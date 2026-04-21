@@ -1,0 +1,12 @@
+# qmd index (local, rebuilt per machine)
+.qmd/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+~/.cache/qmd/
+
+# macOS
+.DS_Store
+
+# Assets are tracked but large — add to LFS later if needed
+# assets/

@@ -1,0 +1,5 @@
+# Generated files — edit sources, not these
+shared/AGENTS.md
+
+# Runtime state — not config
+*.bak

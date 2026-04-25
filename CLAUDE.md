@@ -64,4 +64,21 @@ Run full hybrid search: `qmd query "<terms>" --files --min-score 0.3`
 - Keep wiki pages focused — one entity or concept per page.
 - When a source contradicts an existing page, flag it explicitly at the top of that page.
 - Good answers to queries can be filed back as wiki pages. Offer this when relevant.
-EOF
+
+## wiki/ subdirectory taxonomy
+
+wiki/summaries/    # one page per ingested source
+wiki/entities/     # named things (tools, people, projects)
+wiki/concepts/     # ideas and patterns
+wiki/comparisons/  # side-by-side analyses
+wiki/syntheses/    # cross-source theses
+
+## Optional frontmatter fields
+
+status: stub       # page created but thin; omit when page is substantive
+
+## Stub conventions
+
+- Frontmatter: `status: stub`
+- Body footer: `*Stub — expand when a dedicated source is ingested.*`
+- index.md entry: `[[path/page]] *(stub)* — one-line description`

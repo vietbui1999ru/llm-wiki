@@ -10,3 +10,7 @@
 
 # Assets are tracked but large — add to LFS later if needed
 # assets/
+.env
+.mcp.json
+.obsidian
+.claude

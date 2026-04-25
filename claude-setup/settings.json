@@ -1,0 +1,92 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "teammateMode": "in-process"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(/Users/vietquocbui/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh:*)"
+    ],
+    "defaultMode": "default"
+  },
+  "model": "sonnet",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd ~/repos/llm-wiki && git diff --name-only HEAD 2>/dev/null | grep -q 'log\\.md' && ./scripts/publish-ai-kb.sh || true"
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "input=$(cat); user=$(whoami); host=$(hostname -s); cwd=$(echo \"$input\" | jq -r '.workspace.current_dir'); model=$(echo \"$input\" | jq -r '.model.display_name'); output_style=$(echo \"$input\" | jq -r '.output_style.name // empty'); context_used=$(echo \"$input\" | jq -r '.context_window.used_percentage // empty'); vim_mode=$(echo \"$input\" | jq -r '.vim.mode // empty'); agent=$(echo \"$input\" | jq -r '.agent.name // empty'); short_dir=$(basename \"$cwd\"); [ \"$cwd\" = \"$HOME\" ] && short_dir=\"~\"; git_info=\"\"; if git -C \"$cwd\" rev-parse --git-dir > /dev/null 2>&1; then branch=$(git -C \"$cwd\" --no-optional-locks branch --show-current 2>/dev/null); if [ -n \"$branch\" ]; then if ! git -C \"$cwd\" --no-optional-locks diff --quiet 2>/dev/null || ! git -C \"$cwd\" --no-optional-locks diff --cached --quiet 2>/dev/null; then git_info=\" $(printf '\\033[33m')[$branch*]$(printf '\\033[0m')\"; else git_info=\" $(printf '\\033[32m')[$branch]$(printf '\\033[0m')\"; fi; fi; fi; ctx_info=\"\"; if [ -n \"$context_used\" ]; then ctx_int=$(printf \"%.0f\" \"$context_used\" 2>/dev/null || echo \"$context_used\"); if [ \"$ctx_int\" -ge 80 ] 2>/dev/null; then ctx_color='\\033[31m'; elif [ \"$ctx_int\" -ge 50 ] 2>/dev/null; then ctx_color='\\033[33m'; else ctx_color='\\033[32m'; fi; ctx_info=\" $(printf \"${ctx_color}\")ctx:${ctx_int}%%$(printf '\\033[0m')\"; fi; vim_info=\"\"; [ -n \"$vim_mode\" ] && { [ \"$vim_mode\" = \"INSERT\" ] && vim_info=\" $(printf '\\033[36m')[I]$(printf '\\033[0m')\" || vim_info=\" $(printf '\\033[35m')[N]$(printf '\\033[0m')\"; }; agent_info=\"\"; [ -n \"$agent\" ] && agent_info=\" $(printf '\\033[34m')@$agent$(printf '\\033[0m')\"; style_info=\"\"; [ -n \"$output_style\" ] && [ \"$output_style\" != \"default\" ] && style_info=\" $(printf '\\033[90m')[$output_style]$(printf '\\033[0m')\"; printf \"$(printf '\\033[36m')%s@%s$(printf '\\033[0m') $(printf '\\033[34m')%s$(printf '\\033[0m')%s $(printf '\\033[90m')(%s)$(printf '\\033[0m')%s%s%s%s\" \"$user\" \"$host\" \"$short_dir\" \"$git_info\" \"$model\" \"$ctx_info\" \"$vim_info\" \"$agent_info\" \"$style_info\""
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "context-engineering-fundamentals@context-engineering-marketplace": false,
+    "agent-architecture@context-engineering-marketplace": false,
+    "agent-evaluation@context-engineering-marketplace": false,
+    "agent-development@context-engineering-marketplace": false,
+    "cognitive-architecture@context-engineering-marketplace": false,
+    "playwright@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "code-simplifier@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "agent-sdk-dev@claude-plugins-official": true,
+    "explanatory-output-style@claude-plugins-official": true,
+    "claude-code-setup@claude-plugins-official": true,
+    "learning-output-style@claude-plugins-official": true,
+    "sentry@claude-plugins-official": true,
+    "pyright-lsp@claude-plugins-official": false,
+    "omnisharp@claude-code-lsps": false,
+    "ralph-loop@claude-plugins-official": true,
+    "basedpyright@claude-code-lsps": false,
+    "clangd@claude-code-lsps": false,
+    "gopls@claude-code-lsps": false,
+    "ocaml-lsp@claude-code-lsps": false,
+    "ruby-lsp@claude-code-lsps": false,
+    "rust-analyzer@claude-code-lsps": false,
+    "vscode-langservers@claude-code-lsps": false,
+    "vtsls@claude-code-lsps": false,
+    "pyright@claude-code-lsps": false,
+    "typescript-lsp@claude-plugins-official": false,
+    "caveman@caveman": true,
+    "qmd@qmd": true
+  },
+  "mcpServers": {
+    "shadcn": {
+      "url": "https://www.shadcn.io/api/mcp"
+    }
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    },
+    "qmd": {
+      "source": {
+        "source": "github",
+        "repo": "tobi/qmd"
+      }
+    }
+  },
+  "effortLevel": "medium",
+  "autoUpdatesChannel": "latest",
+  "teammateMode": "in-process",
+  "editorMode": "vim",
+  "verbose": true,
+  "autoCompactEnabled": false,
+  "agentPushNotifEnabled": true
+}

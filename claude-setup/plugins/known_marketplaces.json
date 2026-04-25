@@ -1,0 +1,50 @@
+{
+  "context-engineering-marketplace": {
+    "source": {
+      "source": "github",
+      "repo": "muratcankoylan/Agent-Skills-for-Context-Engineering"
+    },
+    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/context-engineering-marketplace",
+    "lastUpdated": "2026-02-15T23:14:14.273Z"
+  },
+  "obsidian-skills": {
+    "source": {
+      "source": "github",
+      "repo": "kepano/obsidian-skills"
+    },
+    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/obsidian-skills",
+    "lastUpdated": "2026-02-18T22:00:33.018Z"
+  },
+  "claude-code-lsps": {
+    "source": {
+      "source": "github",
+      "repo": "Piebald-AI/claude-code-lsps"
+    },
+    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/claude-code-lsps",
+    "lastUpdated": "2026-02-28T21:15:31.747Z"
+  },
+  "caveman": {
+    "source": {
+      "source": "github",
+      "repo": "JuliusBrussee/caveman"
+    },
+    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/caveman",
+    "lastUpdated": "2026-04-10T18:01:07.216Z"
+  },
+  "qmd": {
+    "source": {
+      "source": "github",
+      "repo": "tobi/qmd"
+    },
+    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/qmd",
+    "lastUpdated": "2026-04-21T02:50:42.803Z"
+  },
+  "claude-plugins-official": {
+    "source": {
+      "source": "github",
+      "repo": "anthropics/claude-plugins-official"
+    },
+    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/claude-plugins-official",
+    "lastUpdated": "2026-04-25T21:48:26.087Z"
+  }
+}

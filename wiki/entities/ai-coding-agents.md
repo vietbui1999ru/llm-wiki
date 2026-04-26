@@ -22,8 +22,8 @@ The class of AI tools that generate, review, refactor, and operate on code — e
 
 ## Shared characteristics
 
-- All benefit from explicit context/standards documents (see [[agent-context-instructions]])
-- All introduce failure modes absent from human code (see [[ai-specific-pitfalls]])
+- All benefit from explicit context/standards documents (see [[concepts/agent-context-instructions]])
+- All introduce failure modes absent from human code (see [[concepts/ai-specific-pitfalls]])
 - All require human approval as the final merge gate
 - Output quality scales with the quality of instructions and context given
 
@@ -38,12 +38,12 @@ Common pattern across platforms:
 ## Use cases
 
 - In-the-moment code improvement during development
-- Large-scale systematic refactoring (see [[ai-agent-technical-debt]])
-- Automated PR review (see [[ai-code-review]])
+- Large-scale systematic refactoring (see [[summaries/ai-agent-technical-debt]])
+- Automated PR review (see [[concepts/ai-code-review]])
 - Security vulnerability detection and fix suggestion
 
 ## Related
 
-- [[agent-context-instructions]] — how to align agent behavior to team standards
-- [[ai-code-review]] — reviewing output from these agents
-- [[ai-specific-pitfalls]] — failure modes unique to AI-generated code
+- [[concepts/agent-context-instructions]] — how to align agent behavior to team standards
+- [[concepts/ai-code-review]] — reviewing output from these agents
+- [[concepts/ai-specific-pitfalls]] — failure modes unique to AI-generated code

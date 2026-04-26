@@ -41,7 +41,8 @@ LLM context generation is the expensive step. With prompt caching (full document
 
 ## Related
 
-- [[bm25]] — the lexical retrieval half of the pipeline
-- [[reranking]] — post-retrieval filtering that stacks with contextual retrieval gains
-- [[compounding-knowledge-base]] — alternative pattern where context is pre-compiled into wiki pages rather than prepended at index time
-- [[qmd]] — local search engine using the BM25 + vector hybrid this technique validates
+- [[concepts/bm25]] — the lexical retrieval half of the pipeline
+- [[concepts/reranking]] — post-retrieval filtering that stacks with contextual retrieval gains
+- [[concepts/compounding-knowledge-base]] — alternative pattern where context is pre-compiled into wiki pages rather than prepended at index time
+- [[entities/qmd]] — local search engine using the BM25 + vector hybrid this technique validates
+- [[summaries/contextual-retrieval]] — Anthropic source; full performance numbers and cost model

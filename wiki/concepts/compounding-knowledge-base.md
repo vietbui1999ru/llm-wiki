@@ -37,10 +37,10 @@ Curation, direction, and synthesis judgment. Specifically: which sources to inge
 
 ## RAG nuance
 
-> **Note (2026-04-22):** [[contextual-retrieval]] significantly improves RAG — −49% retrieval failure with contextual embeddings + BM25, −67% with reranking. The contrast above ("nothing accumulates") remains valid for standard RAG but overstates the ceiling. Improved RAG is a legitimate option for knowledge bases that don't need the cross-source synthesis a compiled wiki provides. The distinction is still real: RAG answers queries from raw sources; a compounding wiki builds durable structure. But the gap is smaller than implied when RAG is properly implemented.
+> **Note (2026-04-22):** [[concepts/contextual-retrieval]] significantly improves RAG — −49% retrieval failure with contextual embeddings + BM25, −67% with reranking. The contrast above ("nothing accumulates") remains valid for standard RAG but overstates the ceiling. Improved RAG is a legitimate option for knowledge bases that don't need the cross-source synthesis a compiled wiki provides. The distinction is still real: RAG answers queries from raw sources; a compounding wiki builds durable structure. But the gap is smaller than implied when RAG is properly implemented.
 
 ## Related
 
-- [[llm-wiki-pattern]] — the specific implementation of this pattern described by Karpathy
-- [[qmd]] — search tool that enables efficient query operations as the wiki scales
-- [[contextual-retrieval]] — technique that significantly narrows the RAG/wiki performance gap for retrieval tasks
+- [[summaries/llm-wiki-pattern]] — the specific implementation of this pattern described by Karpathy
+- [[entities/qmd]] — search tool that enables efficient query operations as the wiki scales
+- [[concepts/contextual-retrieval]] — technique that significantly narrows the RAG/wiki performance gap for retrieval tasks

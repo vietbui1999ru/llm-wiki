@@ -42,5 +42,5 @@ Cohere Rerank (tested by Anthropic). Voyage also offers a reranker. Cross-encode
 
 ## Related
 
-- [[contextual-retrieval]] — gains stack: contextual retrieval + reranking = −67% vs. baseline
-- [[bm25]] — part of initial retrieval that feeds the reranker
+- [[concepts/contextual-retrieval]] — gains stack: contextual retrieval + reranking = −67% vs. baseline
+- [[concepts/bm25]] — part of initial retrieval that feeds the reranker

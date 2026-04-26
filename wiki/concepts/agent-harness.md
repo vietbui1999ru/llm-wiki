@@ -114,3 +114,4 @@ See [[summaries/autoresearch-karpathy]] for details.
 - [[concepts/agentic-sandbox-controls]] — OS-level security for sandbox execution
 - [[summaries/agent-harness-engineering]] — full theory + 5-month case study
 - [[summaries/autoresearch-karpathy]] — minimal harness instantiation for autonomous ML research
+- [[concepts/tool-design-for-agents]] — dual audience principle; error messages as agent recovery instructions

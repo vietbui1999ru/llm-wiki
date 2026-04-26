@@ -59,5 +59,5 @@ Context instructions are a one-time investment that compounds: every subsequent 
 
 ## Related
 
-- [[ai-coding-agents]] — the agents that consume these instructions
-- [[ai-code-review]] — review quality improves directly with instruction quality
+- [[entities/ai-coding-agents]] — the agents that consume these instructions
+- [[concepts/ai-code-review]] — review quality improves directly with instruction quality

@@ -28,7 +28,7 @@ AI code can be syntactically correct, style-compliant, and pass tests — while 
 
 ## AI-specific failure modes
 
-See [[ai-specific-pitfalls]] for a dedicated treatment.
+See [[concepts/ai-specific-pitfalls]] for a dedicated treatment.
 
 ## Novel suggestion
 
@@ -36,5 +36,5 @@ Build a self-reviewing agent: runs before human review, checks PRs against team 
 
 ## Related
 
-- [[ai-code-review]] — synthesized concept page
-- [[ai-specific-pitfalls]] — the unique failure modes of AI-generated code
+- [[concepts/ai-code-review]] — synthesized concept page
+- [[concepts/ai-specific-pitfalls]] — the unique failure modes of AI-generated code

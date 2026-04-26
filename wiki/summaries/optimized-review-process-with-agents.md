@@ -17,7 +17,7 @@ Automate the mechanical layer of review (style, conventions, common bugs) so hum
 
 ## Agent-powered review pipeline
 
-1. **Context/standards file** — encode team conventions, project specifics, security requirements. See [[agent-context-instructions]]. Determines review quality.
+1. **Context/standards file** — encode team conventions, project specifics, security requirements. See [[concepts/agent-context-instructions]]. Determines review quality.
 2. **Automated review on PR** — agent reviews automatically when PR leaves draft. Flags style violations, missing error handling, performance issues.
 3. **Security scanning + autofix** — static analysis (CodeQL equivalent) finds vulnerabilities; agent suggests fixes for human review.
 

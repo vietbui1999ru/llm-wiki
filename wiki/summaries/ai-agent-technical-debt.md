@@ -26,7 +26,7 @@ Human review remains the control gate regardless of how much the agent does.
 
 ## Context/standards documents
 
-Give agents a standards document encoding team conventions before generation. See [[agent-context-instructions]] for the general pattern. Better context → fewer review cycles.
+Give agents a standards document encoding team conventions before generation. See [[concepts/agent-context-instructions]] for the general pattern. Better context → fewer review cycles.
 
 ## Metrics targets
 

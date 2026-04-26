@@ -22,7 +22,7 @@ The practice of reviewing AI-generated code — and using AI agents to assist in
 **Human layer:**
 - Intent verification: does this solve the right problem?
 - Architecture fit: does this match existing patterns?
-- AI-specific pitfall scan: see [[ai-specific-pitfalls]]
+- AI-specific pitfall scan: see [[concepts/ai-specific-pitfalls]]
 - Domain logic correctness
 
 ## 8-point human checklist
@@ -38,7 +38,7 @@ The practice of reviewing AI-generated code — and using AI agents to assist in
 
 ## Automated review with context instructions
 
-Agent-based automated review quality is gated by [[agent-context-instructions]] quality. With good context: agent catches style violations, missing error handling, security patterns, performance issues — freeing human review for design and correctness.
+Agent-based automated review quality is gated by [[concepts/agent-context-instructions]] quality. With good context: agent catches style violations, missing error handling, security patterns, performance issues — freeing human review for design and correctness.
 
 ## The core risk
 
@@ -46,6 +46,11 @@ AI code can be syntactically correct, pass tests, and match style — while bein
 
 ## Related
 
-- [[ai-specific-pitfalls]] — failure modes unique to AI-generated code
-- [[agent-context-instructions]] — how context documents improve automated review quality
-- [[ai-coding-agents]] — the agents producing and reviewing code
+- [[concepts/ai-specific-pitfalls]] — failure modes unique to AI-generated code
+- [[concepts/agent-context-instructions]] — how context documents improve automated review quality
+- [[entities/ai-coding-agents]] — the agents producing and reviewing code
+- [[summaries/reviewing-ai-generated-code]] — 8-step review process and AI-specific pitfall patterns
+- [[summaries/ai-code-vetting-practices]] — condensed checklist: static analysis → readability → security → tests
+- [[summaries/optimized-review-process-with-agents]] — automated review pipeline with agent roles
+- [[summaries/automated-security-reviews]] — Claude Code /security-review command; built-in, no custom agent needed
+- [[concepts/owasp-security-checklist]] — full OWASP Top 10 + AI-specific security checklist for deep audits

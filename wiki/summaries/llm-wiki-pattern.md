@@ -36,7 +36,7 @@ The LLM wiki pattern is different. The LLM **builds and maintains a persistent w
 
 ## Tooling mentioned
 
-- [[qmd]] — local hybrid BM25/vector search over markdown; CLI + MCP server
+- [[entities/qmd]] — local hybrid BM25/vector search over markdown; CLI + MCP server
 - Obsidian — browse wiki in real time while LLM edits; graph view shows structure
 - Obsidian Web Clipper — converts web articles to markdown for raw/
 - Marp — markdown slide decks from wiki content

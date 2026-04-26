@@ -40,5 +40,5 @@ Agent doesn't see all relevant code. Produces solutions that are locally correct
 
 ## Related
 
-- [[ai-code-review]] — full review process that includes this lens
-- [[ai-coding-agents]] — the agents producing this code
+- [[concepts/ai-code-review]] — full review process that includes this lens
+- [[entities/ai-coding-agents]] — the agents producing this code

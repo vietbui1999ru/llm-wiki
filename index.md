@@ -3,6 +3,9 @@
 Catalog of all pages. Updated on every ingest operation.
 
 ## Summaries
+- [[summaries/wshobson-agent-orchestration]] — wshobson/agents: 184 agents, 78 plugins, 150 skills; three-tier Opus/Sonnet/Haiku model routing; PluginEval framework
+- [[summaries/exit-code-0-quality]] — 198 agents, 30 campaigns: four-tier verification pipeline, campaign persistence, parallel worktree isolation, five protocol rules from failures
+- [[summaries/automated-security-reviews]] — Claude Code /security-review command + GitHub Actions; built-in, no custom agent needed
 - [[summaries/llm-wiki-pattern]] — Summary of Karpathy's LLM wiki pattern: architecture, operations, tooling, Memex connection
 - [[summaries/contextual-retrieval]] — Anthropic's Contextual Retrieval: chunk context prepending reduces RAG retrieval failure by 49–67%
 - [[summaries/agentic-sandbox-security]] — NVIDIA AI Red Team: mandatory OS-level sandbox controls for AI coding agents; indirect prompt injection as primary threat
@@ -39,9 +42,14 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/context-degradation]] — Five named failure modes: lost-in-middle, poisoning, distraction, confusion, clash; thresholds and mitigations
 - [[concepts/context-compression]] — Three strategies: anchored iterative summarization (default), opaque, regenerative; token budget table; KV-cache rules
 - [[concepts/tool-design-for-agents]] — Dual audience principle; error messages as agent recovery instructions; naming conventions
+- [[concepts/agent-skills]] — Skills as prompt templates: progressive disclosure, meta-tool architecture, SKILL.md structure, three loading levels
+- [[concepts/agent-subagents]] — Subagents: own context window, YAML frontmatter format, all fields, scopes, invocation patterns, fork mode
+- [[concepts/agent-teams]] — Agent teams: lead+teammates+task list+mailbox; when to use vs subagents; quality gate hooks; best practices
+- [[concepts/verification-pipeline]] — Four-tier quality ladder: typecheck → visual verification → screenshot gate → design critique; origin failures; protocol rules
+- [[concepts/owasp-security-checklist]] — OWASP Top 10 checklist with AI-specific extensions (indirect prompt injection, agentic sandbox); severity classification table
 
 ## Comparisons
 <!-- side-by-side analyses -->
 
 ## Syntheses
-<!-- cross-source insights and theses -->
+- [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing table; common workflow patterns

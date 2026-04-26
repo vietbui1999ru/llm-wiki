@@ -30,7 +30,10 @@ Before implementing, check the wiki for relevant patterns:
 1. **Confirm requirements** — restate what you're building in one sentence; ask if unclear
 2. **Plan** — list files to add or change, note dependencies and order
 3. **Implement** — follow existing project patterns; prefer editing over creating new files
-4. **Verify** — run the app or relevant flow; confirm it works before handing off
+4. **Verify** — confirm the feature actually works, not just that it compiles:
+   - Backend: send real HTTP requests to the endpoint; check response shape and status
+   - Frontend/UI: use Playwright MCP to navigate the route, count expected DOM elements by `data-testid`, capture a screenshot; if the feature should render N items and shows 0, the fix is incomplete regardless of typecheck passing
+   - Do not hand off with "typechecks clean" as the sole evidence — that proves structure, not behavior
 5. **Hand off** — summarize what changed, how to verify, what comes next
 
 ## Code principles

@@ -70,3 +70,4 @@ Sandboxing must cover the entire agent execution environment, not just shell/com
 
 - [[concepts/indirect-prompt-injection]]
 - [[entities/ai-coding-agents]]
+- [[summaries/agentic-sandbox-security]] — NVIDIA AI Red Team source; full tiered denylist and secret injection details

@@ -17,6 +17,7 @@ Classify the request before delegating. Use these rules strictly:
 - "Is this a good pattern?", "What are the tradeoffs?", "How should we structure X?"
 - Code critique, design pattern suggestions, anti-pattern identification
 - Deciding whether to use agents, which testing strategy to adopt, infra approach selection
+- Security audit requested, or code-reviewer flags a vulnerability needing deep analysis → `security-auditor`
 - Any task where judgment quality matters more than speed
 
 ### Route to Sonnet agents when:
@@ -40,12 +41,14 @@ Classify the request before delegating. Use these rules strictly:
 - `architecture-reviewer` — holistic system/code review, structural assessment
 - `design-critic` — critique patterns, suggest improvements, identify anti-patterns
 - `infra-decision-maker` — decide on agent teams, testing strategies, devops approach
+- `security-auditor` — OWASP-depth security analysis, secrets scanning, AI-specific threat review; read-only, produces threat report for code-writer to resolve
 
 ### Sonnet tier
 - `code-writer` — implement features from clear requirements
-- `code-reviewer` — review existing implementation
-- `backend-debug-tester` — find, fix, and test backend bugs
-- `frontend-debug-tester` — find, fix, and test frontend bugs
+- `code-reviewer` — review existing implementation; flags security issues, escalates to security-auditor for deep analysis
+- `backend-debug-tester` — find, fix, and test backend bugs (runs in isolated worktree)
+- `frontend-debug-tester` — find, fix, and test frontend bugs; includes Playwright visual verification (runs in isolated worktree)
+- `visual-verifier` — Playwright DOM audit + screenshot gate for frontend work; hard gate: no screenshot = incomplete
 - `production-platform-devops` — CI/CD, deployment, environment setup
 - `project-health-monitor` — detect changes, update project memory, report health
 
@@ -69,8 +72,15 @@ Example: "build a new feature"
 → `design-explorer` (explore approach, Opus)
 → `architecture-reviewer` (validate structure, Opus)
 → `code-writer` (implement, Sonnet)
+→ `code-reviewer` (review, Sonnet) — escalates to `security-auditor` (Opus) if security issues found
+→ `visual-verifier` (screenshot gate for frontend work, Sonnet) — skip for backend-only
 → `project-health-monitor` (verify, Sonnet)
 → `session-report-generator` (record, Haiku)
+
+Example: "security review before deploy"
+→ `security-auditor` (Opus) — produces threat report
+→ `code-writer` (Sonnet) — resolves Critical/High findings
+→ `security-auditor` (Opus) — re-audit to confirm fixes
 
 ## Long-horizon tasks (ralph loop)
 

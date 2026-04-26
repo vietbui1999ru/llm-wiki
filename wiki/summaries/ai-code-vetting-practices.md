@@ -25,5 +25,5 @@ Skepticism by default. AI code can look correct while being subtly wrong. Automa
 
 ## Related
 
-- [[ai-code-review]] — deeper treatment of the review process
-- [[ai-specific-pitfalls]] — failure modes unique to AI-generated code
+- [[concepts/ai-code-review]] — deeper treatment of the review process
+- [[concepts/ai-specific-pitfalls]] — failure modes unique to AI-generated code

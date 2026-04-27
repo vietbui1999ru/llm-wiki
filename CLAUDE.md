@@ -65,6 +65,30 @@ Run full hybrid search: `qmd query "<terms>" --files --min-score 0.3`
 - When a source contradicts an existing page, flag it explicitly at the top of that page.
 - Good answers to queries can be filed back as wiki pages. Offer this when relevant.
 
+### Pre-Ingest Comprehension Rule
+Before adding any new source to the knowledge base, ask Viet 3–5 questions that test:
+1. High-level understanding (what problem does this source address?)
+2. Key technical concepts from the source
+3. How it connects to or contrasts with existing wiki pages
+Only proceed with ingest after Viet answers correctly and demonstrates understanding.
+Exception: if Viet explicitly says "skip review for this session", proceed directly.
+
+### Ingest Progress Retention
+If an ingest session is interrupted (session ends, context resets, user steps away):
+Write current progress to `wiki/.ingest-progress.md`:
+  - Sources being ingested
+  - Which wiki pages were created/updated
+  - What still needs to be done
+  - Date and context summary
+On session resume, check for `.ingest-progress.md` first and offer to continue from where we left off.
+Delete `.ingest-progress.md` when ingest is fully complete.
+
+### Periodic Review
+At the end of ingest sessions and when explicitly asked: randomly surface 1–2 existing wiki pages
+for Viet to review. Goal is spaced repetition to consolidate knowledge.
+Format: "Random review: [[page]] — [one-line reminder of what it's about]. Want to read through it?"
+Pick pages that haven't been reviewed recently (use log.md timestamps as proxy).
+
 ## wiki/ subdirectory taxonomy
 
 wiki/summaries/    # one page per ingested source

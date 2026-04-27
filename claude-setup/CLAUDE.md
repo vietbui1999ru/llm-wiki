@@ -1,6 +1,7 @@
 # Global Claude Configuration
 
 @~/.claude/rules/core.md
+@~/.claude/rules/communication.md
 @~/.claude/rules/editing.md
 @~/.claude/rules/learning.md
 @~/.claude/rules/intermediate.md

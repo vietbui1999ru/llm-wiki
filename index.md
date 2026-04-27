@@ -3,6 +3,9 @@
 Catalog of all pages. Updated on every ingest operation.
 
 ## Summaries
+- [[summaries/context-window-cluster]] — 5 sources: context window fundamentals, context engineering, 6 management techniques, memory tool API
+- [[summaries/software-documentation]] — 2 sources: principles (clear/concise/structured), doc types, README template, organization
+- [[summaries/claude-code-plugins-llm-wiki]] — Plugin structure, manifest, skill-to-wiki mapping, symlink gotcha, launch commands
 - [[summaries/wshobson-agent-orchestration]] — wshobson/agents: 184 agents, 78 plugins, 150 skills; three-tier Opus/Sonnet/Haiku model routing; PluginEval framework
 - [[summaries/exit-code-0-quality]] — 198 agents, 30 campaigns: four-tier verification pipeline, campaign persistence, parallel worktree isolation, five protocol rules from failures
 - [[summaries/automated-security-reviews]] — Claude Code /security-review command + GitHub Actions; built-in, no custom agent needed
@@ -25,6 +28,11 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/pydoll]] — Async Python CDP-native browser automation library with fingerprint evasion and WebRTC leak protection
 
 ## Concepts
+- [[concepts/context-window]] — Transformer constraint: O(n²) attention, KV cache, context rot, context awareness feature
+- [[concepts/context-engineering]] — Discipline of curating minimal high-signal tokens: JIT retrieval, compaction, note-taking, sub-agents
+- [[concepts/agentic-memory-tool]] — memory_20250818 API, context editing, cross-session learning, memory poisoning security
+- [[concepts/software-documentation]] — Doc types, audiences, principles, structure for doc-hosting platforms
+- [[concepts/claude-code-plugins]] — Plugin structure, manifest format, namespacing, symlink gotcha, when to use plugins vs. personal config
 - [[concepts/compounding-knowledge-base]] — Knowledge bases that accumulate compiled structure vs. RAG's per-query retrieval
 - [[concepts/contextual-retrieval]] — RAG preprocessing technique: LLM-generated context prepended to chunks before embedding + BM25 indexing
 - [[concepts/bm25]] — Lexical ranking function; exact-match complement to semantic embeddings in hybrid search

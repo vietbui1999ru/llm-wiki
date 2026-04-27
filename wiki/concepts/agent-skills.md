@@ -129,3 +129,4 @@ Rule: treat Skills like software packages — only use from trusted sources.
 - [[concepts/agent-subagents]] — subagents and how skills can be preloaded into them
 - [[concepts/agent-teams]] — teams and skill loading behavior
 - [[concepts/indirect-prompt-injection]] — attack vector via malicious skill content
+- [[concepts/claude-code-plugins]] — plugin system that namespaces and bundles skills

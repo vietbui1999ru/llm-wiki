@@ -96,3 +96,5 @@ It extends [[concepts/ralph-loop]] with completion conditions tied to verificati
 - [[concepts/ralph-loop]] — completion conditions; verification as the exit signal
 - [[concepts/agentic-sandbox-controls]] — sandbox security; visual verification runs in a real browser (security boundary)
 - [[summaries/exit-code-0-quality]] — full case study with numbers and architecture
+- [[concepts/cicd-testing]] — broader CI/CD testing strategy; verification-pipeline is one quality gate within it
+- [[concepts/unit-testing]] — unit testing as the foundation layer beneath agent-specific verification

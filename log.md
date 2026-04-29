@@ -24,3 +24,7 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 ## [2026-04-27] rules | Added: caveman ultra mode rule (communication.md), 50-line code generation limit (editing.md), pre-ingest comprehension quiz, progress retention, periodic review (CLAUDE.md); new docs-writer agent in dotfiles
 ## [2026-04-26] ingest | Claude Code Plugins — llm-wiki as plugin (Claude Code Plugins - llm-wiki as plugin.md) → summaries/claude-code-plugins-llm-wiki, concepts/claude-code-plugins; created ~/dotfiles/llm-wiki-plugin scaffold with plugin.json + 3 skills (wiki, agent-patterns, security)
 ## [2026-04-26] synthesis | Wiki/dotfiles gap audit — new pages: concepts/owasp-security-checklist (from security-patterns skill), syntheses/agent-primitive-selection (decision tree from agent-orchestration skill); updated stale gap notes in automated-security-reviews and wshobson-agent-orchestration; 41 pages, 0 orphans, 0 broken links
+## [2026-04-29] ingest | Matt Pocock Skills (mattpocockskills Skills for Real Engineers. Straight from my .claude directory..md) → summaries/mattpocockskills, concepts/domain-glossary; 9 skills installed to ~/.claude/skills/
+## [2026-04-29] ingest | Firecrawl MCP Server (Firecrawl MCP Server.md) → summaries/firecrawl-mcp-server, entities/firecrawl
+## [2026-04-29] ingest | Superpowers Plugin v5.0.7 (local cache) → summaries/superpowers-plugin; enabled plugin in settings.json
+## [2026-04-29] integration | Startup auto-context: added rules/wiki-startup.md → CLAUDE.md; wiki-context skill updated with new content; superpowers enabled

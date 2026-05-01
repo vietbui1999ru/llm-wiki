@@ -36,3 +36,4 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - pdfs/2509.24372v2.pdf (ES LLM Fine-tuning 2025) → summaries/es-llm-finetuning-2025
 - pdfs/2511.16652v2.pdf (EGGROLL 2025) → summaries/eggroll-2025, entities/eggroll
 - new: concepts/evolution-strategies (ties all 3 together)
+## [2026-05-01] ingest | Claude Usage and Length Limits (How do usage and length limits work?.md) → summaries/claude-usage-limits; updated concepts/context-window with product vs API context window distinction (200K product vs 1M API)

@@ -66,6 +66,17 @@ This enables models to self-pace on long-horizon tasks rather than guessing when
 
 Newer models return a **validation error** when prompt + output tokens exceed the window rather than silently truncating. Use the token counting API to pre-check before sending large requests.
 
+## Product vs. API Context Window
+
+The **claude.ai product** (chat, Claude Code) enforces a separate, lower limit than the raw API:
+- claude.ai paid plans (Pro, Max, Team): **200K tokens**
+- Enterprise (some models): **500K tokens**
+- API access (Sonnet/Opus): **1M tokens**
+
+This means the same model has different effective context depending on how you access it. For agent workflows hitting the API directly, the 1M limit applies. For workflows using claude.ai UI or Claude Code, 200K is the ceiling.
+
+See [[summaries/claude-usage-limits]] for the full product-level limit model.
+
 ## Related Pages
 
 - [[concepts/context-engineering]] — engineering discipline for curating what's in context

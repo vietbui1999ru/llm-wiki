@@ -11,6 +11,16 @@ updated: 2026-04-25
 
 Context degradation is not binary — it's a continuum of predictable failure modes as context length grows. Knowing the five patterns by name lets you diagnose failures correctly and pick the right mitigation.
 
+## Smart Zone / Dumb Zone (Practitioner Model)
+
+A practitioner mental model from Dex Hyp (Human Layer) and popularized by Matt Pocock: LLM performance has a **smart zone** (low token count, attention relationships least strained) and a **dumb zone** (high token count, attention degraded).
+
+**Empirical threshold: ~100k tokens.** Pocock claims this holds regardless of advertised context window size (200k or 1M). The larger windows add more dumb zone, not more smart zone — the attention scaling is quadratic regardless of limit.
+
+Implication for task sizing: keep tasks scoped so the agent completes them within ~100k tokens. This maps to the same principle as the degradation thresholds below, but gives a concrete absolute number practitioners can target.
+
+---
+
 ## The Five Patterns
 
 ### 1. Lost-in-Middle
@@ -77,3 +87,4 @@ Ask: *Is the agent ignoring something I told it earlier?* That's lost-in-middle 
 - [[concepts/context-compression]] — the three strategies for active compaction
 - [[concepts/agent-harness]] — harness-level context management (compaction, masking, offloading)
 - [[concepts/ralph-loop]] — loop pattern that manages context across multiple windows using filesystem state
+- [[summaries/mattpocockworkflow]] — source of the smart zone / dumb zone model and 100k threshold

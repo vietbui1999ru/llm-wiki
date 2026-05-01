@@ -86,3 +86,6 @@ The skill considers Phase 1 ("build a fast, deterministic, agent-runnable pass/f
 - `CONTEXT.md` is a form of [[concepts/agent-context-instructions]] — domain-specific alignment docs
 - `/grill-with-docs` reduces [[concepts/context-degradation]] failure mode: context distraction
 - `/improve-codebase-architecture` fights software entropy accelerated by agents (see [[entities/ai-coding-agents]])
+
+## See Also
+[[summaries/mattpocockworkflow]] — the full end-to-end workflow walkthrough: how these skills chain together from grill session → PRD → kanban → AFK loop, plus context management philosophy, deep modules, and parallelization patterns.

@@ -1,3 +1,6 @@
+# git worktrees (optional local dev setup — see GUIDE.md)
+.worktrees/
+
 # qmd index (local, rebuilt per machine)
 .qmd/
 *.sqlite

@@ -4,6 +4,7 @@ Catalog of all pages. Updated on every ingest operation.
 
 ## Summaries
 - [[summaries/mattpocockskills]] — Matt Pocock's engineering skills: 4 failure modes, 9 skills (grill-me, grill-with-docs, tdd, diagnose, zoom-out, to-prd, to-issues, improve-architecture, setup)
+- [[summaries/mattpocockworkflow]] — Full AI coding workflow: grill→PRD→kanban DAG→AFK loop; smart zone; clear-over-compact; deep modules; push/pull standards; SandCastle parallelization
 - [[summaries/firecrawl-mcp-server]] — Firecrawl MCP: 14 tools for web scraping/crawling/search/extraction/browser automation for AI agents
 - [[summaries/superpowers-plugin]] — Superpowers v5.0.7: zero-dependency workflow plugin; Iron Law TDD/debugging; skill-first discipline; subagent execution
 - [[summaries/unit-testing-best-practices]] — 2 sources: 15 practices (naming, AAA, mocks, flaky tests, coverage philosophy), IBM fundamentals
@@ -26,8 +27,14 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/pydoll-network-fingerprinting]] — Pydoll deep-dive: OSI layers, TCP/TLS fingerprinting, WebRTC leaks, GDPR/CFAA legal framework
 - [[summaries/agent-harness-engineering]] — LangChain harness anatomy + OpenAI 5-month Codex case study: harness components, repo-as-record, mechanical enforcement
 - [[summaries/autoresearch-karpathy]] — Karpathy's autonomous ML experiment loop: agent modifies train.py, 5-min runs, val_bpb metric, program.md as control layer
+- [[summaries/docling]] — 3 sources: Docling document parser for AI; why parsing quality matters for RAG; layout-aware PDF → Markdown; vs Firecrawl; research paper pipeline
+- [[summaries/openai-es-2017]] — OpenAI 2017: ES as scalable RL alternative; shared random seed trick; linear worker scaling; solved MuJoCo humanoid in 10 min
+- [[summaries/es-llm-finetuning-2025]] — Cognizant+MIT 2025: first billion-param ES LLM fine-tuning; pop size 30; outperforms GRPO/PPO on Countdown; no reward hacking
+- [[summaries/eggroll-2025]] — Oxford 2025: EGGROLL low-rank perturbations; 100× GPU speedup; 91% batch inference throughput; trains integer quantized models
 
 ## Entities
+- [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
+- [[entities/eggroll]] — Low-rank ES optimizer from Oxford; 100× GPU speedup over naïve ES; trains non-differentiable (int8) architectures; companion to EGG model
 - [[entities/qmd]] *(stub)* — Local hybrid markdown search engine (BM25 + vector); CLI + MCP server
 - [[entities/ai-coding-agents]] — The class of AI coding tools (Claude Code, Codex, OpenCode, etc.): capability spectrum, safety model, use cases
 - [[entities/pydoll]] — Async Python CDP-native browser automation library with fingerprint evasion and WebRTC leak protection
@@ -64,6 +71,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/verification-pipeline]] — Four-tier quality ladder: typecheck → visual verification → screenshot gate → design critique; origin failures; protocol rules
 - [[concepts/owasp-security-checklist]] — OWASP Top 10 checklist with AI-specific extensions (indirect prompt injection, agentic sandbox); severity classification table
 - [[concepts/domain-glossary]] — CONTEXT.md pattern: shared language between dev and agent; token efficiency, consistent naming, reduced context distraction
+- [[concepts/deep-modules]] — Ousterhout's deep vs shallow modules; narrow interface, wide implementation; test boundary design; why AI produces shallow codebases by default
+- [[concepts/evolution-strategies]] — Black-box optimization via parameter perturbation; ES vs RL trade-offs; shared random seed trick; progression from gaming (2017) to LLM fine-tuning (2025)
 
 ## Comparisons
 <!-- side-by-side analyses -->

@@ -89,8 +89,23 @@ system = "You are a code assistant. Current time is provided per-request."
 - **Quick prototype, one compression expected**: regenerative is fine
 - **Never**: aggressive deletion without a summary — you will lose file modification history
 
+## Contrarian View: Clear Over Compact
+
+Matt Pocock (see [[summaries/mattpocockworkflow]]) argues against compacting entirely and prefers hard context clears:
+
+> "I much prefer my AI to behave like the guy from Memento because this state is always the same. Every time you do it, you clear and you go back to the beginning."
+
+His argument: compaction introduces "sediment" — each compressed summary is imperfect, and multiple compression cycles compound drift. Clearing gives a deterministic, reproducible starting state.
+
+**When this is valid**: his workflow stores all state in the filesystem (issue files, commits, PRDs). The harness re-injects the relevant state at the start of each fresh session. Context memory is unnecessary because filesystem memory is durable.
+
+**When anchored iterative summarization is still better**: workflows without a durable filesystem layer, long interactive sessions where rebuilding state from scratch is expensive, or when the agent needs conversational continuity that can't be reconstructed from files.
+
+The practical resolution: **design your harness so clearing is safe** (filesystem stores the state), then prefer clearing. Use compaction only when clearing is not an option.
+
 ## Related Pages
 
 - [[concepts/context-degradation]] — the failure modes compression prevents
 - [[concepts/agent-harness]] — where compaction fits in the harness component model
 - [[concepts/ralph-loop]] — filesystem as durable state across clean context windows (the complement to compression)
+- [[summaries/mattpocockworkflow]] — Pocock's workflow that makes clearing safe by externalizing state

@@ -28,3 +28,11 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 ## [2026-04-29] ingest | Firecrawl MCP Server (Firecrawl MCP Server.md) → summaries/firecrawl-mcp-server, entities/firecrawl
 ## [2026-04-29] ingest | Superpowers Plugin v5.0.7 (local cache) → summaries/superpowers-plugin; enabled plugin in settings.json
 ## [2026-04-29] integration | Startup auto-context: added rules/wiki-startup.md → CLAUDE.md; wiki-context skill updated with new content; superpowers enabled
+## [2026-04-30] ingest | Matt Pocock Full Walkthrough Workflow (Full Walkthrough Workflow for AI Coding — Matt Pocock.md) → summaries/mattpocockworkflow, concepts/deep-modules; updated context-compression (clear-over-compact), context-degradation (smart zone/dumb zone), mattpocockskills (cross-ref)
+## [2026-04-30] ingest | Docling (3 sources: Docling.md, From PDF to Markdown Why Document Parsing is Important For RAG..md, docling-projectdocling Get your documents ready for gen AI.md) → summaries/docling, entities/docling
+## [2026-04-30] update | Added pdfs/ to directory layout in CLAUDE.md; added PDF ingest operation; updated summaries/docling with two-path pipeline (wiki vs RAG)
+## [2026-04-30] ingest | Evolution Strategies cluster — 3 PDFs via Docling
+- pdfs/1703.03864v2.pdf (OpenAI ES 2017) → summaries/openai-es-2017
+- pdfs/2509.24372v2.pdf (ES LLM Fine-tuning 2025) → summaries/es-llm-finetuning-2025
+- pdfs/2511.16652v2.pdf (EGGROLL 2025) → summaries/eggroll-2025, entities/eggroll
+- new: concepts/evolution-strategies (ties all 3 together)

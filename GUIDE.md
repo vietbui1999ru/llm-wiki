@@ -46,12 +46,12 @@ cat ~/repos/llm-wiki/wiki/concepts/context-compression.md
 3. Claude reads it, runs comprehension questions (or skip: "skip review"), writes wiki pages, updates index + log
 
 ### Wiki operations
-| Say this | Does this |
-|---|---|
-| `ingest <file>` | Full ingest: summary + entity/concept pages + index + log |
-| `lint the wiki` | Orphan check, stale claims, missing concepts, source gaps |
-| `search the wiki for <topic>` | qmd search + load relevant pages into context |
-| `query: <question>` | Answer from wiki, optionally file as new page |
+| Say this                      | Does this                                                 |
+| ----------------------------- | --------------------------------------------------------- |
+| `ingest <file>`               | Full ingest: summary + entity/concept pages + index + log |
+| `lint the wiki`               | Orphan check, stale claims, missing concepts, source gaps |
+| `search the wiki for <topic>` | qmd search + load relevant pages into context             |
+| `query: <question>`           | Answer from wiki, optionally file as new page             |
 
 ---
 
@@ -62,17 +62,17 @@ Skills are loaded on-demand via `/skill-name` or automatically when Claude detec
 
 ### Engineering workflow (mattpocock/skills)
 
-| Skill | Invoke | When to use | Example |
-|---|---|---|---|
-| `/grill-me` | `/grill-me` | Before starting any feature — stress-test your plan | "I want to add auth — /grill-me" |
-| `/grill-with-docs` | `/grill-with-docs` | Like grill-me but also builds `CONTEXT.md` glossary and ADRs | New project or module with unclear terminology |
-| `/tdd` | `/tdd` | Build features or fix bugs with red-green-refactor | "Add user profile API — /tdd" |
-| `/diagnose` | `/diagnose` | Hard bugs, flaky tests, performance regressions | "Auth is broken in prod — /diagnose" |
-| `/zoom-out` | `/zoom-out` | Lost in unfamiliar code, need the big picture | "I don't understand this middleware — /zoom-out" |
-| `/to-prd` | `/to-prd` | Synthesize a conversation into a GitHub issue (PRD) | After a grill session, capture it as an issue |
-| `/to-issues` | `/to-issues` | Break a PRD into independently-grabbable vertical slices | After /to-prd, decompose into tickets |
-| `/improve-codebase-architecture` | `/improve-codebase-architecture` | Find shallow modules, refactor opportunities | "The codebase feels messy — /improve-codebase-architecture" |
-| `/setup-matt-pocock-skills` | `/setup-matt-pocock-skills` | First-time per-repo setup: issue tracker, triage labels, CONTEXT.md | Run once per new repo before using the above skills |
+| Skill                            | Invoke                           | When to use                                                         | Example                                                     |
+| -------------------------------- | -------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `/grill-me`                      | `/grill-me`                      | Before starting any feature — stress-test your plan                 | "I want to add auth — /grill-me"                            |
+| `/grill-with-docs`               | `/grill-with-docs`               | Like grill-me but also builds `CONTEXT.md` glossary and ADRs        | New project or module with unclear terminology              |
+| `/tdd`                           | `/tdd`                           | Build features or fix bugs with red-green-refactor                  | "Add user profile API — /tdd"                               |
+| `/diagnose`                      | `/diagnose`                      | Hard bugs, flaky tests, performance regressions                     | "Auth is broken in prod — /diagnose"                        |
+| `/zoom-out`                      | `/zoom-out`                      | Lost in unfamiliar code, need the big picture                       | "I don't understand this middleware — /zoom-out"            |
+| `/to-prd`                        | `/to-prd`                        | Synthesize a conversation into a GitHub issue (PRD)                 | After a grill session, capture it as an issue               |
+| `/to-issues`                     | `/to-issues`                     | Break a PRD into independently-grabbable vertical slices            | After /to-prd, decompose into tickets                       |
+| `/improve-codebase-architecture` | `/improve-codebase-architecture` | Find shallow modules, refactor opportunities                        | "The codebase feels messy — /improve-codebase-architecture" |
+| `/setup-matt-pocock-skills`      | `/setup-matt-pocock-skills`      | First-time per-repo setup: issue tracker, triage labels, CONTEXT.md | Run once per new repo before using the above skills         |
 
 **Setup order for a new project:**
 ```
@@ -246,7 +246,51 @@ Enabled plugins that provide skills and hooks.
 
 ---
 
-## 6. Tips
+## 6. Git Worktrees (Optional Dev Setup)
+
+Worktrees let you work on multiple branches simultaneously without `git stash` or branch switching. Each branch gets its own directory with a clean working tree.
+
+### Setup (one-time)
+
+`.worktrees/` is already in `.gitignore` — safe to create without polluting git status.
+
+```bash
+# Create a worktree for an existing branch
+git worktree add .worktrees/<branch-name> <branch-name>
+
+# Example — set up all three branches at once:
+git worktree add .worktrees/personal-profile personal-profile
+git worktree add .worktrees/wiki-for-AI-LLM wiki-for-AI-LLM
+git worktree add .worktrees/wiki-for-DSA wiki-for-DSA
+```
+
+### Usage
+
+```bash
+# Open a branch's worktree in a new tmux window or editor
+cd .worktrees/wiki-for-DSA
+
+# Edit freely — each worktree has its own index, HEAD, unstaged changes
+# git status, git add, git commit all work normally
+```
+
+### Useful commands
+
+```bash
+git worktree list                    # see all active worktrees
+git worktree remove .worktrees/name  # clean up when done
+```
+
+### Notes
+
+- `.worktrees/` is gitignored — never committed, never tracked
+- Each worktree is fully independent: separate staged files, separate HEAD
+- The main repo (`~/repos/llm-wiki`) and any worktree can both be open at the same time
+- A branch can only be checked out in one worktree at a time
+
+---
+
+## 7. Tips
 
 **Force wiki search in any session:**
 ```

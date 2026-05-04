@@ -4,7 +4,7 @@ type: concept
 tags: [agent-engineering, context-management, compaction, harness, long-horizon]
 sources: []
 created: 2026-04-25
-updated: 2026-04-25
+updated: 2026-05-04
 ---
 
 # Context Compression Strategies
@@ -97,11 +97,20 @@ Matt Pocock (see [[summaries/mattpocockworkflow]]) argues against compacting and
 
 His argument: compaction introduces "sediment" — each compressed summary is imperfect, and multiple cycles compound drift. Clearing gives a deterministic, reproducible starting state.
 
-**Updated (2026-05-04)**: Community evidence from r/ClaudeCode (30+ practitioners) shows clear-over-compact is now the **majority practice** for AI coding workflows — not a contrarian position. Every active framework (GSD, Dangeresque, SandCastle, vanilla loops) enforces fresh context per task. Anchored iterative summarization remains the recommendation for workflows *without* a durable filesystem layer.
+**Updated (2026-05-04)**: Among experienced practitioners running harness-based AFK coding workflows (r/ClaudeCode + r/opencodeCLI, 2026-05, n≈30), clear-over-compact is **majority practice** — not a contrarian position. Every active framework in that community (GSD, Dangeresque, SandCastle, vanilla loops) enforces fresh context per task.
+
+**This evidence is scoped**: the sample is ~30 experienced developers self-selected into harness-heavy workflows on two subreddits. It does not generalize to interactive/exploratory sessions, non-engineer users, or workflows without durable filesystem state.
 
 **When clear-over-compact is valid**: filesystem stores all state (issue files, commits, PRDs); harness re-injects state at session start. The key design principle: **make clearing safe, then prefer clearing**.
 
-**When anchored iterative summarization is still better**: no durable filesystem layer; long interactive sessions where rebuilding state from scratch is expensive; conversational continuity that can't be reconstructed from files.
+**When compact wins over clear:**
+- No durable filesystem layer — clearing loses state that can't be reconstructed
+- Interactive debugging sessions where the chain of reasoning *is* the artifact
+- Exploratory sessions where you don't yet know what to externalize to files
+- Conversational research where history continuity is the product
+- Long sessions with a non-engineer who can't reconstruct context from files
+
+**When anchored iterative summarization is still better**: any of the "when compact wins" cases above.
 
 **OpenCode hook extension**: OpenCode exposes `experimental.session.compacting` — a hook that lets plugins inject domain state into compaction summaries or replace the compaction prompt entirely. This enables custom anchored iterative summarization at the harness level, more reliable than system-prompt instructions. See [[comparisons/claude-code-vs-opencode-plugins]].
 

@@ -47,7 +47,9 @@ Is work genuinely parallel with non-overlapping file scope (3–5 pieces)?
 
 **Rule**: Security and architectural decisions go to Opus. Per wshobson benchmarks, Opus achieves 65% fewer tokens on complex tasks — the higher rate is often offset by not needing correction loops.
 
-### OpenCode / multi-provider (community consensus, r/opencodeCLI 2026-05)
+**Harness > model — scope**: this holds in the mid-capability band (Sonnet-class models with structure vs without). At the frontier (Opus on a novel architectural decision), no harness closes the gap. Harness wins for: long-horizon AFK loops, parallel work, verification gates, repeatability. Model wins for: one-shot architectural judgment, novel domain reasoning, security threat modeling — tasks where a single inference's quality is the bottleneck. Note: DeepSeek max-reasoning unlock is a *model parameter* win, not a harness win.
+
+### OpenCode / multi-provider (majority practice among experienced harness users, r/opencodeCLI 2026-05, n≈30)
 
 | Role | Model | Notes |
 |---|---|---|
@@ -62,6 +64,10 @@ Is work genuinely parallel with non-overlapping file scope (3–5 pieces)?
 **Key insight**: DeepSeek V4 Flash on max reasoning = dramatically better than default. Must use direct DeepSeek API — not OpenRouter or resellers. Toggle in OpenCode via `ctrl+t`.
 
 **Opus-as-orchestrator pattern** (vietphi, r/opencodeCLI): use Opus to generate a bash script that dynamically dispatches the right model per task, capping expensive models by quota (e.g. GLM at 15%). Moves routing from static env config to agent judgment.
+
+**DeepSeek max reasoning — when default beats max**: short targeted edits, fast iteration loops, latency-sensitive interactive sessions, simple refactors. Max reasoning multiplies time-to-first-token and destabilizes KV-cache reuse. Use max for genuinely hard reasoning; default for everything else.
+
+**Vertical slices — when this fails**: layer-internal-complexity-dominant systems (compilers, interpreters, ML training pipelines, cryptographic primitives, database internals); library/SDK work with no UI to slice toward; infrastructure pre-integration phases. Tracer bullets are a web-product-shaped heuristic, not universal.
 
 ## Skill vs Subagent vs Team — At a Glance
 

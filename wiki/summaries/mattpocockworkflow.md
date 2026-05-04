@@ -4,7 +4,7 @@ type: summary
 tags: [agent-workflow, tdd, planning, kanban, parallelization, deep-modules, context-management]
 sources: ["Full Walkthrough Workflow for AI Coding — Matt Pocock.md"]
 created: 2026-04-30
-updated: 2026-04-30
+updated: 2026-05-04
 ---
 
 # Matt Pocock — Full Walkthrough Workflow for AI Coding
@@ -12,6 +12,8 @@ updated: 2026-04-30
 Source: workshop transcript (~90 min), YouTube companion to the skills repo.
 
 Thesis: software engineering fundamentals — the same ones from Fowler, Ousterhout, the Pragmatic Programmer — apply directly to AI-assisted development. The failure mode is treating AI as a new paradigm and abandoning the fundamentals.
+
+**For whom**: experienced developers building product features with known shape (CRUD-adjacent web apps, APIs, UI components). The workflow assumes requirements can be substantially grilled out upfront and that tracer-bullet slices are meaningful. **Fails when**: requirements emerge during implementation (R&D, exploratory); layer-internal complexity dominates (compilers, ML training, crypto primitives); the project is a library with no UI to slice toward.
 
 ---
 

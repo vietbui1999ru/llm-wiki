@@ -115,9 +115,11 @@ Resolution paths:
 
 This nuance is not captured in the sandbox controls concept page. See [[concepts/agentic-sandbox-controls]].
 
-### Clear-over-compact is now consensus
+### Clear-over-compact is now majority practice (scoped)
 
-[[concepts/context-compression]] treats anchored iterative summarization as the default and Pocock's clear preference as a "contrarian position." Community evidence (2026-05-03) shows clear-over-compact is now *majority practice* for coding workflows. Every active framework (GSD, Dangeresque, SandCastle, vanilla loops) enforces fresh context per task. The "contrarian" label should be revised.
+[[concepts/context-compression]] treats anchored iterative summarization as the default and Pocock's clear preference as a "contrarian position." Among experienced practitioners running harness-based AFK workflows (r/ClaudeCode + r/opencodeCLI, 2026-05, n≈30), clear-over-compact is majority practice. Every active framework in that community (GSD, Dangeresque, SandCastle, vanilla loops) enforces fresh context per task.
+
+**Evidence scope**: ~30 experienced developers in harness-heavy communities. Compact remains better for interactive/exploratory sessions and workflows without durable filesystem state. The "contrarian" label should be removed, but "universal consensus" overstates the sample.
 
 ---
 

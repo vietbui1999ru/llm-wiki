@@ -17,6 +17,21 @@ Pattern for using the wiki as a **runtime oracle** — not startup context — t
 
 The wiki is not injected at session start. Agents query it autonomously when they detect they are about to deviate from the workflow. One targeted `qmd` query re-aligns the agent. This is cheaper and more reliable than bulk context injection.
 
+## Known limitation — pull systems require metacognition
+
+This pattern is a **pull** system: the agent must recognize it is drifting before it queries. That is precisely the capability that context-poisoned or distracted agents lack. An agent that is already drifting — confidently hallucinating an API, misreading scope — will not fire the trigger because, from inside its degraded context, it believes it is proceeding correctly.
+
+**Implication**: do not rely on agent discretion alone. Where possible, enforce triggers via harness hooks rather than agent norms:
+
+| Trigger | Harness enforcement (preferred) |
+|---|---|
+| About to commit | `PreToolUse` on `git commit` blocks until `/verify` ran |
+| Large unrequested edit | `PreToolUse` on Edit > N lines → forces qmd query |
+| High tool-call count | `session.idle` auto-compaction via `OC_COMPACT_THRESHOLD` |
+| Session resume | Lean-session plugin injects `.agents/checkpoint.md` on compaction |
+
+Until hook-enforced gates exist in a project's harness, treat self-correction as a **best-effort** layer, not a reliable gate. [[concepts/instinct-clustering]] (push — injects patterns at session start) is the more reliable mechanism but is currently `status: documented-not-adopted`.
+
 ## Deviation Triggers → Wiki Queries
 
 When an agent detects any of these situations, it MUST run the corresponding `qmd` query before proceeding:
@@ -77,7 +92,7 @@ This is the [[concepts/context-engineering]] principle applied to meta-cognition
 
 Settings-opencode's [[concepts/instinct-clustering]] mines behavioral patterns from tool-call telemetry and injects high-confidence "instincts" at session start. That is automatic and implicit. Agent self-correction is explicit and query-driven.
 
-They are complementary: instinct clustering handles patterns the agent doesn't know to look for; self-correction handles known deviation types the agent can detect at runtime. Both avoid bulk startup injection.
+They are complementary — but not symmetric. Instinct clustering is a **push** pattern (high-confidence instincts injected at session start, no agent action required). Self-correction is a **pull** pattern (agent must recognize deviation and query). Push is more reliable for agents that are already drifting; pull is cheaper for agents that are not. For critical gates (commit, merge, claiming completion), prefer push or hook enforcement over relying on pull.
 
 ## Related Pages
 

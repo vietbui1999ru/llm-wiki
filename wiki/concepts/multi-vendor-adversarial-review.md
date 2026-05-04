@@ -58,8 +58,8 @@ For users with a GitHub Copilot subscription: the GitHub Models API (`https://mo
 
 | Model | Council role | Why |
 |---|---|---|
-| GPT 5.4 (`openai/gpt-4.1`) | Primary council voice | Different training from Claude; strong reasoning |
-| GPT 5.2 | Backup / cheaper | Same cross-vendor benefit, lower cost |
+| GPT-4.1 (`openai/gpt-4.1`) | Primary council voice | Different training from Claude; strong reasoning |
+| GPT-4.1 mini (`openai/gpt-4.1-mini`) | Backup / cheaper | Same cross-vendor benefit, lower cost |
 | Grok Code Fast (`xai/grok-code-fast`) | Fast adversarial pass | xAI training = third blind-spot perspective |
 | Codex (`openai/o1` or similar) | Code-specific review | Coding-specialized |
 | Haiku 4.5 | **Skip** | Same Claude family — no cross-vendor value |

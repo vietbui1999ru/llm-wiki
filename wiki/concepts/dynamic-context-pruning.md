@@ -3,6 +3,7 @@ title: "Dynamic Context Pruning (DCP)"
 type: concept
 tags: [context-management, token-efficiency, agent-harness, opencode]
 sources: ["Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md"]
+status: documented-not-adopted
 created: 2026-05-04
 updated: 2026-05-04
 ---

@@ -3,6 +3,7 @@ title: "Instinct Clustering (Homunculus Pattern)"
 type: concept
 tags: [memory, behavioral-learning, agent-harness, context-management, opencode]
 sources: ["Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md"]
+status: documented-not-adopted
 created: 2026-05-04
 updated: 2026-05-04
 ---

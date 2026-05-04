@@ -32,7 +32,7 @@ Reasoning effort:
 /verify   → invoke verification-before-completion skill (Iron Law: evidence before claims)
 /arch     → invoke improve-codebase-architecture skill
 /tdd      → invoke tdd skill
-/council  → dispatch via Pi AI multi-provider (GPT 5.4 + Grok Code Fast + Codex)
+/council  → dispatch via Pi AI multi-provider (GPT-4.1 + Grok Code Fast + Codex)
 
 ## Session memory (read at start, write at end)
 .agents/tasks.md        — active task list, HITL/AFK status
@@ -40,6 +40,11 @@ Reasoning effort:
 .agents/decisions.md    — architectural decisions made this project
 
 Read .agents/ at session start. Update throughout. Write checkpoint before stopping.
+
+## Context management
+Idle naturally between tasks — do not force session end. The lean-session plugin fires on
+session.idle to write a full checkpoint and trigger idle-gated compaction (OC_COMPACT_THRESHOLD).
+For long sessions: if context feels saturated, run the self-correction query before compacting manually.
 
 ## Self-correction
 When about to deviate from workflow, query wiki BEFORE proceeding:

@@ -2,9 +2,9 @@
 title: "Agent Primitive Selection"
 type: synthesis
 tags: [agent-engineering, orchestration, skills, subagents, teams, model-routing]
-sources: []
+sources: ["Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md"]
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-05-04
 ---
 
 # Agent Primitive Selection
@@ -37,6 +37,8 @@ Is work genuinely parallel with non-overlapping file scope (3–5 pieces)?
 
 ## Model Tier Routing
 
+### Claude Code (wshobson tier routing)
+
 | Model | When to use | Example agents |
 |---|---|---|
 | **Opus** | Judgment, design, architecture, security audits | design-explorer, architecture-reviewer, security-auditor |
@@ -44,6 +46,22 @@ Is work genuinely parallel with non-overlapping file scope (3–5 pieces)?
 | **Haiku** | Fast, repetitive, low-judgment | cmd-executor, code-writer-fast, session-report-generator |
 
 **Rule**: Security and architectural decisions go to Opus. Per wshobson benchmarks, Opus achieves 65% fewer tokens on complex tasks — the higher rate is often offset by not needing correction loops.
+
+### OpenCode / multi-provider (community consensus, r/opencodeCLI 2026-05)
+
+| Role | Model | Notes |
+|---|---|---|
+| Planning / council / architecture | Opus 4.7, GLM-5.1 | Opus for judgment; GLM-5.1 for planning via Go plan |
+| Implementation (AFK loop) | DeepSeek V4 Flash (max reasoning) | Direct API only — resellers strip reasoning effort |
+| Implementation (Go plan) | GLM-5.1 | Community: lower hallucination than Kimi K2.6 |
+| Fast targeted changes | DeepSeek V4 Flash, Qwen 3.6 Plus | Speed + cost |
+| Adversarial review | DeepSeek V4 Pro, Qwen 3.6 Plus | Different training = different blind spots |
+| UI / frontend | Kimi K2.6, Gemini | Visual reasoning strength |
+| Spec writing | Mimo 2.5 Pro | Community: Opus-comparable for spec tasks |
+
+**Key insight**: DeepSeek V4 Flash on max reasoning = dramatically better than default. Must use direct DeepSeek API — not OpenRouter or resellers. Toggle in OpenCode via `ctrl+t`.
+
+**Opus-as-orchestrator pattern** (vietphi, r/opencodeCLI): use Opus to generate a bash script that dynamically dispatches the right model per task, capping expensive models by quota (e.g. GLM at 15%). Moves routing from static env config to agent judgment.
 
 ## Skill vs Subagent vs Team — At a Glance
 

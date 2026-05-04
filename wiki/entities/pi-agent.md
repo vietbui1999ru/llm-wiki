@@ -34,7 +34,7 @@ Pi Agent is used as the **council/multi-provider API layer**, not as a primary c
 ```typescript
 import { createAI } from "@mariozechner/pi-ai"
 
-// Primary council voice — GPT 5.4 via GitHub Models
+// Primary council voice — GPT-4.1 via GitHub Models
 const gpt = createAI({
   provider: "openai",
   model: "gpt-4.1",
@@ -65,8 +65,8 @@ GitHub Copilot subscribers access GitHub Models API (`https://models.inference.a
 
 | Model | Role | Why |
 |---|---|---|
-| GPT 5.4 | Primary council voice | Different training from Claude; strong reasoning |
-| GPT 5.2 | Backup / cheaper council | Same cross-vendor benefit, lower cost |
+| GPT-4.1 (`openai/gpt-4.1`) | Primary council voice | Different training from Claude; strong reasoning |
+| GPT-4.1 mini (`openai/gpt-4.1-mini`) | Backup / cheaper council | Same cross-vendor benefit, lower cost |
 | Grok Code Fast | Fast adversarial pass | xAI training = third blind-spot perspective |
 | Codex | Code-specific review | Coding-specialized, different from general GPT |
 | Haiku 4.5 | **Skip for council** | Same Claude family — defeats cross-vendor purpose |

@@ -45,7 +45,7 @@ When an agent detects any of these situations, it MUST run the corresponding `qm
 | Context feels saturated / losing track | `"context compression clear compact"` |
 | Requirements still unclear, about to implement | `"grill pre-implementation alignment"` |
 | Breaking work into horizontal layers, not vertical | `"vertical tracer bullet slices"` |
-| About to auto-commit anything | `"never auto-commit brainstorming"` |
+| About to auto-commit anything | `"auto-commit brainstorming superpowers"` |
 | About to merge without adversarial review | `"multi-vendor adversarial review gate"` |
 | Uncertain about worktree or branch strategy | `"branch strategy agents merge"` |
 | Memory/state feels inconsistent across session | `"context compression .agents checkpoint"` |
@@ -75,7 +75,7 @@ Agents do NOT need to load this entire page at startup. They load it only when t
 | Context saturation | [[concepts/context-compression]] |
 | Pre-implementation | [[summaries/mattpocockworkflow]] (grill phase) |
 | Vertical slices | [[summaries/mattpocockworkflow]] (kanban phase) |
-| Auto-commit | [[summaries/superpowers-plugin]] (brainstorming rules) |
+| Auto-commit | Personal rules: `superpowers-integration.md` (brainstorming auto-commit override) |
 | Adversarial review | [[concepts/multi-vendor-adversarial-review]] |
 | Branch strategy | [[concepts/branch-strategy-for-agents]] |
 | Session memory | [[entities/opencode]] (compaction hook) |

@@ -43,6 +43,12 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - New concepts: concepts/agent-self-correction, concepts/instinct-clustering, concepts/dynamic-context-pruning
 - Updated: multi-vendor-adversarial-review (GitHub Copilot council models)
 - New templates: templates/AGENTS.md, templates/lean-compaction-plugin.ts, templates/env-model-routing.sh
+## [2026-05-04] council-review | Adversarial review + structural audit of full wiki
+- Council (devil's advocate): challenged 8 core theses; Top 3 improvements applied
+- Applied: agent-self-correction (known limitation + harness-enforced hooks), context-compression (when-compact-wins + scoped evidence), mattpocockworkflow (for-whom + fails-when), spec-driven-frameworks (demoted "consensus" to scoped n≈30), agent-primitive-selection (harness>model scope + DeepSeek max-reasoning limits + vertical-slices fails-when)
+- Fixed: GPT-4.1 naming in pi-agent.md, mattpocockworkflow "Contrarian position" label, auto-commit trigger page pointer
+- Coverage gaps flagged (future pages): Council pattern, AGENTS.md cross-provider spec, Worktree isolation
+- Known debt: YAML quoting in ~11 sources: fields; 17.2x DeepMind citation unverified; wshobson agent count discrepancy (184 vs 153)
 ## [2026-05-04] ingest | Spec-Driven Frameworks vs Native CC (Reddit thread + Plugins for Opencode.md) — 2 sources
 - New summaries: summaries/spec-driven-frameworks-reddit
 - New entities: entities/sandcastle, entities/dangeresque, entities/mnemory, entities/agentops, entities/opencode

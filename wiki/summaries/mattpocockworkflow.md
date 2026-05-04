@@ -32,7 +32,7 @@ Pocock prefers hard context clears over compaction ("I hate compacting"). His ar
 - Compaction leaves "sediment" — summarized history that is never quite right, and each compaction compounds drift
 - Analogy: treat the LLM like the amnesiac from *Memento* — design the system so each session starts fresh and complete, not so you can preserve history across one long session
 
-**Contrarian position** relative to anchored iterative summarization in [[concepts/context-compression]], which recommends structured compaction as the default. The debate is context-dependent: Pocock's workflow stores state in filesystem/git (PRDs, issue files, commits), making session-level memory unnecessary. If your harness doesn't have durable filesystem state, clearing is riskier.
+Majority practice among harness-based AFK coding workflows (see [[concepts/context-compression]] for evidence scope). Anchored iterative summarization remains the default for workflows without a durable filesystem layer. The debate is context-dependent: Pocock's workflow stores state in filesystem/git (PRDs, issue files, commits), making session-level memory unnecessary. If your harness doesn't have durable filesystem state, clearing is riskier.
 
 ---
 

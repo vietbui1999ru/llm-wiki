@@ -52,6 +52,20 @@ Less valuable for: routine implementation, obvious bug fixes, tasks with determi
 
 ---
 
+## Council with GitHub Copilot Models
+
+For users with a GitHub Copilot subscription: the GitHub Models API (`https://models.inference.ai.azure.com`, authenticated with a GitHub PAT) provides cross-vendor council without separate API keys.
+
+| Model | Council role | Why |
+|---|---|---|
+| GPT 5.4 (`openai/gpt-4.1`) | Primary council voice | Different training from Claude; strong reasoning |
+| GPT 5.2 | Backup / cheaper | Same cross-vendor benefit, lower cost |
+| Grok Code Fast (`xai/grok-code-fast`) | Fast adversarial pass | xAI training = third blind-spot perspective |
+| Codex (`openai/o1` or similar) | Code-specific review | Coding-specialized |
+| Haiku 4.5 | **Skip** | Same Claude family — no cross-vendor value |
+
+Use [[entities/pi-agent]]'s `@mariozechner/pi-ai` as the unified API layer to call these without vendor-specific client code.
+
 ## Cross-Vendor vs Same-Family Tiering
 
 | Approach | Coverage | Cost | Operational complexity |

@@ -37,6 +37,12 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - pdfs/2511.16652v2.pdf (EGGROLL 2025) → summaries/eggroll-2025, entities/eggroll
 - new: concepts/evolution-strategies (ties all 3 together)
 ## [2026-05-01] ingest | Claude Usage and Length Limits (How do usage and length limits work?.md) → summaries/claude-usage-limits; updated concepts/context-window with product vs API context window distinction (200K product vs 1M API)
+## [2026-05-04] ingest | OpenCode Model Switching + Pi Agent (2 sources)
+- Claude runaway... tried Kimi 2.6 and Deepseek v4.md → summaries/opencode-model-switching-reddit
+- pi-monopackagescoding-agent at main.md → entities/pi-agent
+- New concepts: concepts/agent-self-correction, concepts/instinct-clustering, concepts/dynamic-context-pruning
+- Updated: multi-vendor-adversarial-review (GitHub Copilot council models)
+- New templates: templates/AGENTS.md, templates/lean-compaction-plugin.ts, templates/env-model-routing.sh
 ## [2026-05-04] ingest | Spec-Driven Frameworks vs Native CC (Reddit thread + Plugins for Opencode.md) — 2 sources
 - New summaries: summaries/spec-driven-frameworks-reddit
 - New entities: entities/sandcastle, entities/dangeresque, entities/mnemory, entities/agentops, entities/opencode

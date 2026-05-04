@@ -33,6 +33,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/eggroll-2025]] — Oxford 2025: EGGROLL low-rank perturbations; 100× GPU speedup; 91% batch inference throughput; trains integer quantized models
 - [[summaries/claude-usage-limits]] — Usage vs. length limits; 200K product context window vs 1M API; shared budget across all surfaces; tools/connectors token-expensive per request
 - [[summaries/spec-driven-frameworks-reddit]] — r/ClaudeCode community synthesis: frameworks vs native CC; Dangeresque/SandCastle/Mnemory/AgentOps; clear-over-compact as consensus; OpenCode plugins
+- [[summaries/opencode-model-switching-reddit]] — r/opencodeCLI community: harness > model; GLM-5.1 > Kimi K2.6; DeepSeek Flash max reasoning unlock; multi-model pipeline patterns
 
 ## Entities
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
@@ -46,6 +47,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/mnemory]] — Self-hosted MCP cross-session memory: Qdrant vector search + S3/MinIO artifact store; OSS alternative to Anthropic memory tool
 - [[entities/agentops]] — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
 - [[entities/opencode]] — Open-source Claude Code alternative; plugin system with compaction hooks, custom tools, 30+ event surface
+- [[entities/pi-agent]] — TypeScript unified multi-provider LLM API (pi-mono); council/adversarial review layer; GitHub Copilot Models integration
 
 ## Concepts
 - [[concepts/unit-testing]] — AAA pattern, test doubles, naming convention, coverage philosophy, flaky test quarantine
@@ -82,6 +84,9 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/evolution-strategies]] — Black-box optimization via parameter perturbation; ES vs RL trade-offs; shared random seed trick; progression from gaming (2017) to LLM fine-tuning (2025)
 - [[concepts/multi-vendor-adversarial-review]] — Using different model/vendor to review agent work; catches single-model blind spots; same-tier vs cross-vendor vs /council
 - [[concepts/branch-strategy-for-agents]] — head vs merge-to-head vs branch; when to use each; relation to worktrees and human-merge gates
+- [[concepts/agent-self-correction]] — wiki-as-runtime-oracle; deviation trigger table; qmd queries for re-alignment; zero startup overhead
+- [[concepts/instinct-clustering]] — behavioral pattern mining from tool-call telemetry; observe→cluster→inject pipeline; homunculus pattern
+- [[concepts/dynamic-context-pruning]] — continuous mid-session trimming (DCP) distinct from threshold-triggered compaction; idle-gated auto-compaction
 
 ## Comparisons
 - [[comparisons/spec-driven-frameworks-vs-native]] — Heavy frameworks vs lean skills vs vanilla vs custom harness; community consensus; discrepancies with prior wiki

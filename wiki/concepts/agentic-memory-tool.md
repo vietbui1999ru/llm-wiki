@@ -113,10 +113,25 @@ Memory files are read back into Claude's context, making them a **prompt injecti
 
 See [[concepts/indirect-prompt-injection]] for the broader attack class.
 
+## OSS Alternative: Mnemory
+
+[[entities/mnemory]] is a self-hosted MCP memory backend with semantic vector search (Qdrant) and artifact storage (S3/MinIO). The key architectural difference: Mnemory uses vector similarity for retrieval; the Anthropic tool uses flat file navigation. Mnemory also handles deduplication and contradiction detection automatically within a single LLM call.
+
+| Dimension | Mnemory | memory_20250818 |
+|---|---|---|
+| Retrieval | Semantic vector search (Qdrant) | Flat file read |
+| Deduplication | Automatic (vector proximity) | Manual (agent-written) |
+| Contradiction handling | Automatic flagging | Manual |
+| Vendor lock-in | None | Anthropic API only |
+| Setup cost | High (Qdrant + S3 infra) | Low (flat files) |
+
+For simple projects and single-vendor setups: `memory_20250818` is lower friction. For cross-vendor workflows (Claude + Codex + Cursor on the same project) or projects needing semantic retrieval: Mnemory.
+
 ## Related Pages
 
 - [[concepts/context-engineering]] — the discipline that this tool implements (compaction, note-taking)
 - [[concepts/context-window]] — the fundamental constraint this tool works around
 - [[concepts/context-compression]] — compression strategies; server-side compaction is one lever
 - [[concepts/indirect-prompt-injection]] — security risk in memory files
+- [[entities/mnemory]] — OSS self-hosted parallel to this tool
 - [[summaries/context-window-cluster]] — consolidated source summary

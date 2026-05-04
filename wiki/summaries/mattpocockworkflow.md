@@ -146,6 +146,15 @@ Each implementer runs in isolation — separate context window, separate worktre
 
 ---
 
+## Orchestrator Alternatives
+
+Two orchestrators implement this workflow without requiring containers (addressing the Anthropic ToS constraint on CC subscription keys in Docker):
+
+- **[[entities/dangeresque]]** — host-native CLI, lighter weight. Mandatory adversarial reviewer + human-merge gate. Simpler setup than SandCastle; no container dependency.
+- **[[entities/sandcastle]]** — full TS library. Adds branch strategy parameter (head/merge-to-head/branch), per-iteration token telemetry, and provider abstraction. More complex; suited for CI/CD integration.
+
+Both implement the AFK parallel loop described here; Dangeresque adds adversarial cross-model review as a mandatory step.
+
 ## Relation to Existing Wiki
 
 - [[summaries/mattpocockskills]] — the skills behind each phase (grill-me, to-prd, to-issues, tdd, improve-architecture)
@@ -155,3 +164,6 @@ Each implementer runs in isolation — separate context window, separate worktre
 - [[concepts/ralph-loop]] — the harness pattern underlying the AFK loop
 - [[concepts/verification-pipeline]] — the QA / review gate after implementation
 - [[concepts/agent-context-instructions]] — CLAUDE.md as push mechanism for coding standards
+- [[entities/dangeresque]] — host-native orchestrator implementing this workflow
+- [[entities/sandcastle]] — full parallel orchestrator with branch strategy and telemetry
+- [[concepts/branch-strategy-for-agents]] — head/merge-to-head/branch taxonomy

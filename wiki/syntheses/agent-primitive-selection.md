@@ -90,6 +90,14 @@ Surviving theory = actual root cause
 security-auditor (threat report) → code-writer (fix Critical/High) → security-auditor (re-audit)
 ```
 
+**Multi-vendor adversarial review**:
+```
+Sonnet implements → Opus reviews (same vendor, different tier — minimum)
+Claude implements → Codex reviews (cross-vendor — catches model-family blind spots)
+/council: all vendors analyze simultaneously → surface disagreements explicitly
+```
+See [[concepts/multi-vendor-adversarial-review]] for when each level is appropriate.
+
 ## Related Pages
 
 - [[concepts/agent-skills]] — skill architecture, loading levels, SKILL.md structure

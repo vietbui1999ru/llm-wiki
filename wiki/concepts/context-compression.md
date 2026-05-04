@@ -89,19 +89,21 @@ system = "You are a code assistant. Current time is provided per-request."
 - **Quick prototype, one compression expected**: regenerative is fine
 - **Never**: aggressive deletion without a summary — you will lose file modification history
 
-## Contrarian View: Clear Over Compact
+## Clear Over Compact — Now Community Consensus
 
-Matt Pocock (see [[summaries/mattpocockworkflow]]) argues against compacting entirely and prefers hard context clears:
+Matt Pocock (see [[summaries/mattpocockworkflow]]) argues against compacting and prefers hard context clears:
 
 > "I much prefer my AI to behave like the guy from Memento because this state is always the same. Every time you do it, you clear and you go back to the beginning."
 
-His argument: compaction introduces "sediment" — each compressed summary is imperfect, and multiple compression cycles compound drift. Clearing gives a deterministic, reproducible starting state.
+His argument: compaction introduces "sediment" — each compressed summary is imperfect, and multiple cycles compound drift. Clearing gives a deterministic, reproducible starting state.
 
-**When this is valid**: his workflow stores all state in the filesystem (issue files, commits, PRDs). The harness re-injects the relevant state at the start of each fresh session. Context memory is unnecessary because filesystem memory is durable.
+**Updated (2026-05-04)**: Community evidence from r/ClaudeCode (30+ practitioners) shows clear-over-compact is now the **majority practice** for AI coding workflows — not a contrarian position. Every active framework (GSD, Dangeresque, SandCastle, vanilla loops) enforces fresh context per task. Anchored iterative summarization remains the recommendation for workflows *without* a durable filesystem layer.
 
-**When anchored iterative summarization is still better**: workflows without a durable filesystem layer, long interactive sessions where rebuilding state from scratch is expensive, or when the agent needs conversational continuity that can't be reconstructed from files.
+**When clear-over-compact is valid**: filesystem stores all state (issue files, commits, PRDs); harness re-injects state at session start. The key design principle: **make clearing safe, then prefer clearing**.
 
-The practical resolution: **design your harness so clearing is safe** (filesystem stores the state), then prefer clearing. Use compaction only when clearing is not an option.
+**When anchored iterative summarization is still better**: no durable filesystem layer; long interactive sessions where rebuilding state from scratch is expensive; conversational continuity that can't be reconstructed from files.
+
+**OpenCode hook extension**: OpenCode exposes `experimental.session.compacting` — a hook that lets plugins inject domain state into compaction summaries or replace the compaction prompt entirely. This enables custom anchored iterative summarization at the harness level, more reliable than system-prompt instructions. See [[comparisons/claude-code-vs-opencode-plugins]].
 
 ## Related Pages
 

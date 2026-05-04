@@ -66,8 +66,24 @@ Sandboxes that share the host kernel (Docker, Bubblewrap, Seatbelt) are vulnerab
 
 Sandboxing must cover the entire agent execution environment, not just shell/command-line tool invocations. Hooks, MCP startup scripts, skills, and file-editing tools often run outside sandbox scope by default — this must be explicitly closed.
 
+## Anthropic ToS Constraint (Claude Code Subscription)
+
+Anthropic's Terms of Service restrict running Claude Code subscription keys inside Docker containers. This creates tension with the NVIDIA AI Red Team's "mandatory OS-level sandboxing" recommendation:
+
+- NVIDIA: container/VM isolation is mandatory
+- Anthropic ToS: CC subscription keys cannot run inside containers
+
+**Resolution paths:**
+1. Use the Anthropic API (not subscription) — no container restriction
+2. Host-native worktree isolation ([[entities/dangeresque]] approach) + fine-grained `allowedTools`/`disallowedTools`
+3. [[entities/sandcastle]] workaround: Claude process runs on host, containers only for tool execution (sandboxing tool execution, not the Claude process)
+
+This does not invalidate the NVIDIA guidance — it applies fully to API usage and partially to subscription users who can sandbox tool execution even if the Claude process runs on host.
+
 ## Related concepts
 
 - [[concepts/indirect-prompt-injection]]
 - [[entities/ai-coding-agents]]
+- [[entities/dangeresque]] — host-native alternative to container sandboxing
+- [[entities/sandcastle]] — hybrid: Claude on host, tools in container
 - [[summaries/agentic-sandbox-security]] — NVIDIA AI Red Team source; full tiered denylist and secret injection details

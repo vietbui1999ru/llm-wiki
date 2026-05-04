@@ -37,3 +37,9 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - pdfs/2511.16652v2.pdf (EGGROLL 2025) → summaries/eggroll-2025, entities/eggroll
 - new: concepts/evolution-strategies (ties all 3 together)
 ## [2026-05-01] ingest | Claude Usage and Length Limits (How do usage and length limits work?.md) → summaries/claude-usage-limits; updated concepts/context-window with product vs API context window distinction (200K product vs 1M API)
+## [2026-05-04] ingest | Spec-Driven Frameworks vs Native CC (Reddit thread + Plugins for Opencode.md) — 2 sources
+- New summaries: summaries/spec-driven-frameworks-reddit
+- New entities: entities/sandcastle, entities/dangeresque, entities/mnemory, entities/agentops, entities/opencode
+- New concepts: concepts/multi-vendor-adversarial-review, concepts/branch-strategy-for-agents
+- New comparisons dir + pages: comparisons/spec-driven-frameworks-vs-native, comparisons/claude-code-vs-opencode-plugins
+- Updated: mattpocockworkflow (Dangeresque/SandCastle alternatives), agentic-memory-tool (Mnemory parallel), agentic-sandbox-controls (Anthropic ToS constraint), context-compression (clear-over-compact = consensus), agent-primitive-selection (multi-vendor review pattern); index.md

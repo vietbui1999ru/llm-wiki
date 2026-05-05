@@ -12,7 +12,7 @@ Reads from env (set via env-model-routing.sh):
 Usage:
   council.py "should we use optimistic or pessimistic locking here?"
   echo "question" | council.py
-  council.py --chairman "question"   # adds Chairman synthesis pass
+  council.py --chairman "question"   # Stage 1 + 2 (peer review) + 3 (Chairman)
   council.py --add openai/gpt-4o "question"  # add a third voice
 
 Requires: pip install openai
@@ -66,20 +66,51 @@ async def run(question: str, extra: list[str], chairman: bool) -> None:
         print(SEP2 + "\n")
         return
 
-    # Stage 3: Chairman synthesis — reads all responses, surfaces disagreements
+    # Stage 2: anonymized peer review — each model reviews all others, identity hidden
+    # Voices labeled by number only so no model can favor its own provider.
+    print(SEP)
+    print("  Stage 2: peer review (anonymized)...\n")
+
+    all_voices = "\n\n".join(f"[Voice {i+1}]:\n{r.strip()}" for i, r in enumerate(responses))
+
+    review_prompt = (
+        f"The following responses were given to this question:\n\n"
+        f"Question: {question}\n\n"
+        f"{all_voices}\n\n"
+        "You do not know which AI produced which response.\n"
+        "Review each voice for: accuracy, completeness, and reasoning quality.\n"
+        "Which is strongest overall, and what does each miss or get wrong?\n"
+        "Be critical. Do not give equal praise to all."
+    )
+
+    review_tasks = [
+        ask(client, m, [{"role": "user", "content": review_prompt}])
+        for m in models
+    ]
+    reviews: list[str] = await asyncio.gather(*review_tasks)
+
+    for model, review in zip(models, reviews):
+        print(f"  Reviewer: {model}\n")
+        print(review.strip())
+        print()
+
+    # Stage 3: Chairman synthesis — has first-pass responses + peer reviews
     print(SEP)
     print(f"  Chairman: {CHAIRMAN} — synthesizing...\n")
 
-    labeled = "\n\n".join(f"[Voice {i+1}]:\n{r.strip()}" for i, r in enumerate(responses))
+    peer_reviews = "\n\n".join(
+        f"[Reviewer {i+1}]:\n{r.strip()}" for i, r in enumerate(reviews)
+    )
     synthesis = (
-        f"You are a Chairman synthesizing a council of {len(models)} AI models.\n\n"
-        f"Question asked:\n{question}\n\n"
-        f"Council responses:\n{labeled}\n\n"
+        f"You are the Chairman of a {len(models)}-model council.\n\n"
+        f"Question: {question}\n\n"
+        f"First-pass responses:\n{all_voices}\n\n"
+        f"Peer reviews (each model reviewed the others anonymously):\n{peer_reviews}\n\n"
         "Produce:\n"
         "1. **Points of agreement** — what all voices converge on\n"
-        "2. **Points of disagreement** — where voices diverge and why\n"
-        "3. **Synthesized answer** — your best answer drawing on all responses\n\n"
-        "Be direct. Surface real disagreements — do not average them away."
+        "2. **Points of disagreement** — genuine divergences, not just phrasing\n"
+        "3. **Synthesized answer** — your best answer, weighted by peer review signal\n\n"
+        "Be direct. Do not average away real disagreements."
     )
 
     chairman_resp = await ask(client, CHAIRMAN, [{"role": "user", "content": synthesis}])
@@ -94,7 +125,7 @@ def main() -> None:
     parser.add_argument("question", nargs="?", help="Question to ask the council")
     parser.add_argument(
         "--chairman", action="store_true",
-        help=f"Run Chairman synthesis pass ({CHAIRMAN}) after parallel responses"
+        help=f"Full 3-stage council: parallel → anonymized peer review → Chairman ({CHAIRMAN})"
     )
     parser.add_argument(
         "--add", metavar="MODEL", action="append", default=[],

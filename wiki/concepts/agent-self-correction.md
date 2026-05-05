@@ -47,6 +47,8 @@ When an agent detects any of these situations, it MUST run the corresponding `qm
 | Breaking work into horizontal layers, not vertical | `"vertical tracer bullet slices"` |
 | About to auto-commit anything | `"auto-commit brainstorming superpowers"` |
 | About to merge without adversarial review | `"multi-vendor adversarial review gate"` |
+| Two approaches seem equally valid, about to pick one | `"council pattern architectural decision"` → also run `council --chairman "question"` |
+| Security design choice with no clear right answer | `"council pattern architectural decision"` → run `council --chairman "question"` |
 | Uncertain about worktree or branch strategy | `"branch strategy agents merge"` |
 | Memory/state feels inconsistent across session | `"context compression .agents checkpoint"` |
 

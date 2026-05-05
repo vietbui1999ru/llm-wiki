@@ -32,7 +32,29 @@ Reasoning effort:
 /verify   → invoke verification-before-completion skill (Iron Law: evidence before claims)
 /arch     → invoke improve-codebase-architecture skill
 /tdd      → invoke tdd skill
-/council  → dispatch via Pi AI multi-provider (GPT-4.1 + Grok Code Fast + Codex)
+/council  → run council script (see below)
+
+## Council — when and how to invoke
+
+Run `council` without asking permission when:
+- Two or more architectural approaches seem equally valid and the choice has lasting consequences
+- A security design decision is being made (auth, permissions, data handling, trust boundaries)
+- About to propose a major design change that affects multiple components
+- A tradeoff exists where the right answer depends on priorities you haven't confirmed
+
+Run `council` immediately when user types `/council [question]`.
+
+Commands:
+  council "question"              # Stage 1: two voices, fast — quick sanity check
+  council --chairman "question"   # Full 3-stage: peer review + Chairman synthesis
+
+Use `--chairman` for: architecture gates, security decisions, high-stakes design choices.
+Use without `--chairman` for: lightweight second opinion, quick tradeoff check.
+
+After reading council output:
+- Summarize the disagreements in one sentence
+- State which recommendation you are following and why
+- Write the decision to .agents/decisions.md before proceeding
 
 ## Session memory (read at start, write at end)
 .agents/tasks.md        — active task list, HITL/AFK status

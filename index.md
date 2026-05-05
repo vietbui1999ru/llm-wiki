@@ -48,6 +48,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/agentops]] — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
 - [[entities/opencode]] — Open-source Claude Code alternative; plugin system with compaction hooks, custom tools, 30+ event surface
 - [[entities/pi-agent]] — TypeScript unified multi-provider LLM API (pi-mono); council/adversarial review layer; GitHub Copilot Models integration
+- [[entities/karpathy-llm-council]] — Karpathy's 3-stage council web app: parallel dispatch → anonymized peer review → Chairman synthesis; OpenRouter-based reference implementation
 
 ## Concepts
 - [[concepts/unit-testing]] — AAA pattern, test doubles, naming convention, coverage philosophy, flaky test quarantine
@@ -87,6 +88,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/agent-self-correction]] — wiki-as-runtime-oracle; deviation trigger table; qmd queries for re-alignment; zero startup overhead
 - [[concepts/instinct-clustering]] — behavioral pattern mining from tool-call telemetry; observe→cluster→inject pipeline; homunculus pattern
 - [[concepts/dynamic-context-pruning]] — continuous mid-session trimming (DCP) distinct from threshold-triggered compaction; idle-gated auto-compaction
+- [[concepts/council-pattern]] — 3-stage multi-model deliberation: parallel dispatch → anonymized peer review → Chairman or human synthesis; cost model; when to use
 
 ## Comparisons
 - [[comparisons/spec-driven-frameworks-vs-native]] — Heavy frameworks vs lean skills vs vanilla vs custom harness; community consensus; discrepancies with prior wiki

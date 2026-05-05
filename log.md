@@ -43,6 +43,11 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - New concepts: concepts/agent-self-correction, concepts/instinct-clustering, concepts/dynamic-context-pruning
 - Updated: multi-vendor-adversarial-review (GitHub Copilot council models)
 - New templates: templates/AGENTS.md, templates/lean-compaction-plugin.ts, templates/env-model-routing.sh
+## [2026-05-05] ingest | Karpathy LLM Council (karpathyllm-council LLM Council works together to answer your hardest questions.md)
+- New entity: entities/karpathy-llm-council (3-stage protocol, anonymized peer review, Chairman synthesis)
+- New concept: concepts/council-pattern (fills reviewer gap; general pattern across all implementations)
+- Updated: concepts/multi-vendor-adversarial-review (added Karpathy as implementation); index.md
+- Key additions: anonymization technique, Chairman vs human synthesis tradeoff, council cost model (~10-15x single query)
 ## [2026-05-04] council-review | Adversarial review + structural audit of full wiki
 - Council (devil's advocate): challenged 8 core theses; Top 3 improvements applied
 - Applied: agent-self-correction (known limitation + harness-enforced hooks), context-compression (when-compact-wins + scoped evidence), mattpocockworkflow (for-whom + fails-when), spec-driven-frameworks (demoted "consensus" to scoped n≈30), agent-primitive-selection (harness>model scope + DeepSeek max-reasoning limits + vertical-slices fails-when)

@@ -2,9 +2,9 @@
 title: "Multi-Vendor Adversarial Review"
 type: concept
 tags: [code-review, agent-orchestration, adversarial, cross-vendor, quality]
-sources: ["Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md"]
+sources: ["Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md", "karpathyllm-council LLM Council works together to answer your hardest questions.md"]
 created: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-05
 ---
 
 # Multi-Vendor Adversarial Review
@@ -29,6 +29,9 @@ Self-review catches surface errors (syntax, obvious logic) but misses systematic
 
 ### Dangeresque (per-task)
 [[entities/dangeresque]] runs a mandatory adversarial reviewer after every worker agent. The reviewer is a different model from the implementer. Worker → verify → **adversarial review** → human-merge gate.
+
+### Karpathy llm-council (reference implementation)
+[[entities/karpathy-llm-council]] is a local web app implementing the full 3-stage [[concepts/council-pattern]]: parallel dispatch → anonymized peer review → Chairman LLM synthesis. Key addition to existing implementations: **anonymization** (model identities hidden during review to prevent provider favoritism) and **Chairman synthesis** (designated model produces the final answer rather than a human). OpenRouter-based. Q&A focused, not production-grade.
 
 ### AgentOps `/council` (design decisions)
 [[entities/agentops]] formalizes multi-vendor consensus as a CLI command. Multiple models (Claude, Codex, Cursor) analyze a question simultaneously; disagreements are surfaced as explicit artifacts.

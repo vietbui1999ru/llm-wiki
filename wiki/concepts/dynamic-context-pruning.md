@@ -2,93 +2,161 @@
 title: "Dynamic Context Pruning (DCP)"
 type: concept
 tags: [context-management, token-efficiency, agent-harness, opencode]
-sources: ["Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md"]
-status: documented-not-adopted
+sources:
+  - "Opencode-DCPopencode-dynamic-context-pruning Dynamic context pruning plugin for OpenCode - intelligently manages conversation context to optimize token usage.md"
+  - "Quick Start Install DCP Plugin  opencode-dynamic-context-pruning.md"
+  - "Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md"
 created: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-06
 ---
 
 # Dynamic Context Pruning (DCP)
 
-Continuous mid-session trimming of stale tool results and large file contents from the live context window. Distinct from compaction — DCP runs continuously as the session progresses; compaction is threshold-triggered and summarizes conversation history.
+Mid-session reduction of the context payload sent to the LLM, performed without modifying the underlying session history. Where compaction summarizes everything at a hard threshold, DCP runs as a combination of model-driven compression and automatic cleanup strategies that fire on each LLM fetch — pruned spans are replaced with placeholders before the request is dispatched.
 
-Implemented in `settings-opencode` via `@tarquinen/opencode-dcp` plugin.
+Reference implementation: [[entities/opencode-dcp]] — the `@tarquinen/opencode-dcp` plugin for [[entities/opencode]]. Install:
 
----
-
-## The Problem it Solves
-
-Long coding sessions accumulate:
-- Tool results from earlier turns (file reads, bash outputs) that are no longer relevant
-- Large file contents loaded early but now outdated (file was edited since)
-- Redundant search results from multiple query iterations
-
-These take up context without contributing signal. The model's attention is diluted across stale content while the relevant current-state content competes for the same budget.
-
-DCP prunes the stale entries continuously, before they compound into a saturation event requiring full compaction.
+```bash
+opencode plugin @tarquinen/opencode-dcp@latest --global
+```
 
 ---
 
-## How It Differs from Compaction
+## The Problem It Solves
+
+Long coding sessions accumulate three classes of dead weight in the active context:
+
+- Repeated tool calls (same tool, same args invoked across turns)
+- Errored tool inputs whose large input payload is no longer relevant once the error has been read
+- Closed/finished spans of conversation that the model no longer needs verbatim
+
+These dilute attention and inflate per-request cost without contributing signal. DCP attacks each class with a different mechanism rather than waiting for full compaction.
+
+---
+
+## Three Mechanisms
+
+DCP composes three independent prune paths. Pruned content never leaves the session log on disk — it is only replaced with a placeholder in the outgoing request.
+
+### 1. Compress (model-driven)
+
+A `compress` tool exposed to the model. The model decides when to call it based on task completion, picking which spans no longer need verbatim representation. This is **not** automatic per turn — the model triggers it.
+
+Two modes:
+
+- `range` (default) — compresses contiguous spans of conversation into block summaries. When a new compression overlaps an earlier one, the earlier summary is **nested** inside the new one to preserve information across compression layers rather than dilute it.
+- `message` (experimental) — compresses individual raw messages independently. Allows much more surgical context management.
+
+In both modes, protected tool outputs (subagents, skills, todos) and protected file patterns are appended to compression summaries, ensuring critical state is never lost. `protectUserMessages` keeps user messages verbatim during compression — but this means large pasted prompts (e.g. log files) will never be compressed away.
+
+DCP injects nudges to encourage compression based on context size:
+
+- Below `minContextLimit` (default 50K tokens): no reminders
+- Between min and max: reminders active, but soft
+- Above `maxContextLimit` (default 100K tokens): strong nudges, fires every `nudgeFrequency` fetches
+
+Both limits accept an absolute number or a `"X%"` of the model's context window. Per-model overrides via `modelMinLimits` / `modelMaxLimits`.
+
+### 2. Deduplication (automatic)
+
+Identifies repeated tool calls (same tool name, same arguments) and keeps only the most recent output. Recalculated **on LLM fetch** — i.e. when the request is being assembled, not on every tool-call event. Prompt cache impact is therefore aligned with compression events, not interspersed mid-turn.
+
+### 3. Purge Errors (automatic)
+
+Prunes the **input** payload of errored tool calls after a configurable number of turns (default: 4). Error messages themselves are preserved — only the potentially large input content is removed. Recalculated alongside compress.
+
+---
+
+## How It Differs From Compaction
 
 | Dimension | DCP | Compaction |
 |---|---|---|
-| Trigger | Continuous / per-turn | Threshold (token count or tool-call count) |
-| What it removes | Stale tool results, large file contents | Summarizes conversation history |
-| What it preserves | Current state, recent context | Structured summary of key decisions |
-| Output | Pruned live context | Compressed summary replacing old turns |
-| Reversibility | Entries removed from active window | Originals replaced by summary |
-| Implementation | Plugin hook (per tool call) | `experimental.session.compacting` hook |
+| Trigger | Model-driven (compress) + automatic on LLM fetch (dedup, purge) | Threshold (token count or session-end signal) |
+| Scope | Surgical — specific messages or spans | Whole conversation |
+| What it removes | Stale tool inputs, duplicates, closed spans | Replaces full history with summary |
+| What it preserves | Recent state, protected tools/files, optionally user messages | Structured summary of decisions |
+| Reversibility | `decompress`/`recompress` commands restore by ID | Originals replaced; not reversible from session |
+| Implementation | Plugin (`@tarquinen/opencode-dcp`) | OpenCode `experimental.session.compacting` hook |
 
-They are complementary: DCP keeps the active context lean between compaction events; compaction handles the full summarization when context crosses the threshold.
+The two are **complementary**: DCP keeps the active payload lean continuously; compaction handles wholesale summarization at end of session or near hard limits.
 
 ---
 
-## Idle-Gated Auto-Compaction
+## Commands
 
-Settings-opencode pairs DCP with idle-gated compaction (`auto-compact.js`):
-- Tracks tool call count against `OC_COMPACT_THRESHOLD`
-- Only triggers compaction when `session.idle` fires
-- Avoids interrupting active work mid-task
+DCP exposes a `/dcp` slash command:
 
-Combined pattern:
+| Command | Purpose |
+|---|---|
+| `/dcp` | Show available DCP commands |
+| `/dcp context` | Token-usage breakdown of current session by category, plus tokens saved |
+| `/dcp stats` | Cumulative pruning stats across all sessions |
+| `/dcp sweep [n]` | Prune all tools since last user message (or last n). Respects `commands.protectedTools` |
+| `/dcp manual [on\|off]` | Toggle manual mode — disables autonomous context tools |
+| `/dcp compress [focus]` | Trigger one compress execution. Optional focus text directs what to compress |
+| `/dcp decompress <n>` | Restore a compression by ID (no arg lists available IDs and topics) |
+| `/dcp recompress <n>` | Re-apply a user-decompressed compression by ID |
+
+---
+
+## Protected Tools
+
+By default these tools are never pruned:
+
 ```
-active session → DCP prunes stale entries continuously
-              → tool call count rises toward threshold
-              → user pauses (session.idle)
-              → auto-compaction triggers
-              → session resumes with clean context
+task, skill, todowrite, todoread, compress, batch, plan_enter, plan_exit, write, edit
 ```
+
+The `commands.protectedTools` and `strategies.deduplication.protectedTools` / `strategies.purgeErrors.protectedTools` arrays **add** to this default list. The `compress.protectedTools` array works differently — those tool outputs get appended to compression summaries rather than excluded.
+
+---
+
+## Prompt Cache Trade-Off
+
+LLM providers cache prompts based on exact prefix matching. Because DCP rewrites the outgoing request — replacing pruned content with placeholders — it invalidates cached prefixes from the prune point forward.
+
+Reported numbers from the plugin's testing:
+
+- ~85% cache hit rate **with** DCP
+- ~90% cache hit rate **without** DCP
+
+Lost cache reads are traded for token savings on reduced context size and fewer hallucinations from stale content. In long sessions, savings outweigh cache miss cost.
+
+**No impact** for:
+
+- Request-based billing (e.g. GitHub Copilot — charges per request, not tokens)
+- Uniform token pricing (e.g. Cerebras — same rate for cached and uncached)
 
 ---
 
 ## Relation to Clear-Over-Compact
 
-[[concepts/context-compression]] documents that clear-over-compact is now community consensus for coding workflows. DCP is the middle path:
-- For sessions where clearing is possible → clear (Pocock workflow)
-- For long interactive sessions where clearing loses state → DCP + idle-gated compaction
-- For fully automated AFK loops → Dangeresque / SandCastle manage context via worktree isolation (each task gets fresh context)
+[[concepts/context-compression]] documents that clear-over-compact has become community consensus for harness-based AFK workflows. DCP fits the **interactive** path:
 
-DCP is most valuable for **interactive sessions** that run long without natural clear points.
+- Sessions with safe clear points → clear (Pocock workflow)
+- Long interactive sessions where clearing loses unrecoverable state → DCP + compaction
+- Fully automated AFK loops → worktree isolation gives each task fresh context (no DCP needed)
+
+DCP is most valuable for interactive sessions with no natural clear point, especially with smaller-context models (GitHub Copilot, local) where the `minContextLimit` / `maxContextLimit` values should be lowered to match.
 
 ---
 
-## Configuration
+## Relation to Lean-Session
 
-```jsonc
-// dcp.jsonc in settings-opencode
-{
-  "pruneAfterTurns": 5,        // remove tool result after N turns
-  "maxFileContentTokens": 2000, // truncate large file reads
-  "preserveLastN": 3           // always keep last N tool results
-}
-```
+The `lean-session` plugin (custom, in `templates/`) and DCP solve overlapping problems via different hook surfaces:
+
+- **lean-session** uses OpenCode's `experimental.session.compacting` hook — intervenes in the compaction process itself.
+- **DCP** introduces a `compress` tool plus automatic `tool.execute`-time strategies — works mostly outside compaction.
+
+They are **complementary, not competing**: lean-session shapes the compaction summary when compaction does fire; DCP keeps the active context lean so compaction fires later, less often, and on cleaner input.
 
 ---
 
 ## Related Pages
 
-- [[concepts/context-compression]] — compaction strategies; DCP extends this
-- [[entities/opencode]] — plugin system implementing DCP
+- [[entities/opencode-dcp]] — the plugin itself
+- [[summaries/opencode-dcp]] — full source synthesis
+- [[concepts/context-compression]] — compression strategy taxonomy
+- [[entities/opencode]] — host harness
 - [[concepts/context-degradation]] — failure modes DCP prevents (distraction, confusion)
-- [[concepts/instinct-clustering]] — companion pattern from settings-opencode
+- [[comparisons/claude-code-vs-opencode-plugins]] — why this plugin exists in OpenCode and not Claude Code

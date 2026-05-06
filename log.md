@@ -72,3 +72,10 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - New synthesis: syntheses/lean-agentic-workflow
 - Ties together: grill→PRD→AFK loop, council, lean-session plugin, model routing, .agents/ state, failure modes
 - Also fixed: templates/AGENTS.md cross-provider claim (Opus issue A); pi-agent.md AGENTS.md support marked unverified
+## [2026-05-06] ingest | OpenCode DCP plugin — 2 sources
+- Sources: Opencode-DCPopencode-dynamic-context-pruning.md, Quick Start Install DCP Plugin opencode-dynamic-context-pruning.md
+- New summary: summaries/opencode-dcp
+- New entity: entities/opencode-dcp
+- Updated: concepts/dynamic-context-pruning (removed status: documented-not-adopted; corrected mechanism descriptions; removed fabricated config block; added real commands, thresholds, cache trade-off)
+- Key corrections: Compress is model-triggered (not per-turn automatic); dedup runs on LLM fetch; config fields pruneAfterTurns/maxFileContentTokens/preserveLastN were invented — none exist in real plugin
+- index.md: dynamic-context-pruning promoted (removed documented-not-adopted marker); new entries for summary + entity

@@ -38,6 +38,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/codex-agents-md]] — Codex layering: global→CWD walk, AGENTS.override.md, 32 KiB limit, profile via CODEX_HOME
 - [[summaries/agents-md-critique]] — Critique of AGENTS.md: single-file abstraction wrong, compliance unenforceable, content too shallow; hooks + Memory Bank as alternatives
 - [[summaries/sparc-cursor-cline-rules]] — SPARC framework: 5 principles, 5 workflow phases, Memory Bank integration; mostly a structured AGENTS.md template
+- [[summaries/opencode-dcp]] — OpenCode DCP plugin: Compress (model-driven, range/message modes) + deduplication + purge-errors; ~85% cache hit vs 90% without; /dcp commands
 
 ## Entities
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
@@ -55,6 +56,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/karpathy-llm-council]] — Karpathy's 3-stage council web app: parallel dispatch → anonymized peer review → Chairman synthesis; OpenRouter-based reference implementation
 - [[entities/agents-md-format]] — AGENTS.md format entity: origin, per-tool implementations (Codex/OpenCode/CC/Aider/Gemini), multi-file strategies
 - [[entities/codex]] *(stub)* — OpenAI Codex CLI; pioneered AGENTS.md format; AGENTS.override.md layering; 32 KiB chain limit
+- [[entities/opencode-dcp]] — `@tarquinen/opencode-dcp` npm plugin; Compress + dedup + purge-errors; global/project config; /dcp commands
 
 ## Concepts
 - [[concepts/unit-testing]] — AAA pattern, test doubles, naming convention, coverage philosophy, flaky test quarantine
@@ -93,7 +95,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/branch-strategy-for-agents]] — head vs merge-to-head vs branch; when to use each; relation to worktrees and human-merge gates
 - [[concepts/agent-self-correction]] — wiki-as-runtime-oracle; deviation trigger table; qmd queries for re-alignment; zero startup overhead
 - [[concepts/instinct-clustering]] *(documented-not-adopted)* — behavioral pattern mining from tool-call telemetry; observe→cluster→inject pipeline; homunculus pattern
-- [[concepts/dynamic-context-pruning]] *(documented-not-adopted)* — continuous mid-session trimming (DCP) distinct from threshold-triggered compaction; idle-gated auto-compaction
+- [[concepts/dynamic-context-pruning]] — mid-session context reduction via Compress tool (model-driven) + deduplication + purge-errors; complements compaction; `@tarquinen/opencode-dcp`
 - [[concepts/council-pattern]] — 3-stage multi-model deliberation: parallel dispatch → optional anonymized peer review → Chairman or human synthesis; Stage 2 optional; cost model; when to use
 - [[concepts/worktree-isolation]] — git worktrees for agent filesystem isolation; ToS-compliant sandboxing alternative; scope overlap detection; merge-before-cleanup protocol
 - [[concepts/rules-vs-hooks]] — static rules files vs. dynamic hook injection; compliance problem; hybrid patterns; when to use each

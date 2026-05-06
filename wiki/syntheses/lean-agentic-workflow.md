@@ -71,7 +71,7 @@ Fires on `session.idle` and `session.compacting`. On idle: writes a structured c
 
 This is what makes clear-over-compact safe for interactive sessions. Without it, compaction loses `.agents/` state.
 
-See: [[entities/opencode]], [[concepts/context-compression]]
+See: [[entities/lean-session]], [[entities/opencode]], [[concepts/context-compression]]
 
 ### Self-correction
 
@@ -113,6 +113,8 @@ See: [[concepts/multi-vendor-adversarial-review]], [[entities/agentops]]
 ├── checkpoint.md   — written by lean-session on idle
 └── decisions.md    — council/design decisions (append-only)
 ```
+
+The `.agents/` directory convention originates with [[entities/agentops]]. lean-session reads and writes it on every compaction and idle event.
 
 Read `.agents/` at session start. Update throughout. Write checkpoint before stopping. `decisions.md` is the long-term architectural memory — never truncate it.
 

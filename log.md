@@ -79,3 +79,10 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Updated: concepts/dynamic-context-pruning (removed status: documented-not-adopted; corrected mechanism descriptions; removed fabricated config block; added real commands, thresholds, cache trade-off)
 - Key corrections: Compress is model-triggered (not per-turn automatic); dedup runs on LLM fetch; config fields pruneAfterTurns/maxFileContentTokens/preserveLastN were invented — none exist in real plugin
 - index.md: dynamic-context-pruning promoted (removed documented-not-adopted marker); new entries for summary + entity
+## [2026-05-06] fix | Structural gap fixes — 4 gaps from council review
+- Gap 1 (new): entities/lean-session — plugin entity page from templates/lean-compaction-plugin.ts; 3 hooks documented
+- Gap 2 (cross-link): lean-agentic-workflow.md Session State section — added [[entities/agentops]] anchor; lean-session section — added [[entities/lean-session]] link
+- Gap 3 (scope): agent-self-correction.md verification trigger — split into UI/visual (verification-pipeline) and backend/logic (unit-testing + cicd-testing)
+- Gap 5 (symmetry): agent-self-correction.md Related Pages — added [[concepts/rules-vs-hooks]]
+- Gap 4 confirmed resolved: agentic-sandbox-controls already had ToS/Docker section
+- index.md: added lean-session entity entry

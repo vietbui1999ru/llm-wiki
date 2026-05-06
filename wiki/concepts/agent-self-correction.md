@@ -70,7 +70,8 @@ Agents do NOT need to load this entire page at startup. They load it only when t
 
 | Trigger | Primary wiki page |
 |---|---|
-| Verification | [[concepts/verification-pipeline]] |
+| Verification (UI/visual) | [[concepts/verification-pipeline]] — screenshot gate, DOM counts, Playwright |
+| Verification (backend/logic) | [[concepts/unit-testing]] + [[concepts/cicd-testing]] — test pyramid, AAA, coverage |
 | Debugging | [[concepts/agent-harness]] + systematic-debugging skill |
 | Model tier | [[syntheses/agent-primitive-selection]] |
 | Editing policy | Applied from CLAUDE.md rules |
@@ -100,7 +101,10 @@ They are complementary — but not symmetric. Instinct clustering is a **push** 
 
 - [[concepts/context-engineering]] — JIT retrieval principle
 - [[concepts/instinct-clustering]] — complementary implicit learning system
-- [[concepts/verification-pipeline]] — what to verify before claiming completion
+- [[concepts/verification-pipeline]] — UI/visual verification before claiming completion
+- [[concepts/unit-testing]] — backend/logic verification
+- [[concepts/cicd-testing]] — test pyramid and pipeline-level verification
 - [[concepts/multi-vendor-adversarial-review]] — when to trigger council
 - [[concepts/branch-strategy-for-agents]] — worktree and merge decisions
+- [[concepts/rules-vs-hooks]] — why hook enforcement is stronger than pull-based self-correction
 - [[summaries/mattpocockworkflow]] — the core workflow agents self-correct toward

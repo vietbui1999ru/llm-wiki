@@ -110,7 +110,7 @@ Side-by-side analysis across four workflow approaches. Based on community eviden
 
 Resolution paths:
 1. Use the API (not subscription) — no ToS restriction
-2. Host-native worktree isolation (Dangeresque approach) + fine-grained `allowedTools`/`disallowedTools`
+2. Host-native worktree isolation (Dangeresque approach) + `permissions.allow`/`permissions.deny` in `.claude/settings.json` (note: `allowedTools`/`disallowedTools` is the old CC schema — see [[summaries/claude-code-permissions-settings]])
 3. SandCastle workaround: Claude runs on host, containers only for tool execution
 
 This nuance is not captured in the sandbox controls concept page. See [[concepts/agentic-sandbox-controls]].

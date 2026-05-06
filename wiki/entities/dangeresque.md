@@ -17,7 +17,7 @@ GitHub: https://github.com/slikk66/dangeresque
 
 ## Design Rationale: Host-Native
 
-Dangeresque is explicitly host-native. Anthropic's Terms of Service restrict using Claude Code subscription keys inside Docker containers. SandCastle works around this via provider abstraction (run Claude on host, sandbox tool execution). Dangeresque avoids the problem entirely: Claude Code runs on the host, worktrees provide task isolation, fine-grained `allowedTools`/`disallowedTools` enforce safety.
+Dangeresque is explicitly host-native. Anthropic's Terms of Service restrict using Claude Code subscription keys inside Docker containers. SandCastle works around this via provider abstraction (run Claude on host, sandbox tool execution). Dangeresque avoids the problem entirely: Claude Code runs on the host, worktrees provide task isolation, fine-grained tool filtering enforces safety. (Note: Dangeresque uses its own config layer; CC's native `settings.json` now uses `permissions.allow`/`permissions.deny` — the `allowedTools`/`disallowedTools` names are outdated for CC's own schema. See [[summaries/claude-code-permissions-settings]].)
 
 This is a direct **policy-driven design decision**, not a technical limitation. See [[concepts/agentic-sandbox-controls]] for the tension between OS-level sandboxing (NVIDIA AI Red Team recommendation) and Anthropic ToS.
 

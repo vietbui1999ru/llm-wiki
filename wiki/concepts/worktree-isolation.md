@@ -86,9 +86,9 @@ Worktree isolation is the **ToS-compliant host-native alternative**:
 |---|---|---|---|
 | Docker/container | Full OS isolation | No (subscription key) | Yes |
 | Worktree | Filesystem isolation | Yes | No |
-| `allowedTools`/`disallowedTools` | Tool-level restriction | Yes | No |
+| `permissions.allow`/`permissions.deny` | Tool-level restriction | Yes | No |
 
-Dangeresque (host-native) uses worktrees + `allowedTools`. SandCastle runs Claude on the host (worktree isolation) and only containers for tool execution — Claude itself never runs inside Docker.
+Dangeresque (host-native) uses worktrees + tool filtering. SandCastle runs Claude on the host (worktree isolation) and only containers for tool execution — Claude itself never runs inside Docker. Note: CC's native settings.json schema uses `permissions.allow`/`permissions.deny`, not the older `allowedTools`/`disallowedTools` names. See [[summaries/claude-code-permissions-settings]].
 
 ---
 

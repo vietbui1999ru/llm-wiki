@@ -79,6 +79,12 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Updated: concepts/dynamic-context-pruning (removed status: documented-not-adopted; corrected mechanism descriptions; removed fabricated config block; added real commands, thresholds, cache trade-off)
 - Key corrections: Compress is model-triggered (not per-turn automatic); dedup runs on LLM fetch; config fields pruneAfterTurns/maxFileContentTokens/preserveLastN were invented — none exist in real plugin
 - index.md: dynamic-context-pruning promoted (removed documented-not-adopted marker); new entries for summary + entity
+## [2026-05-06] ingest | Autonomous agent docs cluster — 4 sources (CC permissions, self-healing CI/CD, error budget)
+- New summaries: claude-code-permissions-settings, self-healing-cicd-implementations, error-budget-agentic
+- New concept: concepts/error-budget — SRE error budget adapted to agent loops; 4 budget axes; progress score; rollback design
+- Updated concepts: self-healing-loop (Dagger/ArgoCD/Windmill impl table), agentic-sandbox-controls (rewritten autonomous section with correct settings.json schema)
+- Schema correction propagated: allowedTools/disallowedTools/allowedPaths → permissions.allow/deny + sandbox.filesystem in 4 files (agentic-sandbox-controls, worktree-isolation, comparisons/spec-driven-frameworks-vs-native, dangeresque)
+- Critical finding: sandbox.enabled only sandboxes Bash; Read/Edit/Write built-in tools bypass it — OS-level isolation still required
 ## [2026-05-06] ingest | Autonomous full-stack agent setup prompt → 2 new concepts + sandbox update
 - Source: user prompt describing autonomous CC setup, self-healing loop, agentic CI/CD
 - New: concepts/self-healing-loop — failure signature detection, retry budgets by type, rollback protocol, composition with ralph-loop

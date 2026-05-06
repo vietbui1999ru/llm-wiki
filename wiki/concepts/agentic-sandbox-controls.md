@@ -75,7 +75,7 @@ Anthropic's Terms of Service restrict running Claude Code subscription keys insi
 
 **Resolution paths:**
 1. Use the Anthropic API (not subscription) — no container restriction
-2. Host-native worktree isolation ([[entities/dangeresque]] approach) + fine-grained `allowedTools`/`disallowedTools`
+2. Host-native worktree isolation ([[entities/dangeresque]] approach) + fine-grained `permissions.allow`/`permissions.deny` in `.claude/settings.json`
 3. [[entities/sandcastle]] workaround: Claude process runs on host, containers only for tool execution (sandboxing tool execution, not the Claude process)
 
 This does not invalidate the NVIDIA guidance — it applies fully to API usage and partially to subscription users who can sandbox tool execution even if the Claude process runs on host.
@@ -84,25 +84,49 @@ This does not invalidate the NVIDIA guidance — it applies fully to API usage a
 
 Claude Code supports a flag that removes all approval prompts, enabling fully unattended operation. This flag is named accordingly — it is only safe if the sandbox is independently enforced.
 
-**Critical rule**: `--dangerously-skip-permissions` removes the agent's approval layer. Defense must come entirely from the environment:
+**Critical rule**: `--dangerously-skip-permissions` maps to `defaultMode: "bypassPermissions"` in settings. It removes the approval layer entirely. Defense must come from the environment, not the agent:
 - Run inside a disposable container or VM (non-root user, mounted project workspace only)
 - No personal SSH keys or host home directory mounted
 - Short-lived credentials provisioned per-task via credential broker
-- Explicit allow/deny rules for commands and paths in `.claude/settings.json`
+- `permissions.deny` list for high-risk Bash patterns
 - Builder and deployer as separate network contexts with separate credentials
 - Agent process has no prod deploy permissions
 
-Using this flag on a developer machine with full credentials is equivalent to giving an autonomous agent unrestricted shell access. Confirmed dangerous.
+Using this flag on a developer machine with full credentials is equivalent to unrestricted shell access.
 
-**`.claude/settings.json` permission configuration** (exact format — needs source; search "Claude Code allowedTools settings.json"):
-- `allowedTools` — tools that run without approval
-- `disallowedTools` — tools blocked entirely
-- `allowedPaths` — filesystem paths the agent can write to
-- `sandbox` — restricts Bash; reduces prompts (exact behavior needs docs)
+### Current `settings.json` schema
 
-> **Docs needed**: The exact `settings.json` schema and what `"sandbox": true` restricts are not yet documented in this wiki. Search: "Claude Code permissions sandbox auto allow" + "dangerously skip permissions docker" for sources to ingest.
+```jsonc
+{
+  "permissions": {
+    "allow": ["Bash(git:*)", "Read(**)", "Edit(**)"],
+    "ask":   ["Bash(npm:*)"],
+    "deny":  ["Bash(rm -rf:*)", "Bash(curl * | sh:*)"],
+    "defaultMode": "bypassPermissions",
+    "disableBypassPermissionsMode": false,
+    "skipDangerousModePermissionPrompt": false
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "allowUnsandboxedCommands": false,
+    "filesystem": {
+      "allowWrite": ["./", "/tmp/"],
+      "denyWrite":  ["~/.ssh/", "~/.aws/", "/etc/"]
+    },
+    "network": {
+      "allowedDomains": ["registry.npmjs.org", "github.com"],
+      "deniedDomains":  ["*"]
+    }
+  }
+}
+```
 
-See: [[concepts/self-healing-loop]], [[concepts/agentic-cicd]]
+**`sandbox.enabled` scope**: only sandboxes Bash and its child processes. Built-in file tools (Read, Edit, Write, Glob, Grep) bypass the sandbox entirely. OS-level isolation (container/VM) is required to constrain file tools.
+
+**Schema correction**: older sources and tutorials use `allowedTools`/`disallowedTools`/`allowedPaths`. These are outdated — the current schema uses `permissions.allow`/`permissions.deny`/`sandbox.filesystem`. Third-party orchestrators (Dangeresque, etc.) may still use the old names for their own config layers.
+
+See: [[summaries/claude-code-permissions-settings]], [[concepts/self-healing-loop]], [[concepts/agentic-cicd]]
 
 ## Related concepts
 

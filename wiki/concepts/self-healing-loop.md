@@ -134,6 +134,20 @@ Without structured output, the outer harness cannot distinguish "agent is thinki
 
 ---
 
+## Reference Implementations
+
+| Tool | Layer | What it does |
+|---|---|---|
+| **Dagger** | CI failure | AI agent diagnoses failure log → patches code → reruns failing gate → posts diff to PR; bounded by attempt config |
+| **ArgoCD** | Deploy | Stores known-good revision before deploy; waits for health + operation phase; rolls back to stored revision on failure |
+| **Windmill** | Workflow step | Per-step retry with exponential backoff + jitter; each retry is an isolated execution context |
+
+Dagger handles the "analyze and patch" half; ArgoCD handles the "rollback on deploy failure" half; Windmill provides the retry scheduling primitive that both can use.
+
+See: [[summaries/self-healing-cicd-implementations]]
+
+---
+
 ## When Self-Healing Fails
 
 Self-healing loops fail in predictable ways:

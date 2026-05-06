@@ -68,3 +68,7 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Updated: entities/opencode (agent model: primary/subagent/hidden, AGENTS.md precedence, instructions field), concepts/agent-context-instructions (AGENTS.md ecosystem section, multi-file strategies, nested precedence)
 - Key additions: Linux Foundation stewardship of AGENTS.md; compliance-vs-enforcement distinction; Memory Bank as cross-session state via repomix; rules-vs-hooks as architectural choice
 - Committed: concepts/worktree-isolation (was pending from previous session)
+## [2026-05-06] synthesize | Lean Agentic Workflow
+- New synthesis: syntheses/lean-agentic-workflow
+- Ties together: grill→PRD→AFK loop, council, lean-session plugin, model routing, .agents/ state, failure modes
+- Also fixed: templates/AGENTS.md cross-provider claim (Opus issue A); pi-agent.md AGENTS.md support marked unverified

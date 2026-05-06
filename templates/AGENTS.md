@@ -1,5 +1,10 @@
 # Agent Rules
-# Cross-provider: Claude Code, OpenCode, Pi Agent all read this file.
+# Cross-provider notes:
+# - OpenCode: reads AGENTS.md natively (AGENTS.md > CLAUDE.md precedence)
+# - Codex: reads AGENTS.md natively (32 KiB chain limit across all loaded files)
+# - Claude Code: reads CLAUDE.md, NOT AGENTS.md — symlink if cross-provider needed:
+#     ln -s AGENTS.md CLAUDE.md
+# - Pi Agent: AGENTS.md support unverified — treat as Claude Code (CLAUDE.md)
 # Keep lean. No ceremony. Skills invoked explicitly, not auto-triggered.
 
 ## Core workflow

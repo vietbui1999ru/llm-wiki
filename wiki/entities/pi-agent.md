@@ -77,7 +77,7 @@ Rate limits on GitHub Models: ~150 req/day free tier; higher for GitHub Team/Ent
 
 ## AGENTS.md Support
 
-Pi Agent reads `AGENTS.md` for project-specific rules — same file that Claude Code and OpenCode read. Cross-provider compatibility is native.
+**Unverified**: Pi Agent may read `AGENTS.md`, but this has not been confirmed from source documentation. The raw source (`pi-monopackagescoding-agent at main.md`) does not explicitly state AGENTS.md loading behavior. Treat Pi Agent as requiring CLAUDE.md until verified.
 
 ---
 

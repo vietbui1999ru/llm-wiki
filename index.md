@@ -89,6 +89,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/instinct-clustering]] — behavioral pattern mining from tool-call telemetry; observe→cluster→inject pipeline; homunculus pattern
 - [[concepts/dynamic-context-pruning]] — continuous mid-session trimming (DCP) distinct from threshold-triggered compaction; idle-gated auto-compaction
 - [[concepts/council-pattern]] — 3-stage multi-model deliberation: parallel dispatch → anonymized peer review → Chairman or human synthesis; cost model; when to use
+- [[concepts/worktree-isolation]] — git worktrees for agent filesystem isolation; ToS-compliant sandboxing alternative; scope overlap detection; merge-before-cleanup protocol
 
 ## Comparisons
 - [[comparisons/spec-driven-frameworks-vs-native]] — Heavy frameworks vs lean skills vs vanilla vs custom harness; community consensus; discrepancies with prior wiki

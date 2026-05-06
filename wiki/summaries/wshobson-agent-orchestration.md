@@ -10,7 +10,7 @@ updated: 2026-04-26
 
 # wshobson/agents: Production Agent Orchestration Marketplace
 
-A production-scale Claude Code agent ecosystem: 184 specialized agents, 78 focused plugins, 150 skills, 16 orchestrators, 98 commands. Primary reference for how to structure a large multi-agent system using Claude Code's plugin architecture.
+A production-scale Claude Code agent ecosystem: 184 specialized agents (per repo header; tier breakdown sums to 153 — 31 agents unaccounted, discrepancy unresolved), 78 focused plugins, 150 skills, 16 orchestrators, 98 commands. Primary reference for how to structure a large multi-agent system using Claude Code's plugin architecture.
 
 Source repo: `wshobson/agents` (add via `/plugin marketplace add wshobson/agents`)
 

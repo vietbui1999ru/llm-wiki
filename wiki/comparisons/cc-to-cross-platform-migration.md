@@ -41,17 +41,18 @@ Layer-by-layer mapping of CC assets to equivalent mechanisms on Gemini CLI, Open
 
 | Asset | Claude Code | Gemini CLI | OpenCode | Codex | Cursor |
 |---|---|---|---|---|---|
-| Mechanism | `SKILL.md` + `Skill` tool invocation | None | `.opencode/commands/*.md` slash commands | `agents/openai.yaml` skill entries | None (inline only) |
-| Invocation | `/skill-name` or Skill tool | N/A — embed in GEMINI.md | `/command-name {{args}}` in chat | `invocation: explicit` or `auto` | N/A |
-| Arguments | Via skill prompt | N/A | `{{argument_name}}` template slots | Via `tool_dependencies` | N/A |
-| Shell execution | Bash tool | N/A | `$(command)` injection | Via `bash` tool_dependency | N/A |
+| Mechanism | `SKILL.md` + `Skill` tool invocation | `.gemini/commands/*.toml` + `activate_skill` | `.opencode/commands/*.md` slash commands | `agents/openai.yaml` skill entries | None (inline only) |
+| Invocation | `/skill-name` or Skill tool | `/command-name` (TOML) or `activate_skill` (skills) | `/command-name {{args}}` in chat | `invocation: explicit` or `auto` | N/A |
+| Arguments | Via skill prompt | `{{args}}`, `!{shell}`, `@{file}` in TOML | `{{argument_name}}` template slots | Via `tool_dependencies` | N/A |
+| Shell execution | Bash tool | `!{shell}` injection with confirmation | `$(command)` injection | Via `bash` tool_dependency | N/A |
 | Agent binding | Skill loads into current session | N/A | Command can route to specific agent | Per skill config | N/A |
-| **Parity** | — | Low (inline only) | High | Medium | Low (inline only) |
+| **Parity** | — | High | High | Medium | Low (inline only) |
 
 **Migration action**:
-- Gemini/Cursor: inline skill content as sections in rules file (ambient, not invokable)
+- Gemini: copy TOML commands to `.gemini/commands/`; content format is nearly identical; copy skills to `.gemini/skills/`
 - OpenCode: create `.opencode/commands/wiki-context.md`, `.opencode/commands/security-patterns.md` etc.
 - Codex: add entries to `agents/openai.yaml` + reference prompt file
+- Cursor: inline skill content as sections in rules file (ambient, not invokable)
 
 ---
 

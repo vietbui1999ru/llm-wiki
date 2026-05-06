@@ -42,10 +42,15 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/claude-code-permissions-settings]] — CC settings schema: permissions.allow/ask/deny/defaultMode, bypassPermissions, sandbox.enabled (Bash-only), filesystem+network rules; corrects old allowedTools schema
 - [[summaries/self-healing-cicd-implementations]] — Dagger (AI diagnose→patch→validate), ArgoCD (revision-based rollback), Windmill (per-step retry + exponential backoff)
 - [[summaries/error-budget-agentic]] — SRE error budget origin; agentic adaptation: retry/token/runtime/session budgets; progress score; rollback as first-class pattern
-- [[summaries/gemini-cli-rules]] — GEMINI.md: global/workspace/JIT discovery, @file.md imports, CC migration mapping
+- [[summaries/gemini-cli-rules]] — GEMINI.md: global/workspace/JIT discovery, @file.md imports, TOML commands, CC migration mapping
 - [[summaries/opencode-commands-agents]] — OpenCode commands (.opencode/commands/*.md), rules array, agents JSON config, command→agent binding
 - [[summaries/codex-agents-skills]] — Codex TOML agents (.codex/agents/*.toml), native skills (agents/openai.yaml), 3-layer stack, CC migration mapping
 - [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules, background agents, parity gaps vs CC
+- [[summaries/cursor-cloud-agents]] — Cursor Cloud Agents: microVM isolation, GitHub/GitLab workflow, remote desktop control, cross-agent support
+- [[summaries/cc-auto-mode]] — CC auto mode: 2-stage classifier, threat model, 17% FNR on overeager actions, deny-and-continue
+- [[summaries/cc-agent-teams]] — CC agent teams (experimental): shared task list, teammate direct messaging, TeammateIdle/TaskCompleted hooks
+- [[summaries/context-engineering-anthropic]] — Anthropic context engineering: JIT retrieval, compaction, note-taking, sub-agents; context editing API
+- [[summaries/docker-sandboxes]] — Docker Sandboxes: microVM isolation for coding agents; Docker-in-Docker safe; CC/Codex/Gemini/Copilot/Kiro support
 
 ## Entities
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
@@ -58,6 +63,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/dangeresque]] — Host-native CLI orchestrator; mandatory adversarial reviewer + human-merge gate; ToS-compliant (no container for CC)
 - [[entities/mnemory]] — Self-hosted MCP cross-session memory: Qdrant vector search + S3/MinIO artifact store; OSS alternative to Anthropic memory tool
 - [[entities/agentops]] — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
+- [[entities/gemini-cli]] — Google's Gemini CLI: GEMINI.md + TOML commands + activate_skill; high parity with CC; hooks + subagents (experimental)
 - [[entities/opencode]] — Open-source Claude Code alternative; plugin system with compaction hooks, custom tools, 30+ event surface
 - [[entities/pi-agent]] — TypeScript unified multi-provider LLM API (pi-mono); council/adversarial review layer; GitHub Copilot Models integration
 - [[entities/karpathy-llm-council]] — Karpathy's 3-stage council web app: parallel dispatch → anonymized peer review → Chairman synthesis; OpenRouter-based reference implementation

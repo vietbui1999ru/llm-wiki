@@ -104,3 +104,21 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Gap 5 (symmetry): agent-self-correction.md Related Pages — added [[concepts/rules-vs-hooks]]
 - Gap 4 confirmed resolved: agentic-sandbox-controls already had ToS/Docker section
 - index.md: added lean-session entity entry
+
+## [2026-05-07] ingest | CC permissions deep-dive + auto mode (Configure permissions.md, Claude Code auto mode.md)
+## [2026-05-07] ingest | CC sandboxing official docs (Sandboxing.md)
+## [2026-05-07] ingest | CC agent teams official docs (Orchestrate teams of Claude Code sessions.md)
+## [2026-05-07] ingest | CC skills official docs + first-principles deep dive (Agent Skills.md, Claude Agent Skills A First Principles Deep Dive.md)
+## [2026-05-07] ingest | Gemini CLI tools reference + full feature audit (Tools reference.md, Gemini CLI documentation.md, Provide context with GEMINI.md files.md, Gemini CLI Custom slash commands.md, Custom commands.md)
+## [2026-05-07] ingest | Cursor Cloud Agents (Cloud Agents Cursor Docs.md)
+## [2026-05-07] ingest | Context engineering Anthropic (Effective context engineering for AI agents.md, Memory & context management with Claude Sonnet 4.6.md)
+## [2026-05-07] ingest | Context window management techniques (Top techniques to Manage Context Lengths in LLMs.md)
+## [2026-05-07] ingest | Docker Sandboxes for coding agents (Docker Sandboxes Run Claude Code and More Safely.md, Claude Code Sandbox Guide.md)
+## [2026-05-07] update | gemini-cli-rules.md — added TOML commands section; corrected Skills parity row (Low→High)
+## [2026-05-07] update | cc-to-cross-platform-migration.md — updated Gemini Skills row (parity Low→High; TOML format)
+## [2026-05-07] create | entities/gemini-cli.md — full entity with tool table, TOML commands, Skills, feature parity matrix
+## [2026-05-07] create | summaries/cc-auto-mode.md — 2-stage classifier, threat model, block categories, metrics
+## [2026-05-07] create | summaries/cc-agent-teams.md — architecture, hooks, limitations, subagent definitions as teammates
+## [2026-05-07] create | summaries/context-engineering-anthropic.md — JIT retrieval, compaction, note-taking, sub-agents, context editing API
+## [2026-05-07] create | summaries/docker-sandboxes.md — microVM isolation, Docker-in-Docker, multi-agent support
+## [2026-05-07] create | summaries/cursor-cloud-agents.md — VM isolation, GitHub workflow, remote desktop, access points

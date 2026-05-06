@@ -131,3 +131,11 @@ status: stub       # page created but thin; omit when page is substantive
 - Frontmatter: `status: stub`
 - Body footer: `*Stub — expand when a dedicated source is ingested.*`
 - index.md entry: `[[path/page]] *(stub)* — one-line description`
+
+## Agent skills
+
+### Triage labels
+Five canonical labels: needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+Single-context repo: one `CONTEXT.md` at root (built lazily), ADRs in `docs/adr/`. See `docs/agents/domain.md`.

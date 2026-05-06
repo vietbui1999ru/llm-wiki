@@ -60,3 +60,11 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - New concepts: concepts/multi-vendor-adversarial-review, concepts/branch-strategy-for-agents
 - New comparisons dir + pages: comparisons/spec-driven-frameworks-vs-native, comparisons/claude-code-vs-opencode-plugins
 - Updated: mattpocockworkflow (Dangeresque/SandCastle alternatives), agentic-memory-tool (Mnemory parallel), agentic-sandbox-controls (Anthropic ToS constraint), context-compression (clear-over-compact = consensus), agent-primitive-selection (multi-vendor review pattern); index.md
+## [2026-05-06] ingest | AGENTS.md ecosystem — 8 sources
+- Sources: AGENTS.md (spec), Custom instructions with AGENTS.md – Codex.md, Agents-opencode.md, AGENTS md gets it wrong in 2 ways.md, Rules.md, SPARC CursorCline Rules guide.md, coding-agent-rulesmemory.md at main.md, coding-agent-rulesmemory.md at main 1.md
+- New summaries: summaries/agents-md-spec, summaries/codex-agents-md, summaries/agents-md-critique, summaries/sparc-cursor-cline-rules
+- New entities: entities/agents-md-format, entities/codex (stub)
+- New concepts: concepts/rules-vs-hooks, concepts/memory-bank-pattern
+- Updated: entities/opencode (agent model: primary/subagent/hidden, AGENTS.md precedence, instructions field), concepts/agent-context-instructions (AGENTS.md ecosystem section, multi-file strategies, nested precedence)
+- Key additions: Linux Foundation stewardship of AGENTS.md; compliance-vs-enforcement distinction; Memory Bank as cross-session state via repomix; rules-vs-hooks as architectural choice
+- Committed: concepts/worktree-isolation (was pending from previous session)

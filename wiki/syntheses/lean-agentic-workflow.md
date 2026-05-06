@@ -25,7 +25,7 @@ grill → PRD → vertical slices → AFK loop → verify → ship
 | PRD | `/prd` skill | Synthesize grill into structured specification |
 | vertical slices | `/issues` skill | Break PRD into tracer-bullet tasks (HITL/AFK gate) |
 | AFK loop | Dangeresque | Worker → verify → adversarial review → human-merge gate |
-| verify | `/verify` + council | Evidence before claims; cross-vendor quality gate |
+| verify | `/verify` + council | Evidence before claims; cross-vendor quality gate — see [[concepts/verification-pipeline]] |
 | ship | `branch` or `head` | Merge strategy based on risk |
 
 ---

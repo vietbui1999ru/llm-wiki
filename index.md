@@ -92,9 +92,9 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/multi-vendor-adversarial-review]] — Using different model/vendor to review agent work; catches single-model blind spots; same-tier vs cross-vendor vs /council
 - [[concepts/branch-strategy-for-agents]] — head vs merge-to-head vs branch; when to use each; relation to worktrees and human-merge gates
 - [[concepts/agent-self-correction]] — wiki-as-runtime-oracle; deviation trigger table; qmd queries for re-alignment; zero startup overhead
-- [[concepts/instinct-clustering]] — behavioral pattern mining from tool-call telemetry; observe→cluster→inject pipeline; homunculus pattern
-- [[concepts/dynamic-context-pruning]] — continuous mid-session trimming (DCP) distinct from threshold-triggered compaction; idle-gated auto-compaction
-- [[concepts/council-pattern]] — 3-stage multi-model deliberation: parallel dispatch → anonymized peer review → Chairman or human synthesis; cost model; when to use
+- [[concepts/instinct-clustering]] *(documented-not-adopted)* — behavioral pattern mining from tool-call telemetry; observe→cluster→inject pipeline; homunculus pattern
+- [[concepts/dynamic-context-pruning]] *(documented-not-adopted)* — continuous mid-session trimming (DCP) distinct from threshold-triggered compaction; idle-gated auto-compaction
+- [[concepts/council-pattern]] — 3-stage multi-model deliberation: parallel dispatch → optional anonymized peer review → Chairman or human synthesis; Stage 2 optional; cost model; when to use
 - [[concepts/worktree-isolation]] — git worktrees for agent filesystem isolation; ToS-compliant sandboxing alternative; scope overlap detection; merge-before-cleanup protocol
 - [[concepts/rules-vs-hooks]] — static rules files vs. dynamic hook injection; compliance problem; hybrid patterns; when to use each
 - [[concepts/memory-bank-pattern]] — Josh Wand's `_memory/` hierarchy for cross-session persistence; repomix compile; yak-shaving tracking; mode-based workflow

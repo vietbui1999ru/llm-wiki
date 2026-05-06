@@ -20,7 +20,7 @@ Source repo: `wshobson/agents` (add via `/plugin marketplace add wshobson/agents
 
 **Progressive disclosure.** Skills load knowledge only when activated. Installing `python-development` loads 3 agents + 1 tool + 16 skills (~1,000 tokens), not the entire marketplace.
 
-**100% agent coverage.** All 184 agents accessible; organized into 25 categories, 1–10 plugins each.
+**Plugin coverage.** Organized into 25 categories, 1–10 plugins each. (Note: repo header claims 184 agents; tier breakdown sums to 153 — 31 unaccounted. "100% coverage" claim unresolvable until discrepancy is explained.)
 
 ## Three-Tier Model Strategy
 
@@ -33,7 +33,7 @@ Source repo: `wshobson/agents` (add via `/plugin marketplace add wshobson/agents
 
 Orchestration pipeline: `Opus (architecture) → Sonnet (development) → Haiku (deployment)`
 
-Opus 4.7 achieves 65% fewer tokens on complex tasks — often offsets higher rate.
+Opus 4.7 claimed to achieve 65% fewer tokens on complex tasks (self-reported by repo author; no methodology — treat as marketing, not a benchmark).
 
 ## Notable Plugins
 

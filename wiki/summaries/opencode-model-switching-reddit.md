@@ -25,11 +25,11 @@ Community converges on a multi-model pipeline, not a single best model:
 | Fast targeted changes | DeepSeek V4 Flash, Qwen 3.6 Plus | Fast + cheap |
 | Adversarial review | DeepSeek V4 Pro, Qwen 3.6 Plus | Different training = different blindspots |
 | UI / frontend | Kimi K2.6, Gemini | Visual reasoning strength |
-| Architecture / spec writing | Mimo 2.5 Pro | Underrated; "Opus-comparable" per `look` |
+| Architecture / spec writing | Mimo 2.5 Pro *(unverified — not in public catalogs)* | "Opus-comparable" per single commenter `look` |
 
 **Community pipeline example** (`look`, 13 upvotes):
 ```
-Mimo 2.5 Pro → spec
+Mimo 2.5 Pro → spec  (note: model not verified in public catalogs)
 GLM-5.1 → sequential plan files from spec
 Kimi K2.6 → implement plan files
 Qwen 3.6 Plus + DeepSeek V4 Pro → adversarial reviews at each step
@@ -80,7 +80,7 @@ Mentioned repeatedly: $5 first month, $10/month thereafter. Provides generous mo
 
 ## GLM-5.1 vs Kimi K2.6
 
-Community consensus: **GLM-5.1 > Kimi K2.6** for implementation quality and speed in OpenCode Go. GLM lower hallucination rate (per AA bench), faster throughput. Kimi K2.6 good for UI/frontend. Neither touches Opus/GPT-5.5 for complex architectural tasks.
+Community consensus (n≈30, single thread): **GLM-5.1 > Kimi K2.6** for implementation quality and speed in OpenCode Go. GLM lower hallucination rate (per "AA bench" — benchmark name undefined in source, treat as informal claim), faster throughput. Kimi K2.6 good for UI/frontend. Neither touches Opus/GPT-5.5 for complex architectural tasks.
 
 ---
 

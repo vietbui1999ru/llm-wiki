@@ -80,9 +80,35 @@ Anthropic's Terms of Service restrict running Claude Code subscription keys insi
 
 This does not invalidate the NVIDIA guidance — it applies fully to API usage and partially to subscription users who can sandbox tool execution even if the Claude process runs on host.
 
+## Autonomous / Unattended Mode (`--dangerously-skip-permissions`)
+
+Claude Code supports a flag that removes all approval prompts, enabling fully unattended operation. This flag is named accordingly — it is only safe if the sandbox is independently enforced.
+
+**Critical rule**: `--dangerously-skip-permissions` removes the agent's approval layer. Defense must come entirely from the environment:
+- Run inside a disposable container or VM (non-root user, mounted project workspace only)
+- No personal SSH keys or host home directory mounted
+- Short-lived credentials provisioned per-task via credential broker
+- Explicit allow/deny rules for commands and paths in `.claude/settings.json`
+- Builder and deployer as separate network contexts with separate credentials
+- Agent process has no prod deploy permissions
+
+Using this flag on a developer machine with full credentials is equivalent to giving an autonomous agent unrestricted shell access. Confirmed dangerous.
+
+**`.claude/settings.json` permission configuration** (exact format — needs source; search "Claude Code allowedTools settings.json"):
+- `allowedTools` — tools that run without approval
+- `disallowedTools` — tools blocked entirely
+- `allowedPaths` — filesystem paths the agent can write to
+- `sandbox` — restricts Bash; reduces prompts (exact behavior needs docs)
+
+> **Docs needed**: The exact `settings.json` schema and what `"sandbox": true` restricts are not yet documented in this wiki. Search: "Claude Code permissions sandbox auto allow" + "dangerously skip permissions docker" for sources to ingest.
+
+See: [[concepts/self-healing-loop]], [[concepts/agentic-cicd]]
+
 ## Related concepts
 
 - [[concepts/indirect-prompt-injection]]
+- [[concepts/self-healing-loop]] — autonomous loop that requires sandbox isolation
+- [[concepts/agentic-cicd]] — CI as external watchdog when agent runs unattended
 - [[entities/ai-coding-agents]]
 - [[entities/dangeresque]] — host-native alternative to container sandboxing
 - [[entities/sandcastle]] — hybrid: Claude on host, tools in container

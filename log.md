@@ -79,6 +79,12 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Updated: concepts/dynamic-context-pruning (removed status: documented-not-adopted; corrected mechanism descriptions; removed fabricated config block; added real commands, thresholds, cache trade-off)
 - Key corrections: Compress is model-triggered (not per-turn automatic); dedup runs on LLM fetch; config fields pruneAfterTurns/maxFileContentTokens/preserveLastN were invented — none exist in real plugin
 - index.md: dynamic-context-pruning promoted (removed documented-not-adopted marker); new entries for summary + entity
+## [2026-05-06] ingest | Autonomous full-stack agent setup prompt → 2 new concepts + sandbox update
+- Source: user prompt describing autonomous CC setup, self-healing loop, agentic CI/CD
+- New: concepts/self-healing-loop — failure signature detection, retry budgets by type, rollback protocol, composition with ralph-loop
+- New: concepts/agentic-cicd — CI as external watchdog, 10-gate sequence, staging-first, builder/deployer network split, diff size cap, no destructive migration auto-run
+- Updated: concepts/agentic-sandbox-controls — added --dangerously-skip-permissions section with critical safety rule; builder/deployer network pattern; docs-needed marker for settings.json schema
+- Gaps flagged (need online sources): CC settings.json allowedTools/allowedPaths exact schema, "sandbox":true behavior, real self-healing pipeline implementations, error budget as agent loop guardrail
 ## [2026-05-06] fix | Structural gap fixes — 4 gaps from council review
 - Gap 1 (new): entities/lean-session — plugin entity page from templates/lean-compaction-plugin.ts; 3 hooks documented
 - Gap 2 (cross-link): lean-agentic-workflow.md Session State section — added [[entities/agentops]] anchor; lean-session section — added [[entities/lean-session]] link

@@ -42,6 +42,10 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/claude-code-permissions-settings]] — CC settings schema: permissions.allow/ask/deny/defaultMode, bypassPermissions, sandbox.enabled (Bash-only), filesystem+network rules; corrects old allowedTools schema
 - [[summaries/self-healing-cicd-implementations]] — Dagger (AI diagnose→patch→validate), ArgoCD (revision-based rollback), Windmill (per-step retry + exponential backoff)
 - [[summaries/error-budget-agentic]] — SRE error budget origin; agentic adaptation: retry/token/runtime/session budgets; progress score; rollback as first-class pattern
+- [[summaries/gemini-cli-rules]] — GEMINI.md: global/workspace/JIT discovery, @file.md imports, CC migration mapping
+- [[summaries/opencode-commands-agents]] — OpenCode commands (.opencode/commands/*.md), rules array, agents JSON config, command→agent binding
+- [[summaries/codex-agents-skills]] — Codex TOML agents (.codex/agents/*.toml), native skills (agents/openai.yaml), 3-layer stack, CC migration mapping
+- [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules, background agents, parity gaps vs CC
 
 ## Entities
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
@@ -111,6 +115,7 @@ Catalog of all pages. Updated on every ingest operation.
 ## Comparisons
 - [[comparisons/spec-driven-frameworks-vs-native]] — Heavy frameworks vs lean skills vs vanilla vs custom harness; community consensus; discrepancies with prior wiki
 - [[comparisons/claude-code-vs-opencode-plugins]] — Hook surface, compaction control, custom tools; OpenCode's compaction hook as key differentiator
+- [[comparisons/cc-to-cross-platform-migration]] — Full migration matrix: CC rules/skills/subagents/hooks/plugins → Gemini/OpenCode/Codex/Cursor; parity rating per layer
 
 ## Syntheses
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern

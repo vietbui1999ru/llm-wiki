@@ -39,11 +39,12 @@ Each tool implements its own discovery and layering on top of the format:
 
 | Tool | Discovery details |
 |---|---|
-| **Codex** | `~/.codex/` global + project root→CWD walk; `AGENTS.override.md` override; 32 KiB limit |
-| **OpenCode** | `AGENTS.md > CLAUDE.md` per directory; `~/.config/opencode/AGENTS.md` global; `instructions` field for multi-file |
+| **Codex** | `~/.codex/` global + project root→CWD walk; `AGENTS.override.md` override; 32 KiB limit. Also has TOML custom agents (`.codex/agents/*.toml`) and native skills (`agents/openai.yaml`) as separate layers beyond AGENTS.md. |
+| **OpenCode** | `AGENTS.md > CLAUDE.md` per directory; `~/.config/opencode/AGENTS.md` global; `rules:` array in `opencode.json` for multi-file without duplicating into AGENTS.md |
 | **Claude Code** | Does not read AGENTS.md; uses CLAUDE.md with @-import for multi-file composition |
 | **Aider** | Requires `read: AGENTS.md` in `.aider.conf.yml` |
-| **Gemini CLI** | Requires `.gemini/settings.json` context.fileName config |
+| **Gemini CLI** | `GEMINI.md` (not AGENTS.md); supports global `~/.gemini/GEMINI.md`, workspace discovery, JIT per-subdirectory, and `@file.md` imports for modular composition |
+| **Cursor** | `.cursor/rules/*.md` (not AGENTS.md); created via Cursor UI; ambient only (no on-demand invocation) |
 
 ---
 

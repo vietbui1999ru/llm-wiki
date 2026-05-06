@@ -79,6 +79,12 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Updated: concepts/dynamic-context-pruning (removed status: documented-not-adopted; corrected mechanism descriptions; removed fabricated config block; added real commands, thresholds, cache trade-off)
 - Key corrections: Compress is model-triggered (not per-turn automatic); dedup runs on LLM fetch; config fields pruneAfterTurns/maxFileContentTokens/preserveLastN were invented — none exist in real plugin
 - index.md: dynamic-context-pruning promoted (removed documented-not-adopted marker); new entries for summary + entity
+## [2026-05-06] ingest | Cross-platform migration audit — 5 sources (Gemini, OpenCode, Codex, Cursor)
+- New summaries: gemini-cli-rules, opencode-commands-agents, codex-agents-skills, cursor-rules-background-agents
+- New comparison: comparisons/cc-to-cross-platform-migration — full 6-layer migration matrix (rules/skills/subagents/hooks/plugins/settings) across 4 platforms; parity ratings
+- Updated: entities/codex (expanded from stub — TOML agents + native skills + 3-layer stack); entities/agents-md-format (corrected Gemini + Cursor rows, expanded Codex row)
+- Key corrections from audit: Codex agents are TOML (not YAML); Gemini uses GEMINI.md with @file.md imports (not AGENTS.md); OpenCode commands can bind directly to agents (stronger than CC skills); Cursor background agents now support rules but have no subagent/skill equivalent
+- Search backlog added: cursor.com/docs/cloud-agent, opencode.ai/docs/config, blakecrosley AGENTS.md patterns, Gemini custom tools docs
 ## [2026-05-06] ingest | Autonomous agent docs cluster — 4 sources (CC permissions, self-healing CI/CD, error budget)
 - New summaries: claude-code-permissions-settings, self-healing-cicd-implementations, error-budget-agentic
 - New concept: concepts/error-budget — SRE error budget adapted to agent loops; 4 budget axes; progress score; rollback design

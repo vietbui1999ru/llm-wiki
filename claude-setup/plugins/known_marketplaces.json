@@ -13,7 +13,7 @@
       "repo": "kepano/obsidian-skills"
     },
     "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/obsidian-skills",
-    "lastUpdated": "2026-05-06T18:37:46.389Z",
+    "lastUpdated": "2026-05-08T16:12:57.026Z",
     "autoUpdate": true
   },
   "claude-code-lsps": {
@@ -22,7 +22,7 @@
       "repo": "Piebald-AI/claude-code-lsps"
     },
     "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/claude-code-lsps",
-    "lastUpdated": "2026-05-06T18:37:45.409Z",
+    "lastUpdated": "2026-05-08T16:12:56.121Z",
     "autoUpdate": true
   },
   "caveman": {
@@ -47,6 +47,6 @@
       "repo": "anthropics/claude-plugins-official"
     },
     "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/claude-plugins-official",
-    "lastUpdated": "2026-04-27T16:11:45.897Z"
+    "lastUpdated": "2026-05-08T16:07:47.492Z"
   }
 }

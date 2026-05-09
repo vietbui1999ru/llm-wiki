@@ -45,3 +45,19 @@ See wiki: [[concepts/tool-design-for-agents]]
 Supervisor pattern: one coordinator routes to specialized workers. State lives in shared filesystem,
 not in agent memory. Workers receive isolated context per task. Completion signal required or loop
 never exits. See wiki: [[concepts/agent-harness]], [[concepts/ralph-loop]]
+
+### Preference feedback loop (judge auto-invocation)
+After generating any **code output**, **implementation plan**, or **design/architecture response**:
+invoke `/judge` skill before ending the turn.
+
+Trigger conditions (invoke):
+- Response contains ``` code blocks with substantial implementation
+- Response is a numbered implementation plan or structured task breakdown
+- Response contains architectural decisions, tradeoff analysis, system design
+
+Do NOT invoke for: quick factual answers, lookups, shell commands, one-liners under ~100 words,
+conversation turns, ingest summaries.
+
+The judge is silent on first strike. On second consecutive low score for the same dimension and
+response type, it drafts a corrective rule for human approval.
+See wiki: [[concepts/preference-feedback-loop]]

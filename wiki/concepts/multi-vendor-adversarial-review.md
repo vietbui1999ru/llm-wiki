@@ -2,9 +2,13 @@
 title: "Multi-Vendor Adversarial Review"
 type: concept
 tags: [code-review, agent-orchestration, adversarial, cross-vendor, quality]
-sources: ["Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md", "karpathyllm-council LLM Council works together to answer your hardest questions.md"]
+sources:
+  - "Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md"
+  - "karpathyllm-council LLM Council works together to answer your hardest questions.md"
+  - "LLM-as-a-judge a complete guide to using LLMs for evaluations.md"
+  - "LLM-As-Judge 7 Best Practices & Evaluation Templates.md"
 created: 2026-05-04
-updated: 2026-05-05
+updated: 2026-05-07
 ---
 
 # Multi-Vendor Adversarial Review
@@ -82,6 +86,19 @@ For most workflows: same-vendor tiering (Sonnet implements, Opus reviews) is the
 
 ---
 
+## LLM-as-Judge as the Evaluation Mechanism
+
+The cross-vendor reviewer in multi-vendor adversarial review is typically implemented as an **LLM-as-judge** — an LLM with a structured evaluation prompt that scores the work against defined dimensions.
+
+Key evaluation modes:
+- **Pairwise**: judge compares two responses, picks winner (more reliable for ranking)
+- **Direct scoring**: judge rates against rubric dimensions (Correctness, Conciseness, Actionability, Relevance)
+- **Chain-of-thought (G-Eval)**: judge reasons step-by-step before scoring — more accurate, provides audit trail
+
+See [[concepts/llm-as-judge]] for the full pattern including when to use rubric-based vs. pairwise evaluation, and implementation best practices.
+
+---
+
 ## Relation to Existing Wiki
 
 - [[concepts/verification-pipeline]] — multi-vendor review as an implementation of the reviewer tier
@@ -89,3 +106,4 @@ For most workflows: same-vendor tiering (Sonnet implements, Opus reviews) is the
 - [[entities/dangeresque]] — adversarial reviewer built into the pipeline
 - [[entities/agentops]] — `/council` as formalized multi-vendor consensus
 - [[summaries/mattpocockworkflow]] — Sonnet→Opus as single-vendor tiering
+- [[concepts/llm-as-judge]] — the evaluation mechanism used in the cross-vendor reviewer role

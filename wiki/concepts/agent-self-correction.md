@@ -6,7 +6,7 @@ sources:
   - "Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md"
   - "Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md"
 created: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-07
 ---
 
 # Agent Self-Correction
@@ -97,6 +97,18 @@ This is the [[concepts/context-engineering]] principle applied to meta-cognition
 
 They are complementary — but not symmetric. Instinct clustering is a **push** pattern (high-confidence instincts injected at session start, no agent action required). Self-correction is a **pull** pattern (agent must recognize deviation and query). Push would be more reliable for agents that are already drifting; pull is cheaper for agents that are not. Until instinct clustering is adopted and validated, prefer hook enforcement over relying on pull for critical gates (commit, merge, claiming completion).
 
+## Relation to Self-Refine
+
+**Self-Refine** (Madaan et al., 2023) is a related but distinct pattern: generate output → self-feedback (same model critiques its own output) → refine → repeat.
+
+Key distinction:
+- Self-Refine: **same model**, **same turn**, **self-feedback** — iterative refinement within one task
+- Agent Self-Correction: **external oracle** (wiki), **cross-turn**, **triggered on deviation** — re-alignment across a session
+
+They are complementary. Self-Refine improves individual outputs; agent self-correction re-aligns session-level behavior. Agent self-correction has the **pull-system limitation** (requires metacognition to trigger); Self-Refine has the **self-evaluation bias** (same model reviewing its own work tends to be overconfident — see [[concepts/llm-as-judge]] for why cross-vendor evaluation is stronger).
+
+See [[summaries/self-refinement]] for source details.
+
 ## Related Pages
 
 - [[concepts/context-engineering]] — JIT retrieval principle
@@ -108,3 +120,5 @@ They are complementary — but not symmetric. Instinct clustering is a **push** 
 - [[concepts/branch-strategy-for-agents]] — worktree and merge decisions
 - [[concepts/rules-vs-hooks]] — why hook enforcement is stronger than pull-based self-correction
 - [[summaries/mattpocockworkflow]] — the core workflow agents self-correct toward
+- [[summaries/self-refinement]] — Self-Refine paper (same-model iterative refinement; related but distinct)
+- [[concepts/preference-feedback-loop]] — automatic judge-driven correction (complements agent self-correction)

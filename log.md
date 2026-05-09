@@ -2,6 +2,16 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-07] ingest | DSPy (4 sources: Stanford README, dbreunig pipeline walkthrough, HuggingFace GEPA cookbook, DSPy docs)
+- New entity: entities/dspy — Signatures/Modules/Optimizers stack; GEPA error-driven prompt augmentation; module/optimizer comparison tables
+- New summary: summaries/dspy — architecture, GEPA mechanics, performance claims marked (claimed, unverified), limitations, decision criteria
+
+## [2026-05-07] write | Preference Feedback Loop + RLHF/RLAIF/Self-Refine cluster — created concepts/preference-feedback-loop.md, summaries/rlhf-cai.md, summaries/self-refinement.md; updated concepts/agent-self-correction.md with Self-Refine relation section and new cross-links; updated index.md
+
+## [2026-05-07] ingest | Cloudflare Agent Memory (Agents that remember introducing Agent Memory.md)
+
+## [2026-05-06] ingest | patterns/api-design
+
 ## [2026-04-20] init | Wiki scaffolded
 ## [2026-04-21] ingest | LLM Wiki Pattern (llm-wiki.md)
 ## [2026-04-22] ingest | Contextual Retrieval in AI Systems (Contextual Retrieval in AI Systems.md)
@@ -104,6 +114,11 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Gap 5 (symmetry): agent-self-correction.md Related Pages — added [[concepts/rules-vs-hooks]]
 - Gap 4 confirmed resolved: agentic-sandbox-controls already had ToS/Docker section
 - index.md: added lean-session entity entry
+## [2026-05-06] ingest | patterns/backend + architectural-patterns update
+- Sources: Design Patterns for Modern Backend Development – with Example Use Cases.md, Design Patterns for Modern Backend Development.md, mehdihadeliawesome-software-architecture (link index — used for pattern taxonomy only)
+- Replaced stub: wiki/patterns/backend.md — middleware chains (composition order, error/auth placement), JWT vs session, OAuth2 flows, RBAC vs ABAC, service layer, repository pattern, queue/worker (at-least-once, DLQ, task queue vs event stream), DI (constructor vs service locator), API gateway, anti-pattern taxonomy
+- Updated: wiki/systems/architectural-patterns.md — added Modular Monolith and Vertical Slice Architecture sections; Awesome Software Architecture sources are link indexes only (no substantive content beyond section names)
+- index.md: backend promoted from stub; architectural-patterns description updated
 
 ## [2026-05-07] ingest | CC permissions deep-dive + auto mode (Configure permissions.md, Claude Code auto mode.md)
 ## [2026-05-07] ingest | CC sandboxing official docs (Sandboxing.md)
@@ -122,3 +137,58 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 ## [2026-05-07] create | summaries/context-engineering-anthropic.md — JIT retrieval, compaction, note-taking, sub-agents, context editing API
 ## [2026-05-07] create | summaries/docker-sandboxes.md — microVM isolation, Docker-in-Docker, multi-agent support
 ## [2026-05-07] create | summaries/cursor-cloud-agents.md — VM isolation, GitHub workflow, remote desktop, access points
+## [2026-05-06] scaffold | patterns/ + systems/ wiki directories
+## [2026-05-06] expand | patterns/refactoring + patterns/algorithmic — both promoted from stub to full pages
+- patterns/refactoring: 13 Fowler techniques (triggers, before/after snippets, anti-patterns, order-of-operations guide); source: Refactoring and Design Patterns.md (thin — Fowler catalog applied from domain knowledge)
+- patterns/algorithmic: 15 pattern families (problem shape, recognition trigger, complexity, templates); source: Common Algorithm Patterns Cheat Sheet.md
+## [2026-05-06] expand | patterns/design-patterns-creational — replaced stub with full page covering all 5 GoF creational patterns
+- Sources: Factory Method.md, Abstract Factory.md, Abstract Factory in Go.md, Builder.md, Prototype.md, Singleton.md, Design Patterns in TypeScript.md
+- Structure per pattern: intent + when-to-use + when-NOT-to-use + TypeScript sketch + anti-patterns; comparison table at end
+- index.md: removed stub marker, updated description
+## [2026-05-06] expand | patterns/design-patterns-behavioral — replaced stub with full page covering all 10 GoF behavioral patterns + Domain Event
+- Sources: Chain of Responsibility.md, Command.md, Iterator.md, Mediator.md, Memento.md, Observer.md, State.md, Strategy.md, Template Method.md, Visitor.md, Domain Event.md, Design Patterns in TypeScript.md
+- Structure per pattern: intent + when-to-use + when-NOT-to-use + TypeScript sketch + anti-patterns
+- Includes confusion table: Observer vs Mediator, Strategy vs State, Command vs CoR
+- Cross-links: concepts/agent-skills (Strategy basis), patterns/principles, patterns/design-patterns-creational, patterns/design-patterns-structural
+- index.md: removed stub marker, updated description
+## [2026-05-06] expand | patterns/design-patterns-structural — replaced stub with full page covering all 7 GoF structural patterns
+- Sources: Adapter.md, Bridge.md, Composite.md, Decorator.md, Facade.md, Flyweight.md, Proxy.md, Design Patterns in TypeScript.md
+- Structure per pattern: intent + when-to-use + when-NOT-to-use + TypeScript sketch + anti-patterns
+- Includes Adapter/Facade/Proxy confusion table (interface change, scope, purpose, transparency)
+- Includes pattern selection signal table (code smell → pattern mapping)
+- Cross-links: patterns/principles, patterns/design-patterns-creational, patterns/design-patterns-behavioral, concepts/deep-modules
+- index.md: removed stub marker, updated description
+
+## [2026-05-06] expand | systems/ — replaced all 6 stubs with full pages
+- Sources: system-design-primerREADME.md at master.md, Decompose monoliths into microservices by using CQRS and event sourcing - AWS Prescriptive Guidance.md, Machine-Learning-InterviewssrcMLSDml-system-design.md at main.md
+- systems/distributed-systems: CAP theorem (CP vs AP), eventual consistency conflict resolution (LWW/vector clocks/CRDTs), idempotency patterns, circuit breaker (state machine), backpressure strategies, saga choreography vs orchestration, 2PC avoidance, distributed locks + fencing tokens
+- systems/architectural-patterns: monolith vs microservices (decision criteria), event-driven architecture failure modes, CQRS (when warranted, AWS DynamoDB Streams reference implementation), event sourcing, hexagonal architecture, layered architecture, strangler fig migration
+- systems/system-design-process: 6-step process (requirements → capacity estimation → component decomposition → data flow → tradeoff articulation → scaling), latency reference table, common interview mistakes table
+- systems/scalability-reliability: 4 cache update strategies (cache-aside/write-through/write-behind/refresh-ahead), sharding shard key selection + failure modes, 5 rate limiting algorithms, L4 vs L7 load balancing, RED/USE observability methods, SLO/SLA/availability numbers table
+- systems/data-modeling: 5 DB type decision criteria table, normalization (1NF-3NF) vs denormalization decision, expand-contract schema evolution, event sourcing data model, polyglot persistence tradeoffs, access-pattern-driven design
+- systems/ai-ml: 9-step ML system design process, offline/online metrics, feature stores (training-serving consistency), model selection heuristic, batch vs real-time vs hybrid serving, edge inference (quantization/pruning/distillation), A/B/shadow/canary deployment, covariate vs concept drift; AI agent patterns → wiki/concepts/ pointers
+- index.md: all 6 systems/ entries promoted from stubs to substantive descriptions
+
+## [2026-05-06] expand | patterns/frontend + patterns/concurrency + patterns/database — replaced all three stubs with full reference pages
+- Sources: Design Patterns for React Interviews.md, Persson Dennis - 21 Fantastic React Design Patterns and When to Use Them.md, Mastering Concurrency A Guide for Software Engineers.md, Mastering Concurrency A Senior Engineer's Survival Guide.md, A detailed guide on Database Indexes.md
+- patterns/frontend: 9 component patterns (custom hooks, container/presentational, compound components, headless, HOC, render props, provider, error boundary, portal, atomic design); state management decision table; CSR/SSR/SSG/ISR; performance (memo/lazy/virtualization); CSS architecture; SOLID in React
+- patterns/concurrency: thread safety fundamentals, mutex/semaphore/RWLock/atomic/condition variables, memory models (ordering, false sharing), race condition detection, deadlock (Coffman conditions + prevention strategies), async/await pitfalls table, actor model, CSP, parallel algorithm patterns, backpressure
+- patterns/database: indexing strategies (B-tree/hash/composite/covering/bitmap/filtered/full-text) with when-to-use; EXPLAIN / query plan reading; N+1 detection and fix; connection pooling (parameters, PgBouncer modes); ACID, isolation levels, optimistic vs pessimistic locking; read/write splitting; denormalization triggers
+- index.md: removed stub markers, updated descriptions for all three
+
+## [2026-05-06] expand | patterns/principles + patterns/code-quality — replaced both stubs with full reference pages
+- Sources: The SOLID Principles of Object-Oriented Programming Explained in Plain English.md, What Is Clean Code? A Guide to Principles and Best Practices.md
+- patterns/principles: SOLID (each principle: definition, rationale, violation, fix, anti-patterns), DRY, YAGNI, KISS, LoD, SoC, composition over inheritance; decision table
+- patterns/code-quality: naming conventions, function discipline (size/SRP/abstraction/params), cognitive complexity mitigations, comment discipline, magic numbers/constants, code smell taxonomy (structural + AI-specific); AI-generated code pitfall section
+- index.md: removed stub markers, updated descriptions for both
+
+## [2026-05-07] ingest | LLM-as-Judge (3 sources: evidentlyai guide, Monte Carlo best practices, Datadog custom evaluations)
+- New concept: concepts/llm-as-judge — evaluation modes (pairwise/direct/G-Eval/span/trace), rubric axes, failure modes, RLHF relation, implementation notes
+- New summary: summaries/llm-as-judge — problem statement, core technique, production incident (Monte Carlo compliance drop), best practices, limitations
+- Updated: concepts/multi-vendor-adversarial-review — added LLM-as-judge as the evaluation mechanism section; added [[concepts/llm-as-judge]] to relation links; updated sources + frontmatter date
+- index.md: added entries for both new pages
+
+## [2026-05-06] ingest | patterns/error-handling
+- Sources: Best practices for exceptions.md, Error handling patterns.md, General error handling rules    Technical Writing.md
+- patterns/error-handling: error taxonomy (expected/unexpected, recoverable/fatal, business/technical), fail-fast, exceptions vs Result types, railway-oriented programming, propagation and rethrow discipline, exponential backoff with jitter, API error response design, logging discipline, anti-pattern table
+- index.md: removed stub marker, updated description

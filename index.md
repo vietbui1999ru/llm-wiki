@@ -51,6 +51,11 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/cc-agent-teams]] — CC agent teams (experimental): shared task list, teammate direct messaging, TeammateIdle/TaskCompleted hooks
 - [[summaries/context-engineering-anthropic]] — Anthropic context engineering: JIT retrieval, compaction, note-taking, sub-agents; context editing API
 - [[summaries/docker-sandboxes]] — Docker Sandboxes: microVM isolation for coding agents; Docker-in-Docker safe; CC/Codex/Gemini/Copilot/Kiro support
+- [[summaries/llm-as-judge]] — 3 sources: LLM-as-judge evaluation pattern; pairwise vs direct scoring; G-Eval chain-of-thought; production monitoring incident; best practices and limitations
+- [[summaries/cloudflare-agent-memory]] — Managed cross-session memory service: 5-channel RRF retrieval (FTS+key+HyDE+vector+message), 4-type taxonomy (Facts/Events/Instructions/Tasks), compaction-integrated ingest
+- [[summaries/rlhf-cai]] — RLHF/RLAIF/Constitutional AI/DPO: alignment training techniques; 3-stage RLHF pipeline; DPO as reward-model-free alternative; inspiration for preference-feedback-loop
+- [[summaries/self-refinement]] — Madaan et al. 2023: same-model iterative generate→critique→refine loop; no training required; self-evaluation bias limitation
+- [[summaries/dspy]] — DSPy signatures/modules/optimizers stack; GEPA error-driven prompt augmentation; when to use vs plain prompting; limitations
 
 ## Entities
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
@@ -71,6 +76,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/codex]] *(stub)* — OpenAI Codex CLI; pioneered AGENTS.md format; AGENTS.override.md layering; 32 KiB chain limit
 - [[entities/opencode-dcp]] — `@tarquinen/opencode-dcp` npm plugin; Compress + dedup + purge-errors; global/project config; /dcp commands
 - [[entities/lean-session]] — OpenCode plugin; injects `.agents/` state into compaction; writes checkpoint on idle; 3 hooks: compacting/diff/idle
+- [[entities/dspy]] — Stanford framework for programming LMs via Signatures/Modules/Optimizers; GEPA optimizer: error-driven prompt refinement; automated prompt optimization without manual prompt engineering
 
 ## Concepts
 - [[concepts/unit-testing]] — AAA pattern, test doubles, naming convention, coverage philosophy, flaky test quarantine
@@ -117,6 +123,31 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/self-healing-loop]] — failure→bounded retry→rollback→escalation; failure signature detection; guardrails; composes with ralph-loop; Dagger/ArgoCD/Windmill implementations
 - [[concepts/agentic-cicd]] — CI as external watchdog when agent IS the developer; gate sequence; staging-first; diff size cap; builder/deployer network split
 - [[concepts/error-budget]] — SRE error budget adapted to agent loops; retry/token/runtime/session budget axes; progress score; no-progress detection
+- [[concepts/llm-as-judge]] — LLM evaluates another LLM's output via structured prompt; pairwise vs direct scoring vs G-Eval; failure modes (self-bias, reward hacking, sycophancy); relation to RLHF
+- [[concepts/preference-feedback-loop]] — cross-vendor judge evaluates agent outputs on 4-dimension rubric; pattern-triggered rule extraction; human approval gate; extends mistakes/ + memory/feedback_*
+
+## Patterns
+- [[patterns/principles]] — SOLID (SRP/OCP/LSP/ISP/DIP), DRY, YAGNI, KISS, Law of Demeter, SoC, composition over inheritance; per-principle violation patterns and decision table
+- [[patterns/code-quality]] — naming conventions, function discipline (size/SRP/params/abstraction), cognitive complexity, comment discipline, magic numbers, code smell taxonomy (structural + AI-specific)
+- [[patterns/design-patterns-creational]] — All 5 GoF creational patterns: Factory Method, Abstract Factory, Builder, Prototype, Singleton; intent, triggers, anti-patterns, TypeScript sketches, comparison table
+- [[patterns/design-patterns-structural]] — All 7 GoF structural patterns: Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy; intent, triggers, TypeScript sketches, anti-patterns, Adapter/Facade/Proxy confusion table
+- [[patterns/design-patterns-behavioral]] — All 10 GoF behavioral patterns + Domain Event: intent, when to use/not, TypeScript sketch, anti-patterns, confusion table for Observer/Mediator, Strategy/State, Command/CoR
+- [[patterns/refactoring]] — 13 Fowler-style techniques: Extract Method/Variable, Inline, Move, Replace Temp with Query, Introduce Parameter Object, Replace Conditional with Polymorphism, Decompose Conditional, Magic Number → Constant, Error Code → Exception, Pull Up/Push Down, Extract/Inline Class; each with trigger, before/after snippet, anti-patterns
+- [[patterns/algorithmic]] — 15 pattern families: sliding window, two pointers, fast/slow pointers, binary search, merge intervals, BFS, DFS, backtracking, DP (memo vs tabulation), greedy, topological sort, union-find, top-K heap, modified binary search, monotonic stack/queue; each with problem shape, recognition trigger, complexity, template
+- [[patterns/api-design]] — Resource-oriented URL design, HTTP method semantics, field masks, structured error bodies, URL vs header versioning, cursor/offset pagination, idempotency keys, long-running operations (LRO), and API anti-pattern table
+- [[patterns/error-handling]] — error taxonomy (expected/unexpected, recoverable/fatal, business/technical); fail-fast; exceptions vs Result types; railway-oriented programming; error propagation and rethrow discipline; exponential backoff with jitter; API error response design; logging discipline; anti-pattern table
+- [[patterns/frontend]] — React component patterns (custom hooks, container/presentational, compound components, headless, HOC, render props, provider, portals, atomic design); state management decision table (local/lifted/server/global); rendering strategies (CSR/SSR/SSG/ISR); performance (memo/lazy/virtualization); CSS architecture (BEM/CSS Modules/Tailwind/CSS-in-JS)
+- [[patterns/backend]] — middleware chain composition order, JWT vs session auth, RBAC vs ABAC enforcement placement, service layer / repository pattern, queue/worker at-least-once delivery + DLQ, DI anti-patterns, API gateway, backend anti-pattern taxonomy
+- [[patterns/concurrency]] — thread safety fundamentals, synchronization primitives (mutex/semaphore/RWLock/atomic), memory models, race condition detection/prevention, deadlock patterns, async/await pitfalls, actor model, CSP, parallel algorithm patterns (map-reduce/fork-join/thread-pool/producer-consumer), backpressure
+- [[patterns/database]] — indexing strategies (B-tree/hash/composite/covering/bitmap/filtered/full-text); EXPLAIN / query plan reading; N+1 detection and fix; connection pooling parameters and modes; ACID, isolation levels, optimistic vs pessimistic locking; read/write splitting; when to denormalize
+
+## Systems
+- [[systems/distributed-systems]] — CAP theorem (CP vs AP), eventual consistency conflict resolution, idempotency patterns, circuit breaker, backpressure strategies, saga (choreography vs orchestration), 2PC avoidance, distributed locks + fencing tokens
+- [[systems/architectural-patterns]] — monolith vs microservices (decision criteria), event-driven architecture, CQRS (when warranted + AWS reference), event sourcing, hexagonal architecture, layered architecture, modular monolith, vertical slice architecture, strangler fig migration
+- [[systems/system-design-process]] — requirements clarification framework (functional/non-functional), capacity estimation (QPS/storage/bandwidth), component decomposition, data flow mapping, API contract-first, tradeoff articulation, common design mistakes
+- [[systems/scalability-reliability]] — caching strategies (cache-aside/write-through/write-behind; layer placement; invalidation), database sharding (shard key selection, failure modes), rate limiting algorithms (token bucket/leaky bucket/sliding window), load balancing (L4 vs L7, sticky sessions), observability (RED/USE methods, structured logs, distributed tracing), SLO/SLA/availability numbers
+- [[systems/data-modeling]] — relational/document/wide-column/graph/time-series decision criteria, normalization (1NF-3NF) vs denormalization (when to break rules), schema evolution (expand-contract, versioned events), event sourcing as data model, polyglot persistence tradeoffs, access-pattern-driven design
+- [[systems/ai-ml]] — 9-step ML system design process, metrics (offline/online, counter metrics), data labeling strategies, feature stores (training-serving consistency), model selection heuristic, batch vs real-time serving, edge inference (quantization/pruning/distillation), A/B/shadow/canary deployment, monitoring (covariate vs concept drift); AI agent patterns → wiki/concepts/
 
 ## Comparisons
 - [[comparisons/spec-driven-frameworks-vs-native]] — Heavy frameworks vs lean skills vs vanilla vs custom harness; community consensus; discrepancies with prior wiki

@@ -5,8 +5,9 @@ tags: [memory, context-management, cross-session, context-editing, anthropic-api
 sources:
   - "Memory & context management with Claude Sonnet 4.6.md"
   - "Effective context engineering for AI agents.md"
+  - "Agents that remember introducing Agent Memory.md"
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-07
 ---
 
 # Agentic Memory Tool
@@ -113,19 +114,33 @@ Memory files are read back into Claude's context, making them a **prompt injecti
 
 See [[concepts/indirect-prompt-injection]] for the broader attack class.
 
-## OSS Alternative: Mnemory
+## Alternatives
+
+### Mnemory (self-hosted)
 
 [[entities/mnemory]] is a self-hosted MCP memory backend with semantic vector search (Qdrant) and artifact storage (S3/MinIO). The key architectural difference: Mnemory uses vector similarity for retrieval; the Anthropic tool uses flat file navigation. Mnemory also handles deduplication and contradiction detection automatically within a single LLM call.
 
-| Dimension | Mnemory | memory_20250818 |
-|---|---|---|
-| Retrieval | Semantic vector search (Qdrant) | Flat file read |
-| Deduplication | Automatic (vector proximity) | Manual (agent-written) |
-| Contradiction handling | Automatic flagging | Manual |
-| Vendor lock-in | None | Anthropic API only |
-| Setup cost | High (Qdrant + S3 infra) | Low (flat files) |
+### Cloudflare Agent Memory (managed service)
 
-For simple projects and single-vendor setups: `memory_20250818` is lower friction. For cross-vendor workflows (Claude + Codex + Cursor on the same project) or projects needing semantic retrieval: Mnemory.
+[[summaries/cloudflare-agent-memory]] is a managed memory-as-a-service for agents. Key architectural differentiator: **5-channel retrieval with RRF fusion** (full-text, exact key, HyDE, direct vector, raw message search). Memory types: Facts / Events / Instructions / Tasks — keyed deduplication via version chain rather than overwrite.
+
+Primary use case: agents running in Cloudflare Workers; also available via REST API for external agents. Integrates with compaction lifecycle: `ingest` is called when a harness compacts context, preserving knowledge that would otherwise be discarded.
+
+Key distinction: constrained API (not raw filesystem access) makes it superior for reasoning tasks involving temporal logic and supersession.
+
+### Comparison
+
+| Dimension | Mnemory | memory_20250818 | Cloudflare Agent Memory |
+|---|---|---|---|
+| Retrieval | Semantic vector (Qdrant) | Flat file read | 5-channel RRF (FTS+key+HyDE+vector+message) |
+| Deduplication | Automatic (vector proximity) | Manual (agent-written) | Content-addressed ID + key-based supersession |
+| Contradiction handling | Automatic flagging | Manual | Supersession chain (keyed facts) |
+| Memory taxonomy | None | None | Facts/Events/Instructions/Tasks |
+| Vendor lock-in | None (self-hosted) | Anthropic API only | Cloudflare platform |
+| Setup cost | High (Qdrant + S3) | Low (flat files) | Low (managed) |
+| Cross-vendor support | Yes | No | Yes (REST API) |
+
+For simple projects and single-vendor setups: `memory_20250818` is lower friction. For cross-vendor workflows (Claude + Codex + Cursor on the same project) or projects needing semantic retrieval: Mnemory. For managed retrieval with memory taxonomy and compaction integration: Cloudflare Agent Memory.
 
 ## Related Pages
 
@@ -134,4 +149,5 @@ For simple projects and single-vendor setups: `memory_20250818` is lower frictio
 - [[concepts/context-compression]] — compression strategies; server-side compaction is one lever
 - [[concepts/indirect-prompt-injection]] — security risk in memory files
 - [[entities/mnemory]] — OSS self-hosted parallel to this tool
+- [[summaries/cloudflare-agent-memory]] — managed memory service with 5-channel retrieval
 - [[summaries/context-window-cluster]] — consolidated source summary

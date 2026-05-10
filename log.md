@@ -2,6 +2,11 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-10] ingest | Actor Model (2 sources: thesis + Orleans docs)
+- New concept page: concepts/actor-model — 3 primitives, mailbox semantics, no-shared-state rule, location transparency, actor vs threads vs CSP, supervision trees (one_for_one/one_for_all/rest_for_one), virtual actor model (Orleans grains/silos), implementations table (Erlang/Elixir/Akka/Akka.NET/Orleans/ProtoActor), when-to-use guide
+- Updated: summaries/awesome-software-architecture — WIKI-CANDIDATE flag removed
+- Updated: index.md — new entry under Concepts
+
 ## [2026-05-10] ingest | Awesome Software Architecture (mehdihadeli curated list — 2 sources, link dump)
 - New summary: summaries/awesome-software-architecture — topic taxonomy extraction; cross-linked to existing systems/ and patterns/ pages; WIKI-CANDIDATE flagged for Actor Model
 

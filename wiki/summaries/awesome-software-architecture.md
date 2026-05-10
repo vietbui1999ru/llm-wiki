@@ -55,4 +55,4 @@ The list does not cover: AI/agent orchestration, LLM-specific patterns, testing 
 
 The list separately covers **Actor Model** as a first-class architecture style — not currently in [[systems/architectural-patterns]].
 
-WIKI-CANDIDATE: Actor Model architecture as a concept page — message-passing concurrency model, actors as unit of execution, Akka/Orleans/ProtoActor as implementations; distinct from event-driven architecture.
+Actor Model is now documented at [[concepts/actor-model]] — 3 primitives, mailbox semantics, supervision trees, virtual actor model (Orleans), implementations table.

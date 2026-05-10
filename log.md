@@ -2,6 +2,19 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-10] ingest | Awesome Software Architecture (mehdihadeli curated list — 2 sources, link dump)
+- New summary: summaries/awesome-software-architecture — topic taxonomy extraction; cross-linked to existing systems/ and patterns/ pages; WIKI-CANDIDATE flagged for Actor Model
+
+## [2026-05-10] ingest | HN: How should junior programmers use AI for programming?
+- New summary: summaries/hn-junior-devs-and-ai — AI as multiplier not substitute; repetition/debugging gap; 70/30 heuristic; agentic tools harmful for juniors; 7 actionable heuristics; community atrophy concern
+
+## [2026-05-10] skip | anthropic claude-cookbooks — shallow README, link catalog only, no technique depth or pattern explanations; no wiki page created
+
+## [2026-05-10] ingest | Living dangerously with Claude (Simon Willison talk)
+- New summary: summaries/living-dangerously-with-claude — YOLO mode UX vs. lethal trifecta risk; sandbox-exec macOS proxy pattern; AI-layer defenses insufficient
+- Updated: concepts/agentic-sandbox-controls — added macOS sandbox-exec + HTTP proxy section with deprecation warning
+- Updated: concepts/indirect-prompt-injection — added lethal trifecta named subset
+
 ## [2026-05-07] ingest | DSPy (4 sources: Stanford README, dbreunig pipeline walkthrough, HuggingFace GEPA cookbook, DSPy docs)
 - New entity: entities/dspy — Signatures/Modules/Optimizers stack; GEPA error-driven prompt augmentation; module/optimizer comparison tables
 - New summary: summaries/dspy — architecture, GEPA mechanics, performance claims marked (claimed, unverified), limitations, decision criteria

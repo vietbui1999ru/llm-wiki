@@ -56,6 +56,9 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/rlhf-cai]] — RLHF/RLAIF/Constitutional AI/DPO: alignment training techniques; 3-stage RLHF pipeline; DPO as reward-model-free alternative; inspiration for preference-feedback-loop
 - [[summaries/self-refinement]] — Madaan et al. 2023: same-model iterative generate→critique→refine loop; no training required; self-evaluation bias limitation
 - [[summaries/dspy]] — DSPy signatures/modules/optimizers stack; GEPA error-driven prompt augmentation; when to use vs plain prompting; limitations
+- [[summaries/living-dangerously-with-claude]] — Willison talk: YOLO mode productivity vs. lethal trifecta risk; sandbox-exec macOS pattern; why AI-layer defenses are insufficient
+- [[summaries/awesome-software-architecture]] — mehdihadeli curated list: topic taxonomy for software architecture (DDD, microservices, distributed patterns, design principles, messaging tools, DevOps); reference index, not prose
+- [[summaries/hn-junior-devs-and-ai]] — HN community: AI amplifies existing ability; juniors lack evaluation frame; repetition/debugging gap; agentic tools harmful for beginners; 7 actionable heuristics
 
 ## Entities
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated

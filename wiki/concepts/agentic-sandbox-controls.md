@@ -80,6 +80,20 @@ Anthropic's Terms of Service restrict running Claude Code subscription keys insi
 
 This does not invalidate the NVIDIA guidance — it applies fully to API usage and partially to subscription users who can sandbox tool execution even if the Claude process runs on host.
 
+## macOS Host-Native Sandbox (`sandbox-exec` + HTTP Proxy)
+
+Apple's `sandbox-exec` provides a policy-based sandbox for any command without requiring Docker. Anthropic's [`sandbox-runtime`](https://github.com/anthropic-experimental/sandbox-runtime) OSS library (released Oct 2025) documents this pattern for Claude Code:
+
+1. Run Claude Code under `sandbox-exec` with a policy that denies all outbound except `localhost:<proxy-port>`
+2. Anthropic runs an HTTP proxy on that port
+3. The proxy enforces a domain allowlist — the OS never sees a connection to non-allowlisted hosts
+
+This is ToS-compliant (host-native, not Docker) and directly cuts the exfiltration leg of prompt injection attacks.
+
+**Deprecation warning**: `sandbox-exec` has been marked deprecated in Apple docs since at least 2017. Still functional and used by Codex CLI as of 2025, but long-term availability is uncertain.
+
+See: [[summaries/living-dangerously-with-claude]]
+
 ## Autonomous / Unattended Mode (`--dangerously-skip-permissions`)
 
 Claude Code supports a flag that removes all approval prompts, enabling fully unattended operation. This flag is named accordingly — it is only safe if the sandbox is independently enforced.

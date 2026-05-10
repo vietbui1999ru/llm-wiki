@@ -39,6 +39,16 @@ Coding agents have broad OS-level permissions (same as the developer) and execut
 | Direct | User's own prompt | Jailbreak in the chat input |
 | Indirect | Third-party content agent reads | Malicious instruction in a cloned repo's README |
 
+## The Lethal Trifecta
+
+Simon Willison's term for the highest-risk subset of prompt injection scenarios. A system is in the lethal trifecta when it combines:
+
+1. **Access to private data** (source code, credentials, env vars)
+2. **Exposure to untrusted content** (fetched files, repos, web pages)
+3. **Ability to externally communicate** (arbitrary outbound network)
+
+When all three are present, a single successful injection can exfiltrate private data to the attacker. Removing any one leg breaks the attack chain — network egress control is typically the most tractable mitigation. See [[summaries/living-dangerously-with-claude]].
+
 ## Mitigations
 
 Indirect prompt injection cannot be fully solved at the model layer. The mitigations are structural:

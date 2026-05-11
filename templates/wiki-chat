@@ -26,8 +26,9 @@ import sys
 from pathlib import Path
 
 try:
+    import ollama as _ollama
     from lightrag import LightRAG, QueryParam
-    from lightrag.llm.ollama import ollama_model_complete, ollama_embed
+    from lightrag.llm.ollama import ollama_model_complete
     from lightrag.utils import EmbeddingFunc
     from prompt_toolkit import prompt as pt_prompt
     from prompt_toolkit.history import FileHistory
@@ -48,6 +49,15 @@ VALID_MODES = ("local", "global", "hybrid", "naive")
 console = Console()
 
 
+async def _embed(texts: list[str]):
+    import numpy as np
+    loop = asyncio.get_event_loop()
+    resp = await loop.run_in_executor(
+        None, lambda: _ollama.embed(model=EMBED_MODEL, input=texts)
+    )
+    return np.array(resp.embeddings, dtype=np.float32)
+
+
 def _build_rag() -> LightRAG:
     if not WORK_DIR.exists():
         console.print("[red]Index not found. Run: wiki-index[/red]")
@@ -65,7 +75,7 @@ def _build_rag() -> LightRAG:
         embedding_func=EmbeddingFunc(
             embedding_dim=EMBED_DIM,
             max_token_size=8192,
-            func=lambda texts: ollama_embed(texts, embed_model=EMBED_MODEL),
+            func=_embed,
         ),
     )
 

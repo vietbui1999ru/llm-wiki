@@ -1,0 +1,22 @@
+#!/bin/zsh
+# Keep qmd index current after every wiki commit.
+# qmd embed is incremental — only new/changed chunks are re-embedded.
+
+WIKI_ROOT="$(git rev-parse --show-toplevel)"
+
+# Check if any wiki pages or index changed in this commit
+if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE "^wiki/|^index\.md|^log\.md"; then
+    CHANGED=1
+elif ! git rev-parse HEAD~1 >/dev/null 2>&1; then
+    # First commit — always run
+    CHANGED=1
+fi
+
+if [[ -n "$CHANGED" ]]; then
+    cd "$WIKI_ROOT"
+    printf "  qmd: indexing... "
+    qmd update 2>/dev/null | grep -oE "[0-9]+ new" | head -1 | xargs -I{} printf "{} "
+    printf "embedding... "
+    qmd embed 2>/dev/null | grep -oE "Embedded [0-9]+ chunks" | head -1
+    printf "\n"
+fi

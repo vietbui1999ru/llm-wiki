@@ -7,13 +7,35 @@ Claude owns the wiki layer entirely. Viet curates sources and asks questions.
 
 ## Directory layout
 
-raw/        # Immutable source documents (web-scraped markdown, text). Never modify these.
-pdfs/       # Immutable PDF sources (research papers, reports). Never modify these.
-wiki/       # LLM-maintained markdown pages. Claude writes and updates these.
-mistakes/   # AI error log. raw-log.md (hook-captured), structured entries, global-prevention-rules.md.
-assets/     # Images downloaded from sources (use Obsidian hotkey or manual save).
-index.md    # Catalog of all wiki pages. Updated on every ingest.
-log.md      # Append-only chronological record of all operations.
+raw/                   # Immutable source documents (web-scraped markdown, text). Never modify these.
+pdfs/                  # Immutable PDF sources (research papers, reports). Never modify these.
+wiki/                  # LLM-maintained markdown pages. Claude writes and updates these.
+mistakes/              # AI error log. raw-log.md (hook-captured), structured entries, global-prevention-rules.md.
+assets/                # Images downloaded from sources (use Obsidian hotkey or manual save).
+claude-setup/scripts/  # Versioned setup scripts. Install manually — see Setup section below.
+index.md               # Catalog of all wiki pages. Updated on every ingest.
+log.md                 # Append-only chronological record of all operations.
+
+## Setup (one-time, after cloning)
+
+After cloning this repo, install the git hooks:
+
+```bash
+cp claude-setup/scripts/post-commit .git/hooks/post-commit
+chmod +x .git/hooks/post-commit
+```
+
+**What it does:** runs `qmd update && qmd embed` after any commit that touches `wiki/`,
+`index.md`, or `log.md` — keeps the search index current automatically.
+
+Also install wiki-chat (local wiki Q&A TUI):
+```bash
+cp templates/wiki-chat ~/.local/bin/wiki-chat  # if the script is added to templates
+chmod +x ~/.local/bin/wiki-chat
+pip install ollama rich prompt_toolkit
+```
+
+Or run directly: `python3 ~/.local/bin/wiki-chat`
 
 ## Frontmatter for wiki pages
 

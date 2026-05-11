@@ -14,9 +14,13 @@ Usage:
   wiki-index --full     wipe and rebuild from scratch
   wiki-index --status   show manifest stats without indexing
 
+Extraction backend (set env var before running):
+  ANTHROPIC_API_KEY=sk-...  → Claude Haiku (better entity/relation extraction)
+  unset                     → qwen2.5:3b via ollama (fully local, free)
+
 Requires:
-  pip install lightrag-hku
-  ollama running with phi4-mini + nomic-embed-text
+  uv run --script wiki-index   (deps declared inline above)
+  ollama running with qwen2.5:3b + nomic-embed-text
 """
 from __future__ import annotations
 
@@ -31,6 +35,7 @@ try:
     import ollama as _ollama
     from lightrag import LightRAG, QueryParam
     from lightrag.llm.ollama import ollama_model_complete
+    from lightrag.llm.anthropic import anthropic_complete_if_cache
     from lightrag.utils import EmbeddingFunc
 except ImportError:
     print("Missing: pip install lightrag-hku")
@@ -40,9 +45,18 @@ WIKI_DIR    = Path.home() / "repos/llm-wiki"
 WIKI_PAGES  = WIKI_DIR / "wiki"
 WORK_DIR    = WIKI_DIR / ".lightrag"
 MANIFEST    = WORK_DIR / "manifest.json"
-LLM_MODEL   = "qwen2.5:3b"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
+
+_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+if _API_KEY:
+    LLM_MODEL      = "claude-haiku-4-5-20251001"
+    _llm_func      = anthropic_complete_if_cache
+    _llm_max_async = 4
+else:
+    LLM_MODEL      = "qwen2.5:3b"
+    _llm_func      = ollama_model_complete
+    _llm_max_async = 2
 
 
 async def _embed(texts: list[str]):
@@ -58,9 +72,9 @@ def _build_rag() -> LightRAG:
     WORK_DIR.mkdir(exist_ok=True)
     return LightRAG(
         working_dir=str(WORK_DIR),
-        llm_model_func=ollama_model_complete,
+        llm_model_func=_llm_func,
         llm_model_name=LLM_MODEL,
-        llm_model_max_async=2,
+        llm_model_max_async=_llm_max_async,
         max_extract_input_tokens=16384,
         # Wiki pages are focused (1 concept/page, ~300-800 tokens).
         # chunk_token_size=800 keeps most pages as a single chunk — preserves
@@ -111,7 +125,8 @@ async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
         print("Index up to date — no changes detected.")
         return manifest
 
-    print(f"Indexing {len(changed)} new/changed pages (of {len(pages)} total)...")
+    backend = "anthropic" if _API_KEY else "ollama"
+    print(f"Indexing {len(changed)} new/changed pages (of {len(pages)} total) · extraction: {LLM_MODEL} ({backend})")
     for i, p in enumerate(changed, 1):
         rel = p.relative_to(WIKI_DIR)
         print(f"  [{i}/{len(changed)}] {rel}", flush=True)

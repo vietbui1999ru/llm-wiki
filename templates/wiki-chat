@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""wiki-chat — personal wiki AI assistant
+
+Usage:
+  wiki-chat                      interactive Q&A
+  wiki-chat --model gemma3:4b    use a larger model for better quality
+
+Prompt commands:
+  /search <terms>    show matched pages without synthesis
+  /model <name>      switch model mid-session
+  q / exit           quit
+
+Requires:
+  pip install ollama rich prompt_toolkit
+  qmd on PATH, index current: cd ~/repos/llm-wiki && qmd update && qmd embed
+"""
+from __future__ import annotations
+
+import argparse
+import subprocess
+import sys
+from pathlib import Path
+
+try:
+    import ollama
+    from prompt_toolkit import prompt as pt_prompt
+    from prompt_toolkit.history import FileHistory
+    from rich.console import Console
+    from rich.markdown import Markdown
+    from rich.panel import Panel
+except ImportError as e:
+    print(f"Missing dependency: {e}\nRun: pip install ollama rich prompt_toolkit")
+    sys.exit(1)
+
+# ── Config ───────────────────────────────────────────────────────────────────
+WIKI_DIR      = Path.home() / "repos/llm-wiki"
+DEFAULT_MODEL = "gemma3:1b"   # fast interactive model; use --model gemma3:4b for better quality
+MIN_SCORE     = 0.35
+TOP_N         = 3             # fewer pages = less context = faster inference
+MAX_CHARS     = 2000          # per page trim
+
+SYSTEM = (
+    "You are a personal knowledge assistant for a technical wiki on AI engineering, "
+    "software architecture, and development patterns. "
+    "Answer using ONLY the provided wiki page context. Be concise and direct. "
+    "At the end, list pages used as: Sources: <names>"
+)
+
+console = Console()
+
+
+# ── Search ───────────────────────────────────────────────────────────────────
+def search_wiki(query: str, top_n: int) -> tuple[str, list[str]]:
+    """BM25 search via qmd search (fast, no LLM). Returns (context_text, page_rel_paths)."""
+    result = subprocess.run(
+        ["qmd", "search", query, "--files", f"--min-score={MIN_SCORE}"],
+        cwd=WIKI_DIR,
+        capture_output=True,
+        text=True,
+    )
+
+    ctx, found = "", []
+    for line in result.stdout.splitlines():
+        if not line.startswith("#"):
+            continue
+
+        # format: #docid,score,qmd://wiki/wiki/concepts/foo.md,"context label"
+        parts = line.split(",", 3)
+        if len(parts) < 3:
+            continue
+
+        qmd_path = parts[2].strip()
+        if "qmd://wiki/wiki/" not in qmd_path:
+            continue  # skip raw/, index.md, log.md, etc.
+
+        # qmd://wiki/wiki/concepts/foo.md → wiki/concepts/foo.md
+        rel = qmd_path.replace("qmd://wiki/", "")
+        p = WIKI_DIR / rel
+        if not p.exists():
+            continue
+
+        ctx += f"\n\n### {rel}\n{p.read_text()[:MAX_CHARS]}"
+        found.append(rel)
+
+        if len(found) >= top_n:
+            break
+
+    return ctx, found
+
+
+# ── Synthesis ────────────────────────────────────────────────────────────────
+def synthesize(question: str, ctx: str, model: str) -> None:
+    prompt_text = f"{SYSTEM}\n\nWiki pages:\n{ctx}\n\nQuestion: {question}"
+    console.print("[dim]▸[/dim] ", end="")
+    full = ""
+    try:
+        for chunk in ollama.generate(model=model, prompt=prompt_text, stream=True):
+            token = chunk["response"]
+            full += token
+            print(token, end="", flush=True)
+        print()  # newline after stream
+        console.print(f"[dim]─── Sources in context: {ctx.count('### wiki/')} pages[/dim]")
+    except Exception as e:
+        console.print(f"\n[red]ollama error: {e}[/red]")
+        console.print("[dim]Is ollama running? Try: ollama serve[/dim]")
+
+
+# ── Startup check ────────────────────────────────────────────────────────────
+def check_ollama(model: str) -> bool:
+    try:
+        available = [m.model for m in ollama.list().models]
+        if not any(m.startswith(model.split(":")[0]) for m in available):
+            console.print(f"[yellow]Model '{model}' not found. Pull it with: ollama pull {model}[/yellow]")
+            console.print(f"[dim]Available: {', '.join(available) or 'none'}[/dim]")
+            return False
+        return True
+    except Exception:
+        console.print("[red]ollama not reachable. Start it with: ollama serve[/red]")
+        return False
+
+
+# ── Main loop ─────────────────────────────────────────────────────────────────
+def main() -> None:
+    parser = argparse.ArgumentParser(description="wiki-chat: personal wiki AI assistant")
+    parser.add_argument("--model", default=DEFAULT_MODEL)
+    parser.add_argument("--top-n", type=int, default=TOP_N)
+    args = parser.parse_args()
+
+    model = args.model
+
+    if not check_ollama(model):
+        sys.exit(1)
+
+    hist = FileHistory(str(Path.home() / ".wiki-chat-history"))
+
+    console.print(Panel(
+        f"[bold cyan]Wiki Chat[/bold cyan]  [dim]model: {model} · search: BM25[/dim]\n"
+        "[dim]/search <terms>  /model <name>  q to quit[/dim]",
+        border_style="cyan",
+    ))
+
+    while True:
+        try:
+            raw = pt_prompt("→ ", history=hist).strip()
+        except (KeyboardInterrupt, EOFError):
+            break
+
+        if not raw or raw in ("q", "quit", "exit"):
+            break
+
+        if raw.startswith("/model "):
+            model = raw.split(None, 1)[1].strip()
+            console.print(f"[dim]model → {model}[/dim]")
+            continue
+
+        search_only = raw.startswith("/search ")
+        query = raw[8:].strip() if search_only else raw
+        if not query:
+            continue
+
+        with console.status("[dim]searching wiki...[/dim]", spinner="dots"):
+            ctx, pages = search_wiki(query, top_n=args.top_n)
+
+        if not ctx:
+            console.print("[yellow]No matching wiki pages found.[/yellow]")
+            continue
+
+        for p in pages:
+            console.print(f"  [dim]· {p}[/dim]")
+
+        if not search_only:
+            synthesize(query, ctx, model)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,4 +1,13 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#   "lightrag-hku",
+#   "mcp",
+#   "ollama",
+#   "numpy",
+# ]
+# ///
 """wiki-mcp — local MCP server: graph-aware wiki queries via LightRAG + ollama
 
 Zero API cost. Exposes wiki_query and wiki_status to OpenCode (or any MCP client)

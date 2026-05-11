@@ -2,6 +2,10 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-11] update | GUIDE.md — added wiki-chat/wiki-index (LightRAG RAG) to §2 search, §3.1 skills, §6 playbooks; added docs-writer agent to §3.2 feature dev; added interactive wiki query and documentation playbooks
+
+## [2026-05-11] build | wiki-chat TUI (LightRAG v2) — migrated from qmd+ollama to LightRAG graph-aware retrieval; phi4-mini + nomic-embed-text (768 dim); manifest-based incremental indexing; modes: local/global/hybrid/naive; ~/.local/bin/wiki-chat + wiki-index; summaries/agentic-search-vs-rag.md + summaries/local-rag-elasticsearch.md ingested to validate RAG stack choice
+
 ## [2026-05-11] build | wiki-chat TUI — ~/.local/bin/wiki-chat; qmd+ollama local assistant; qmd index refreshed (349 pages, 1818 chunks embedded); syntheses/local-rag-wiki.md future-dev note created
 
 ## [2026-05-10] ingest | Actor Model (2 sources: thesis + Orleans docs)

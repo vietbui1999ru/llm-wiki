@@ -41,7 +41,7 @@ except ImportError as e:
 
 WIKI_DIR    = Path.home() / "repos/llm-wiki"
 WORK_DIR    = WIKI_DIR / ".lightrag"
-LLM_MODEL   = "phi4-mini"
+LLM_MODEL   = "qwen2.5:3b"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 VALID_MODES = ("local", "global", "hybrid", "naive")

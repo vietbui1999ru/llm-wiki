@@ -91,6 +91,16 @@ cd ~/repos/llm-wiki
 qmd query "context compression degradation" --files --min-score 0.4
 ```
 
+**Interactive graph-aware Q&A (LightRAG TUI):**
+```bash
+wiki-chat              # hybrid mode — recommended default
+wiki-chat --mode local # entity/concept-focused questions
+wiki-chat --mode global# cross-concept, community-level questions
+```
+Inside `wiki-chat`: `/mode local|global|hybrid|naive` to switch, `/reindex` to rebuild after ingests, `/status` for index stats, `q` to quit.
+
+> First time: run `wiki-index` to build the graph. Takes ~30–60 min for 149 pages.
+
 **Read a specific page:**
 ```bash
 cat ~/repos/llm-wiki/wiki/concepts/context-compression.md
@@ -113,6 +123,8 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 | `pre-digest` | `/pre-digest` | Runs gemma4:e4b locally to pre-process a source file into a digest before full ingest |
 | `agent-orchestration` | Auto (agent/multi-step work) | Multi-agent coordination patterns, subagent design, harness systems |
 | `security-patterns` | Auto (security review) | OWASP checklist + AI-specific threats (indirect prompt injection, agentic sandbox) |
+| `wiki-index` | `wiki-index` in terminal | Build/update LightRAG graph index; run after bulk ingests or `--full` to wipe+rebuild |
+| `wiki-chat` | `wiki-chat` in terminal | Interactive graph-aware Q&A (LightRAG); 4 modes: hybrid (default), local, global, naive |
 
 ---
 
@@ -120,6 +132,7 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 
 | Skill | Invoke | When to use | Example |
 |---|---|---|---|
+| `docs-writer` | Auto (after code-writer; or "document this" / "write docs") | Write/update structured markdown docs to `docs/`; follows Diátaxis (tutorial/how-to/reference/explanation) | "document the new auth module" |
 | `/grill-me` | `/grill-me` | Stress-test a plan before starting | "I want to add auth — /grill-me" |
 | `/grill-with-docs` | `/grill-with-docs` | Like grill-me but also builds `CONTEXT.md` + ADRs | New project or module with unclear terminology |
 | `/tdd` | `/tdd` | Build features or fix bugs with red-green-refactor | "Add user profile API — /tdd" |
@@ -392,6 +405,29 @@ After any code/plan/design response:
 ```
 "search the wiki for context degradation"
 → wiki-context skill invoked → relevant pages loaded → answer with [[page]] citations
+```
+
+### "I want to query the wiki interactively (deep exploration)"
+```
+wiki-chat                     # in terminal, outside Claude Code
+→ Hybrid mode: entity graph + community summaries
+→ /mode local   — specific concept/entity questions
+→ /mode global  — big-picture cross-concept questions
+→ /reindex      — rebuild graph after new ingests
+→ q to quit
+
+Prerequisite: wiki-index must have run at least once.
+After bulk ingests: wiki-index (incremental) or wiki-index --full (rebuild)
+```
+
+### "I want to document a new feature or module"
+```
+Say: "document this" / "write docs" / "update the docs"
+→ docs-writer agent invoked
+→ outputs structured markdown to project's docs/ folder
+→ 4 Diátaxis types: tutorial (learning-oriented), how-to (goal-oriented),
+  reference (information-oriented), explanation (understanding-oriented)
+→ AI agents treated as explicit audience (machine-readable navigation)
 ```
 
 ### "I want to improve the architecture of this codebase"

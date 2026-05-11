@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""wiki-mcp — local MCP server: graph-aware wiki queries via LightRAG + ollama
+
+Zero API cost. Exposes wiki_query and wiki_status to OpenCode (or any MCP client)
+via stdio transport. LightRAG initialized once at startup and kept alive.
+
+Requires:
+  pip install mcp lightrag-hku ollama numpy
+  ollama running with qwen2.5:3b + nomic-embed-text
+  wiki-index run at least once to build the graph
+"""
+from __future__ import annotations
+
+import asyncio
+import json
+import sys
+from pathlib import Path
+
+try:
+    import numpy as np
+    import ollama as _ollama
+    from lightrag import LightRAG, QueryParam
+    from lightrag.llm.ollama import ollama_model_complete
+    from lightrag.utils import EmbeddingFunc
+    from mcp.server import Server
+    from mcp.server.stdio import stdio_server
+    from mcp import types
+except ImportError as e:
+    print(f"Missing: {e}\nRun: pip install mcp lightrag-hku ollama numpy", file=sys.stderr)
+    sys.exit(1)
+
+WIKI_DIR    = Path.home() / "repos/llm-wiki"
+WORK_DIR    = WIKI_DIR / ".lightrag"
+LLM_MODEL   = "qwen2.5:3b"
+EMBED_MODEL = "nomic-embed-text"
+EMBED_DIM   = 768
+
+_rag: LightRAG | None = None
+
+
+async def _embed(texts: list[str]):
+    loop = asyncio.get_event_loop()
+    resp = await loop.run_in_executor(
+        None, lambda: _ollama.embed(model=EMBED_MODEL, input=texts)
+    )
+    return np.array(resp.embeddings, dtype=np.float32)
+
+
+async def get_rag() -> LightRAG:
+    global _rag
+    if _rag is not None:
+        return _rag
+    if not WORK_DIR.exists():
+        raise RuntimeError("Wiki index not found. Run: wiki-index")
+    _rag = LightRAG(
+        working_dir=str(WORK_DIR),
+        llm_model_func=ollama_model_complete,
+        llm_model_name=LLM_MODEL,
+        llm_model_max_async=1,
+        max_extract_input_tokens=8192,
+        chunk_token_size=800,
+        chunk_overlap_token_size=64,
+        top_k=20,
+        cosine_threshold=0.3,
+        embedding_func=EmbeddingFunc(
+            embedding_dim=EMBED_DIM,
+            max_token_size=8192,
+            func=_embed,
+        ),
+    )
+    await _rag.initialize_storages()
+    return _rag
+
+
+app = Server("wiki-mcp")
+
+
+@app.list_tools()
+async def list_tools() -> list[types.Tool]:
+    return [
+        types.Tool(
+            name="wiki_query",
+            description=(
+                "Query the personal LLM wiki using graph-aware RAG (LightRAG + ollama). "
+                "Returns a synthesized answer from the knowledge graph — no API cost. "
+                "Better than keyword search for concept questions, cross-topic synthesis, "
+                "and relationship queries. "
+                "mode: hybrid=entity+community graph (default), "
+                "local=specific concept/entity, global=big-picture cross-concept, naive=flat vector"
+            ),
+            inputSchema={
+                "type": "object",
+                "required": ["question"],
+                "properties": {
+                    "question": {"type": "string", "description": "The question to answer from the wiki"},
+                    "mode": {
+                        "type": "string",
+                        "enum": ["hybrid", "local", "global", "naive"],
+                        "default": "hybrid",
+                    },
+                },
+            },
+        ),
+        types.Tool(
+            name="wiki_status",
+            description="Show wiki index stats: pages indexed, model in use, work dir.",
+            inputSchema={"type": "object", "properties": {}},
+        ),
+    ]
+
+
+@app.call_tool()
+async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
+    if name == "wiki_query":
+        rag    = await get_rag()
+        result = await rag.aquery(
+            arguments["question"],
+            param=QueryParam(mode=arguments.get("mode", "hybrid")),
+        )
+        return [types.TextContent(type="text", text=result)]
+
+    if name == "wiki_status":
+        manifest_path = WORK_DIR / "manifest.json"
+        if not manifest_path.exists():
+            return [types.TextContent(type="text", text="No index. Run: wiki-index")]
+        manifest = json.loads(manifest_path.read_text())
+        pages    = list((WIKI_DIR / "wiki").rglob("*.md"))
+        indexed  = sum(1 for p in pages if str(p) in manifest)
+        text     = f"Pages: {len(pages)} total · {indexed} indexed · model: {LLM_MODEL} · dir: {WORK_DIR}"
+        return [types.TextContent(type="text", text=text)]
+
+    raise ValueError(f"Unknown tool: {name}")
+
+
+async def main() -> None:
+    async with stdio_server() as (read_stream, write_stream):
+        await app.run(
+            read_stream,
+            write_stream,
+            app.create_initialization_options(),
+        )
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

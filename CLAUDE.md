@@ -28,16 +28,17 @@ chmod +x .git/hooks/post-commit
 **What it does:** runs `qmd update && qmd embed` after any commit that touches `wiki/`,
 `index.md`, or `log.md` — keeps the search index current automatically.
 
-Also install wiki-chat + wiki-index (LightRAG graph-aware Q&A TUI):
+Also install wiki-chat + wiki-index + wiki-mcp (LightRAG graph-aware Q&A):
 ```bash
 cp templates/wiki-chat ~/.local/bin/wiki-chat
 cp templates/wiki-index ~/.local/bin/wiki-index
-chmod +x ~/.local/bin/wiki-chat ~/.local/bin/wiki-index
-pip install lightrag-hku ollama rich prompt_toolkit
+cp templates/wiki-mcp ~/.local/bin/wiki-mcp
+chmod +x ~/.local/bin/wiki-chat ~/.local/bin/wiki-index ~/.local/bin/wiki-mcp
+pip install lightrag-hku ollama rich prompt_toolkit mcp
 
 # Pull required ollama models
 ollama pull nomic-embed-text   # embeddings
-ollama pull phi4-mini          # synthesis
+ollama pull qwen2.5:3b         # entity extraction + synthesis
 
 # Build graph index (one-time, ~30-60 min for 149 pages)
 wiki-index
@@ -46,9 +47,12 @@ wiki-index
 wiki-chat
 ```
 
-Models used: `phi4-mini` for entity extraction + synthesis, `nomic-embed-text` for embeddings.
+Models used: `qwen2.5:3b` for entity extraction + synthesis, `nomic-embed-text` for embeddings.
 Index lives at `~/repos/llm-wiki/.lightrag/` (gitignored). Re-run `wiki-index` after bulk ingests,
 or use `/reindex` inside wiki-chat to pick up changed pages.
+
+`wiki-mcp` is an MCP server wrapping LightRAG — add to OpenCode/Claude Code as a local MCP for
+zero-API-cost wiki queries. Wire-up in `~/.config/opencode/opencode.json` under `mcp.wiki-rag`.
 
 ## Frontmatter for wiki pages
 

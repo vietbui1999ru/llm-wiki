@@ -8,13 +8,15 @@
 #   "numpy",
 # ]
 # ///
-"""wiki-mcp — local MCP server: graph-aware wiki queries via LightRAG + ollama
+"""wiki-mcp — local MCP server: graph-aware wiki queries via LightRAG
 
-Zero API cost. Exposes wiki_query and wiki_status to OpenCode (or any MCP client)
-via stdio transport. LightRAG initialized once at startup and kept alive.
+Retrieval always runs locally (nomic-embed-text + graph traversal, zero cost).
+Synthesis backend auto-selected by env var:
+  ANTHROPIC_API_KEY set → Claude Haiku (frontier, ~$0.001/query)
+  unset               → qwen2.5:3b via ollama (fully local, free)
 
 Requires:
-  pip install mcp lightrag-hku ollama numpy
+  uv run --script wiki-mcp   (deps declared inline above)
   ollama running with qwen2.5:3b + nomic-embed-text
   wiki-index run at least once to build the graph
 """
@@ -22,6 +24,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -30,19 +33,30 @@ try:
     import ollama as _ollama
     from lightrag import LightRAG, QueryParam
     from lightrag.llm.ollama import ollama_model_complete
+    from lightrag.llm.anthropic import anthropic_complete_if_cache
     from lightrag.utils import EmbeddingFunc
     from mcp.server import Server
     from mcp.server.stdio import stdio_server
     from mcp import types
 except ImportError as e:
-    print(f"Missing: {e}\nRun: pip install mcp lightrag-hku ollama numpy", file=sys.stderr)
+    print(f"Missing: {e}", file=sys.stderr)
     sys.exit(1)
 
 WIKI_DIR    = Path.home() / "repos/llm-wiki"
 WORK_DIR    = WIKI_DIR / ".lightrag"
-LLM_MODEL   = "qwen2.5:3b"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
+
+# Synthesis backend: frontier if API key present, local otherwise
+_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+if _API_KEY:
+    LLM_MODEL      = "claude-haiku-4-5-20251001"
+    _llm_func      = anthropic_complete_if_cache
+    _llm_max_async = 4
+else:
+    LLM_MODEL      = "qwen2.5:3b"
+    _llm_func      = ollama_model_complete
+    _llm_max_async = 1
 
 _rag: LightRAG | None = None
 
@@ -63,9 +77,9 @@ async def get_rag() -> LightRAG:
         raise RuntimeError("Wiki index not found. Run: wiki-index")
     _rag = LightRAG(
         working_dir=str(WORK_DIR),
-        llm_model_func=ollama_model_complete,
+        llm_model_func=_llm_func,
         llm_model_name=LLM_MODEL,
-        llm_model_max_async=1,
+        llm_model_max_async=_llm_max_async,
         max_extract_input_tokens=8192,
         chunk_token_size=800,
         chunk_overlap_token_size=64,

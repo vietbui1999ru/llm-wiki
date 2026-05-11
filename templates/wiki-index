@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+"""wiki-index — build/update LightRAG graph index over the wiki
+
+Usage:
+  wiki-index            index new/changed pages (incremental)
+  wiki-index --full     wipe and rebuild from scratch
+  wiki-index --status   show manifest stats without indexing
+
+Requires:
+  pip install lightrag-hku
+  ollama running with phi4-mini + nomic-embed-text
+"""
+from __future__ import annotations
+
+import argparse
+import asyncio
+import json
+import os
+import sys
+from pathlib import Path
+
+try:
+    from lightrag import LightRAG, QueryParam
+    from lightrag.llm.ollama import ollama_model_complete, ollama_embed
+    from lightrag.utils import EmbeddingFunc
+except ImportError:
+    print("Missing: pip install lightrag-hku")
+    sys.exit(1)
+
+WIKI_DIR    = Path.home() / "repos/llm-wiki"
+WIKI_PAGES  = WIKI_DIR / "wiki"
+WORK_DIR    = WIKI_DIR / ".lightrag"
+MANIFEST    = WORK_DIR / "manifest.json"
+LLM_MODEL   = "phi4-mini"
+EMBED_MODEL = "nomic-embed-text"
+EMBED_DIM   = 768
+
+
+def make_rag() -> LightRAG:
+    WORK_DIR.mkdir(exist_ok=True)
+    return LightRAG(
+        working_dir=str(WORK_DIR),
+        llm_model_func=ollama_model_complete,
+        llm_model_name=LLM_MODEL,
+        llm_model_max_async=2,
+        llm_model_max_token_size=32768,
+        embedding_func=EmbeddingFunc(
+            embedding_dim=EMBED_DIM,
+            max_token_size=8192,
+            func=lambda texts: ollama_embed(texts, embed_model=EMBED_MODEL),
+        ),
+    )
+
+
+def load_manifest() -> dict:
+    if MANIFEST.exists():
+        return json.loads(MANIFEST.read_text())
+    return {}
+
+
+def save_manifest(m: dict) -> None:
+    MANIFEST.write_text(json.dumps(m, indent=2))
+
+
+def page_content(path: Path) -> str:
+    rel = path.relative_to(WIKI_DIR)
+    return f"# Source: {rel}\n\n{path.read_text()}"
+
+
+async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
+    changed = [
+        p for p in pages
+        if str(p) not in manifest
+        or manifest[str(p)] != p.stat().st_mtime
+    ]
+
+    if not changed:
+        print("Index up to date — no changes detected.")
+        return manifest
+
+    print(f"Indexing {len(changed)} new/changed pages (of {len(pages)} total)...")
+    for i, p in enumerate(changed, 1):
+        rel = p.relative_to(WIKI_DIR)
+        print(f"  [{i}/{len(changed)}] {rel}", flush=True)
+        await rag.ainsert(page_content(p))
+        manifest[str(p)] = p.stat().st_mtime
+        save_manifest(manifest)   # save after each page so partial runs resume
+
+    print(f"Done. {len(changed)} pages indexed.")
+    return manifest
+
+
+def show_status(pages: list[Path], manifest: dict) -> None:
+    indexed   = sum(1 for p in pages if str(p) in manifest)
+    changed   = sum(1 for p in pages
+                    if str(p) in manifest and manifest[str(p)] != p.stat().st_mtime)
+    unindexed = len(pages) - indexed
+    print(f"Pages total:    {len(pages)}")
+    print(f"Indexed:        {indexed}")
+    print(f"Changed:        {changed}")
+    print(f"Not yet:        {unindexed}")
+    print(f"Work dir:       {WORK_DIR}")
+
+
+async def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--full",   action="store_true", help="wipe and rebuild")
+    parser.add_argument("--status", action="store_true", help="show stats only")
+    args = parser.parse_args()
+
+    pages = sorted(WIKI_PAGES.rglob("*.md"))
+
+    if args.status:
+        show_status(pages, load_manifest())
+        return
+
+    if args.full and WORK_DIR.exists():
+        import shutil
+        shutil.rmtree(WORK_DIR)
+        print("Wiped existing index.")
+
+    rag      = make_rag()
+    manifest = {} if args.full else load_manifest()
+    await index_pages(rag, pages, manifest)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

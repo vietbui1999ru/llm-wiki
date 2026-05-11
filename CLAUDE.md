@@ -28,14 +28,27 @@ chmod +x .git/hooks/post-commit
 **What it does:** runs `qmd update && qmd embed` after any commit that touches `wiki/`,
 `index.md`, or `log.md` — keeps the search index current automatically.
 
-Also install wiki-chat (local wiki Q&A TUI):
+Also install wiki-chat + wiki-index (LightRAG graph-aware Q&A TUI):
 ```bash
-cp templates/wiki-chat ~/.local/bin/wiki-chat  # if the script is added to templates
-chmod +x ~/.local/bin/wiki-chat
-pip install ollama rich prompt_toolkit
+cp templates/wiki-chat ~/.local/bin/wiki-chat
+cp templates/wiki-index ~/.local/bin/wiki-index
+chmod +x ~/.local/bin/wiki-chat ~/.local/bin/wiki-index
+pip install lightrag-hku ollama rich prompt_toolkit
+
+# Pull required ollama models
+ollama pull nomic-embed-text   # embeddings
+ollama pull phi4-mini          # synthesis
+
+# Build graph index (one-time, ~30-60 min for 149 pages)
+wiki-index
+
+# Then chat
+wiki-chat
 ```
 
-Or run directly: `python3 ~/.local/bin/wiki-chat`
+Models used: `phi4-mini` for entity extraction + synthesis, `nomic-embed-text` for embeddings.
+Index lives at `~/repos/llm-wiki/.lightrag/` (gitignored). Re-run `wiki-index` after bulk ingests,
+or use `/reindex` inside wiki-chat to pick up changed pages.
 
 ## Frontmatter for wiki pages
 

@@ -3,6 +3,9 @@
 
 # qmd index (local, rebuilt per machine)
 .qmd/
+
+# LightRAG graph index (local, rebuilt via wiki-index)
+.lightrag/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal

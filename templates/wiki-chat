@@ -1,143 +1,105 @@
 #!/usr/bin/env python3
-"""wiki-chat — personal wiki AI assistant
+"""wiki-chat — personal wiki AI assistant (LightRAG + ollama)
 
 Usage:
-  wiki-chat                      interactive Q&A
-  wiki-chat --model gemma3:4b    use a larger model for better quality
+  wiki-chat                    interactive Q&A (hybrid graph search)
+  wiki-chat --mode local       entity-focused (specific concept questions)
+  wiki-chat --mode global      community summaries (cross-concept questions)
 
 Prompt commands:
-  /search <terms>    show matched pages without synthesis
-  /model <name>      switch model mid-session
-  q / exit           quit
+  /mode local|global|hybrid|naive   switch query mode mid-session
+  /reindex                          re-index changed wiki pages
+  /status                           show index stats
+  q / exit                          quit
 
 Requires:
-  pip install ollama rich prompt_toolkit
-  qmd on PATH, index current: cd ~/repos/llm-wiki && qmd update && qmd embed
+  pip install lightrag-hku ollama rich prompt_toolkit
+  wiki-index run at least once to build the graph
 """
 from __future__ import annotations
 
 import argparse
+import asyncio
+import json
 import subprocess
 import sys
 from pathlib import Path
 
 try:
-    import ollama
+    from lightrag import LightRAG, QueryParam
+    from lightrag.llm.ollama import ollama_model_complete, ollama_embed
+    from lightrag.utils import EmbeddingFunc
     from prompt_toolkit import prompt as pt_prompt
     from prompt_toolkit.history import FileHistory
     from rich.console import Console
     from rich.markdown import Markdown
     from rich.panel import Panel
 except ImportError as e:
-    print(f"Missing dependency: {e}\nRun: pip install ollama rich prompt_toolkit")
+    print(f"Missing dependency: {e}\nRun: pip install lightrag-hku ollama rich prompt_toolkit")
     sys.exit(1)
 
-# ── Config ───────────────────────────────────────────────────────────────────
-WIKI_DIR      = Path.home() / "repos/llm-wiki"
-DEFAULT_MODEL = "gemma3:1b"   # fast interactive model; use --model gemma3:4b for better quality
-MIN_SCORE     = 0.35
-TOP_N         = 3             # fewer pages = less context = faster inference
-MAX_CHARS     = 2000          # per page trim
-
-SYSTEM = (
-    "You are a personal knowledge assistant for a technical wiki on AI engineering, "
-    "software architecture, and development patterns. "
-    "Answer using ONLY the provided wiki page context. Be concise and direct. "
-    "At the end, list pages used as: Sources: <names>"
-)
+WIKI_DIR    = Path.home() / "repos/llm-wiki"
+WORK_DIR    = WIKI_DIR / ".lightrag"
+LLM_MODEL   = "phi4-mini"
+EMBED_MODEL = "nomic-embed-text"
+EMBED_DIM   = 768
+VALID_MODES = ("local", "global", "hybrid", "naive")
 
 console = Console()
 
 
-# ── Search ───────────────────────────────────────────────────────────────────
-def search_wiki(query: str, top_n: int) -> tuple[str, list[str]]:
-    """BM25 search via qmd search (fast, no LLM). Returns (context_text, page_rel_paths)."""
-    result = subprocess.run(
-        ["qmd", "search", query, "--files", f"--min-score={MIN_SCORE}"],
-        cwd=WIKI_DIR,
-        capture_output=True,
-        text=True,
+def make_rag() -> LightRAG:
+    if not WORK_DIR.exists():
+        console.print("[red]Index not found. Run: wiki-index[/red]")
+        sys.exit(1)
+    return LightRAG(
+        working_dir=str(WORK_DIR),
+        llm_model_func=ollama_model_complete,
+        llm_model_name=LLM_MODEL,
+        llm_model_max_async=2,
+        llm_model_max_token_size=32768,
+        embedding_func=EmbeddingFunc(
+            embedding_dim=EMBED_DIM,
+            max_token_size=8192,
+            func=lambda texts: ollama_embed(texts, embed_model=EMBED_MODEL),
+        ),
     )
 
-    ctx, found = "", []
-    for line in result.stdout.splitlines():
-        if not line.startswith("#"):
-            continue
 
-        # format: #docid,score,qmd://wiki/wiki/concepts/foo.md,"context label"
-        parts = line.split(",", 3)
-        if len(parts) < 3:
-            continue
-
-        qmd_path = parts[2].strip()
-        if "qmd://wiki/wiki/" not in qmd_path:
-            continue  # skip raw/, index.md, log.md, etc.
-
-        # qmd://wiki/wiki/concepts/foo.md → wiki/concepts/foo.md
-        rel = qmd_path.replace("qmd://wiki/", "")
-        p = WIKI_DIR / rel
-        if not p.exists():
-            continue
-
-        ctx += f"\n\n### {rel}\n{p.read_text()[:MAX_CHARS]}"
-        found.append(rel)
-
-        if len(found) >= top_n:
-            break
-
-    return ctx, found
-
-
-# ── Synthesis ────────────────────────────────────────────────────────────────
-def synthesize(question: str, ctx: str, model: str) -> None:
-    prompt_text = f"{SYSTEM}\n\nWiki pages:\n{ctx}\n\nQuestion: {question}"
-    console.print("[dim]▸[/dim] ", end="")
-    full = ""
+async def ask(rag: LightRAG, question: str, mode: str) -> None:
+    console.print(f"[dim]▸ querying [{mode}]...[/dim]")
     try:
-        for chunk in ollama.generate(model=model, prompt=prompt_text, stream=True):
-            token = chunk["response"]
-            full += token
-            print(token, end="", flush=True)
-        print()  # newline after stream
-        console.print(f"[dim]─── Sources in context: {ctx.count('### wiki/')} pages[/dim]")
+        result = await rag.aquery(question, param=QueryParam(mode=mode))
+        console.print(Markdown(result))
     except Exception as e:
-        console.print(f"\n[red]ollama error: {e}[/red]")
-        console.print("[dim]Is ollama running? Try: ollama serve[/dim]")
+        console.print(f"[red]Query error: {e}[/red]")
 
 
-# ── Startup check ────────────────────────────────────────────────────────────
-def check_ollama(model: str) -> bool:
-    try:
-        available = [m.model for m in ollama.list().models]
-        if not any(m.startswith(model.split(":")[0]) for m in available):
-            console.print(f"[yellow]Model '{model}' not found. Pull it with: ollama pull {model}[/yellow]")
-            console.print(f"[dim]Available: {', '.join(available) or 'none'}[/dim]")
-            return False
-        return True
-    except Exception:
-        console.print("[red]ollama not reachable. Start it with: ollama serve[/red]")
-        return False
+def show_index_status() -> None:
+    manifest_path = WORK_DIR / "manifest.json"
+    if not manifest_path.exists():
+        console.print("[yellow]No manifest found. Run: wiki-index[/yellow]")
+        return
+    manifest = json.loads(manifest_path.read_text())
+    pages    = list((WIKI_DIR / "wiki").rglob("*.md"))
+    indexed  = sum(1 for p in pages if str(p) in manifest)
+    changed  = sum(1 for p in pages
+                   if str(p) in manifest and manifest[str(p)] != p.stat().st_mtime)
+    console.print(f"[dim]Pages: {len(pages)} total · {indexed} indexed · {changed} changed[/dim]")
 
 
-# ── Main loop ─────────────────────────────────────────────────────────────────
-def main() -> None:
-    parser = argparse.ArgumentParser(description="wiki-chat: personal wiki AI assistant")
-    parser.add_argument("--model", default=DEFAULT_MODEL)
-    parser.add_argument("--top-n", type=int, default=TOP_N)
-    args = parser.parse_args()
-
-    model = args.model
-
-    if not check_ollama(model):
-        sys.exit(1)
-
+async def run(args: argparse.Namespace) -> None:
+    mode = args.mode
+    rag  = make_rag()
     hist = FileHistory(str(Path.home() / ".wiki-chat-history"))
 
     console.print(Panel(
-        f"[bold cyan]Wiki Chat[/bold cyan]  [dim]model: {model} · search: BM25[/dim]\n"
-        "[dim]/search <terms>  /model <name>  q to quit[/dim]",
+        f"[bold cyan]Wiki Chat[/bold cyan]  [dim]model: {LLM_MODEL} · mode: {mode}[/dim]\n"
+        "[dim]/mode local|global|hybrid|naive  /reindex  /status  q to quit[/dim]",
         border_style="cyan",
     ))
+
+    show_index_status()
 
     while True:
         try:
@@ -148,28 +110,38 @@ def main() -> None:
         if not raw or raw in ("q", "quit", "exit"):
             break
 
-        if raw.startswith("/model "):
-            model = raw.split(None, 1)[1].strip()
-            console.print(f"[dim]model → {model}[/dim]")
+        if raw.startswith("/mode "):
+            new_mode = raw.split(None, 1)[1].strip()
+            if new_mode in VALID_MODES:
+                mode = new_mode
+                console.print(f"[dim]mode → {mode}[/dim]")
+            else:
+                console.print(f"[yellow]Unknown mode. Options: {', '.join(VALID_MODES)}[/yellow]")
             continue
 
-        search_only = raw.startswith("/search ")
-        query = raw[8:].strip() if search_only else raw
-        if not query:
+        if raw == "/reindex":
+            console.print("[dim]Running wiki-index...[/dim]")
+            # subprocess.run is safe here: no shell, no user-controlled args
+            result = subprocess.run(
+                ["wiki-index"],
+                capture_output=True,
+                text=True,
+            )
+            console.print(result.stdout or result.stderr)
             continue
 
-        with console.status("[dim]searching wiki...[/dim]", spinner="dots"):
-            ctx, pages = search_wiki(query, top_n=args.top_n)
-
-        if not ctx:
-            console.print("[yellow]No matching wiki pages found.[/yellow]")
+        if raw == "/status":
+            show_index_status()
             continue
 
-        for p in pages:
-            console.print(f"  [dim]· {p}[/dim]")
+        await ask(rag, raw, mode)
 
-        if not search_only:
-            synthesize(query, ctx, model)
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="wiki-chat: graph-aware wiki assistant")
+    parser.add_argument("--mode", choices=VALID_MODES, default="hybrid")
+    args = parser.parse_args()
+    asyncio.run(run(args))
 
 
 if __name__ == "__main__":

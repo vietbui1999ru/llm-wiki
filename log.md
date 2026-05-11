@@ -2,6 +2,8 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-11] build | wiki-chat TUI — ~/.local/bin/wiki-chat; qmd+ollama local assistant; qmd index refreshed (349 pages, 1818 chunks embedded); syntheses/local-rag-wiki.md future-dev note created
+
 ## [2026-05-10] ingest | Actor Model (2 sources: thesis + Orleans docs)
 - New concept page: concepts/actor-model — 3 primitives, mailbox semantics, no-shared-state rule, location transparency, actor vs threads vs CSP, supervision trees (one_for_one/one_for_all/rest_for_one), virtual actor model (Orleans grains/silos), implementations table (Erlang/Elixir/Akka/Akka.NET/Orleans/ProtoActor), when-to-use guide
 - Updated: summaries/awesome-software-architecture — WIKI-CANDIDATE flag removed

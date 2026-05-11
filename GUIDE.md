@@ -1,10 +1,55 @@
 # LLM Wiki & Claude Setup — User Guide
 
-Personal reference for Viet. Covers: the wiki, installed skills, MCP tools, and scenario playbooks.
+Personal reference for Viet. Covers: active rules, the wiki, all installed skills, MCP tools, plugins, and scenario playbooks.
 
 ---
 
-## 1. The Wiki
+## 1. Rules in Effect
+
+These behaviors are always active. No need to invoke them — Claude follows them automatically.
+
+### Communication
+| Rule | Behavior |
+|---|---|
+| **Caveman mode** | All natural language compressed — no articles, no filler, fragments OK. Does NOT apply to code, commits, or docs. |
+| **50-line code limit** | Long implementations broken into explained chunks. Say "give me the whole thing" to override. |
+| **No sycophantic openers** | No "Sure!", "Great question!", etc. Ever. |
+| **No trailing summaries** | Claude doesn't summarize what it just did at the end of responses. |
+
+### Skill discipline (superpowers)
+- Before every substantive response, Claude checks: does a skill apply?
+- If even 1% chance → invokes the skill. This is not optional.
+- Order: `wiki-context` first → then process skills (debugging, brainstorming) → then implementation skills.
+
+### Auto-invocation (wiki-startup)
+| Trigger | Skill invoked |
+|---|---|
+| Any technical task, design question, agent work | `wiki-context` |
+| Multi-agent systems, subagent design, team coordination | `agent-orchestration` |
+
+### Preference feedback loop (judge auto-invocation)
+After any response containing:
+- Code blocks with substantial implementation
+- Numbered implementation plans or structured task breakdowns
+- Architectural decisions or tradeoff analysis
+
+Claude invokes `/judge` before ending the turn. Silent on first strike. On second consecutive low score for the same dimension, drafts a corrective rule for approval.
+
+### Domain-specific rules
+| Domain | Rule |
+|---|---|
+| **Learning** (C, Go, Embedded, CUDA, Kubernetes, Terraform, Ansible) | Small examples only, explain terms on first use, no scaffolds |
+| **Intermediate** (Web/Backend, DevOps, Docker, Linux, Homelab) | Minimal working config, explain the why, show alternatives |
+| **Research** (Rocq/Coq/Lean, FP) | One lemma/function at a time, types first, cite sources |
+| **Applied AI** (ML, AI Engineering, Agent Orchestration) | Reference canonical sources, flag empirical vs theoretical claims |
+| **TDD exclusion** | TDD is skipped in Learning domains unless you explicitly request it |
+
+### Pre-ingest rule
+Before adding any source to the wiki, Claude asks 3–5 comprehension questions. Say "skip review" to bypass.
+
+---
+
+## 2. The Wiki
 
 ### What it is
 A personal knowledge base at `~/repos/llm-wiki/wiki/`. Claude owns and maintains it. You curate sources and ask questions.
@@ -12,22 +57,33 @@ A personal knowledge base at `~/repos/llm-wiki/wiki/`. Claude owns and maintains
 ### Structure
 ```
 raw/          ← source documents (never edit these)
+pdfs/         ← PDF sources (never edit these)
 wiki/
   summaries/  ← one page per ingested source
   entities/   ← named things (tools, projects)
   concepts/   ← ideas and patterns
+  comparisons/← side-by-side analyses
   syntheses/  ← cross-source conclusions
-index.md      ← catalog of all pages (auto-updated)
+index.md      ← catalog of all pages (auto-updated on every ingest)
 log.md        ← append-only operation history
-GUIDE.md      ← this file
 ```
 
+### Wiki operations
+
+| Say this | Does this |
+|---|---|
+| `ingest <file.md>` | Summary + entity/concept pages + index + log |
+| `ingest <file.pdf>` | Triggers `pdf-ingest` skill (Docling parse → comprehension → wiki pages) |
+| `lint the wiki` | Orphan check, stale claims, missing concepts, source gaps |
+| `search the wiki for <topic>` | qmd search + load relevant pages into context |
+| `query: <question>` | Answer from wiki, optionally file as new page |
+
 ### How to search
+
 **In Claude Code** (preferred — uses MCP):
 ```
 search the wiki for "context compression"
 ```
-Claude invokes the `wiki-context` skill which searches via qmd and loads relevant pages.
 
 **Direct CLI:**
 ```bash
@@ -40,41 +96,41 @@ qmd query "context compression degradation" --files --min-score 0.4
 cat ~/repos/llm-wiki/wiki/concepts/context-compression.md
 ```
 
-### How to add content
-1. Drop a source into `raw/`
-2. Tell Claude: `ingest <filename>`
-3. Claude reads it, runs comprehension questions (or skip: "skip review"), writes wiki pages, updates index + log
+---
 
-### Wiki operations
-| Say this                      | Does this                                                 |
-| ----------------------------- | --------------------------------------------------------- |
-| `ingest <file>`               | Full ingest: summary + entity/concept pages + index + log |
-| `lint the wiki`               | Orphan check, stale claims, missing concepts, source gaps |
-| `search the wiki for <topic>` | qmd search + load relevant pages into context             |
-| `query: <question>`           | Answer from wiki, optionally file as new page             |
+## 3. Skills
+
+Skills load on-demand via `/skill-name` or auto-trigger based on context. Superpowers is enabled — Claude checks before every response.
 
 ---
 
-## 2. Skills
+### 3.1 Wiki & knowledge
 
-Skills are loaded on-demand via `/skill-name` or automatically when Claude detects they apply.
-**Superpowers is enabled** — Claude checks for applicable skills before every response.
+| Skill | Invoke | When to use |
+|---|---|---|
+| `wiki-context` | Auto (technical/design topics) | Loads relevant wiki patterns before responding |
+| `pdf-ingest` | `ingest <file.pdf>` | Parses PDF via Docling, runs comprehension check, writes wiki pages |
+| `pre-digest` | `/pre-digest` | Runs gemma4:e4b locally to pre-process a source file into a digest before full ingest |
+| `agent-orchestration` | Auto (agent/multi-step work) | Multi-agent coordination patterns, subagent design, harness systems |
+| `security-patterns` | Auto (security review) | OWASP checklist + AI-specific threats (indirect prompt injection, agentic sandbox) |
 
-### Engineering workflow (mattpocock/skills)
+---
 
-| Skill                            | Invoke                           | When to use                                                         | Example                                                     |
-| -------------------------------- | -------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `/grill-me`                      | `/grill-me`                      | Before starting any feature — stress-test your plan                 | "I want to add auth — /grill-me"                            |
-| `/grill-with-docs`               | `/grill-with-docs`               | Like grill-me but also builds `CONTEXT.md` glossary and ADRs        | New project or module with unclear terminology              |
-| `/tdd`                           | `/tdd`                           | Build features or fix bugs with red-green-refactor                  | "Add user profile API — /tdd"                               |
-| `/diagnose`                      | `/diagnose`                      | Hard bugs, flaky tests, performance regressions                     | "Auth is broken in prod — /diagnose"                        |
-| `/zoom-out`                      | `/zoom-out`                      | Lost in unfamiliar code, need the big picture                       | "I don't understand this middleware — /zoom-out"            |
-| `/to-prd`                        | `/to-prd`                        | Synthesize a conversation into a GitHub issue (PRD)                 | After a grill session, capture it as an issue               |
-| `/to-issues`                     | `/to-issues`                     | Break a PRD into independently-grabbable vertical slices            | After /to-prd, decompose into tickets                       |
-| `/improve-codebase-architecture` | `/improve-codebase-architecture` | Find shallow modules, refactor opportunities                        | "The codebase feels messy — /improve-codebase-architecture" |
-| `/setup-matt-pocock-skills`      | `/setup-matt-pocock-skills`      | First-time per-repo setup: issue tracker, triage labels, CONTEXT.md | Run once per new repo before using the above skills         |
+### 3.2 Feature development
 
-**Setup order for a new project:**
+| Skill | Invoke | When to use | Example |
+|---|---|---|---|
+| `/grill-me` | `/grill-me` | Stress-test a plan before starting | "I want to add auth — /grill-me" |
+| `/grill-with-docs` | `/grill-with-docs` | Like grill-me but also builds `CONTEXT.md` + ADRs | New project or module with unclear terminology |
+| `/tdd` | `/tdd` | Build features or fix bugs with red-green-refactor | "Add user profile API — /tdd" |
+| `/zoom-out` | `/zoom-out` | Need the big picture of unfamiliar code | "I don't understand this middleware" |
+| `/to-prd` | `/to-prd` | Synthesize a conversation into a GitHub issue (PRD) | After a grill session, capture as issue |
+| `/to-issues` | `/to-issues` | Break a PRD into independently-grabbable vertical slices | After /to-prd, decompose into tickets |
+| `/improve-codebase-architecture` | `/improve-codebase-architecture` | Find shallow modules, refactor opportunities | "Codebase feels messy" |
+| `feature-dev:feature-dev` | Auto (guided feature dev) | Codebase analysis → architect → implement | Complex feature with exploration phase |
+| `/setup-matt-pocock-skills` | `/setup-matt-pocock-skills` | First-time per-repo setup: issue tracker, triage labels, CONTEXT.md | Run once per new repo |
+
+**New project setup order:**
 ```
 /setup-matt-pocock-skills  → configure repo
 /grill-with-docs           → plan the change, build CONTEXT.md
@@ -86,47 +142,142 @@ Skills are loaded on-demand via `/skill-name` or automatically when Claude detec
 
 ---
 
-### Knowledge & research
+### 3.3 Quality & feedback
 
 | Skill | Invoke | When to use |
 |---|---|---|
-| `wiki-context` | Auto (on technical/design topics) | Load relevant wiki patterns before designing systems |
-| `agent-orchestration` | Auto (on agent/multi-step work) | Patterns for subagent design, team coordination, harness systems |
-| `security-patterns` | Auto (on security review) | OWASP checklist + AI-specific threats |
-
-These trigger automatically. You don't need to invoke them manually unless you want to force-load them.
+| `/judge` | Auto (after code/plan/design responses) | LLM-as-judge evaluation on 4-dimension rubric; silent first strike |
+| `/judge-report` | `/judge-report` | Show current session's judge evaluation history |
+| `/earn-it` | `/earn-it` | Claude becomes Socratic — you write the code, Claude guides. Enforces hand-code-first discipline |
+| `simplify` | `/simplify` | Review recently changed code for reuse, quality, and efficiency |
+| `code-review:code-review` | `/code-review` | Code review a pull request |
+| `/review` | `/review` | Review a pull request (alias) |
+| `/security-review` | `/security-review` | Full OWASP + AI-specific security audit; structured threat report |
 
 ---
 
-### Superpowers (obra/superpowers)
+### 3.4 Debugging & diagnosis
 
-These auto-trigger based on context. You don't call them directly — Claude invokes them.
+| Skill | Invoke | When to use |
+|---|---|---|
+| `/diagnose` | `/diagnose` | Hard bugs, flaky tests, performance regressions — 6-phase loop |
+| `superpowers:systematic-debugging` | Auto (bug/test failure) | Disciplined root-cause analysis before fixing |
+
+`/diagnose` phases: build feedback loop → reproduce → hypothesize → instrument → fix → cleanup.
+
+---
+
+### 3.5 Session & memory
+
+| Skill | Invoke | When to use |
+|---|---|---|
+| `/save-session` | `/save-session` | Before clearing context or ending a long session — full summary saved |
+| `/capture-mistake` | Auto (after Claude self-corrects) | Files the mistake immediately to `mistakes/` |
+| `/synthesize-mistakes` | `/synthesize-mistakes` | Distill `raw-log.md` + structured entries into `global-prevention-rules.md` |
+
+The mistakes pipeline: `capture-mistake` → individual `mistakes/YYYY-MM-DD-*.md` → `synthesize-mistakes` → `global-prevention-rules.md` → loaded every session.
+
+---
+
+### 3.6 Project setup & config
+
+| Skill | Invoke | When to use |
+|---|---|---|
+| `/claude-init` | `/claude-init` | Project onboarding — aggressive questions to set up CLAUDE.md |
+| `/init` | `/init` | Initialize a new CLAUDE.md file |
+| `update-config` | `/update-config` | Configure settings.json: permissions, hooks, env vars, automated behaviors |
+| `keybindings-help` | `/keybindings-help` | Customize keyboard shortcuts, rebind keys, chord bindings |
+| `fewer-permission-prompts` | `/fewer-permission-prompts` | Scan transcripts for common read-only ops, add allowlist to reduce prompts |
+| `claude-md-management:revise-claude-md` | Auto (end of session) | Update CLAUDE.md with session learnings |
+| `claude-md-management:claude-md-improver` | `/improve-claude-md` | Audit and improve CLAUDE.md files |
+
+---
+
+### 3.7 Background & automation
+
+| Skill | Invoke | When to use |
+|---|---|---|
+| `loop` | `/loop <interval> <command>` | Run a prompt or slash command on a recurring interval |
+| `schedule` | `/schedule` | Create/manage scheduled remote agents (cron-based routines) |
+| `ralph-loop:ralph-loop` | `/ralph-loop` | Start a long-running autonomous agent loop |
+| `ralph-loop:cancel-ralph` | `/cancel-ralph` | Cancel an active Ralph Loop |
+| `ralph-loop:help` | `/ralph-loop help` | Explain Ralph Loop plugin and available commands |
+
+`ralph-loop` pattern: intercepts exit, reinjects original prompt with clean context + durable filesystem state. Enables extended AFK sessions.
+
+---
+
+### 3.8 AI & SDK development
+
+| Skill | Invoke | When to use |
+|---|---|---|
+| `claude-api` | Auto (when code imports `anthropic` or `@anthropic-ai/sdk`) | Build/debug/optimize Claude API apps with prompt caching |
+| `agent-sdk-dev:new-sdk-app` | `/new-sdk-app` | Create and set up a new Claude Agent SDK application |
+
+`claude-api` also handles: migrating between model versions, caching tuning, tool use, batch API, files API.
+
+---
+
+### 3.9 Superpowers (auto-trigger)
+
+These are invoked by Claude, not by you. They override nothing — they defer to your CLAUDE.md rules.
 
 | Skill | Triggers when |
 |---|---|
 | `using-superpowers` | Every conversation start — establishes skill-check discipline |
-| `test-driven-development` | Any feature/bugfix implementation |
-| `systematic-debugging` | Any bug or test failure |
+| `brainstorming` | Before any creative work (creating features, designing systems) |
+| `writing-plans` | You have a spec/requirements for a multi-step task |
 | `executing-plans` | You have a written plan file to execute |
+| `test-driven-development` | Any feature/bugfix implementation (Learning domains excluded) |
+| `systematic-debugging` | Any bug or test failure |
 | `dispatching-parallel-agents` | 2+ independent problems to solve concurrently |
+| `subagent-driven-development` | Executing implementation plans with isolated parallel tasks |
+| `using-git-worktrees` | Feature work that needs branch isolation |
+| `requesting-code-review` | Completing tasks, implementing major features |
+| `receiving-code-review` | Receiving code review feedback before implementing |
 | `finishing-a-development-branch` | Implementation complete, ready to merge/PR |
-
-**Note:** superpowers skills defer to your CLAUDE.md rules. Caveman mode, 50-line limit, etc. all win.
+| `verification-before-completion` | Before claiming work is complete, fixed, or passing |
+| `writing-skills` | Creating or editing skills |
 
 ---
 
-### Productivity
+### 3.10 Plugin: Caveman
 
 | Skill | Invoke | When to use |
 |---|---|---|
 | `/caveman` | `/caveman` | Toggle ultra-compressed comms (already always on) |
-| `/caveman-commit` | Auto | Write compressed but precise commit messages |
-| `/caveman-review` | During PR review | Compressed code review comments |
-| `qmd:qmd` | "search my notes for X" | Search any qmd-indexed markdown collection |
+| `caveman:caveman-commit` | Auto | Compressed but precise commit messages |
+| `caveman:caveman-review` | During PR review | Compressed code review comments |
+| `caveman:compress` | `/compress` | Compress natural language memory files (CLAUDE.md, todos, plans) |
 
 ---
 
-## 3. MCP Tools
+### 3.11 Plugin: Sentry
+
+| Skill | Invoke | When to use |
+|---|---|---|
+| `sentry:seer` | "ask Sentry about X" | Natural language questions about your Sentry environment |
+| `sentry:sentry-code-review` | `/sentry-code-review` | Analyze and resolve Sentry comments on GitHub PRs |
+| `sentry:sentry-setup-tracing` | `/sentry-setup-tracing` | Setup Sentry Performance Monitoring |
+| `sentry:sentry-setup-logging` | `/sentry-setup-logging` | Setup Sentry Logging |
+| `sentry:sentry-setup-metrics` | `/sentry-setup-metrics` | Setup Sentry Metrics |
+| `sentry:sentry-setup-ai-monitoring` | `/sentry-setup-ai-monitoring` | Setup Sentry AI Agent Monitoring |
+| `sentry:sentry-ios-swift-setup` | `/sentry-ios-setup` | Setup Sentry in iOS/Swift apps |
+
+---
+
+### 3.12 Other
+
+| Skill | Invoke | When to use |
+|---|---|---|
+| `qmd:qmd` | "search my notes for X" | Search any qmd-indexed markdown collection |
+| `frontend-design:frontend-design` | `/frontend-design` | Create distinctive, production-grade frontend interfaces |
+| `statusline-setup` | `/statusline-setup` | Configure Claude Code status line |
+| `claude-code-setup:claude-automation-recommender` | `/automation-recommender` | Analyze codebase and recommend CC automations |
+
+---
+
+## 4. MCP Tools
 
 MCP tools are available directly to Claude — no skill needed.
 
@@ -142,6 +293,7 @@ MCP tools are available directly to Claude — no skill needed.
 | **sentry** | Query error tracking, issues, events | "what errors are trending", "analyze this Sentry issue" |
 | **CodeGraphContext** | Code graph analysis, dead code, complexity | "find dead code", "most complex functions", "analyze relationships" |
 | **Figma** | Read designs, generate diagrams, code connect | When given a figma.com URL |
+| **MermaidChart** | Create and validate Mermaid diagrams | "generate a diagram of X", "create a flowchart" |
 
 ### Firecrawl tool selection guide
 
@@ -155,36 +307,33 @@ MCP tools are available directly to Claude — no skill needed.
 | Complex research, unknown URLs | `firecrawl_agent` (async — wait for result) |
 | Click/fill/navigate a page | `firecrawl_interact` |
 
-**Example:**
-```
-"Scrape the Anthropic pricing page and extract model names and prices as JSON"
-→ Claude uses firecrawl_extract with a schema
-```
-
 ---
 
-## 4. Plugins
+## 5. Plugins
 
 Enabled plugins that provide skills and hooks.
 
 | Plugin | What it adds |
 |---|---|
-| `superpowers` | Full dev workflow: TDD, debugging, planning, parallel agents |
+| `superpowers` | Full dev workflow: TDD, debugging, planning, parallel agents, skill-check discipline |
 | `caveman` | Ultra-compressed communication mode |
-| `qmd` | Wiki search skill |
+| `qmd` | Wiki search skill + MCP server |
 | `context7` | Live library doc fetching |
-| `playwright` | Browser testing skills |
+| `playwright` | Browser automation + visual verification skills |
 | `feature-dev` | Guided feature development with codebase analysis |
 | `code-review` | PR code review |
 | `security-guidance` | Security review tools |
-| `ralph-loop` | Long-running autonomous agent loops |
-| `sentry` | Sentry error tracking integration |
+| `ralph-loop` | Long-running autonomous agent loops with clean context reinject |
+| `sentry` | Sentry error tracking integration + AI monitoring setup |
 | `obsidian` | Obsidian vault CLI/markdown tools |
 | `frontend-design` | High-quality UI design skills |
+| `claude-md-management` | CLAUDE.md audit, improvement, and session learning capture |
+| `claude-code-setup` | CC automation analysis and configuration |
+| `agent-sdk-dev` | Claude Agent SDK app scaffolding |
 
 ---
 
-## 5. Scenario Playbooks
+## 6. Scenario Playbooks
 
 ### "I want to build a new feature"
 ```
@@ -199,7 +348,22 @@ Enabled plugins that provide skills and hooks.
 ```
 /diagnose
 → Phase 1: build a fast feedback loop (test, curl, CLI invocation)
-→ Phase 2-6: reproduce → hypothesize → instrument → fix → cleanup
+→ Phase 2–6: reproduce → hypothesize → instrument → fix → cleanup
+```
+
+### "I want Claude to grade its own output"
+```
+After any code/plan/design response:
+→ /judge triggers automatically (preference feedback loop)
+→ /judge-report to see the full session evaluation history
+→ On second consecutive low score for a dimension: rule drafted for approval
+```
+
+### "I want to learn by doing (not just copy)"
+```
+/earn-it
+→ Claude becomes Socratic: asks questions, guides design, you write the code
+→ No code dumps; you earn each implementation piece
 ```
 
 ### "I need to research something from the web"
@@ -209,24 +373,25 @@ Enabled plugins that provide skills and hooks.
 → Offer to ingest result as a wiki page
 ```
 
-### "I want to understand an unfamiliar codebase section"
-```
-/zoom-out
-→ Claude gives you a module map using the project's domain vocabulary
-```
-
-### "I want to add this new source to the wiki"
+### "I want to add a markdown source to the wiki"
 ```
 1. Drop file in raw/
 2. "ingest <filename>"
-3. Answer the 3-5 comprehension questions (or "skip review")
+3. Answer the 3–5 comprehension questions (or "skip review")
 4. Wiki pages auto-created, index + log updated
+```
+
+### "I want to add a PDF research paper to the wiki"
+```
+1. Drop PDF in pdfs/
+2. "ingest <filename.pdf>"
+3. pdf-ingest skill invokes: Docling parse → comprehension check → wiki pages
 ```
 
 ### "I want to check if the wiki has anything on topic X"
 ```
 "search the wiki for context degradation"
-→ wiki-context skill invoked → relevant pages loaded → answer with citations
+→ wiki-context skill invoked → relevant pages loaded → answer with [[page]] citations
 ```
 
 ### "I want to improve the architecture of this codebase"
@@ -244,9 +409,43 @@ Enabled plugins that provide skills and hooks.
 → Structured threat report
 ```
 
+### "I want to run a long autonomous task"
+```
+/ralph-loop
+→ Claude works until it exits
+→ ralph-loop intercepts exit, reinjects original prompt + durable filesystem state
+→ Continues until task complete or you /cancel-ralph
+```
+
+### "I want to set up a recurring background task"
+```
+/loop 30m /your-command
+→ Runs /your-command every 30 minutes, self-pacing within the loop
+/schedule
+→ Creates a cron-based remote agent routine (persists across sessions)
+```
+
+### "A mistake was made — prevent recurrence"
+```
+Claude auto-invokes /capture-mistake after any self-correction
+→ Files to mistakes/YYYY-MM-DD-<topic>.md
+
+Periodically: /synthesize-mistakes
+→ Distills all structured entries into global-prevention-rules.md
+→ Rules loaded every session from that point on
+```
+
+### "Context is getting long — ending the session"
+```
+/save-session
+→ Full session summary saved to disk
+→ Safe to /clear or close Claude Code
+→ Resume next session: "continue from save-session summary"
+```
+
 ---
 
-## 6. Git Worktrees (Optional Dev Setup)
+## 7. Git Worktrees (Optional Dev Setup)
 
 Worktrees let you work on multiple branches simultaneously without `git stash` or branch switching. Each branch gets its own directory with a clean working tree.
 
@@ -264,16 +463,6 @@ git worktree add .worktrees/wiki-for-AI-LLM wiki-for-AI-LLM
 git worktree add .worktrees/wiki-for-DSA wiki-for-DSA
 ```
 
-### Usage
-
-```bash
-# Open a branch's worktree in a new tmux window or editor
-cd .worktrees/wiki-for-DSA
-
-# Edit freely — each worktree has its own index, HEAD, unstaged changes
-# git status, git add, git commit all work normally
-```
-
 ### Useful commands
 
 ```bash
@@ -283,14 +472,14 @@ git worktree remove .worktrees/name  # clean up when done
 
 ### Notes
 
-- `.worktrees/` is gitignored — never committed, never tracked
 - Each worktree is fully independent: separate staged files, separate HEAD
-- The main repo (`~/repos/llm-wiki`) and any worktree can both be open at the same time
+- The main repo and any worktree can both be open simultaneously
 - A branch can only be checked out in one worktree at a time
+- Superpowers `using-git-worktrees` skill auto-triggers when starting isolated feature work
 
 ---
 
-## 7. Tips
+## 8. Tips
 
 **Force wiki search in any session:**
 ```
@@ -298,10 +487,16 @@ search the wiki for <topic>
 ```
 Always works regardless of context.
 
-**The skills auto-trigger. You don't need to say "use TDD" or "use the wiki"** — with superpowers + wiki-startup rules active, Claude checks for applicable skills and loads wiki context automatically.
+**Skills auto-trigger.** With superpowers + wiki-startup rules active, Claude checks for applicable skills and loads wiki context automatically. You don't need to say "use TDD" or "use the wiki."
 
-**Caveman mode is always on** — all natural language responses are compressed. Code, commits, docs are written normally.
+**Caveman mode is always on** — natural language output compressed. Code, commits, and docs are written normally.
 
 **50-line code limit** — Claude breaks long implementations into explained chunks. Say "give me the whole thing" to override.
 
 **Per-repo setup** — run `/setup-matt-pocock-skills` once per project to configure issue tracker + domain glossary. After that, all engineering skills know the context.
+
+**Judge is always watching** — after substantial code/plan/design outputs, Claude auto-invokes `/judge`. Use `/judge-report` to see the session's quality history.
+
+**Skip comprehension on ingest** — if you already know a source well, say "skip review" or "just ingest it" to bypass the 3–5 question check.
+
+**Shell commands in session** — prefix with `!` to run in the current Claude Code session: `! gcloud auth login`.

@@ -161,3 +161,4 @@ Catalog of all pages. Updated on every ingest operation.
 ## Syntheses
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern
 - [[syntheses/lean-agentic-workflow]] — Full stack: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes
+- [[syntheses/local-rag-wiki]] — wiki-chat TUI (qmd+ollama, ~/.local/bin); 4-level RAG upgrade path: section chunking → Qdrant → reranking; future development note

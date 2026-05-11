@@ -36,20 +36,26 @@ EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 
 
-def make_rag() -> LightRAG:
+def _build_rag() -> LightRAG:
     WORK_DIR.mkdir(exist_ok=True)
     return LightRAG(
         working_dir=str(WORK_DIR),
         llm_model_func=ollama_model_complete,
         llm_model_name=LLM_MODEL,
         llm_model_max_async=2,
-        llm_model_max_token_size=32768,
+        max_extract_input_tokens=16384,
         embedding_func=EmbeddingFunc(
             embedding_dim=EMBED_DIM,
             max_token_size=8192,
             func=lambda texts: ollama_embed(texts, embed_model=EMBED_MODEL),
         ),
     )
+
+
+async def make_rag() -> LightRAG:
+    rag = _build_rag()
+    await rag.initialize_storages()
+    return rag
 
 
 def load_manifest() -> dict:
@@ -119,9 +125,12 @@ async def main() -> None:
         shutil.rmtree(WORK_DIR)
         print("Wiped existing index.")
 
-    rag      = make_rag()
+    rag      = await make_rag()
     manifest = {} if args.full else load_manifest()
-    await index_pages(rag, pages, manifest)
+    try:
+        await index_pages(rag, pages, manifest)
+    finally:
+        await rag.finalize_storages()
 
 
 if __name__ == "__main__":

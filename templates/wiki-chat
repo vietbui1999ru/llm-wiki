@@ -48,7 +48,7 @@ VALID_MODES = ("local", "global", "hybrid", "naive")
 console = Console()
 
 
-def make_rag() -> LightRAG:
+def _build_rag() -> LightRAG:
     if not WORK_DIR.exists():
         console.print("[red]Index not found. Run: wiki-index[/red]")
         sys.exit(1)
@@ -57,13 +57,19 @@ def make_rag() -> LightRAG:
         llm_model_func=ollama_model_complete,
         llm_model_name=LLM_MODEL,
         llm_model_max_async=2,
-        llm_model_max_token_size=32768,
+        max_extract_input_tokens=16384,
         embedding_func=EmbeddingFunc(
             embedding_dim=EMBED_DIM,
             max_token_size=8192,
             func=lambda texts: ollama_embed(texts, embed_model=EMBED_MODEL),
         ),
     )
+
+
+async def make_rag() -> LightRAG:
+    rag = _build_rag()
+    await rag.initialize_storages()
+    return rag
 
 
 async def ask(rag: LightRAG, question: str, mode: str) -> None:
@@ -90,7 +96,7 @@ def show_index_status() -> None:
 
 async def run(args: argparse.Namespace) -> None:
     mode = args.mode
-    rag  = make_rag()
+    rag  = await make_rag()
     hist = FileHistory(str(Path.home() / ".wiki-chat-history"))
 
     console.print(Panel(
@@ -101,7 +107,8 @@ async def run(args: argparse.Namespace) -> None:
 
     show_index_status()
 
-    while True:
+    try:
+      while True:
         try:
             raw = pt_prompt("→ ", history=hist).strip()
         except (KeyboardInterrupt, EOFError):
@@ -135,6 +142,8 @@ async def run(args: argparse.Namespace) -> None:
             continue
 
         await ask(rag, raw, mode)
+    finally:
+        await rag.finalize_storages()
 
 
 def main() -> None:

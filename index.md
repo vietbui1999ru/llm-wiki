@@ -11,6 +11,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/cicd-testing]] — testing pyramid, 6 test types, pipeline stage map, shift-left, continuous testing
 - [[summaries/context-window-cluster]] — 5 sources: context window fundamentals, context engineering, 6 management techniques, memory tool API
 - [[summaries/software-documentation]] — 2 sources: principles (clear/concise/structured), doc types, README template, organization
+- [[summaries/mintlify-docs-guide]] — 8 sources: Diátaxis 4-type framework, AI agents as explicit audience, navigation for LLM retrieval, maintenance strategies
 - [[summaries/claude-code-plugins-llm-wiki]] — Plugin structure, manifest, skill-to-wiki mapping, symlink gotcha, launch commands
 - [[summaries/wshobson-agent-orchestration]] — wshobson/agents: 184 agents, 78 plugins, 150 skills; three-tier Opus/Sonnet/Haiku model routing; PluginEval framework
 - [[summaries/exit-code-0-quality]] — 198 agents, 30 campaigns: four-tier verification pipeline, campaign persistence, parallel worktree isolation, five protocol rules from failures
@@ -44,6 +45,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/error-budget-agentic]] — SRE error budget origin; agentic adaptation: retry/token/runtime/session budgets; progress score; rollback as first-class pattern
 - [[summaries/gemini-cli-rules]] — GEMINI.md: global/workspace/JIT discovery, @file.md imports, TOML commands, CC migration mapping
 - [[summaries/opencode-commands-agents]] — OpenCode commands (.opencode/commands/*.md), rules array, agents JSON config, command→agent binding
+- [[summaries/opencode-config]] — OpenCode JSON config: 8-level precedence, merge semantics, TUI/server/compaction/permission options, variable substitution, MDM managed settings
 - [[summaries/codex-agents-skills]] — Codex TOML agents (.codex/agents/*.toml), native skills (agents/openai.yaml), 3-layer stack, CC migration mapping
 - [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules, background agents, parity gaps vs CC
 - [[summaries/cursor-cloud-agents]] — Cursor Cloud Agents: microVM isolation, GitHub/GitLab workflow, remote desktop control, cross-agent support
@@ -87,7 +89,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/context-window]] — Transformer constraint: O(n²) attention, KV cache, context rot, context awareness feature
 - [[concepts/context-engineering]] — Discipline of curating minimal high-signal tokens: JIT retrieval, compaction, note-taking, sub-agents
 - [[concepts/agentic-memory-tool]] — memory_20250818 API, context editing, cross-session learning, memory poisoning security; Mnemory as OSS parallel
-- [[concepts/software-documentation]] — Doc types, audiences, principles, structure for doc-hosting platforms
+- [[concepts/software-documentation]] — Doc types (Diátaxis), audiences (including AI agents), principles, structure for doc-hosting platforms
 - [[concepts/claude-code-plugins]] — Plugin structure, manifest format, namespacing, symlink gotcha, when to use plugins vs. personal config
 - [[concepts/compounding-knowledge-base]] — Knowledge bases that accumulate compiled structure vs. RAG's per-query retrieval
 - [[concepts/contextual-retrieval]] — RAG preprocessing technique: LLM-generated context prepended to chunks before embedding + BM25 indexing

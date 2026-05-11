@@ -2,7 +2,7 @@
 title: "OpenCode Commands, Rules, and Agents"
 type: summary
 tags: [opencode, commands, rules, agents, subagents, cross-platform]
-sources: []
+sources: ["Agents-opencode.md", "Rules.md"]
 urls:
   - "https://opencode.ai/docs/commands/"
   - "https://opencode.ai/docs/rules/"

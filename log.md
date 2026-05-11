@@ -212,3 +212,16 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Sources: Best practices for exceptions.md, Error handling patterns.md, General error handling rules    Technical Writing.md
 - patterns/error-handling: error taxonomy (expected/unexpected, recoverable/fatal, business/technical), fail-fast, exceptions vs Result types, railway-oriented programming, propagation and rethrow discipline, exponential backoff with jitter, API error response design, logging discipline, anti-pattern table
 - index.md: removed stub marker, updated description
+
+## [2026-05-11] ingest | opencode-config
+- Sources: Config.md
+- summaries/opencode-config: 8-level config precedence, merge semantics, TUI/server/compaction/permission options, variable substitution ({env:VAR}, {file:path}), MDM managed settings
+- entities/opencode: added Config.md to sources; added Config Precedence section
+- summaries/opencode-commands-agents: fixed empty sources field → ["Agents-opencode.md", "Rules.md"]
+- index.md: added summaries/opencode-config entry
+
+## [2026-05-11] ingest | mintlify-docs-guide
+- Sources: Introduction.md, Content types.md, Organize navigation.md, Style and tone.md, Maintenance.md, Tracking success.md, Understand your audience.md, Using media.md
+- summaries/mintlify-docs-guide: Diátaxis 4-type framework, AI agents as explicit audience, navigation for LLM retrieval, maintenance strategies
+- concepts/software-documentation: added Diátaxis framework table, AI agents as explicit audience section, new sources/references
+- index.md: added summaries/mintlify-docs-guide, updated concepts/software-documentation description

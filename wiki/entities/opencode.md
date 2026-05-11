@@ -2,9 +2,9 @@
 title: "OpenCode"
 type: entity
 tags: [agent-harness, plugins, CLI, compaction, alternative-to-claude-code]
-sources: ["Plugins for Opencode.md", "Agents-opencode.md", "Rules.md"]
+sources: ["Plugins for Opencode.md", "Agents-opencode.md", "Rules.md", "Config.md"]
 created: 2026-05-04
-updated: 2026-05-06
+updated: 2026-05-11
 ---
 
 # OpenCode
@@ -159,6 +159,22 @@ The `instructions` field escapes the single-file limitation — accepts glob pat
 ```
 
 All instruction files are combined with AGENTS.md. Remote instructions fetched with 5-second timeout.
+
+---
+
+## Config Precedence
+
+8-level merge order (low → high): remote org defaults → global (`~/.config/opencode/opencode.json`) → `OPENCODE_CONFIG` env → project (`opencode.json`) → `.opencode/` dirs → `OPENCODE_CONFIG_CONTENT` env → managed files → MDM `.mobileconfig` (highest, not user-overridable).
+
+Config files are **merged not replaced** — conflicting keys override, non-conflicting keys from all sources are preserved.
+
+**Variable substitution** in config values:
+- `{env:VAR}` — substitutes environment variable
+- `{file:path}` — substitutes file contents (for keeping API keys out of config)
+
+**TUI settings** live in a separate `tui.json` file — not in `opencode.json`.
+
+See [[summaries/opencode-config]] for full reference.
 
 ---
 

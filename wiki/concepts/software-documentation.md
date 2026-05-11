@@ -5,8 +5,12 @@ tags: [documentation, technical-writing, readme, api-docs, developer-experience]
 sources:
   - "How to write software documentation.md"
   - "Documentation done right A developer's guide.md"
+  - "Content types.md"
+  - "Organize navigation.md"
+  - "Understand your audience.md"
+  - "Maintenance.md"
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-11
 ---
 
 # Software Documentation
@@ -30,17 +34,34 @@ Every doc should be written for exactly one audience:
 
 Mixing audiences in one document creates noise for both. Separate user-facing docs from contributor docs.
 
-## Documentation Types
+## Documentation Types — Diátaxis Framework
 
-| Type | Purpose | Examples |
-|---|---|---|
-| **README** | First contact; answers "should I use this?" | Problem, install, quick example, links |
-| **Tutorial** | End-to-end walkthrough for new users | "Getting started" guide |
-| **How-to guide** | Task-oriented; assumes user knows the domain | "How to configure X" |
-| **Reference** | Complete, accurate description of API/config/schema | API reference, config spec |
-| **Concept/background** | Explains the *why* and *how* behind design decisions | Architecture doc, design rationale |
+Every page should map to exactly one type. The Diátaxis framework organizes types along two axes: action vs. cognition, learning vs. working.
 
-Avoid over-relying on FAQs: they become stale, accumulate disparate content, resist search, and tempt lazy content addition.
+| Type | Goal | User level | Structure |
+|---|---|---|---|
+| **Tutorial** | Learn through practice | Beginner | Sequential, guided |
+| **How-to guide** | Solve a specific problem | Intermediate | Problem-solution |
+| **Reference** | Find precise information | Experienced | Scannable facts |
+| **Explanation** | Understand concepts | Any | Conceptual, opinionated |
+| **README** | First contact; "should I use this?" | — | Problem + install + quick example |
+
+Assign a type before writing and enforce it throughout the page. Avoid FAQs: they become stale, accumulate disparate content, and resist search.
+
+## AI Agents as Explicit Audience
+
+AI coding assistants (Claude Code, Copilot) retrieve documentation to answer user questions. LLM-unfriendly docs produce bad AI answers.
+
+Key insight from Mintlify research: **practices that make docs LLM-friendly are the same practices that make docs human-friendly**.
+
+For AI retrieval specifically:
+- **Self-contained pages** — agents cannot infer context from prior pages; each page must stand alone
+- **Consistent terminology** — inconsistent naming confuses retrieval matching
+- **Semantic heading hierarchy** — helps agents understand relationships between concepts
+- **Remove outdated content** — agents may retrieve stale information; wrong docs are worse than no docs
+- **Descriptive titles** — helps agents determine page relevance before loading
+
+Test: ask an AI assistant questions about your product. If it struggles, your docs need work.
 
 ## What Belongs in a README
 
@@ -78,3 +99,6 @@ AI coding agents (Claude Code, Codex) can generate and maintain documentation au
 - [[concepts/agent-context-instructions]] — CLAUDE.md as a form of living documentation
 - [[entities/ai-coding-agents]] — AI tools that automate documentation generation
 - [[summaries/software-documentation]] — consolidated source summary
+- [[summaries/mintlify-docs-guide]] — Diátaxis framework, AI audience, maintenance strategies
+- [[concepts/contextual-retrieval]] — navigation structure affects retrieval quality
+- [[concepts/domain-glossary]] — consistent terminology is a shared principle

@@ -225,3 +225,10 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - summaries/mintlify-docs-guide: Diátaxis 4-type framework, AI agents as explicit audience, navigation for LLM retrieval, maintenance strategies
 - concepts/software-documentation: added Diátaxis framework table, AI agents as explicit audience section, new sources/references
 - index.md: added summaries/mintlify-docs-guide, updated concepts/software-documentation description
+
+## [2026-05-11] ingest | agentic-search-vs-rag + local-rag-elasticsearch
+- Sources: 3× RyanNg agentic-search-vs-rag files + Local RAG Elasticsearch.md
+- summaries/agentic-search-vs-rag: 30-question benchmark; graph search 2× IoU, 99% fewer tokens vs flat RAG; RAG only wins dependency recall; validates LightRAG choice for wiki
+- summaries/local-rag-elasticsearch: Elasticsearch+LocalAI stack; retrieval 14ms, LLM 16s; model size/latency table
+- templates/wiki-index + wiki-chat: optimized LightRAG config (chunk_token_size=800, top_k=20, cosine_threshold=0.3, ids/file_paths passed to ainsert)
+- index.md: added 2 new summary entries, updated local-rag-wiki entry

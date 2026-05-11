@@ -44,6 +44,15 @@ def _build_rag() -> LightRAG:
         llm_model_name=LLM_MODEL,
         llm_model_max_async=2,
         max_extract_input_tokens=16384,
+        # Wiki pages are focused (1 concept/page, ~300-800 tokens).
+        # chunk_token_size=800 keeps most pages as a single chunk — preserves
+        # the "one concept per page" property rather than splitting across chunks.
+        chunk_token_size=800,
+        chunk_overlap_token_size=64,
+        # top_k=20 (down from default 40): wiki has dense cross-links so
+        # graph traversal finds related nodes quickly; fewer candidates = less noise.
+        top_k=20,
+        cosine_threshold=0.3,
         embedding_func=EmbeddingFunc(
             embedding_dim=EMBED_DIM,
             max_token_size=8192,
@@ -88,7 +97,11 @@ async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
     for i, p in enumerate(changed, 1):
         rel = p.relative_to(WIKI_DIR)
         print(f"  [{i}/{len(changed)}] {rel}", flush=True)
-        await rag.ainsert(page_content(p))
+        await rag.ainsert(
+            page_content(p),
+            ids=[str(rel)],
+            file_paths=[str(rel)],
+        )
         manifest[str(p)] = p.stat().st_mtime
         save_manifest(manifest)   # save after each page so partial runs resume
 

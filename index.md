@@ -18,6 +18,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/automated-security-reviews]] — Claude Code /security-review command + GitHub Actions; built-in, no custom agent needed
 - [[summaries/llm-wiki-pattern]] — Summary of Karpathy's LLM wiki pattern: architecture, operations, tooling, Memex connection
 - [[summaries/contextual-retrieval]] — Anthropic's Contextual Retrieval: chunk context prepending reduces RAG retrieval failure by 49–67%
+- [[summaries/agentic-search-vs-rag]] — Experiment: graph/agentic search vs flat RAG; 99% fewer tokens, 2× IoU; RAG only wins on dependency recall; validates LightRAG for wiki
+- [[summaries/local-rag-elasticsearch]] — Local RAG with Elasticsearch + LocalAI: retrieval 14ms, LLM dominates (16s); model size/speed trade-offs; stack patterns
 - [[summaries/agentic-sandbox-security]] — NVIDIA AI Red Team: mandatory OS-level sandbox controls for AI coding agents; indirect prompt injection as primary threat
 - [[summaries/ai-agent-technical-debt]] — Using AI agents for systematic debt reduction: two modes, agentic safety model, metrics
 - [[summaries/ai-code-vetting-practices]] — Condensed checklist for vetting AI-generated code: static analysis → readability → security → tests
@@ -163,4 +165,4 @@ Catalog of all pages. Updated on every ingest operation.
 ## Syntheses
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern
 - [[syntheses/lean-agentic-workflow]] — Full stack: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes
-- [[syntheses/local-rag-wiki]] — wiki-chat TUI (qmd+ollama, ~/.local/bin); 4-level RAG upgrade path: section chunking → Qdrant → reranking; future development note
+- [[syntheses/local-rag-wiki]] — wiki-chat TUI (LightRAG+phi4-mini+nomic-embed-text); graph-aware hybrid search; wiki-index incremental indexer; validated by agentic-search-vs-rag experiment

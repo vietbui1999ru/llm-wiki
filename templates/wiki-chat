@@ -58,6 +58,10 @@ def _build_rag() -> LightRAG:
         llm_model_name=LLM_MODEL,
         llm_model_max_async=2,
         max_extract_input_tokens=16384,
+        chunk_token_size=800,
+        chunk_overlap_token_size=64,
+        top_k=20,
+        cosine_threshold=0.3,
         embedding_func=EmbeddingFunc(
             embedding_dim=EMBED_DIM,
             max_token_size=8192,

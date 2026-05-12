@@ -86,6 +86,34 @@ A malicious MCP server registers a tool with the same name as a legitimate one. 
 
 **Defense:** pin tool definitions and diff on each session (snapshot-and-diff for rug-pull detection); maintain MCP server allowlist; audit tool descriptions for hidden instructions.
 
+## LLM-Level Attack Techniques
+
+These attacks target the model's input/output processing rather than the agent's permissions, and apply to both direct and indirect injection.
+
+### Encoding & Obfuscation
+Base64 / hex encoding hides injection strings from regex filters. Unicode zero-width characters embed invisible content. KaTeX white-on-white text (`$\color{white}{\text{malicious}}$`) is invisible to humans but processed by the model.
+
+### Typoglycemia Attacks
+LLMs read words with scrambled middle letters if the first and last letters are intact — the same cognitive shortcut humans use. `"ignroe all prevoius systme instructions"` reaches the model as `"ignore all previous system instructions"`.
+
+**Detection approach:** same-first-last-letter + anagram check is the minimal implementation. Production systems should use Levenshtein distance (threshold 1–2) or Jaro-Winkler against a keyword blocklist — covers insertions, deletions, transpositions beyond simple anagram scrambles. Libraries: `rapidfuzz` (Python), `apache-commons-text` (Java). Reference: [arxiv.org/abs/2410.01677](https://arxiv.org/abs/2410.01677)
+
+### Best-of-N (BoN) Jailbreaking
+Systematically generate prompt variations until one bypasses safety: random capitalization, character spacing, word shuffling, framing changes. Due to **power-law scaling**, success probability approaches 1 with sufficient attempts.
+
+**Measured results** (Hughes et al., [arxiv.org/abs/2412.03556](https://arxiv.org/abs/2412.03556)):
+- 89% success on GPT-4o, 78% on Claude 3.5 Sonnet
+
+All current defenses (rate limiting, content filters, circuit breakers, safety training, temperature reduction) only increase attacker cost — they do not prevent eventual success. Defense in depth is the current only viable posture; no single control is sufficient.
+
+### Multimodal Injection
+Instructions hidden in images via steganography or invisible characters, or in document metadata, processed by multimodal LLMs. The model executes instructions embedded in a PNG or PDF that look like a normal file to humans. Reference: [arxiv.org/abs/2506.02456](https://arxiv.org/abs/2506.02456)
+
+### RAG Poisoning
+Adversarial content injected into the vector database backing a RAG system. Retrieval returns attacker-controlled documents as if they were trusted knowledge — instructions in those documents reach the primary LLM in the trusted context position. Example: embedding a document that says "Ignore all previous instructions" in a shared knowledge base.
+
+---
+
 ## Mitigations
 
 Indirect prompt injection cannot be fully solved at the model layer. The mitigations are structural:
@@ -97,9 +125,25 @@ Indirect prompt injection cannot be fully solved at the model layer. The mitigat
 - Separate LLM call to summarize/validate untrusted external content before injecting into main context
 - Restrict agent context to minimum files and content needed for the task
 
+### Dual-LLM Pattern (Architectural Defense)
+[Simon Willison's pattern](https://simonwillison.net/2023/Apr/25/dual-llm-pattern/): split into a **privileged LLM** (holds tools, takes actions, never reads untrusted content) and a **quarantined LLM** (reads untrusted content, cannot act, returns only structured summaries to the privileged model). Injected instructions in external content never reach the actor.
+
+### Model-Based Guardrails
+A separate purpose-trained classifier (Llama Guard, ShieldGemma, IBM Granite Guardian, Prompt Guard) screening at three placements:
+
+| Placement | What it covers |
+|---|---|
+| **Input screening** | User prompts + all retrieved/fetched content before primary LLM |
+| **Output screening** | Primary model response before returning to user or downstream tools |
+| **Action screening** | Each proposed tool call vs. original user intent (without untrusted context) |
+
+Guardrails are one defense layer — they are themselves LLMs susceptible to injection. A purpose-trained classifier with a different architecture is preferable to a general-purpose model from the same family (same jailbreaks transfer more readily).
+
 ## Related concepts
 
 - [[concepts/agentic-sandbox-controls]]
 - [[entities/ai-coding-agents]]
 - [[summaries/owasp-ai-security]] — dev-loop attack vectors; CI/CD confused deputy; MCP tool shadowing
+- [[summaries/owasp-prompt-injection]] — full OWASP attack taxonomy; typoglycemia; Best-of-N; dual-LLM pattern
+- [[summaries/owasp-mcp-security]] — MCP-specific threat model; tool shadowing; rug pull; hash pinning
 - [[concepts/agent-context-instructions]] — rules files (CLAUDE.md, AGENTS.md) — the persistent steering surface

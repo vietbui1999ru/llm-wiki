@@ -240,3 +240,5 @@ Why: tag `v4` can be force-pushed by the action owner or an attacker with repo a
 - [[concepts/error-budget]] — token/session budget axes implementing spend limits and circuit breakers
 - [[summaries/agentic-sandbox-security]] — NVIDIA AI Red Team original OS-level controls source
 - [[summaries/living-dangerously-with-claude]] — lethal trifecta; sandbox-exec pattern
+- [[summaries/owasp-prompt-injection]] — full LLM prompt injection attack taxonomy; typoglycemia; Best-of-N power-law scaling; dual-LLM pattern
+- [[summaries/owasp-mcp-security]] — MCP-specific threat model; rug pull; tool shadowing; ECDSA message signing; hash pinning

@@ -270,3 +270,11 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Remaining structural orphans (acceptable): patterns/algorithmic, patterns/backend, patterns/frontend (reference pages), summaries/awesome-software-architecture, summaries/cursor-cloud-agents, summaries/hn-junior-devs-and-ai, summaries/sparc-cursor-cline-rules
 - Broken links (false positives): [[wikilinks]] and [[links]] in wikilink-graph-extraction are prose, not page refs; self-healing-cicd code block artifact — no action needed
 - Source gaps: OWASP LLM Prompt Injection Prevention, OWASP MCP Security Cheat Sheet, OpenTelemetry for AI agents, OWASP Top 10 for LLMs not yet ingested
+
+## [2026-05-12] ingest | OWASP LLM Prompt Injection Prevention + OWASP MCP Security
+- Sources: LLM Prompt Injection Prevention + MCP Security (OWASP Cheat Sheet Series)
+- Created summaries/owasp-prompt-injection: 9+ attack types (typoglycemia, Best-of-N 89% GPT-4o/78% Claude 3.5 via power-law scaling, multimodal steganography, RAG poisoning), 4-layer SecureLLMPipeline, dual-LLM pattern, model-based guardrails at 3 placements (input/output/action screening)
+- Created summaries/owasp-mcp-security: 9 key risks, 12 best practices incl. SHA-256 tool hash pinning, ECDSA message signing + nonce/timestamp replay protection, mcp-scan, bind to 127.0.0.1, JSON Schema additionalProperties:false
+- Updated concepts/indirect-prompt-injection: added LLM-Level Attack Techniques section (encoding/obfuscation, typoglycemia with Levenshtein defense note, Best-of-N with power-law caveat, multimodal injection, RAG poisoning); added dual-LLM pattern and model-based guardrails to Mitigations; added links to new summaries
+- Updated summaries/owasp-ai-security: added cross-references to owasp-prompt-injection and owasp-mcp-security
+- index.md: added owasp-prompt-injection and owasp-mcp-security entries; updated indirect-prompt-injection entry

@@ -19,14 +19,14 @@ A working synthesis of the workflow that emerged from ingesting and critiquing t
 grill → PRD → vertical slices → AFK loop → verify → ship
 ```
 
-| Phase | Tool | Purpose |
-|---|---|---|
-| grill | `/grill` skill | Align on requirements before any implementation |
-| PRD | `/prd` skill | Synthesize grill into structured specification |
-| vertical slices | `/issues` skill | Break PRD into tracer-bullet tasks (HITL/AFK gate) |
-| AFK loop | Dangeresque | Worker → verify → adversarial review → human-merge gate |
-| verify | `/verify` + council | Evidence before claims; cross-vendor quality gate — see [[concepts/verification-pipeline]] |
-| ship | `branch` or `head` | Merge strategy based on risk |
+| Phase           | Tool                | Purpose                                                                                    |
+| --------------- | ------------------- | ------------------------------------------------------------------------------------------ |
+| grill           | `/grill` skill      | Align on requirements before any implementation                                            |
+| PRD             | `/prd` skill        | Synthesize grill into structured specification                                             |
+| vertical slices | `/issues` skill     | Break PRD into tracer-bullet tasks (HITL/AFK gate)                                         |
+| AFK loop        | Dangeresque         | Worker → verify → adversarial review → human-merge gate                                    |
+| verify          | `/verify` + council | Evidence before claims; cross-vendor quality gate — see [[concepts/verification-pipeline]] |
+| ship            | `branch` or `head`  | Merge strategy based on risk                                                               |
 
 ---
 

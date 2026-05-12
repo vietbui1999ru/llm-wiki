@@ -9,12 +9,12 @@ Personal reference for Viet. Covers: active rules, the wiki, all installed skill
 These behaviors are always active. No need to invoke them — Claude follows them automatically.
 
 ### Communication
-| Rule | Behavior |
-|---|---|
-| **Caveman mode** | All natural language compressed — no articles, no filler, fragments OK. Does NOT apply to code, commits, or docs. |
-| **50-line code limit** | Long implementations broken into explained chunks. Say "give me the whole thing" to override. |
-| **No sycophantic openers** | No "Sure!", "Great question!", etc. Ever. |
-| **No trailing summaries** | Claude doesn't summarize what it just did at the end of responses. |
+| Rule                       | Behavior                                                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Caveman mode**           | All natural language compressed — no articles, no filler, fragments OK. Does NOT apply to code, commits, or docs. |
+| **50-line code limit**     | Long implementations broken into explained chunks. Say "give me the whole thing" to override.                     |
+| **No sycophantic openers** | No "Sure!", "Great question!", etc. Ever.                                                                         |
+| **No trailing summaries**  | Claude doesn't summarize what it just did at the end of responses.                                                |
 
 ### Skill discipline (superpowers)
 - Before every substantive response, Claude checks: does a skill apply?
@@ -22,9 +22,9 @@ These behaviors are always active. No need to invoke them — Claude follows the
 - Order: `wiki-context` first → then process skills (debugging, brainstorming) → then implementation skills.
 
 ### Auto-invocation (wiki-startup)
-| Trigger | Skill invoked |
-|---|---|
-| Any technical task, design question, agent work | `wiki-context` |
+| Trigger                                                 | Skill invoked         |
+| ------------------------------------------------------- | --------------------- |
+| Any technical task, design question, agent work         | `wiki-context`        |
 | Multi-agent systems, subagent design, team coordination | `agent-orchestration` |
 
 ### Preference feedback loop (judge auto-invocation)
@@ -99,7 +99,7 @@ wiki-chat --mode global# cross-concept, community-level questions
 ```
 Inside `wiki-chat`: `/mode local|global|hybrid|naive` to switch, `/reindex` to rebuild after ingests, `/status` for index stats, `q` to quit.
 
-> First time: run `wiki-index` to build the graph. Takes ~30–60 min for 149 pages.
+> First time: run `wiki-index --full` to build the graph. Takes ~30–60 min for ~150 pages with local `qwen2.5:3b` (free). **With `ANTHROPIC_API_KEY` set, expect $10–30+** — LightRAG runs 3 extraction phases per page. Use local LLM for full builds; unset `ANTHROPIC_API_KEY` or pass `--yes` to confirm API cost.
 
 **Read a specific page:**
 ```bash
@@ -116,32 +116,32 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 
 ### 3.1 Wiki & knowledge
 
-| Skill | Invoke | When to use |
-|---|---|---|
-| `wiki-context` | Auto (technical/design topics) | Loads relevant wiki patterns before responding |
-| `pdf-ingest` | `ingest <file.pdf>` | Parses PDF via Docling, runs comprehension check, writes wiki pages |
-| `pre-digest` | `/pre-digest` | Runs gemma4:e4b locally to pre-process a source file into a digest before full ingest |
-| `agent-orchestration` | Auto (agent/multi-step work) | Multi-agent coordination patterns, subagent design, harness systems |
-| `security-patterns` | Auto (security review) | OWASP checklist + AI-specific threats (indirect prompt injection, agentic sandbox) |
-| `wiki-index` | `wiki-index` in terminal | Build/update LightRAG graph index; run after bulk ingests or `--full` to wipe+rebuild |
-| `wiki-chat` | `wiki-chat` in terminal | Interactive graph-aware Q&A (LightRAG); 4 modes: hybrid (default), local, global, naive |
+| Skill                 | Invoke                         | When to use                                                                             |
+| --------------------- | ------------------------------ | --------------------------------------------------------------------------------------- |
+| `wiki-context`        | Auto (technical/design topics) | Loads relevant wiki patterns before responding                                          |
+| `pdf-ingest`          | `ingest <file.pdf>`            | Parses PDF via Docling, runs comprehension check, writes wiki pages                     |
+| `pre-digest`          | `/pre-digest`                  | Runs gemma4:e4b locally to pre-process a source file into a digest before full ingest   |
+| `agent-orchestration` | Auto (agent/multi-step work)   | Multi-agent coordination patterns, subagent design, harness systems                     |
+| `security-patterns`   | Auto (security review)         | OWASP checklist + AI-specific threats (indirect prompt injection, agentic sandbox)      |
+| `wiki-index`          | `wiki-index` in terminal       | Build/update LightRAG graph index; incremental by default; `--full` wipes+rebuilds; `--yes` bypasses $10–30+ cost confirmation when API key is set |
+| `wiki-chat`           | `wiki-chat` in terminal        | Interactive graph-aware Q&A (LightRAG); 4 modes: hybrid (default), local, global, naive |
 
 ---
 
 ### 3.2 Feature development
 
-| Skill | Invoke | When to use | Example |
-|---|---|---|---|
-| `docs-writer` | Auto (after code-writer; or "document this" / "write docs") | Write/update structured markdown docs to `docs/`; follows Diátaxis (tutorial/how-to/reference/explanation) | "document the new auth module" |
-| `/grill-me` | `/grill-me` | Stress-test a plan before starting | "I want to add auth — /grill-me" |
-| `/grill-with-docs` | `/grill-with-docs` | Like grill-me but also builds `CONTEXT.md` + ADRs | New project or module with unclear terminology |
-| `/tdd` | `/tdd` | Build features or fix bugs with red-green-refactor | "Add user profile API — /tdd" |
-| `/zoom-out` | `/zoom-out` | Need the big picture of unfamiliar code | "I don't understand this middleware" |
-| `/to-prd` | `/to-prd` | Synthesize a conversation into a GitHub issue (PRD) | After a grill session, capture as issue |
-| `/to-issues` | `/to-issues` | Break a PRD into independently-grabbable vertical slices | After /to-prd, decompose into tickets |
-| `/improve-codebase-architecture` | `/improve-codebase-architecture` | Find shallow modules, refactor opportunities | "Codebase feels messy" |
-| `feature-dev:feature-dev` | Auto (guided feature dev) | Codebase analysis → architect → implement | Complex feature with exploration phase |
-| `/setup-matt-pocock-skills` | `/setup-matt-pocock-skills` | First-time per-repo setup: issue tracker, triage labels, CONTEXT.md | Run once per new repo |
+| Skill                            | Invoke                                                      | When to use                                                                                                | Example                                        |
+| -------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `docs-writer`                    | Auto (after code-writer; or "document this" / "write docs") | Write/update structured markdown docs to `docs/`; follows Diátaxis (tutorial/how-to/reference/explanation) | "document the new auth module"                 |
+| `/grill-me`                      | `/grill-me`                                                 | Stress-test a plan before starting                                                                         | "I want to add auth — /grill-me"               |
+| `/grill-with-docs`               | `/grill-with-docs`                                          | Like grill-me but also builds `CONTEXT.md` + ADRs                                                          | New project or module with unclear terminology |
+| `/tdd`                           | `/tdd`                                                      | Build features or fix bugs with red-green-refactor                                                         | "Add user profile API — /tdd"                  |
+| `/zoom-out`                      | `/zoom-out`                                                 | Need the big picture of unfamiliar code                                                                    | "I don't understand this middleware"           |
+| `/to-prd`                        | `/to-prd`                                                   | Synthesize a conversation into a GitHub issue (PRD)                                                        | After a grill session, capture as issue        |
+| `/to-issues`                     | `/to-issues`                                                | Break a PRD into independently-grabbable vertical slices                                                   | After /to-prd, decompose into tickets          |
+| `/improve-codebase-architecture` | `/improve-codebase-architecture`                            | Find shallow modules, refactor opportunities                                                               | "Codebase feels messy"                         |
+| `feature-dev:feature-dev`        | Auto (guided feature dev)                                   | Codebase analysis → architect → implement                                                                  | Complex feature with exploration phase         |
+| `/setup-matt-pocock-skills`      | `/setup-matt-pocock-skills`                                 | First-time per-repo setup: issue tracker, triage labels, CONTEXT.md                                        | Run once per new repo                          |
 
 **New project setup order:**
 ```
@@ -157,24 +157,24 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 
 ### 3.3 Quality & feedback
 
-| Skill | Invoke | When to use |
-|---|---|---|
-| `/judge` | Auto (after code/plan/design responses) | LLM-as-judge evaluation on 4-dimension rubric; silent first strike |
-| `/judge-report` | `/judge-report` | Show current session's judge evaluation history |
-| `/earn-it` | `/earn-it` | Claude becomes Socratic — you write the code, Claude guides. Enforces hand-code-first discipline |
-| `simplify` | `/simplify` | Review recently changed code for reuse, quality, and efficiency |
-| `code-review:code-review` | `/code-review` | Code review a pull request |
-| `/review` | `/review` | Review a pull request (alias) |
-| `/security-review` | `/security-review` | Full OWASP + AI-specific security audit; structured threat report |
+| Skill                     | Invoke                                  | When to use                                                                                      |
+| ------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `/judge`                  | Auto (after code/plan/design responses) | LLM-as-judge evaluation on 4-dimension rubric; silent first strike                               |
+| `/judge-report`           | `/judge-report`                         | Show current session's judge evaluation history                                                  |
+| `/earn-it`                | `/earn-it`                              | Claude becomes Socratic — you write the code, Claude guides. Enforces hand-code-first discipline |
+| `simplify`                | `/simplify`                             | Review recently changed code for reuse, quality, and efficiency                                  |
+| `code-review:code-review` | `/code-review`                          | Code review a pull request                                                                       |
+| `/review`                 | `/review`                               | Review a pull request (alias)                                                                    |
+| `/security-review`        | `/security-review`                      | Full OWASP + AI-specific security audit; structured threat report                                |
 
 ---
 
 ### 3.4 Debugging & diagnosis
 
-| Skill | Invoke | When to use |
-|---|---|---|
-| `/diagnose` | `/diagnose` | Hard bugs, flaky tests, performance regressions — 6-phase loop |
-| `superpowers:systematic-debugging` | Auto (bug/test failure) | Disciplined root-cause analysis before fixing |
+| Skill                              | Invoke                  | When to use                                                    |
+| ---------------------------------- | ----------------------- | -------------------------------------------------------------- |
+| `/diagnose`                        | `/diagnose`             | Hard bugs, flaky tests, performance regressions — 6-phase loop |
+| `superpowers:systematic-debugging` | Auto (bug/test failure) | Disciplined root-cause analysis before fixing                  |
 
 `/diagnose` phases: build feedback loop → reproduce → hypothesize → instrument → fix → cleanup.
 
@@ -182,11 +182,11 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 
 ### 3.5 Session & memory
 
-| Skill | Invoke | When to use |
-|---|---|---|
-| `/save-session` | `/save-session` | Before clearing context or ending a long session — full summary saved |
-| `/capture-mistake` | Auto (after Claude self-corrects) | Files the mistake immediately to `mistakes/` |
-| `/synthesize-mistakes` | `/synthesize-mistakes` | Distill `raw-log.md` + structured entries into `global-prevention-rules.md` |
+| Skill                  | Invoke                            | When to use                                                                 |
+| ---------------------- | --------------------------------- | --------------------------------------------------------------------------- |
+| `/save-session`        | `/save-session`                   | Before clearing context or ending a long session — full summary saved       |
+| `/capture-mistake`     | Auto (after Claude self-corrects) | Files the mistake immediately to `mistakes/`                                |
+| `/synthesize-mistakes` | `/synthesize-mistakes`            | Distill `raw-log.md` + structured entries into `global-prevention-rules.md` |
 
 The mistakes pipeline: `capture-mistake` → individual `mistakes/YYYY-MM-DD-*.md` → `synthesize-mistakes` → `global-prevention-rules.md` → loaded every session.
 
@@ -194,15 +194,15 @@ The mistakes pipeline: `capture-mistake` → individual `mistakes/YYYY-MM-DD-*.m
 
 ### 3.6 Project setup & config
 
-| Skill | Invoke | When to use |
-|---|---|---|
-| `/claude-init` | `/claude-init` | Project onboarding — aggressive questions to set up CLAUDE.md |
-| `/init` | `/init` | Initialize a new CLAUDE.md file |
-| `update-config` | `/update-config` | Configure settings.json: permissions, hooks, env vars, automated behaviors |
-| `keybindings-help` | `/keybindings-help` | Customize keyboard shortcuts, rebind keys, chord bindings |
-| `fewer-permission-prompts` | `/fewer-permission-prompts` | Scan transcripts for common read-only ops, add allowlist to reduce prompts |
-| `claude-md-management:revise-claude-md` | Auto (end of session) | Update CLAUDE.md with session learnings |
-| `claude-md-management:claude-md-improver` | `/improve-claude-md` | Audit and improve CLAUDE.md files |
+| Skill                                     | Invoke                      | When to use                                                                |
+| ----------------------------------------- | --------------------------- | -------------------------------------------------------------------------- |
+| `/claude-init`                            | `/claude-init`              | Project onboarding — aggressive questions to set up CLAUDE.md              |
+| `/init`                                   | `/init`                     | Initialize a new CLAUDE.md file                                            |
+| `update-config`                           | `/update-config`            | Configure settings.json: permissions, hooks, env vars, automated behaviors |
+| `keybindings-help`                        | `/keybindings-help`         | Customize keyboard shortcuts, rebind keys, chord bindings                  |
+| `fewer-permission-prompts`                | `/fewer-permission-prompts` | Scan transcripts for common read-only ops, add allowlist to reduce prompts |
+| `claude-md-management:revise-claude-md`   | Auto (end of session)       | Update CLAUDE.md with session learnings                                    |
+| `claude-md-management:claude-md-improver` | `/improve-claude-md`        | Audit and improve CLAUDE.md files                                          |
 
 ---
 
@@ -296,17 +296,17 @@ MCP tools are available directly to Claude — no skill needed.
 
 ### Active servers
 
-| Server | What it does | When Claude uses it |
-|---|---|---|
-| **firecrawl** | Web scraping, crawling, search, structured extraction, autonomous web research | "scrape this URL", "research X from the web", "extract data from these pages" |
-| **github** | Read/write issues, PRs, branches, code search | "create issue", "list open PRs", "search code for X" |
-| **playwright** | Browser automation, screenshots, UI testing | "take a screenshot of", "click X on this page", "verify UI renders correctly" |
-| **context7** | Fetch live library/framework docs | "how does X work in Next.js", "Prisma migration syntax" |
-| **qmd** | Search wiki + any qmd-indexed collection | Wiki searches (used by wiki-context skill) |
-| **sentry** | Query error tracking, issues, events | "what errors are trending", "analyze this Sentry issue" |
-| **CodeGraphContext** | Code graph analysis, dead code, complexity | "find dead code", "most complex functions", "analyze relationships" |
-| **Figma** | Read designs, generate diagrams, code connect | When given a figma.com URL |
-| **MermaidChart** | Create and validate Mermaid diagrams | "generate a diagram of X", "create a flowchart" |
+| Server               | What it does                                                                   | When Claude uses it                                                           |
+| -------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| **firecrawl**        | Web scraping, crawling, search, structured extraction, autonomous web research | "scrape this URL", "research X from the web", "extract data from these pages" |
+| **github**           | Read/write issues, PRs, branches, code search                                  | "create issue", "list open PRs", "search code for X"                          |
+| **playwright**       | Browser automation, screenshots, UI testing                                    | "take a screenshot of", "click X on this page", "verify UI renders correctly" |
+| **context7**         | Fetch live library/framework docs                                              | "how does X work in Next.js", "Prisma migration syntax"                       |
+| **qmd**              | Search wiki + any qmd-indexed collection                                       | Wiki searches (used by wiki-context skill)                                    |
+| **sentry**           | Query error tracking, issues, events                                           | "what errors are trending", "analyze this Sentry issue"                       |
+| **CodeGraphContext** | Code graph analysis, dead code, complexity                                     | "find dead code", "most complex functions", "analyze relationships"           |
+| **Figma**            | Read designs, generate diagrams, code connect                                  | When given a figma.com URL                                                    |
+| **MermaidChart**     | Create and validate Mermaid diagrams                                           | "generate a diagram of X", "create a flowchart"                               |
 
 ### Firecrawl tool selection guide
 
@@ -441,9 +441,30 @@ Say: "document this" / "write docs" / "update the docs"
 ### "I need to review a PR for security"
 ```
 /security-review
-→ OWASP Top 10 + AI-specific threats (indirect prompt injection, agentic sandbox)
+→ OWASP Top 10 + AI-specific threats:
+  - Indirect prompt injection (including dev-loop vectors: issues, PRs, changelogs)
+  - Rules file injection (CLAUDE.md, AGENTS.md as persistent steering surface)
+  - CI/CD confused deputy ("clinejection" attack pattern)
+  - Test fabrication / test deletion
+  - Hallucinated dependencies (slopsquatting)
+  - Agentic sandbox controls
 → Structured threat report
 ```
+
+### "I want to update the LightRAG graph after new ingests"
+```
+wiki-index                    # incremental — picks up new/changed pages only
+wiki-index --status           # see what's indexed vs. pending
+tail -f .lightrag/last-index.log   # watch progress
+
+# Full rebuild (local LLM, free):
+wiki-index --full
+
+# Full rebuild (Haiku, $10–30+):
+wiki-index --full --yes
+```
+The post-commit hook runs `wiki-index` (incremental) automatically after commits touching `wiki/`.
+New pages that were ingested this session are queued automatically on next run.
 
 ### "I want to run a long autonomous task"
 ```

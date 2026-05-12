@@ -45,11 +45,11 @@ Do parallel workers need each other's PARTIAL results mid-task?
 
 ### Claude Code (wshobson tier routing)
 
-| Model | When to use | Example agents |
-|---|---|---|
-| **Opus** | Judgment, design, architecture, security audits | design-explorer, architecture-reviewer, security-auditor |
-| **Sonnet** | Implementation, review, debugging, deployment | code-writer, code-reviewer, backend-debug-tester |
-| **Haiku** | Fast, repetitive, low-judgment | cmd-executor, code-writer-fast, session-report-generator |
+| Model      | When to use                                     | Example agents                                           |
+| ---------- | ----------------------------------------------- | -------------------------------------------------------- |
+| **Opus**   | Judgment, design, architecture, security audits | design-explorer, architecture-reviewer, security-auditor |
+| **Sonnet** | Implementation, review, debugging, deployment   | code-writer, code-reviewer, backend-debug-tester         |
+| **Haiku**  | Fast, repetitive, low-judgment                  | cmd-executor, code-writer-fast, session-report-generator |
 
 **Rule**: Security and architectural decisions go to Opus. Per wshobson benchmarks, Opus achieves 65% fewer tokens on complex tasks — the higher rate is often offset by not needing correction loops.
 
@@ -57,15 +57,15 @@ Do parallel workers need each other's PARTIAL results mid-task?
 
 ### OpenCode / multi-provider (majority practice among experienced harness users, r/opencodeCLI 2026-05, n≈30)
 
-| Role | Model | Notes |
-|---|---|---|
-| Planning / council / architecture | Opus 4.7, GLM-5.1 | Opus for judgment; GLM-5.1 for planning via Go plan |
-| Implementation (AFK loop) | DeepSeek V4 Flash (max reasoning) | Direct API only — resellers strip reasoning effort |
-| Implementation (Go plan) | GLM-5.1 | Community: lower hallucination than Kimi K2.6 |
-| Fast targeted changes | DeepSeek V4 Flash, Qwen 3.6 Plus | Speed + cost |
-| Adversarial review | DeepSeek V4 Pro, Qwen 3.6 Plus | Different training = different blind spots |
-| UI / frontend | Kimi K2.6, Gemini | Visual reasoning strength |
-| Spec writing | Mimo 2.5 Pro | Community: Opus-comparable for spec tasks |
+| Role                              | Model                             | Notes                                               |
+| --------------------------------- | --------------------------------- | --------------------------------------------------- |
+| Planning / council / architecture | Opus 4.7, GLM-5.1                 | Opus for judgment; GLM-5.1 for planning via Go plan |
+| Implementation (AFK loop)         | DeepSeek V4 Flash (max reasoning) | Direct API only — resellers strip reasoning effort  |
+| Implementation (Go plan)          | GLM-5.1                           | Community: lower hallucination than Kimi K2.6       |
+| Fast targeted changes             | DeepSeek V4 Flash, Qwen 3.6 Plus  | Speed + cost                                        |
+| Adversarial review                | DeepSeek V4 Pro, Qwen 3.6 Plus    | Different training = different blind spots          |
+| UI / frontend                     | Kimi K2.6, Gemini                 | Visual reasoning strength                           |
+| Spec writing                      | Mimo 2.5 Pro                      | Community: Opus-comparable for spec tasks           |
 
 **Key insight**: DeepSeek V4 Flash on max reasoning = dramatically better than default. Must use direct DeepSeek API — not OpenRouter or resellers. Toggle in OpenCode via `ctrl+t`.
 

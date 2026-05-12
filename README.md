@@ -14,6 +14,7 @@ Most people who read about AI engineering forget 90% of it. This wiki makes forg
 - Concepts are linked across sources so patterns become visible
 - The LLM is the maintainer — it knows the schema, enforces cross-links, catches contradictions
 - A mistakes log prevents the same errors from recurring across sessions
+- A graph-aware RAG system (LightRAG) enables synthesis queries across the knowledge graph
 
 **Primary domain:** AI agent engineering — orchestration, context management, harness design, multi-model coordination, memory systems, tool design.
 
@@ -34,27 +35,33 @@ llm-wiki/
 │   ├── comparisons/      # Side-by-side analyses
 │   └── syntheses/        # Cross-source conclusions
 │
+├── .lightrag/            # LightRAG graph index (gitignored, rebuilt per machine)
+│
 ├── index.md              # Catalog of all pages (auto-updated on every ingest)
 ├── log.md                # Append-only history of all operations
 │
 ├── mistakes/             # Error log and prevention system
 │   ├── raw-log.md        # Hook-captured raw entries
 │   ├── YYYY-MM-DD-*.md   # Structured mistake entries
-│   ├── log.md            # Synthesize-mistakes run log
 │   └── global-prevention-rules.md  # Distilled rules loaded every session
 │
-├── templates/            # Operational templates for the lean workflow
+├── templates/            # Installable scripts and workflow tools
+│   ├── wiki-index        # Build/update LightRAG graph index (incremental)
+│   ├── wiki-chat         # Interactive graph-aware Q&A TUI (local, ollama)
+│   ├── wiki-mcp          # MCP server exposing wiki_query to OpenCode/Claude Code
 │   ├── AGENTS.md         # Cross-provider agent rules (copy to your projects)
-│   ├── council.py        # Multi-model deliberation script (GitHub Models API)
+│   ├── council.py        # Multi-model deliberation script
 │   ├── env-model-routing.sh         # Model routing env vars
 │   ├── lean-compaction-plugin.ts    # OpenCode compaction + checkpoint plugin
 │   └── install-agents-md.sh        # Script to install AGENTS.md to a project
 │
-├── claude-setup/         # Claude Code configuration (symlinked to ~/.claude)
+├── claude-setup/
+│   ├── scripts/
+│   │   ├── install.sh    # One-command machine setup (binaries + deps + models)
+│   │   └── post-commit   # Hook: runs qmd + wiki-index after wiki commits
 │   ├── skills/           # Custom skills (wiki-context, pdf-ingest, etc.)
 │   ├── rules/            # CLAUDE.md rule files (@-imported)
-│   ├── plugins/          # Installed plugins (superpowers, caveman, qmd, etc.)
-│   └── CLAUDE.md         # Root config with @-imports
+│   └── plugins/          # Installed plugins (superpowers, caveman, qmd, etc.)
 │
 ├── CLAUDE.md             # Claude Code operating instructions for this repo
 ├── GUIDE.md              # User reference: skills, MCP tools, scenario playbooks
@@ -67,22 +74,31 @@ llm-wiki/
 Source (URL, PDF, note)
     │
     ▼
-raw/ or pdfs/          ← human drops file here
+raw/ or pdfs/              ← human drops file here
     │
     ▼
-ingest operation       ← human says "ingest <filename>"
+ingest operation           ← human says "ingest <filename>"
     │
-    ├─→ wiki/summaries/<source>.md       (always created)
-    ├─→ wiki/entities/<tool>.md          (if source introduces a named thing)
-    ├─→ wiki/concepts/<pattern>.md       (if source introduces a pattern)
-    ├─→ index.md                         (updated with new page entries)
-    └─→ log.md                           (operation appended)
-    │
-    ▼
-qmd index              ← BM25 + vector search over all wiki/ pages
+    ├─→ wiki/summaries/<source>.md
+    ├─→ wiki/entities/<tool>.md
+    ├─→ wiki/concepts/<pattern>.md
+    ├─→ index.md + log.md
     │
     ▼
-query / grill / council  ← human asks questions; LLM retrieves and synthesizes
+git commit
+    │
+    ├─→ qmd index          ← BM25 + vector (fast, synchronous)
+    └─→ wiki-index         ← LightRAG graph extraction (background, incremental)
+              │
+              ▼
+         .lightrag/        ← entity/relation graph persists on disk
+              │
+    ┌─────────┴──────────────────────┐
+    ▼                                ▼
+wiki-chat (local TUI)        wiki-mcp (MCP server)
+qwen2.5:3b synthesis         Haiku or qwen2.5:3b synthesis
+                                     │
+                             OpenCode / Claude Code
 ```
 
 ---
@@ -93,45 +109,64 @@ query / grill / council  ← human asks questions; LLM retrieves and synthesizes
 
 | Tool | Purpose | Install |
 |---|---|---|
-| [Claude Code](https://claude.ai/code) | LLM interface — runs the wiki operations | Download from claude.ai |
-| [qmd](https://github.com/antiloger/qmd) | Hybrid search (BM25 + vector) over wiki pages | `cargo install qmd` or binary release |
-| Git | Version control for wiki pages | Standard |
+| [Claude Code](https://claude.ai/code) | LLM interface — runs wiki operations | Download from claude.ai |
+| [qmd](https://github.com/antiloger/qmd) | Hybrid search (BM25 + vector) | `cargo install qmd` or binary release |
+| [ollama](https://ollama.com) | Local LLM inference (graph index + TUI) | Download from ollama.com |
+| [uv](https://docs.astral.sh/uv/) | Python script runner (install.sh handles this) | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| Git | Version control | Standard |
 
-### Optional (for full lean workflow)
+### Optional
 
-| Tool | Purpose | Install |
-|---|---|---|
-| [OpenCode](https://opencode.ai) | AFK agent orchestration, compaction hooks | `npm i -g opencode-ai` |
-| GitHub PAT | Access GitHub Models API for cross-vendor council | [github.com/settings/tokens](https://github.com/settings/tokens) — `models:read` scope |
-| Python 3.10+ + openai package | Run `council.py` | `pip install openai` |
-| [Bun](https://bun.sh) | OpenCode plugin runtime | `curl -fsSL https://bun.sh/install \| bash` |
+| Tool | Purpose |
+|---|---|
+| `ANTHROPIC_API_KEY` in `.env` | Claude Haiku for entity extraction (`wiki-index`) and OpenCode synthesis (`wiki-mcp`). Without it everything runs locally for free. |
+| `OPENROUTER_API_KEY` in `.env` | OpenRouter as alternative extraction backend for `wiki-index` / `wiki-mcp` (stub — not yet implemented; set `ANTHROPIC_API_KEY` or leave unset for local). |
+| [OpenCode](https://opencode.ai) | AFK agent orchestration; connects to `wiki-mcp` for in-session wiki queries |
+| GitHub PAT | Cross-vendor council via GitHub Models API |
 
 ---
 
 ## Setup
 
-### 1. Clone the repo
+### 1. Clone and run install.sh
 
 ```bash
-git clone <your-fork> ~/repos/llm-wiki
+git clone git@github.com:vietbui1999ru/llm-wiki.git ~/repos/llm-wiki
 cd ~/repos/llm-wiki
+bash claude-setup/scripts/install.sh
 ```
 
-### 2. Install qmd and index the wiki
+`install.sh` handles everything: installs `uv` if missing, copies `wiki-index`/`wiki-chat`/`wiki-mcp` to `~/.local/bin`, pulls `qwen2.5:3b` and `nomic-embed-text` via ollama, installs the post-commit hook.
+
+Make sure `~/.local/bin` is on your `$PATH`:
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+```
+
+### 2. Configure the Anthropic key (optional)
 
 ```bash
-# Install qmd (check repo for latest install method)
-cargo install qmd
-
-# Index the wiki
-cd ~/repos/llm-wiki
-qmd init
-qmd add wiki/
+cp .env.example .env
+# edit .env — paste ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-### 3. Link Claude Code configuration
+Without a key: all tools use `qwen2.5:3b` locally. Free, but lower extraction quality.
 
-The `claude-setup/` directory contains skills, rules, and plugins for Claude Code. Symlink it to `~/.claude`:
+### 3. Build the graph index (one-time)
+
+```bash
+# Test the LLM backend first
+wiki-index --test
+
+# Then build (~30–60 min for ~150 pages with local qwen2.5:3b)
+wiki-index --full
+```
+
+> **Cost warning:** `--full` with `ANTHROPIC_API_KEY` set costs **$10–30+** for ~150 pages. LightRAG runs 3 extraction phases per page (entity → relation → community), each with multiple LLM calls. Use `qwen2.5:3b` (unset API keys) for full rebuilds. If you want to use Haiku anyway, pass `--yes` to confirm: `wiki-index --full --yes`.
+
+After the initial build, the post-commit hook keeps the index current automatically — no manual re-runs needed after ingests. The indexer prepends Obsidian wikilink structure as extraction hints, reducing LLM token cost ~40–55% per page.
+
+### 4. Link Claude Code configuration
 
 ```bash
 # If starting fresh (no existing ~/.claude):
@@ -141,37 +176,18 @@ ln -s ~/repos/llm-wiki/claude-setup ~/.claude
 # Copy skills/, rules/, plugins/ from claude-setup/ into your ~/.claude
 ```
 
-Verify by opening Claude Code in any project — the wiki-context skill and superpowers plugin should be active.
+### 5. Wire wiki-mcp into OpenCode (optional)
 
-### 4. Configure model routing (optional)
-
-For the lean multi-model workflow, source the env vars:
-
-```bash
-# Add to ~/.zshrc or per-project .envrc (direnv)
-source ~/repos/llm-wiki/templates/env-model-routing.sh
-
-# For council (GitHub Models API):
-export GITHUB_TOKEN=<your PAT with models:read scope>
+Add to `~/.config/opencode/opencode.json` under `"mcp"`:
+```json
+"wiki-rag": {
+  "type": "local",
+  "command": ["/home/<user>/.local/bin/wiki-mcp"],
+  "enabled": true
+}
 ```
 
-### 5. Install council script (optional)
-
-```bash
-cp ~/repos/llm-wiki/templates/council.py ~/bin/council
-chmod +x ~/bin/council
-# Requires: pip install openai
-```
-
-### 6. Install OpenCode lean-session plugin (optional)
-
-```bash
-# The installed version should be JS, not TS
-# Copy to OpenCode plugins dir:
-cp ~/repos/llm-wiki/templates/lean-compaction-plugin.ts \
-   ~/.config/opencode/plugins/lean-session.js
-# Note: compile TS → JS first if OpenCode doesn't handle TS natively
-```
+With `ANTHROPIC_API_KEY` in `.env`, OpenCode queries use Claude Haiku for synthesis. Without it, qwen2.5:3b is used.
 
 ---
 
@@ -179,67 +195,96 @@ cp ~/repos/llm-wiki/templates/lean-compaction-plugin.ts \
 
 ### 1. Add a source to the wiki
 
-Drop any markdown file, scraped article, or note into `raw/`:
-
 ```bash
-cp ~/Downloads/interesting-article.md ~/repos/llm-wiki/raw/
+cp ~/Downloads/article.md ~/repos/llm-wiki/raw/
 ```
 
-Then in Claude Code:
-
+In Claude Code:
 ```
-ingest interesting-article.md
+ingest article.md
 ```
 
-Claude reads the source, asks 3–5 comprehension questions, then writes:
-- A summary page in `wiki/summaries/`
-- Entity or concept pages for anything new
-- Updates `index.md` and `log.md`
+Claude asks 3–5 comprehension questions, then writes summary/entity/concept pages, updates `index.md` and `log.md`, and commits. The post-commit hook automatically runs `wiki-index` in the background — new pages are in the graph within a few minutes.
 
-To skip the comprehension check: `"skip review"` or `"just ingest it"`.
+Skip the comprehension check: `"skip review"` or `"just ingest it"`.
 
-### 2. Ask a question
+### 2. Search the wiki (in Claude Code / OpenCode)
 
 ```
 search the wiki for context degradation strategies
 ```
 
-Claude invokes `wiki-context` skill → searches qmd → loads relevant pages → synthesizes an answer with `[[page]]` citations.
+The `wiki-context` skill searches qmd (BM25 + vector) → loads relevant pages → Claude synthesizes with `[[page]]` citations.
 
-### 3. Ingest a PDF (research paper)
+### 3. Query the wiki interactively (terminal TUI)
+
+```bash
+wiki-chat                  # hybrid mode (default)
+wiki-chat --mode local     # entity/concept-focused
+wiki-chat --mode global    # cross-concept big picture
+```
+
+Graph-aware retrieval via LightRAG. Always uses qwen2.5:3b locally — no API cost.
+
+Inside the TUI: `/mode local|global|hybrid|naive`, `/reindex`, `/status`, `q` to quit.
+
+### 4. Ingest a PDF (research paper)
 
 ```bash
 cp ~/Downloads/paper.pdf ~/repos/llm-wiki/pdfs/
 ```
 
-In Claude Code: `ingest paper.pdf` → triggers `pdf-ingest` skill (uses Docling to parse → comprehension check → wiki pages).
+In Claude Code: `ingest paper.pdf` → `pdf-ingest` skill (Docling parse → comprehension → wiki pages).
 
-### 4. Run a council on a design decision
+### 5. Ask a question and file the answer as a wiki page
 
-```bash
-# Quick 2-voice sanity check
-council "should we use worktrees or containers for agent isolation?"
-
-# Full 3-stage: peer review + Chairman synthesis
-council --chairman "what's the right memory architecture for a long-horizon agent?"
+```
+query: what are the trade-offs between worktree isolation and container sandboxing for AI agents?
 ```
 
-### 5. Lint the wiki
+If the answer is non-trivial and reusable, Claude offers to file it as a new synthesis page.
+
+### 6. Lint the wiki
 
 ```
 lint the wiki
 ```
 
-Claude scans for: orphan pages, stale claims contradicted by newer sources, concepts mentioned without their own page, and suggests 3–5 next sources to find.
+Scans for orphan pages, stale claims, missing concept pages, and suggests 3–5 next sources.
 
-### 6. Copy the agent workflow to a project
+### 7. Run a council on a design decision
 
 ```bash
-# Install AGENTS.md to a project
-~/repos/llm-wiki/templates/install-agents-md.sh /path/to/your/project
+council "should we use worktrees or containers for agent isolation?"
+council --chairman "what's the right memory architecture for a long-horizon agent?"
 ```
 
-This copies the lean workflow rules (grill→PRD→AFK loop→verify), council auto-triggers, and self-correction protocol to your project.
+---
+
+## RAG Search Tools
+
+Three tools, different trade-offs:
+
+| Tool | When to use | Backend | Cost |
+|---|---|---|---|
+| `search the wiki for X` (Claude Code) | Quick lookup, in-session | qmd BM25+vector → Claude synthesis | API (Claude) |
+| `wiki-chat` | Deep exploration, standalone terminal | LightRAG graph → qwen2.5:3b | Free |
+| `wiki-mcp` (OpenCode) | In-session wiki queries without Claude API | LightRAG graph → Haiku or qwen2.5:3b | Optional |
+
+Index maintenance:
+
+```bash
+wiki-index --test          # verify LLM backend
+wiki-index                 # incremental (new/changed pages only) — safe to run anytime
+wiki-index --status        # show manifest stats without indexing
+wiki-index --full          # wipe and rebuild — free with local LLM (no API key)
+wiki-index --full --yes    # rebuild with API key (skip cost confirmation; expect $10–30+)
+```
+
+The post-commit hook runs `wiki-index` (incremental) in the background automatically after every commit touching `wiki/`. Check progress:
+```bash
+tail -f ~/repos/llm-wiki/.lightrag/last-index.log
+```
 
 ---
 
@@ -252,122 +297,95 @@ Every wiki page requires this frontmatter:
 title: "Page Title"
 type: entity | concept | summary | comparison | synthesis
 tags: [tag1, tag2]
-sources: ["raw/filename.md"]   # files in raw/ that informed this page
+sources: ["raw/filename.md"]
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
 ```
 
-Optional fields:
-```yaml
-status: stub                   # thin page; expand when source is ingested
-```
+Optional: `status: stub` for thin pages awaiting expansion.
 
 ### Page types
 
 | Type | Location | Purpose |
 |---|---|---|
 | `summary` | `wiki/summaries/` | One page per ingested source |
-| `entity` | `wiki/entities/` | Named things: tools, projects, people, systems |
+| `entity` | `wiki/entities/` | Named things: tools, projects, people |
 | `concept` | `wiki/concepts/` | Ideas, patterns, techniques |
-| `comparison` | `wiki/comparisons/` | Side-by-side analysis of two+ approaches |
-| `synthesis` | `wiki/syntheses/` | Cross-source conclusions; your actual opinions |
-
-### Cross-linking
-
-Use Obsidian-style wikilinks:
-```markdown
-See [[concepts/context-compression]] and [[entities/opencode]].
-```
-
-Links in `index.md` use the same syntax. Every new page must be added to `index.md`.
+| `comparison` | `wiki/comparisons/` | Side-by-side analysis |
+| `synthesis` | `wiki/syntheses/` | Cross-source conclusions |
 
 ---
 
 ## Mistakes System
 
-Every session-level error is logged to prevent recurrence:
+Every error is logged to prevent recurrence:
 
 ```
 mistakes/
-├── raw-log.md              # Hook-captured raw entries (auto-populated)
-├── YYYY-MM-DD-<topic>.md   # Structured mistake entry per incident
-├── log.md                  # Synthesize-mistakes run history
+├── raw-log.md              # Hook-captured raw entries
+├── YYYY-MM-DD-<topic>.md   # Structured entry per incident
 └── global-prevention-rules.md  # Max 30 lines of distilled rules, loaded every session
 ```
 
-`global-prevention-rules.md` is @-imported into `CLAUDE.md` and loaded at every session start — the rules are always active. Individual mistake files provide context; the global file provides the actionable rules.
-
-When a mistake is made: `capture-mistake` skill files it. Periodically: `synthesize-mistakes` skill distills new entries into `global-prevention-rules.md`.
+`global-prevention-rules.md` is @-imported into `CLAUDE.md` and active every session. `capture-mistake` skill files new entries; `synthesize-mistakes` distills them into the global file.
 
 ---
 
 ## Adapting to Your Own Workflow
 
-This wiki is domain-specific (AI/agent engineering) and person-specific (one person's workflow). To adapt:
-
 ### Minimal adoption (wiki only)
 
-1. Fork this repo, clear `raw/`, `wiki/`, `index.md`, `log.md`
+1. Fork, clear `raw/`, `wiki/`, `index.md`, `log.md`
 2. Keep `CLAUDE.md`, `claude-setup/`, `mistakes/global-prevention-rules.md`
-3. Start ingesting sources in your domain
-4. The schema, cross-linking convention, and ingest workflow carry over unchanged
+3. Run `bash claude-setup/scripts/install.sh`
+4. Start ingesting sources in your domain
 
 ### Change the domain
 
-Edit `CLAUDE.md` to describe your domain. The wiki taxonomy (summaries/entities/concepts/comparisons/syntheses) is domain-agnostic — it works for any knowledge area.
+Edit `CLAUDE.md` to describe your domain. The wiki taxonomy (summaries/entities/concepts/comparisons/syntheses) is domain-agnostic.
 
 ### Add the lean workflow to an existing project
 
 ```bash
-# Copy AGENTS.md to any project
 ~/repos/llm-wiki/templates/install-agents-md.sh /path/to/project
-
-# The AGENTS.md encodes:
-# - grill→PRD→AFK loop→verify workflow
-# - Council auto-trigger rules
-# - Model routing via env vars
-# - Self-correction protocol (qmd query before deviating)
-# - .agents/ session state (tasks.md, checkpoint.md, decisions.md)
 ```
 
-### Use council without the full wiki
+### Use council standalone
 
 ```bash
-# council.py works standalone — just needs GITHUB_TOKEN
-export GITHUB_TOKEN=<your PAT>
+export GITHUB_TOKEN=<your PAT with models:read>
 pip install openai
 council "your question here"
-council --chairman "your question here"
 ```
 
 ---
 
 ## Key Concepts (Quick Reference)
 
-| Concept | What it is | Wiki page |
-|---|---|---|
-| Lean workflow | grill→PRD→AFK loop→verify cycle | `syntheses/lean-agentic-workflow` |
-| Council pattern | 3-stage multi-model deliberation | `concepts/council-pattern` |
-| Worktree isolation | Git worktrees for parallel agent safety | `concepts/worktree-isolation` |
-| Clear-over-compact | Fresh context per task > compaction | `concepts/context-compression` |
-| Memory Bank | `_memory/` + repomix for cross-session state | `concepts/memory-bank-pattern` |
-| Rules vs hooks | Static files vs dynamic injection | `concepts/rules-vs-hooks` |
-| Multi-vendor review | Cross-provider adversarial review | `concepts/multi-vendor-adversarial-review` |
-| Agent self-correction | Wiki-as-runtime-oracle for deviation detection | `concepts/agent-self-correction` |
+| Concept | Wiki page |
+|---|---|
+| Graph-aware RAG (LightRAG) | `syntheses/local-rag-wiki` |
+| LightRAG indexing cost reduction | `concepts/wikilink-graph-extraction` |
+| Lean workflow | `syntheses/lean-agentic-workflow` |
+| Council pattern | `concepts/council-pattern` |
+| Worktree isolation | `concepts/worktree-isolation` |
+| Clear-over-compact | `concepts/context-compression` |
+| Agent self-correction | `concepts/agent-self-correction` |
+| Multi-vendor review | `concepts/multi-vendor-adversarial-review` |
+| Worker coordination (partial results) | `concepts/worker-coordination` |
+| AI + OWASP security | `concepts/owasp-security-checklist` |
 
 ---
 
 ## Authoring Rules (for the LLM)
 
-These rules apply whenever Claude writes or updates wiki pages. They are distilled from the `mistakes/` log:
-
 - **Cite sources precisely.** Self-reported README claims are not benchmarks. Write `(claimed, unverified)` for unverified numbers.
 - **Verify model names.** Check against a public provider catalog before adding to routing tables.
 - **Keep index.md in sync.** After updating a page's core claim, grep for all cross-references and check for drift.
-- **Respect status flags.** `documented-not-adopted` patterns must be labeled in the index and never described as "preferred" or "more reliable."
-- **One thing per page.** Concept pages cover one concept. Entity pages cover one entity. Split when scope creeps.
-- **Never modify `raw/` or `pdfs/`.** These are immutable source records.
+- **Respect status flags.** `documented-not-adopted` patterns must be labeled and never described as "preferred."
+- **One thing per page.** Split when scope creeps.
+- **Never modify `raw/` or `pdfs/`.** Immutable source records.
 
 Full rules in `mistakes/global-prevention-rules.md`.
 

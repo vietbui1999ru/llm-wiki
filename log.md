@@ -257,3 +257,8 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - concepts/indirect-prompt-injection: added dev-loop attack vectors (issues, PRs, changelogs, error traces), rules files as persistent steering, CI/CD confused deputy, MCP tool shadowing section
 - concepts/owasp-security-checklist: expanded AI-specific risks section with tool security, memory security, DoW, slopsquatting, test fabrication, CI/CD confused deputy, multi-agent propagation
 - index.md: added owasp-ai-security summary entry, updated owasp-security-checklist + indirect-prompt-injection entries
+
+## [2026-05-12] ingest | OWASP AI Model Ops + GitHub Actions Security
+- Sources: Secure AI Model Ops + GitHub Actions Security (OWASP Cheat Sheet Series)
+- summaries/owasp-ai-security: extended with Secure AI Model Ops section (circuit breakers, chain-depth limits, spend limits for agentic flows) and GitHub Actions Security section ("clinejection" real-world attack name, SHA pinning, impostor commit detection)
+- index.md: updated owasp-ai-security entry to reflect 4 sources

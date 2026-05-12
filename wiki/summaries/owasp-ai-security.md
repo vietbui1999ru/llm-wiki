@@ -1,18 +1,20 @@
 ---
-title: "OWASP AI Security: Agent Security + Secure Coding with AI"
+title: "OWASP AI Security: Agent Security + Secure Coding with AI + Model Ops + GitHub Actions"
 type: summary
-tags: [security, OWASP, agents, agentic-coding, prompt-injection, supply-chain, mcp, ci-cd]
-sources: ["AI Agent Security - OWASP Cheat Sheet Series.md", "Secure Coding with AI - OWASP Cheat Sheet Series.md"]
+tags: [security, OWASP, agents, agentic-coding, prompt-injection, supply-chain, mcp, ci-cd, mlops, github-actions]
+sources: ["AI Agent Security - OWASP Cheat Sheet Series.md", "Secure Coding with AI - OWASP Cheat Sheet Series.md", "Secure AI Model Ops - OWASP Cheat Sheet Series.md", "GitHub Actions Security - OWASP Cheat Sheet Series.md"]
 created: 2026-05-12
 updated: 2026-05-12
 ---
 
-# OWASP AI Security: Agent Security + Secure Coding with AI
+# OWASP AI Security: Agent Security + Secure Coding with AI + Model Ops + GitHub Actions
 
-Two complementary 2026 OWASP cheat sheets, two perspectives on the same threat landscape:
+Four complementary 2026 OWASP cheat sheets across the AI security landscape:
 
 - **AI Agent Security** — you are *building* an AI agent product; how to make it secure.
 - **Secure Coding with AI** — you are a *developer using* AI coding tools; what new risks those tools introduce.
+- **Secure AI/ML Model Ops** — operating and deploying AI/ML systems in production; model lifecycle threats.
+- **GitHub Actions Security** — CI/CD pipeline hardening; AI assistant in CI as confused deputy.
 
 Both cross-reference the [OWASP LLM Prompt Injection Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html) and the [OWASP MCP Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/MCP_Security_Cheat_Sheet.html) for deeper dives.
 
@@ -184,11 +186,57 @@ AI tools don't accept responsibility for the code they generate. The developer w
 
 ---
 
+## Secure AI/ML Model Ops — Agent-Specific Controls
+
+Standard ML security (data poisoning, model inversion, adversarial examples, open artifact stores, orphaned deployments) is out of scope for agent engineering. The relevant sections:
+
+**Inference API Security for agentic flows:**
+- Recursion, retry, and chain-depth limits for agentic/tool-using flows
+- Per-tenant token, request, concurrency, and spend limits to contain Denial of Wallet
+- Circuit breakers or kill switches for cost/latency/tool-call anomalies
+- Monitor usage telemetry in near real-time; alert on sudden spend or token spikes
+- Structured prompt templates to separate instructions from user input
+
+**Infrastructure:**
+- Harden containers: distroless images + AppArmor
+- Least privilege for training and inference jobs
+- Isolate dev/staging/production
+
+See [[concepts/error-budget]] for token/session budget patterns that implement the spend-limit recommendations.
+
+---
+
+## GitHub Actions Security — AI Assistant in CI
+
+The full cheat sheet is standard GitHub Actions hardening. The AI-specific section and supply chain controls are most relevant.
+
+### "Clinejection" Attack
+Named real-world attack: malicious PR body manipulates AI assistant running in CI (with `write` GITHUB_TOKEN or org secrets) to exfiltrate secrets or modify the pipeline. Documented in [Cline post-mortem](https://cline.bot/blog/post-mortem-unauthorized-cline-cli-npm). Confirms the CI/CD confused deputy threat at S11 above.
+
+Mitigation: limit AI assistant capabilities in CI to minimum tools; scope GITHUB_TOKEN to read-only by default (`permissions: {}`); require approval gates for write operations.
+
+### SHA Pinning (Supply Chain)
+Always pin third-party actions and reusable workflows to a commit SHA, not a mutable tag:
+```yaml
+uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+```
+Why: tag `v4` can be force-pushed by the action owner or an attacker with repo access; SHA is immutable. Dependency confusion attack: GitHub resolves a SHA to the matching object regardless of which fork it originated — always verify the SHA belongs to the expected org/repo (Zizmor `impostor-commit` rule automates this).
+
+### Key Hardening Actions
+- Require approval for all external contributors (not just first-time) — "first-time contributor" setting is bypassable via initial legitimate PR
+- Restrict default `GITHUB_TOKEN` to read-only at repo level; grant write only at job level
+- Avoid `pull_request_target` and `workflow_run` triggers (both expose secrets to untrusted code)
+- Use OIDC-based short-lived tokens ("trusted publishing") to eliminate static credentials from workflows
+- Enable CodeQL `language: actions` scanning + [Zizmor](https://docs.zizmor.sh/) for defense in depth
+
+---
+
 ## Related
 
 - [[concepts/owasp-security-checklist]] — full OWASP Top 10 checklist extended with AI-specific risks
 - [[concepts/indirect-prompt-injection]] — primary attack vector; dev-loop vectors from S3 added
 - [[concepts/agentic-sandbox-controls]] — OS-level controls; --dangerously-skip-permissions, macOS sandbox-exec
 - [[concepts/agent-context-instructions]] — rules files (CLAUDE.md, AGENTS.md) security implications
+- [[concepts/error-budget]] — token/session budget axes implementing spend limits and circuit breakers
 - [[summaries/agentic-sandbox-security]] — NVIDIA AI Red Team original OS-level controls source
 - [[summaries/living-dangerously-with-claude]] — lethal trifecta; sandbox-exec pattern

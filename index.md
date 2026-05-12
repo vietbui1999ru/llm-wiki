@@ -63,7 +63,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/living-dangerously-with-claude]] — Willison talk: YOLO mode productivity vs. lethal trifecta risk; sandbox-exec macOS pattern; why AI-layer defenses are insufficient
 - [[summaries/awesome-software-architecture]] — mehdihadeli curated list: topic taxonomy for software architecture (DDD, microservices, distributed patterns, design principles, messaging tools, DevOps); reference index, not prose
 - [[summaries/hn-junior-devs-and-ai]] — HN community: AI amplifies existing ability; juniors lack evaluation frame; repetition/debugging gap; agentic tools harmful for beginners; 7 actionable heuristics
-- [[summaries/owasp-ai-security]] — 2 OWASP cheat sheets: AI Agent Security (8 best practices, 11 risks) + Secure Coding with AI (14 threats: slopsquatting, rules file injection, CI/CD confused deputy, test fabrication)
+- [[summaries/owasp-ai-security]] — 4 OWASP cheat sheets: AI Agent Security (8 practices, 11 risks) + Secure Coding with AI (14 threats incl. slopsquatting, rules file injection, CI/CD confused deputy, test fabrication) + Secure AI Model Ops (circuit breakers, chain-depth limits, DoW) + GitHub Actions Security ("clinejection" attack, SHA pinning)
 
 ## Entities
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated

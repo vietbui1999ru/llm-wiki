@@ -278,3 +278,10 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Updated concepts/indirect-prompt-injection: added LLM-Level Attack Techniques section (encoding/obfuscation, typoglycemia with Levenshtein defense note, Best-of-N with power-law caveat, multimodal injection, RAG poisoning); added dual-LLM pattern and model-based guardrails to Mitigations; added links to new summaries
 - Updated summaries/owasp-ai-security: added cross-references to owasp-prompt-injection and owasp-mcp-security
 - index.md: added owasp-prompt-injection and owasp-mcp-security entries; updated indirect-prompt-injection entry
+
+## [2026-05-12] ingest | Git Worktrees for Parallel AI Agent Execution
+- Sources: "How to Use Git Worktrees for Parallel AI Agent Execution.md" + "Parallel agents + git worktrees real-world experience?.md"
+- Created summaries/worktrees-parallel-agents: 4 failure modes table, what worktrees fix vs don't fix (runtime isolation gap, logical conflicts), worktree-per-task vs per-agent heuristic (task duration / cache reuse), dependency handling strategies, git worktree lock, git rerere, sparse-checkout, Galactic (per-worktree IP), Block agent-task-queue, Switchman, Overstory, Intent 3-tier architecture
+- Created concepts/shared-task-queue: filesystem inbox in main checkout accessible from any worktree via git-common-dir trick; atomic POSIX mv claim protocol; 3 startup layers (CLAUDE.md instruction / orchestrator pre-claim / claim-task skill); task file format; state machine (inbox→claimed→done with failure return); relation to Pocock/SandCastle planner model vs pull model
+- Updated concepts/worktree-isolation: added per-task vs per-agent decision table, runtime isolation gap section (Galactic, Block agent-task-queue, composite Dagger Container-Use pattern), git worktree lock, git rerere, sparse-checkout; updated sources and date
+- index.md: added worktrees-parallel-agents summary, shared-task-queue concept; updated worktree-isolation entry

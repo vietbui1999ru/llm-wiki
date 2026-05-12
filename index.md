@@ -66,6 +66,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/owasp-ai-security]] — 4 OWASP cheat sheets: AI Agent Security (8 practices, 11 risks) + Secure Coding with AI (14 threats incl. slopsquatting, rules file injection, CI/CD confused deputy, test fabrication) + Secure AI Model Ops (circuit breakers, chain-depth limits, DoW) + GitHub Actions Security ("clinejection" attack, SHA pinning)
 - [[summaries/owasp-prompt-injection]] — OWASP LLM Prompt Injection Prevention: 9+ attack types (typoglycemia, Best-of-N power-law scaling, multimodal, RAG poisoning), 4-layer SecureLLMPipeline, dual-LLM pattern, model-based guardrails at 3 placements
 - [[summaries/owasp-mcp-security]] — OWASP MCP Security: 9 key risks (tool poisoning, rug pull, tool shadowing, confused deputy), 12 best practices incl. SHA-256 tool hash pinning, ECDSA message signing, bind to 127.0.0.1, mcp-scan
+- [[summaries/worktrees-parallel-agents]] — 4 failure modes of shared-repo multi-agent; what worktrees fix (file conflicts, lock contention) vs don't fix (runtime isolation, logical conflicts); worktree-per-task vs per-agent; Galactic, Block agent-task-queue, Switchman, Intent architecture
 
 ## Entities
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
@@ -129,7 +130,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/instinct-clustering]] *(documented-not-adopted)* — behavioral pattern mining from tool-call telemetry; observe→cluster→inject pipeline; homunculus pattern
 - [[concepts/dynamic-context-pruning]] — mid-session context reduction via Compress tool (model-driven) + deduplication + purge-errors; complements compaction; `@tarquinen/opencode-dcp`
 - [[concepts/council-pattern]] — 3-stage multi-model deliberation: parallel dispatch → optional anonymized peer review → Chairman or human synthesis; Stage 2 optional; cost model; when to use
-- [[concepts/worktree-isolation]] — git worktrees for agent filesystem isolation; ToS-compliant sandboxing alternative; scope overlap detection; merge-before-cleanup protocol
+- [[concepts/worktree-isolation]] — git worktrees for agent filesystem isolation; ToS-compliant sandboxing alternative; scope overlap, merge-before-cleanup; runtime isolation gap (ports); worktree-per-task vs per-agent; git worktree lock, rerere, sparse-checkout
+- [[concepts/shared-task-queue]] — filesystem inbox in main checkout; atomic claim via POSIX mv; git-common-dir trick to find inbox from any worktree; 3 startup layers (CLAUDE.md/orchestrator/skill); pull vs push model
 - [[concepts/rules-vs-hooks]] — static rules files vs. dynamic hook injection; compliance problem; hybrid patterns; when to use each
 - [[concepts/memory-bank-pattern]] — Josh Wand's `_memory/` hierarchy for cross-session persistence; repomix compile; yak-shaving tracking; mode-based workflow
 - [[concepts/self-healing-loop]] — failure→bounded retry→rollback→escalation; failure signature detection; guardrails; composes with ralph-loop; Dagger/ArgoCD/Windmill implementations

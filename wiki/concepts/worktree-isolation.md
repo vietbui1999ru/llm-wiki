@@ -2,9 +2,13 @@
 title: "Worktree Isolation"
 type: concept
 tags: [agent-harness, parallelization, git, orchestration, context-management]
-sources: ["Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md", "Exit Code 0 Is Not Quality What 198 Autonomous Agents Taught Me About AI Orchestration.md"]
+sources:
+  - "Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md"
+  - "Exit Code 0 Is Not Quality What 198 Autonomous Agents Taught Me About AI Orchestration.md"
+  - "How to Use Git Worktrees for Parallel AI Agent Execution.md"
+  - "Parallel agents + git worktrees real-world experience?.md"
 created: 2026-05-05
-updated: 2026-05-05
+updated: 2026-05-12
 ---
 
 # Worktree Isolation
@@ -103,6 +107,67 @@ Dangeresque (host-native) uses worktrees + tool filtering. SandCastle runs Claud
 
 ---
 
+## Per-Task vs Per-Agent
+
+The fundamental architectural decision when assigning worktrees:
+
+| Factor | Worktree-Per-Task | Worktree-Per-Agent |
+|---|---|---|
+| Task duration | Short (minutes to ~1 hour) | Long (multi-hour sessions) |
+| Cache reuse | None; fresh install per task | Warm; dependencies persist |
+| Cleanup model | Destroy after each task | Destroy after session ends |
+| Best fit | Ephemeral code generation, one-shot refactors | Dedicated test writers, ongoing refactoring agents |
+
+**Default:** worktree-per-task. Worktree-per-agent only when the agent persists across multiple tasks and benefits from warm dependency caches or accumulated environment state (e.g., a long-running specialist agent keeping a pre-compiled build warm).
+
+---
+
+## Runtime Isolation Gap
+
+Worktrees solve **filesystem** conflicts only. They do not provide network or process isolation.
+
+Two agents in separate worktrees still collide on:
+- Port numbers when both start a dev server on `:3000`
+- Shared databases and test state
+- Build caches and configuration registries
+
+**Mitigations:**
+- Deterministic port assignment from branch name hash: `PORT=$(( 3100 + $(echo "${BRANCH_NAME}" | cksum | cut -d' ' -f1) % 6899 ))`
+- Galactic (github.com/idolaman/galactic) — assigns a unique local IP per worktree (127.0.0.2, 127.0.0.3, etc.) so multiple backends run without port juggling
+- Block's agent-task-queue — FIFO coordination for expensive shared operations like test runners; prevents multiple agents from concurrently triggering `./gradlew test`
+- **Composite pattern:** worktrees for git isolation + containers (Dagger Container-Use) for runtime isolation; full isolation at both layers
+
+---
+
+## Operational Details
+
+### Lock while agent runs
+```bash
+git worktree lock --reason "Agent running" .trees/TASK-123
+# prevents accidental removal while agent is active
+
+git worktree unlock .trees/TASK-123
+git worktree remove .trees/TASK-123
+git worktree prune
+```
+
+### Conflict resolution recording
+```bash
+git config rerere.enabled true
+# Records conflict resolutions; auto-reapplies on identical recurrence
+# Valuable when agents touch the same files in sequential waves
+```
+
+### Sparse checkout (monorepos)
+Constrain worktree to files the agent actually needs:
+```bash
+git worktree add .trees/TASK-123 -b agent/TASK-123 origin/main
+cd .trees/TASK-123
+git sparse-checkout set src/payments/ tests/payments/
+```
+
+---
+
 ## Fresh Context Window Per Task
 
 Each worktree task gets a fresh agent session — no accumulated context from prior tasks. This is the mechanical basis for [[concepts/context-compression]] clear-over-compact in AFK workflows:
@@ -118,10 +183,12 @@ State carried between tasks lives in: commits, branch history, `.agents/decision
 
 ## Related Pages
 
+- [[concepts/shared-task-queue]] — filesystem inbox with atomic claim semantics; how agents discover tasks at startup across worktrees
 - [[concepts/branch-strategy-for-agents]] — merge strategy after worktree work completes
 - [[concepts/agentic-sandbox-controls]] — ToS constraint driving host-native isolation
 - [[concepts/context-compression]] — clear-over-compact; worktrees make clearing safe
 - [[entities/dangeresque]] — lightweight host-native orchestrator using worktrees
 - [[entities/sandcastle]] — TypeScript lib; worktree + container combination
 - [[summaries/exit-code-0-quality]] — scope overlap detection, merge-before-cleanup protocol
+- [[summaries/worktrees-parallel-agents]] — runtime isolation gap, per-task vs per-agent, galactic, block agent-task-queue
 - [[concepts/agent-subagents]] — `isolation: "worktree"` parameter

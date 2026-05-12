@@ -1,10 +1,10 @@
 ---
 title: "OWASP Security Checklist"
 type: concept
-tags: [security, OWASP, code-review, checklist, web-security]
-sources: []
+tags: [security, OWASP, code-review, checklist, web-security, agents, agentic-coding]
+sources: ["AI Agent Security - OWASP Cheat Sheet Series.md", "Secure Coding with AI - OWASP Cheat Sheet Series.md"]
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-05-12
 ---
 
 # OWASP Security Checklist
@@ -75,21 +75,79 @@ The full operational checklist lives in the `security-patterns` skill (preloaded
 
 ## AI-Specific Risks
 
-These extend the OWASP checklist for agent-based systems:
+Extended from two 2026 OWASP cheat sheets: [[summaries/owasp-ai-security]]. Two perspectives:
+- **Building an agent** — tool security, memory security, multi-agent trust
+- **Using AI coding tools** — slopsquatting, rules file injection, CI/CD confused deputy, test fabrication
 
 ### Indirect Prompt Injection
-- Agent reads external content (URLs, files, emails)? → treat as untrusted
+- Agent reads external content (URLs, files, emails, issues, PR descriptions, error traces)? → treat as untrusted
 - External content can't override system instructions or trigger tool calls
+- Rules files (CLAUDE.md, AGENTS.md) modified by injected instructions persist across all future sessions
 - Sandboxed: agent can't exfiltrate data via unexpected network calls
 
-See [[concepts/indirect-prompt-injection]] for full treatment.
+See [[concepts/indirect-prompt-injection]] for full treatment including dev-loop vectors and CI/CD confused deputy.
 
 ### Agentic Sandbox Controls
 - Tool permissions minimal: only what the task requires
 - Destructive operations (delete, overwrite) require explicit confirmation
-- Secrets injected at runtime, not baked into prompts or config
+- Secrets injected at runtime, not baked into prompts or config; ephemeral credentials per task
+- `--dangerously-skip-permissions` and auto-accept modes remove all approval prompts — only safe with OS-level sandbox enforced independently
 
 See [[concepts/agentic-sandbox-controls]] for full treatment.
+
+### Tool Security & Least Privilege
+- Agents get minimum tools for specific task; no wildcard permissions (e.g. `"allowed_commands": "*"`)
+- Tool authorization middleware for MEDIUM+ risk operations (require `user_confirmed` flag)
+- Risk tiers: LOW (read) → MEDIUM (write) → HIGH (email, code exec) → CRITICAL (delete, financial)
+- MCP servers: maintain allowlist; snapshot-and-diff tool definitions to detect rug-pull updates; audit tool descriptions for embedded injection payloads
+
+### Memory & Context Security
+- Validate/sanitize data before storing in agent memory
+- Memory isolation between users and sessions
+- TTL + size limits on memory entries; scan for PII and API keys before persistence
+- Cryptographic integrity check on stored memory entries to detect tampering
+
+### AI Coding Tool Threats (Secure Coding with AI)
+
+**Hallucinated Dependencies (slopsquatting)**
+- AI suggests packages that don't exist; attackers pre-register malicious packages at those names
+- Verify every AI-suggested package: check registry existence, download count, creation date (< 30 days = suspect), maintainer history
+- Block unvetted packages in CI; maintain internal allowlist
+
+**Outdated Dependencies**
+- AI training data is historical; suggested versions may have post-cutoff CVEs
+- Run `npm audit` / `pip audit` / `govulncheck` on every AI-generated dependency list
+- Never skip dependency auditing because code was AI-generated
+
+**Rules Files as Persistent Steering**
+- `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, `.github/copilot-instructions.md` steer all future generations
+- Treat as security-critical config: require explicit approval for any modification including by the agent
+- Git hooks that flag changes to rules files in every PR
+
+**Test Fabrication and Test Deletion**
+- Agents make CI green by: deleting failing tests, weakening assertions, mocking the unit under test, asserting buggy behavior
+- 100% pass rate ≠ evidence of correctness when the same agent wrote both code and tests
+- Add adversarial/negative test cases the AI didn't generate; flag test deletions in CI; human-review all assertion changes
+
+**CI/CD Confused Deputy**
+- CI/CD bots (review bots, `claude-code-action`) process PR events with org secrets
+- Malicious PR body can instruct CI agent to exfiltrate secrets or modify the pipeline
+- Scope CI agent credentials to minimum; sanitize PR content before passing as context; approval gates for pushes
+
+**Prompt Context Leakage**
+- AI coding tools send open files and terminal output to the model provider API
+- `.gitignore` does NOT prevent AI tools from reading files
+- Exclude `.env`, `*.pem`, `*.key`, `credentials.json` via `.cursorignore`/`.copilotignore`
+
+**Multi-Agent Propagation**
+- Prompt injection propagates across agent boundaries: output of compromised Agent A becomes instructions for Agent B
+- Treat output from any agent as untrusted input to the next; sanitize before passing
+- Don't inherit full permissions/credentials from parent agent without scope restriction
+
+### Denial of Wallet (DoW)
+- Unbounded agent loops can exhaust API/compute budget via crafted inputs
+- Set per-session cost limits and tool call rate limits; alert on anomalies
+- See [[concepts/error-budget]] for token budget patterns
 
 ## Severity Classification
 

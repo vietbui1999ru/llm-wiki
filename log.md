@@ -250,3 +250,10 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - summaries/local-rag-elasticsearch: Elasticsearch+LocalAI stack; retrieval 14ms, LLM 16s; model size/latency table
 - templates/wiki-index + wiki-chat: optimized LightRAG config (chunk_token_size=800, top_k=20, cosine_threshold=0.3, ids/file_paths passed to ainsert)
 - index.md: added 2 new summary entries, updated local-rag-wiki entry
+
+## [2026-05-12] ingest | OWASP AI Security Cheat Sheets (2 sources)
+- Sources: AI Agent Security + Secure Coding with AI (OWASP Cheat Sheet Series)
+- summaries/owasp-ai-security: combined summary; AI Agent Security (8 best practices, 11 risks); Secure Coding with AI (14 threat sections: slopsquatting, rules file injection, CI/CD confused deputy, test fabrication, MCP tool shadowing)
+- concepts/indirect-prompt-injection: added dev-loop attack vectors (issues, PRs, changelogs, error traces), rules files as persistent steering, CI/CD confused deputy, MCP tool shadowing section
+- concepts/owasp-security-checklist: expanded AI-specific risks section with tool security, memory security, DoW, slopsquatting, test fabrication, CI/CD confused deputy, multi-agent propagation
+- index.md: added owasp-ai-security summary entry, updated owasp-security-checklist + indirect-prompt-injection entries

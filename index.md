@@ -63,6 +63,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/living-dangerously-with-claude]] — Willison talk: YOLO mode productivity vs. lethal trifecta risk; sandbox-exec macOS pattern; why AI-layer defenses are insufficient
 - [[summaries/awesome-software-architecture]] — mehdihadeli curated list: topic taxonomy for software architecture (DDD, microservices, distributed patterns, design principles, messaging tools, DevOps); reference index, not prose
 - [[summaries/hn-junior-devs-and-ai]] — HN community: AI amplifies existing ability; juniors lack evaluation frame; repetition/debugging gap; agentic tools harmful for beginners; 7 actionable heuristics
+- [[summaries/owasp-ai-security]] — 2 OWASP cheat sheets: AI Agent Security (8 best practices, 11 risks) + Secure Coding with AI (14 threats: slopsquatting, rules file injection, CI/CD confused deputy, test fabrication)
 
 ## Entities
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
@@ -100,7 +101,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/ai-code-review]] — Reviewing AI-generated code: automated + human layers, 8-point checklist, core risk of intent misalignment
 - [[concepts/ai-specific-pitfalls]] — Failure modes unique to AI code: hallucinated APIs, slopsquatting, deleted tests, "looks right" logic errors
 - [[concepts/agent-context-instructions]] — Standards documents that align agent output to team conventions before generation
-- [[concepts/indirect-prompt-injection]] — Primary attack vector on AI agents: adversarial instructions embedded in third-party content the agent reads
+- [[concepts/indirect-prompt-injection]] — Primary attack vector on AI agents: adversarial instructions in third-party content; dev-loop vectors (issues, PRs, changelogs); rules files as persistent steering; CI/CD confused deputy; MCP tool shadowing
 - [[concepts/agentic-sandbox-controls]] — OS-level security controls for AI agents; Anthropic ToS constraint on CC in containers; host-native alternative
 - [[concepts/web-fingerprinting]] — Multi-layer browser/network/behavioral fingerprinting used by anti-bot systems; evasion principles
 - [[concepts/proxy-rotation]] — Proxy types by OSI layer, rotation strategies, limits vs. full fingerprinting evasion
@@ -116,7 +117,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/worker-coordination]] — Partial result passing between parallel workers: contract-first, pipeline, filesystem blackboard, actor mailbox; decision table; failure modes
 - [[concepts/wikilink-graph-extraction]] — Reducing LightRAG indexing cost by injecting Obsidian wikilink structure as extraction hints; ~40-55% token reduction; chunking_func hook; future direct graph injection path
 - [[concepts/verification-pipeline]] — Four-tier quality ladder: typecheck → visual verification → screenshot gate → design critique; origin failures; protocol rules
-- [[concepts/owasp-security-checklist]] — OWASP Top 10 checklist with AI-specific extensions (indirect prompt injection, agentic sandbox); severity classification table
+- [[concepts/owasp-security-checklist]] — OWASP Top 10 checklist + AI-specific extensions: tool least-privilege, memory security, DoW, slopsquatting, test fabrication, CI/CD confused deputy, rules file injection; severity classification table
 - [[concepts/domain-glossary]] — CONTEXT.md pattern: shared language between dev and agent; token efficiency, consistent naming, reduced context distraction
 - [[concepts/deep-modules]] — Ousterhout's deep vs shallow modules; narrow interface, wide implementation; test boundary design; why AI produces shallow codebases by default
 - [[concepts/evolution-strategies]] — Black-box optimization via parameter perturbation; ES vs RL trade-offs; shared random seed trick; progression from gaming (2017) to LLM fine-tuning (2025)

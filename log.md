@@ -285,3 +285,12 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Created concepts/shared-task-queue: filesystem inbox in main checkout accessible from any worktree via git-common-dir trick; atomic POSIX mv claim protocol; 3 startup layers (CLAUDE.md instruction / orchestrator pre-claim / claim-task skill); task file format; state machine (inbox→claimed→done with failure return); relation to Pocock/SandCastle planner model vs pull model
 - Updated concepts/worktree-isolation: added per-task vs per-agent decision table, runtime isolation gap section (Galactic, Block agent-task-queue, composite Dagger Container-Use pattern), git worktree lock, git rerere, sparse-checkout; updated sources and date
 - index.md: added worktrees-parallel-agents summary, shared-task-queue concept; updated worktree-isolation entry
+
+## [2026-05-12] lint
+- 158 pages total; 8 orphans, 29 low-inbound
+- Acceptable orphans (unchanged from prior lint): patterns/algorithmic, patterns/backend, patterns/frontend, summaries/awesome-software-architecture, summaries/cursor-cloud-agents, summaries/hn-junior-devs-and-ai, summaries/sparc-cursor-cline-rules
+- Fixed entities/docling (new orphan): added Related Pages section to summaries/docling linking back
+- Fixed summaries/cc-agent-teams (1 inbound from dead-end): added to concepts/agent-teams Related Pages
+- Stale claim: concepts/agent-teams + syntheses/agent-primitive-selection had no WORKTREE POOL branch; updated both to add worktree pool (>30 min or >5 tasks) as a fourth parallel primitive alongside agent teams
+- Missing concept pages: OpenTelemetry for AI agents (3 raw sources uningested); no entity pages for Galactic or Switchman tools
+- Source gaps: OpenTelemetry for AI Agents (3 sources), Cloudflare Workers/AI inference (2 sources)

@@ -133,3 +133,9 @@ raw documents → Docling → DoclingDocument → Markdown/JSON → chunk → em
 ```
 
 Combined with [[concepts/contextual-retrieval]] (prepend context to chunks before embedding), Docling-quality parsing maximizes retrieval precision by ensuring chunks carry real semantic content rather than parsing artifacts.
+
+## Related Pages
+
+- [[entities/docling]] — entity page; capabilities, MCP integration, comparison with Firecrawl
+- [[concepts/contextual-retrieval]] — chunk context prepending; works downstream of Docling parsing
+- [[entities/firecrawl]] — complementary tool: Firecrawl for web URLs, Docling for files/PDFs

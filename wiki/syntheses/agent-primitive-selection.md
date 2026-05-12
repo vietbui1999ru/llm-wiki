@@ -30,8 +30,10 @@ Do workers need to talk to each other?
   → No:  SUBAGENTS (each reports only to parent)
   → Yes: AGENT TEAM (shared task list + mailbox)
 
-Is work genuinely parallel with non-overlapping file scope (3–5 pieces)?
-  → AGENT TEAM
+Is work genuinely parallel with non-overlapping file scope?
+  → Tasks short (<30 min), ≤5 tasks:  AGENT TEAM (in-process, shared task list)
+  → Tasks long (>30 min) or >5 tasks: WORKTREE POOL (isolated checkouts, shared inbox)
+      See [[concepts/shared-task-queue]], [[concepts/worktree-isolation]]
   → Otherwise: single session or sequential subagents
 
 Do parallel workers need each other's PARTIAL results mid-task?

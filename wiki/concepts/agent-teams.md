@@ -129,4 +129,7 @@ The debate structure prevents anchoring — sequential investigation is biased t
 - [[concepts/agent-subagents]] — subagents and when to prefer them over teams
 - [[concepts/agent-harness]] — harness components; teams as the highest coordination layer
 - [[concepts/context-degradation]] — why each teammate needs its own context window
+- [[concepts/worktree-isolation]] — worktrees as the alternative for long-running parallel tasks (>30 min)
+- [[concepts/shared-task-queue]] — filesystem inbox for cross-worktree coordination; pull model alternative to in-process task list
+- [[summaries/cc-agent-teams]] — CC experimental agent teams implementation details
 - [[summaries/wshobson-agent-orchestration]] — 184 agents, 78 plugins; three-tier routing; PluginEval framework

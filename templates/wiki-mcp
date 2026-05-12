@@ -56,13 +56,16 @@ _API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 async def _anthropic_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
     kwargs.setdefault("max_tokens", 4096)
-    return await anthropic_complete_if_cache(
+    result = await anthropic_complete_if_cache(
         "claude-haiku-4-5-20251001", prompt,
         system_prompt=system_prompt,
         history_messages=history_messages or [],
         api_key=_API_KEY,
         **kwargs,
     )
+    if hasattr(result, "__aiter__"):
+        return "".join([chunk async for chunk in result])
+    return result
 
 if _API_KEY:
     LLM_MODEL      = "claude-haiku-4-5-20251001"

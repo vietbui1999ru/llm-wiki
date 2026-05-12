@@ -1,6 +1,7 @@
 #!/bin/zsh
-# Keep qmd index current after every wiki commit.
+# Keep qmd + LightRAG indexes current after every wiki commit.
 # qmd embed is incremental — only new/changed chunks are re-embedded.
+# wiki-index is incremental — only new/changed pages are extracted.
 
 WIKI_ROOT="$(git rev-parse --show-toplevel)"
 
@@ -14,9 +15,29 @@ fi
 
 if [[ -n "$CHANGED" ]]; then
     cd "$WIKI_ROOT"
+
+    # ── qmd (fast, synchronous) ──────────────────────────────────────────────
     printf "  qmd: indexing... "
     qmd update 2>/dev/null | grep -oE "[0-9]+ new" | head -1 | xargs -I{} printf "{} "
     printf "embedding... "
     qmd embed 2>/dev/null | grep -oE "Embedded [0-9]+ chunks" | head -1
     printf "\n"
+
+    # ── wiki-index (slow, background) ────────────────────────────────────────
+    if command -v wiki-index &>/dev/null && [[ -d "$WIKI_ROOT/.lightrag" ]]; then
+        LOCKFILE="$WIKI_ROOT/.lightrag/.index.lock"
+        LOGFILE="$WIKI_ROOT/.lightrag/last-index.log"
+        if [[ -f "$LOCKFILE" ]]; then
+            printf "  wiki-index: already running (skipping)\n"
+        else
+            # Source .env so background process gets the same LLM backend
+            [[ -f "$WIKI_ROOT/.env" ]] && set -a && source "$WIKI_ROOT/.env" && set +a
+            touch "$LOCKFILE"
+            (
+                wiki-index >"$LOGFILE" 2>&1
+                rm -f "$LOCKFILE"
+            ) &
+            printf "  wiki-index: indexing new pages in background (log: .lightrag/last-index.log)\n"
+        fi
+    fi
 fi

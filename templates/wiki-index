@@ -53,9 +53,19 @@ EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 
 _API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+
+async def _anthropic_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
+    return await anthropic_complete_if_cache(
+        "claude-haiku-4-5-20251001", prompt,
+        system_prompt=system_prompt,
+        history_messages=history_messages or [],
+        api_key=_API_KEY,
+        **kwargs,
+    )
+
 if _API_KEY:
     LLM_MODEL      = "claude-haiku-4-5-20251001"
-    _llm_func      = anthropic_complete_if_cache
+    _llm_func      = _anthropic_llm
     _llm_max_async = 4
 else:
     LLM_MODEL      = "qwen2.5:3b"

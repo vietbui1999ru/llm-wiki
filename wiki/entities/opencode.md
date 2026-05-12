@@ -4,7 +4,7 @@ type: entity
 tags: [agent-harness, plugins, CLI, compaction, alternative-to-claude-code]
 sources: ["Plugins for Opencode.md", "Agents-opencode.md", "Rules.md", "Config.md"]
 created: 2026-05-04
-updated: 2026-05-11
+updated: 2026-05-12
 ---
 
 # OpenCode
@@ -185,3 +185,4 @@ See [[summaries/opencode-config]] for full reference.
 - [[concepts/agent-harness]] — OpenCode is a complete harness implementation; compare components
 - [[entities/ai-coding-agents]] — OpenCode is part of the AI coding agent ecosystem
 - [[concepts/claude-code-plugins]] — Claude Code's plugin system (what OpenCode extends)
+- [[summaries/opencode-model-switching-reddit]] — community model-routing patterns: GLM-5.1 planning, DeepSeek Flash max-reasoning, multi-vendor adversarial review

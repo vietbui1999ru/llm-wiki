@@ -155,3 +155,4 @@ Building the full graph from scratch takes ~30–60 min for 150 pages with a loc
 - [[concepts/bm25]] — lexical retrieval used by qmd (wiki-context path)
 - [[concepts/reranking]] — post-retrieval filtering; not yet applied here
 - [[entities/qmd]] — BM25 + vector engine for the wiki-context skill path
+- [[concepts/wikilink-graph-extraction]] — Obsidian wikilink hints injected at chunk time to reduce LightRAG extraction cost ~40–55%

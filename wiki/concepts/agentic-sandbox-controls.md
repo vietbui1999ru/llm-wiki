@@ -4,7 +4,7 @@ type: concept
 tags: [security, sandboxing, agents, OS-controls, secret-injection]
 sources: ["Practical Security Guidance for Sandboxing Agentic Workflows and Managing Execution Risk.md"]
 created: 2026-04-22
-updated: 2026-04-22
+updated: 2026-05-12
 ---
 
 # Agentic Sandbox Controls
@@ -151,3 +151,5 @@ See: [[summaries/claude-code-permissions-settings]], [[concepts/self-healing-loo
 - [[entities/dangeresque]] — host-native alternative to container sandboxing
 - [[entities/sandcastle]] — hybrid: Claude on host, tools in container
 - [[summaries/agentic-sandbox-security]] — NVIDIA AI Red Team source; full tiered denylist and secret injection details
+- [[summaries/docker-sandboxes]] — microVM isolation for coding agents; Docker-in-Docker safe; CC/Codex/Gemini/Copilot/Kiro support
+- [[summaries/owasp-ai-security]] — OWASP S5 runtime sandboxing; --dangerously-skip-permissions risks; rules files as persistent steering

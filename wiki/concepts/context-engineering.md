@@ -6,7 +6,7 @@ sources:
   - "Effective context engineering for AI agents.md"
   - "Context windows.md"
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-12
 ---
 
 # Context Engineering
@@ -89,3 +89,4 @@ For tasks spanning tens of minutes to hours:
 - [[concepts/agent-harness]] — the broader harness that orchestrates context management
 - [[concepts/tool-design-for-agents]] — token-efficient tool design as context engineering
 - [[summaries/context-window-cluster]] — consolidated source summary for this cluster
+- [[summaries/context-engineering-anthropic]] — Anthropic's JIT retrieval, compaction, note-taking, sub-agents, and context editing API

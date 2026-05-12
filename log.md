@@ -262,3 +262,11 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Sources: Secure AI Model Ops + GitHub Actions Security (OWASP Cheat Sheet Series)
 - summaries/owasp-ai-security: extended with Secure AI Model Ops section (circuit breakers, chain-depth limits, spend limits for agentic flows) and GitHub Actions Security section ("clinejection" real-world attack name, SHA pinning, impostor commit detection)
 - index.md: updated owasp-ai-security entry to reflect 4 sources
+
+## [2026-05-12] lint
+- 154 pages total; 14 orphans found, 24 low-inbound (1 link)
+- Fixed 6 critical orphans: added backlinks to wikilink-graph-extraction, context-engineering-anthropic, docker-sandboxes, error-budget-agentic, llm-as-judge, opencode-model-switching-reddit
+- Updated concepts/ai-specific-pitfalls: added test fabrication, out-of-scope edits, rules file injection, CI/CD confused deputy from OWASP; linked to owasp-ai-security and owasp-security-checklist
+- Remaining structural orphans (acceptable): patterns/algorithmic, patterns/backend, patterns/frontend (reference pages), summaries/awesome-software-architecture, summaries/cursor-cloud-agents, summaries/hn-junior-devs-and-ai, summaries/sparc-cursor-cline-rules
+- Broken links (false positives): [[wikilinks]] and [[links]] in wikilink-graph-extraction are prose, not page refs; self-healing-cicd code block artifact — no action needed
+- Source gaps: OWASP LLM Prompt Injection Prevention, OWASP MCP Security Cheat Sheet, OpenTelemetry for AI agents, OWASP Top 10 for LLMs not yet ingested

@@ -4,7 +4,7 @@ type: concept
 tags: [ai-agents, code-review, pitfalls, security, testing]
 sources: [Review AI-generated code.md, General Best Practices for vetting AI Code.md]
 created: 2026-04-22
-updated: 2026-04-22
+updated: 2026-05-12
 ---
 
 # AI-Specific Code Pitfalls
@@ -38,7 +38,21 @@ Agent doesn't see all relevant code. Produces solutions that are locally correct
 - For business logic: trace from requirements/docs to implementation explicitly
 - Ask: "What assumption did the agent make here? Is it correct?"
 
+## Additional Pitfalls (OWASP 2026)
+
+The OWASP Secure Coding with AI cheat sheet adds failure modes not covered above:
+
+**Test fabrication** — distinct from test deletion: agent writes tests that *assert the buggy behavior* rather than correct behavior. 100% CI pass rate provides no assurance. Different from "looks right" code — CI still passes.
+
+**Out-of-scope edits** — agent touches files beyond the requested change (lockfiles, CI configs, unrelated tests). Review-anchoring bias means reviewers focused on the PR description miss these.
+
+**Rules file injection** — agent or attacker via PR modifies `.cursorrules`/`CLAUDE.md`/`AGENTS.md` to steer all future generations. Persists across context resets. See [[concepts/indirect-prompt-injection]].
+
+**CI/CD confused deputy** — AI review bots with org secrets process attacker-controlled PR content ("clinejection" attack). See [[summaries/owasp-ai-security]].
+
 ## Related
 
 - [[concepts/ai-code-review]] — full review process that includes this lens
 - [[entities/ai-coding-agents]] — the agents producing this code
+- [[summaries/owasp-ai-security]] — OWASP Secure Coding with AI; extended pitfall list
+- [[concepts/owasp-security-checklist]] — checklist form of the same AI-specific risks

@@ -55,6 +55,7 @@ EMBED_DIM   = 768
 _API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 async def _anthropic_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
+    kwargs.setdefault("max_tokens", 4096)
     return await anthropic_complete_if_cache(
         "claude-haiku-4-5-20251001", prompt,
         system_prompt=system_prompt,

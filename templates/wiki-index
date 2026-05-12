@@ -13,13 +13,19 @@
 
 Usage:
   wiki-index            index new/changed pages (incremental)
-  wiki-index --full     wipe and rebuild from scratch
+  wiki-index --full     wipe and rebuild from scratch  *** see cost warning below ***
   wiki-index --status   show manifest stats without indexing
 
 Extraction backend (priority order, set env var in .env):
-  ANTHROPIC_API_KEY=sk-ant-...  → Claude Haiku (best entity/relation extraction)
+  ANTHROPIC_API_KEY=sk-ant-...  → Claude Haiku (best quality)
   OPENROUTER_API_KEY=sk-or-...  → OpenRouter (not yet implemented — stub only)
-  unset                         → qwen2.5:3b via ollama (fully local, free)
+  unset                         → qwen2.5:3b via ollama (fully local, FREE — recommended for --full)
+
+COST WARNING — --full with Anthropic API:
+  LightRAG runs 3 extraction phases per page (entity → relation → community),
+  each with multiple LLM calls. At ~150 pages, expect $10–30 with Claude Haiku.
+  Use qwen2.5:3b (ollama, free) for full rebuilds. Reserve Haiku for incremental
+  updates where per-page cost (~$0.07–0.20) is acceptable.
 
 Requires:
   uv run --script wiki-index   (deps declared inline above)
@@ -199,6 +205,7 @@ async def main() -> None:
     parser.add_argument("--full",   action="store_true", help="wipe and rebuild")
     parser.add_argument("--status", action="store_true", help="show stats only")
     parser.add_argument("--test",   action="store_true", help="test LLM backend then exit")
+    parser.add_argument("--yes",    action="store_true", help="skip cost confirmation for --full with API key")
     args = parser.parse_args()
 
     pages = sorted(WIKI_PAGES.rglob("*.md"))
@@ -210,6 +217,14 @@ async def main() -> None:
     if args.test:
         await test_llm_backend()
         return
+
+    if args.full and (_API_KEY or _OPENROUTER_KEY) and not args.yes:
+        backend = "Anthropic Haiku" if _API_KEY else "OpenRouter"
+        print(f"WARNING: --full with {backend} backend on {len(pages)} pages.")
+        print(f"  LightRAG runs 3 extraction phases per page → expect $10–30+ in API costs.")
+        print(f"  Use qwen2.5:3b (unset API keys) for free full rebuilds.")
+        print(f"  Pass --yes to confirm and proceed.")
+        raise SystemExit(1)
 
     if args.full and WORK_DIR.exists():
         import shutil

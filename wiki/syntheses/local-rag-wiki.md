@@ -68,7 +68,9 @@ wiki-index --test       # verify LLM backend then exit
 
 **Extraction backend** (controlled by `.env`):
 - `ANTHROPIC_API_KEY` set → Claude Haiku (better entity/relation extraction)
-- unset → qwen2.5:3b via ollama (free, sufficient for most pages)
+- unset → qwen2.5:3b via ollama (free — **recommended for full rebuilds**)
+
+**Cost warning:** LightRAG runs 3 extraction phases per page (entity → relation → community), each with multiple LLM calls. A full rebuild of ~150 pages with Haiku costs **$10–30**, not pennies. Use qwen2.5:3b for full rebuilds; Haiku is acceptable for incremental updates (1–3 new pages per ingest).
 
 Incremental by default: a `manifest.json` tracks `{path: mtime}`. Only changed/new pages are re-extracted. The manifest is saved after each page so partial runs resume automatically.
 
@@ -136,8 +138,10 @@ Building the full graph from scratch takes ~30–60 min for 150 pages with a loc
 
 | Metric | Value |
 |---|---|
-| Initial build (qwen2.5:3b, ~150 pages) | ~30–60 min |
-| Incremental update (1–3 new pages) | ~1–5 min |
+| Initial build (qwen2.5:3b local, ~150 pages) | ~30–60 min, free |
+| Initial build (Claude Haiku, ~150 pages) | faster, but $10–30 |
+| Incremental update (1–3 new pages, Haiku) | ~1–5 min, ~$0.07–0.60 |
+| Incremental update (1–3 new pages, local) | ~5–15 min, free |
 | Query latency (wiki-chat, local) | ~15–30s |
 | Retrieval quality vs flat RAG | 2× IoU, 99% fewer tokens |
 

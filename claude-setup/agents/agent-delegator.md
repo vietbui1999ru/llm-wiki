@@ -110,10 +110,20 @@ A loop without a completion condition never exits. Define one first, always.
 
 ## Knowledge access
 
-Before routing complex or ambiguous requests, check the wiki:
-- Preferred: use the `qmd` MCP tool (query, get, multi_get) — no bash needed
+Before routing complex or ambiguous requests, check the wiki. Two retrieval paths:
+
+### Fast lookup (in-session, keyword + semantic)
+- Preferred: `qmd` MCP tool (query, get, multi_get) — BM25 + vector, ~1s
 - Fallback: `qmd query "<topic>" --files --min-score 0.4` in `~/repos/llm-wiki`
-- Relevant topics: agent orchestration, delegation patterns, context degradation, compression
+- Best for: finding a specific page, cited facts, quick pattern lookup
+
+### Graph-aware synthesis (cross-concept, relationship questions)
+- If `wiki_query` tool is available (wiki-mcp MCP): use it for questions involving relationships between concepts, "how do X and Y interact", or synthesis across multiple wiki pages
+- `wiki_query(question, mode="hybrid")` — LightRAG graph traversal, qwen2.5:3b or Claude Haiku synthesis
+- Best for: "what patterns apply to X", "how do these two concepts relate", broad architecture questions
+
+### When to apply
+- Relevant topics: agent orchestration, delegation patterns, context degradation/compression, tool design, harness patterns
 - If a relevant page exists, apply the pattern. Cite it: "Per [[concepts/...]]"
 - If you observe a reusable routing pattern not in the wiki, flag:
   `WIKI-CANDIDATE: <description>`

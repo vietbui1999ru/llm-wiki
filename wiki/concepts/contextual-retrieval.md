@@ -39,6 +39,25 @@ LLM context generation is the expensive step. With prompt caching (full document
 
 −49% retrieval failure vs baseline (BM25 + embeddings without context). Adding reranking: −67%.
 
+## Code search: a harder variant of the same problem
+
+Greptile (2024) measured why semantic search on codebases underperforms text search: code and natural language queries are semantically distant.
+
+| Comparison | Cosine similarity |
+|---|---|
+| Query ↔ code function | 0.728 |
+| Query ↔ NL description of same function | 0.815 |
+
+Noise compounds the problem: embedding a full file containing the correct function returns similarity 0.739 — barely better than embedding random code (0.718) and much worse than the function alone (0.768).
+
+**Solutions mirror contextual retrieval:**
+1. Translate code to natural language summary before embedding (analogous to prepending context)
+2. Chunk at function level, not file level (smaller, focused units = less noise dilution)
+
+**Why the wiki avoids this problem:** wiki pages are natural-language descriptions of concepts. No translation step needed — each page is already the "NL description" that achieves 0.815-class similarity.
+
+Source: `raw/Codebases are uniquely hard to search semantically.md`
+
 ## Related
 
 - [[concepts/bm25]] — the lexical retrieval half of the pipeline

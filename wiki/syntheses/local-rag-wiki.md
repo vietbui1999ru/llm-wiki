@@ -1,173 +1,153 @@
 ---
-title: "Local Wiki Q&A: Current State and RAG Upgrade Path"
+title: "Local Wiki RAG: LightRAG Graph Stack"
 type: synthesis
-tags: [rag, local-llm, ollama, qmd, tui, future-development]
-sources: []
+tags: [rag, local-llm, ollama, lightrag, graph, mcp, wiki-chat, wiki-index, wiki-mcp]
+sources: ["summaries/agentic-search-vs-rag", "summaries/local-rag-elasticsearch"]
 created: 2026-05-11
-updated: 2026-05-11
+updated: 2026-05-12
 ---
 
-# Local Wiki Q&A: Current State and RAG Upgrade Path
+# Local Wiki RAG: LightRAG Graph Stack
 
-> **Future development note.** This page captures the current `wiki-chat` implementation and the full RAG migration path. Pick up from here when revisiting local RAG.
+The wiki uses a two-retrieval-path architecture: **qmd** for fast lexical+vector search inside Claude Code sessions, and **LightRAG** for graph-aware synthesis in the TUI and MCP server. Both run locally at zero cost by default; LightRAG can optionally use Claude Haiku for higher-quality synthesis.
 
 ---
 
-## What's built (2026-05-11)
+## Architecture
 
-**Tool:** `~/.local/bin/wiki-chat` — Python TUI, runs from anywhere on the machine.
-
-**Usage:**
-```bash
-wiki-chat                        # interactive Q&A
-wiki-chat --model gemma3:12b     # better quality
-wiki-chat --top-n 8              # more pages per query
+```
+wiki/ pages
+    │
+    ├─── qmd index (BM25 + vector)          ← wiki-context skill → Claude Code
+    │    Updated by: post-commit hook (synchronous)
+    │
+    └─── LightRAG graph (.lightrag/)        ← wiki-chat TUI + wiki-mcp MCP server
+         Updated by: wiki-index (background, post-commit)
 ```
 
-**Prompt commands:**
-- `/search <terms>` — show matched pages without synthesis
-- `/model <name>` — switch model mid-session
-- `q` — quit
+### Why two paths
 
-**Dependencies:** `pip install ollama rich prompt_toolkit` (already installed)
-
-**Config constants** (edit the script to change):
-| Constant | Default | Purpose |
+| Dimension | qmd | LightRAG |
 |---|---|---|
-| `WIKI_DIR` | `~/repos/llm-wiki` | Wiki root |
-| `DEFAULT_MODEL` | `gemma4:e4b` | Ollama model |
-| `MIN_SCORE` | `0.4` | qmd retrieval threshold |
-| `TOP_N` | `5` | Max pages per query |
-| `MAX_CHARS` | `4000` | Per-page context trim |
+| Retrieval type | BM25 + vector hybrid | entity/community graph traversal |
+| Synthesis | Claude Sonnet (in-session) | qwen2.5:3b local or Claude Haiku |
+| Latency | ~1s | ~15–30s (LLM synthesis) |
+| Best for | In-session lookup, citation | Cross-concept questions, relationships |
+| Cost | API (synthesis) | Free local; optional Haiku for quality |
+| Available in | Claude Code, OpenCode | Anywhere (TUI or MCP) |
 
-### How it works
+The agentic-search-vs-rag experiment validated the LightRAG path: graph search achieved 2× retrieval IoU with 99% fewer tokens vs flat RAG. See [[summaries/agentic-search-vs-rag]].
 
+---
+
+## Tools
+
+### wiki-chat — interactive TUI
+
+```bash
+wiki-chat                   # hybrid mode (default)
+wiki-chat --mode local      # entity/concept-focused
+wiki-chat --mode global     # community summaries, big-picture
 ```
-query → qmd CLI (BM25 + vector hybrid) → top-N wiki/wiki/ pages → ollama synthesis → rich TUI
+
+Always uses **qwen2.5:3b via ollama** — no API cost, no API key required. Modes match LightRAG's query modes (local/global/hybrid/naive).
+
+TUI prompt commands:
+- `/mode local|global|hybrid|naive` — switch mid-session
+- `/reindex` — trigger wiki-index for new pages
+- `/status` — show manifest stats
+
+### wiki-index — graph indexer
+
+```bash
+wiki-index              # incremental (new/changed pages only)
+wiki-index --full       # wipe and rebuild from scratch
+wiki-index --status     # show manifest stats without indexing
+wiki-index --test       # verify LLM backend then exit
 ```
 
-qmd output format: `#docid,score,qmd://wiki/wiki/concepts/foo.md,"context label"`
+**Extraction backend** (controlled by `.env`):
+- `ANTHROPIC_API_KEY` set → Claude Haiku (better entity/relation extraction)
+- unset → qwen2.5:3b via ollama (free, sufficient for most pages)
 
-The script filters to `qmd://wiki/wiki/` paths only, skipping `raw/`, `index.md`, and `log.md`.
+Incremental by default: a `manifest.json` tracks `{path: mtime}`. Only changed/new pages are re-extracted. The manifest is saved after each page so partial runs resume automatically.
 
-### qmd index maintenance
+The **post-commit hook** triggers `wiki-index` in the background after any commit touching `wiki/`. Progress: `tail -f .lightrag/last-index.log`.
 
-The index needs manual updates when wiki pages are added:
+### wiki-mcp — MCP server
+
+Zero-cost wiki queries from Claude Code or OpenCode. Exposes two tools:
+- `wiki_query(question, mode="hybrid")` — graph-aware synthesis
+- `wiki_status()` — show index stats
+
+Synthesis backend: same hybrid logic as wiki-index (Haiku if key set, qwen2.5:3b otherwise). LightRAG graph is initialized once as a singleton; retrieval is always local (nomic-embed-text + graph traversal).
+
+Wire into OpenCode (`~/.config/opencode/opencode.json`):
+```json
+"wiki-rag": {
+  "type": "local",
+  "command": ["/Users/<user>/.local/bin/wiki-mcp"],
+  "enabled": true
+}
+```
+
+---
+
+## Setup
 
 ```bash
 cd ~/repos/llm-wiki
-qmd update          # re-index new/changed files
-qmd embed           # regenerate vectors (runs embeddinggemma-300M locally)
+bash claude-setup/scripts/install.sh
 ```
 
-The index was 20 days stale when wiki-chat was built — 349 new pages were missing. Add `qmd update && qmd embed` to the ingest flow or run it periodically.
+`install.sh` handles: copying binaries to `~/.local/bin`, setting up the post-commit hook, pulling `qwen2.5:3b` and `nomic-embed-text` via ollama. uv handles Python deps via PEP 723 inline metadata — no pip or venv needed.
 
----
-
-## Why the current approach works at this scale
-
-Per [[concepts/contextual-retrieval]]: the classic RAG chunking problem is decontextualized fragments — chunks that lose provenance when split from their source. The wiki is structured with one concept per page (CLAUDE.md rule), so each page is already a focused, self-contained chunk. No chunking needed.
-
-Per [[entities/qmd]]: qmd already does BM25 + vector hybrid — the full retrieval pipeline. The only missing piece was synthesis, which ollama provides.
-
-**When this breaks down:** pages grow past ~500 lines, or the wiki exceeds ~500 pages. At that point, whole-page retrieval starts pulling in too much noise per page and page-level search precision drops.
-
----
-
-## RAG upgrade path
-
-### Level 1 — Current (qmd + ollama)
-- Whole-page retrieval via qmd
-- `wiki-chat` TUI
-- Works for wiki < ~300 pages with focused pages
-- No additional dependencies
-
-### Level 2 — Section chunking (when pages get long)
-
-Split pages at H2 (`##`) headers. Prepend the page's frontmatter YAML as context to each chunk before indexing. This is [[concepts/contextual-retrieval]] applied to markdown.
-
-```python
-import re, yaml
-
-def chunk_page(path: Path) -> list[dict]:
-    text = path.read_text()
-    # extract frontmatter
-    fm_match = re.match(r"^---\n(.*?)\n---\n", text, re.DOTALL)
-    fm = fm_match.group(1) if fm_match else ""
-    body = text[fm_match.end():] if fm_match else text
-    # split at H2 headers
-    sections = re.split(r"(?=^## )", body, flags=re.MULTILINE)
-    return [{"context": fm, "content": s.strip(), "source": str(path)} for s in sections if s.strip()]
-```
-
-Each chunk = frontmatter + section. Index these instead of whole pages.
-
-**Trigger:** when `/search <terms>` returns pages that are clearly not fully relevant (the matched page has a section that's relevant but also much unrelated content).
-
-### Level 3 — Qdrant + local embeddings (scale)
-
-Replace qmd's internal vector store with Qdrant. Use `nomic-embed-text` (via ollama, free, local) for consistent embeddings between indexing and query.
-
+One-time graph build (required before wiki-chat or wiki-mcp):
 ```bash
-docker run -d -p 6333:6333 -v qdrant_data:/qdrant/storage qdrant/qdrant
-ollama pull nomic-embed-text
+wiki-index --test      # verify backend
+wiki-index --full      # build (~30–60 min for ~150 pages with local LLM)
 ```
 
-```python
-from qdrant_client import QdrantClient
-from qdrant_client.models import Distance, VectorParams, PointStruct
-import ollama
-
-client = QdrantClient("localhost", port=6333)
-# embed at index time:
-vec = ollama.embeddings(model="nomic-embed-text", prompt=chunk_text)["embedding"]
-# embed at query time:
-query_vec = ollama.embeddings(model="nomic-embed-text", prompt=query)["embedding"]
-# vector search:
-hits = client.search("wiki", query_vector=query_vec, limit=20)
-```
-
-Retain BM25 via qmd (or switch to Whoosh/tantivy for pure Python). Merge results with RRF (Reciprocal Rank Fusion):
-
-```python
-def rrf(bm25_hits, vec_hits, k=60):
-    scores = {}
-    for rank, doc in enumerate(bm25_hits):
-        scores[doc.id] = scores.get(doc.id, 0) + 1 / (k + rank + 1)
-    for rank, doc in enumerate(vec_hits):
-        scores[doc.id] = scores.get(doc.id, 0) + 1 / (k + rank + 1)
-    return sorted(scores, key=scores.get, reverse=True)
-```
-
-**Trigger:** wiki > 500 pages, or need metadata filtering (by type, tag, date range).
-
-### Level 4 — Reranking (quality over latency)
-
-After RRF merge, pass top 20 candidates through a cross-encoder reranker, then send top 5 to ollama.
-
-```bash
-pip install sentence-transformers
-```
-
-```python
-from sentence_transformers import CrossEncoder
-reranker = CrossEncoder("BAAI/bge-reranker-base")  # ~280MB, runs on CPU
-pairs = [(query, doc.content) for doc in top_20]
-scores = reranker.predict(pairs)
-top_5 = [doc for _, doc in sorted(zip(scores, top_20), reverse=True)][:5]
-```
-
-Per [[concepts/reranking]] + [[concepts/contextual-retrieval]]: combined gain is −67% retrieval failure vs plain BM25.
-
-**Trigger:** synthesis quality is high but answers sometimes miss the best page. Reranking fixes retrieval recall precision without changing the synthesis step.
+After initial build, the post-commit hook keeps the graph current automatically.
 
 ---
 
-## Related wiki pages
+## Design choices
 
-- [[concepts/contextual-retrieval]] — chunk context prepending; −49% retrieval failure
-- [[concepts/bm25]] — lexical retrieval half of the hybrid pipeline
-- [[concepts/reranking]] — post-retrieval filtering; −67% combined with contextual retrieval
-- [[entities/qmd]] — current retrieval engine; BM25 + vector + LLM reranking, on-device
-- [[entities/mnemory]] — Qdrant + S3 memory service; Qdrant usage patterns relevant to Level 3
-- [[summaries/docling]] — document parsing if ingesting non-markdown sources into RAG
+### Graph over flat RAG
+
+Per [[summaries/agentic-search-vs-rag]]: graph search wins on cross-concept queries (99% fewer tokens, 2× IoU). Flat RAG only wins on explicit dependency recall. The wiki's primary use case — "how do X and Y relate?", "what patterns apply to problem Z?" — is exactly where graph search wins.
+
+### One concept per page = natural graph nodes
+
+The wiki rule "one thing per page" (CLAUDE.md) makes each page a clean entity for LightRAG to extract. Entities extracted from `concepts/context-degradation` naturally link to `concepts/context-compression`, `concepts/ralph-loop`, etc. Cross-links become graph edges.
+
+### qwen2.5:3b for local synthesis
+
+Better structured output for entity extraction than phi4-mini. Fits comfortably in M1 Pro 16GB and RTX 2060 6GB. For higher-quality extraction at index time: use `ANTHROPIC_API_KEY` — Haiku costs ~$0.001 per page at current pricing.
+
+### Manifest-based incremental indexing
+
+Building the full graph from scratch takes ~30–60 min for 150 pages with a local LLM. The manifest approach means each new ingest only costs extraction time for the new pages (typically 1–3 pages). Post-commit automation makes this transparent.
+
+---
+
+## Performance
+
+| Metric | Value |
+|---|---|
+| Initial build (qwen2.5:3b, ~150 pages) | ~30–60 min |
+| Incremental update (1–3 new pages) | ~1–5 min |
+| Query latency (wiki-chat, local) | ~15–30s |
+| Retrieval quality vs flat RAG | 2× IoU, 99% fewer tokens |
+
+---
+
+## Related
+
+- [[summaries/agentic-search-vs-rag]] — experiment validating graph search for this wiki
+- [[summaries/local-rag-elasticsearch]] — stack comparison; retrieval latency benchmarks
+- [[concepts/contextual-retrieval]] — chunk context technique; wiki pages are pre-contextualized (one concept per page)
+- [[concepts/bm25]] — lexical retrieval used by qmd (wiki-context path)
+- [[concepts/reranking]] — post-retrieval filtering; not yet applied here
+- [[entities/qmd]] — BM25 + vector engine for the wiki-context skill path

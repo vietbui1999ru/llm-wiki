@@ -2,6 +2,12 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-12] update | syntheses/local-rag-wiki — complete rewrite; removed stale qmd+ollama "current state" framing; documented actual deployed stack: wiki-chat (LightRAG TUI, local-only), wiki-index (incremental, hybrid backend), wiki-mcp (MCP server, OpenCode integration), post-commit hook; updated index.md entry
+
+## [2026-05-12] ingest | Codebases are uniquely hard to search semantically (Greptile, Daksh) — absorbed into concepts/contextual-retrieval; added code search section: cosine sim 0.728 (code) vs 0.815 (NL description), noise dilution data; explains why wiki NL pages avoid the code search problem
+
+## [2026-05-12] update | claude-setup/agents/agent-delegator.md — added wiki-mcp (wiki_query MCP tool) as graph-aware synthesis path alongside qmd fast lookup; split knowledge access into fast lookup vs graph-aware query sections
+
 ## [2026-05-11] update | GUIDE.md — added wiki-chat/wiki-index (LightRAG RAG) to §2 search, §3.1 skills, §6 playbooks; added docs-writer agent to §3.2 feature dev; added interactive wiki query and documentation playbooks
 
 ## [2026-05-11] build | wiki-chat TUI (LightRAG v2) — migrated from qmd+ollama to LightRAG graph-aware retrieval; phi4-mini + nomic-embed-text (768 dim); manifest-based incremental indexing; modes: local/global/hybrid/naive; ~/.local/bin/wiki-chat + wiki-index; summaries/agentic-search-vs-rag.md + summaries/local-rag-elasticsearch.md ingested to validate RAG stack choice

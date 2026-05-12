@@ -165,4 +165,4 @@ Catalog of all pages. Updated on every ingest operation.
 ## Syntheses
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern
 - [[syntheses/lean-agentic-workflow]] — Full stack: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes
-- [[syntheses/local-rag-wiki]] — wiki-chat TUI (LightRAG+phi4-mini+nomic-embed-text); graph-aware hybrid search; wiki-index incremental indexer; validated by agentic-search-vs-rag experiment
+- [[syntheses/local-rag-wiki]] — two-path RAG stack: qmd (BM25+vector, Claude Code) + LightRAG graph (wiki-chat TUI + wiki-mcp MCP); qwen2.5:3b local or Haiku hybrid; manifest-based incremental indexing; post-commit automation

@@ -2,6 +2,14 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-12] new | concepts/worker-coordination — partial result coordination between parallel agents: contract-first, pipeline, filesystem blackboard, actor mailbox patterns; decision table; failure modes (silent dependency, partial write race, scope bleed)
+
+## [2026-05-12] update | agent-primitive-selection — added partial-results branch to decision tree; links to concepts/worker-coordination
+
+## [2026-05-12] update | wiki-index + wiki-mcp — added OpenRouter as 3rd backend stub (OPENROUTER_API_KEY env var, NotImplementedError until wired); updated docstring
+
+## [2026-05-12] update | agent-delegator — removed dead wiki_query/wiki-mcp branch (tool not available in Claude Code sessions)
+
 ## [2026-05-12] update | syntheses/local-rag-wiki — complete rewrite; removed stale qmd+ollama "current state" framing; documented actual deployed stack: wiki-chat (LightRAG TUI, local-only), wiki-index (incremental, hybrid backend), wiki-mcp (MCP server, OpenCode integration), post-commit hook; updated index.md entry
 
 ## [2026-05-12] ingest | Codebases are uniquely hard to search semantically (Greptile, Daksh) — absorbed into concepts/contextual-retrieval; added code search section: cosine sim 0.728 (code) vs 0.815 (NL description), noise dilution data; explains why wiki NL pages avoid the code search problem

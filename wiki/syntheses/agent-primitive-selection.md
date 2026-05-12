@@ -33,6 +33,12 @@ Do workers need to talk to each other?
 Is work genuinely parallel with non-overlapping file scope (3–5 pieces)?
   → AGENT TEAM
   → Otherwise: single session or sequential subagents
+
+Do parallel workers need each other's PARTIAL results mid-task?
+  → Can the interface be defined upfront?     → CONTRACT-FIRST (seed before spawning)
+  → Is the dependency one-directional?        → PIPELINE (make it sequential)
+  → Is the dependency bidirectional/emergent? → FILESYSTEM BLACKBOARD
+  See [[concepts/worker-coordination]]
 ```
 
 ## Model Tier Routing

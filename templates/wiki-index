@@ -16,9 +16,10 @@ Usage:
   wiki-index --full     wipe and rebuild from scratch
   wiki-index --status   show manifest stats without indexing
 
-Extraction backend (set env var before running):
-  ANTHROPIC_API_KEY=sk-...  → Claude Haiku (better entity/relation extraction)
-  unset                     → qwen2.5:3b via ollama (fully local, free)
+Extraction backend (priority order, set env var in .env):
+  ANTHROPIC_API_KEY=sk-ant-...  → Claude Haiku (best entity/relation extraction)
+  OPENROUTER_API_KEY=sk-or-...  → OpenRouter (not yet implemented — stub only)
+  unset                         → qwen2.5:3b via ollama (fully local, free)
 
 Requires:
   uv run --script wiki-index   (deps declared inline above)
@@ -52,7 +53,8 @@ MANIFEST    = WORK_DIR / "manifest.json"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 
-_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+_API_KEY          = os.environ.get("ANTHROPIC_API_KEY", "")
+_OPENROUTER_KEY   = os.environ.get("OPENROUTER_API_KEY", "")
 
 async def _anthropic_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
     kwargs.setdefault("max_tokens", 4096)
@@ -71,6 +73,10 @@ if _API_KEY:
     LLM_MODEL      = "claude-haiku-4-5-20251001"
     _llm_func      = _anthropic_llm
     _llm_max_async = 4
+elif _OPENROUTER_KEY:
+    # TODO: wire up OpenRouter backend via lightrag.llm.openai.openai_complete_if_cache
+    # base_url="https://openrouter.ai/api/v1", model e.g. "anthropic/claude-haiku-4-5"
+    raise NotImplementedError("OpenRouter backend not yet implemented. Set ANTHROPIC_API_KEY or leave unset for local.")
 else:
     LLM_MODEL      = "qwen2.5:3b"
     _llm_func      = ollama_model_complete

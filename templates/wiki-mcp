@@ -13,9 +13,10 @@
 """wiki-mcp — local MCP server: graph-aware wiki queries via LightRAG
 
 Retrieval always runs locally (nomic-embed-text + graph traversal, zero cost).
-Synthesis backend auto-selected by env var:
-  ANTHROPIC_API_KEY set → Claude Haiku (frontier, ~$0.001/query)
-  unset               → qwen2.5:3b via ollama (fully local, free)
+Synthesis backend auto-selected by env var (priority order):
+  ANTHROPIC_API_KEY=sk-ant-...  → Claude Haiku (frontier, ~$0.001/query)
+  OPENROUTER_API_KEY=sk-or-...  → OpenRouter (not yet implemented — stub only)
+  unset                         → qwen2.5:3b via ollama (fully local, free)
 
 Requires:
   uv run --script wiki-mcp   (deps declared inline above)
@@ -52,7 +53,8 @@ EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 
 # Synthesis backend: frontier if API key present, local otherwise
-_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+_API_KEY        = os.environ.get("ANTHROPIC_API_KEY", "")
+_OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
 async def _anthropic_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
     kwargs.setdefault("max_tokens", 4096)
@@ -71,6 +73,10 @@ if _API_KEY:
     LLM_MODEL      = "claude-haiku-4-5-20251001"
     _llm_func      = _anthropic_llm
     _llm_max_async = 4
+elif _OPENROUTER_KEY:
+    # TODO: wire up OpenRouter backend via lightrag.llm.openai.openai_complete_if_cache
+    # base_url="https://openrouter.ai/api/v1", model e.g. "anthropic/claude-haiku-4-5"
+    raise NotImplementedError("OpenRouter backend not yet implemented.")
 else:
     LLM_MODEL      = "qwen2.5:3b"
     _llm_func      = ollama_model_complete

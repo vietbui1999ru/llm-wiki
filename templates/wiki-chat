@@ -3,12 +3,10 @@
 # requires-python = ">=3.10"
 # dependencies = [
 #   "lightrag-hku",
-#   "anthropic",
 #   "ollama",
 #   "rich",
 #   "prompt_toolkit",
 #   "numpy",
-#   "python-dotenv",
 # ]
 # ///
 """wiki-chat — personal wiki AI assistant (LightRAG, hybrid synthesis)
@@ -18,9 +16,7 @@ Usage:
   wiki-chat --mode local       entity-focused (specific concept questions)
   wiki-chat --mode global      community summaries (cross-concept questions)
 
-Synthesis backend (set env var before running):
-  ANTHROPIC_API_KEY=sk-...  → Claude Haiku (~$0.001/query, better answers)
-  unset                     → qwen2.5:3b via ollama (fully local, free)
+Always uses qwen2.5:3b via ollama — fully local, no API cost.
 
 Prompt commands:
   /mode local|global|hybrid|naive   switch query mode mid-session
@@ -33,17 +29,14 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import os
 import subprocess
 import sys
 from pathlib import Path
 
 try:
     import ollama as _ollama
-    from dotenv import load_dotenv
     from lightrag import LightRAG, QueryParam
     from lightrag.llm.ollama import ollama_model_complete
-    from lightrag.llm.anthropic import anthropic_complete_if_cache
     from lightrag.utils import EmbeddingFunc
     from prompt_toolkit import prompt as pt_prompt
     from prompt_toolkit.history import FileHistory
@@ -55,35 +48,14 @@ except ImportError as e:
     sys.exit(1)
 
 WIKI_DIR    = Path.home() / "repos/llm-wiki"
-load_dotenv(WIKI_DIR / ".env")
 WORK_DIR    = WIKI_DIR / ".lightrag"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 VALID_MODES = ("local", "global", "hybrid", "naive")
 
-_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-
-async def _anthropic_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
-    kwargs.setdefault("max_tokens", 4096)
-    result = await anthropic_complete_if_cache(
-        "claude-haiku-4-5-20251001", prompt,
-        system_prompt=system_prompt,
-        history_messages=history_messages or [],
-        api_key=_API_KEY,
-        **kwargs,
-    )
-    if hasattr(result, "__aiter__"):
-        return "".join([chunk async for chunk in result])
-    return result
-
-if _API_KEY:
-    LLM_MODEL  = "claude-haiku-4-5-20251001"
-    _llm_func  = _anthropic_llm
-    _llm_async = 4
-else:
-    LLM_MODEL  = "qwen2.5:3b"
-    _llm_func  = ollama_model_complete
-    _llm_async = 1
+LLM_MODEL  = "qwen2.5:3b"
+_llm_func  = ollama_model_complete
+_llm_async = 1
 
 console = Console()
 
@@ -152,9 +124,8 @@ async def run(args: argparse.Namespace) -> None:
     rag  = await make_rag()
     hist = FileHistory(str(Path.home() / ".wiki-chat-history"))
 
-    backend = "anthropic" if _API_KEY else "ollama"
     console.print(Panel(
-        f"[bold cyan]Wiki Chat[/bold cyan]  [dim]model: {LLM_MODEL} ({backend}) · mode: {mode}[/dim]\n"
+        f"[bold cyan]Wiki Chat[/bold cyan]  [dim]model: {LLM_MODEL} · mode: {mode}[/dim]\n"
         "[dim]/mode local|global|hybrid|naive  /reindex  /status  q to quit[/dim]",
         border_style="cyan",
     ))

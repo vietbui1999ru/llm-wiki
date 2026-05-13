@@ -294,3 +294,14 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Stale claim: concepts/agent-teams + syntheses/agent-primitive-selection had no WORKTREE POOL branch; updated both to add worktree pool (>30 min or >5 tasks) as a fourth parallel primitive alongside agent teams
 - Missing concept pages: OpenTelemetry for AI agents (3 raw sources uningested); no entity pages for Galactic or Switchman tools
 - Source gaps: OpenTelemetry for AI Agents (3 sources), Cloudflare Workers/AI inference (2 sources)
+
+## [2026-05-12] lint
+- 151 unique basenames across 158 files (7 basename collisions discovered — first time flagged)
+- Basename collisions (wikilink ambiguity): dspy (summary+entity), docling (summary+entity), opencode-dcp (summary+entity), cicd-testing (concept+summary), software-documentation (concept+summary), contextual-retrieval (concept+summary), llm-as-judge (concept+summary)
+- True orphans (7): all acceptable carry-overs from prior lint — patterns/algorithmic, patterns/backend, patterns/frontend, summaries/awesome-software-architecture, summaries/cursor-cloud-agents, summaries/hn-junior-devs-and-ai, summaries/sparc-cursor-cline-rules
+- 2nd-degree orphan (new): systems/ai-ml only linked from summaries/hn-junior-devs-and-ai (itself an orphan); fixed by adding link from summaries/autoresearch-karpathy
+- Fixed concepts/dynamic-context-pruning (1 inbound from entity only): added link from concepts/context-compression Related Pages
+- Fixed concepts/wikilink-graph-extraction (1 inbound): added link from summaries/agentic-search-vs-rag Related Pages
+- Stale claim (unconfirmed — needs ingest): syntheses/agent-primitive-selection treats background execution as subagent flag; new CC docs (raw/ "1" variants) may define background agents as a distinct primitive via agent view UI
+- Missing concept pages: OpenTelemetry/AI observability (3 raw sources uningested), entities/galactic, entities/switchman
+- Source gaps: OpenTelemetry AI (3 sources in raw/), Cloudflare Workers AI inference (1 source in raw/), new CC docs — background agents/agent view (8 files in raw/)

@@ -77,3 +77,4 @@ The human's job is not running experiments but writing the `program.md` that def
 - [[concepts/agent-harness]] — harness component model; autoresearch as a minimal instantiation
 - [[concepts/ralph-loop]] — the continuous loop pattern autoresearch runs
 - [[entities/ai-coding-agents]] — the agent class running the research loop
+- [[systems/ai-ml]] — production ML system design; serving and monitoring for outputs autoresearch generates

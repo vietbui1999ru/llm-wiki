@@ -86,3 +86,4 @@ This experiment directly validates the switch from BM25+ollama to LightRAG for t
 - [[concepts/contextual-retrieval]] — flat RAG improvement baseline
 - [[concepts/reranking]] — post-retrieval filtering (complementary to graph retrieval)
 - [[summaries/local-rag-elasticsearch]] — local RAG implementation reference
+- [[concepts/wikilink-graph-extraction]] — using Obsidian wikilinks to reduce LightRAG indexing cost; structural complement to context trees

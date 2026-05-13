@@ -120,3 +120,4 @@ His argument: compaction introduces "sediment" — each compressed summary is im
 - [[concepts/agent-harness]] — where compaction fits in the harness component model
 - [[concepts/ralph-loop]] — filesystem as durable state across clean context windows (the complement to compression)
 - [[summaries/mattpocockworkflow]] — Pocock's workflow that makes clearing safe by externalizing state
+- [[concepts/dynamic-context-pruning]] — mid-session context reduction via Compress tool + deduplication + purge-errors; complements compaction

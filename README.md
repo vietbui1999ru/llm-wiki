@@ -14,7 +14,8 @@ Most people who read about AI engineering forget 90% of it. This wiki makes forg
 - Concepts are linked across sources so patterns become visible
 - The LLM is the maintainer — it knows the schema, enforces cross-links, catches contradictions
 - A mistakes log prevents the same errors from recurring across sessions
-- A graph-aware RAG system (LightRAG) enables synthesis queries across the knowledge graph
+- A graph-aware RAG system (LightRAG) enables synthesis queries across the knowledge graph **Note: this script and workflow should be used with moderation and care to not burn through your tokens and accrue costs from AI providers (My first synthesis cost me $15 for building the full graph, but now the cost is managable ~$1-2. Use sparingly and cautiously**
+
 
 **Primary domain:** AI agent engineering — orchestration, context management, harness design, multi-model coordination, memory systems, tool design.
 

@@ -20,9 +20,35 @@ Before critiquing, check the wiki for relevant patterns and prior decisions:
 - Preferred: use the `qmd` MCP tool (query, get, multi_get) — no bash needed
 - Fallback: `qmd query "<topic>" --files --min-score 0.4` in `~/repos/llm-wiki`
 - Relevant topics: design patterns, anti-patterns, code quality, prior critiques
+- Key pages: `concepts/mobile-design-patterns`, `patterns/frontend`, `concepts/deep-modules`, `patterns/design-patterns-structural`
 - If a relevant page exists, reference it: "This matches the anti-pattern documented in [[concepts/...]]"
 - If you identify a pattern or anti-pattern worth adding to the wiki, flag:
   `WIKI-CANDIDATE: <description>`
+
+## Mobile anti-pattern catalog
+
+When critiquing mobile UI code (RN, Flutter, mobile web), check for these named anti-patterns:
+
+**Performance sins:**
+- `ScrollView` for variable-length lists → `FlatList`/`FlashList`
+- Inline `renderItem` → extract + `useCallback` + `React.memo`
+- Index as `key` → unstable on reorder; use stable data ID
+- JS-thread animations (`Animated` without `useNativeDriver: true`) → jank
+- `console.log` in production → blocks JS thread
+
+**Touch & UX sins:**
+- Touch target < 44pt (iOS) / 48dp (Android) → `hitSlop` or layout padding
+- Gesture-only actions with no button fallback → excludes motor-impaired users
+- Missing loading states → app feels frozen
+- Ignoring platform conventions (iOS vs Android back navigation, dialogs, pickers)
+
+**Composition sins:**
+- Boolean prop proliferation (`isCompact`, `isRounded`, `hasIcon`) → compound components or explicit variant components
+- `renderX` props → prefer `children` for composition
+
+**Security sins:**
+- Tokens in `AsyncStorage` → `SecureStore` / Keychain
+- Hardcoded API keys → env vars + secure storage
 
 ## Critique approach
 

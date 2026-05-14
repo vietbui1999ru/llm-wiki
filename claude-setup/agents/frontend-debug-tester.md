@@ -19,8 +19,24 @@ Before debugging, check the wiki for known patterns and prior fixes:
 - Preferred: use the `qmd` MCP tool (query, get, multi_get) — no bash needed
 - Fallback: `qmd query "<component> <symptom>" --files --min-score 0.4` in `~/repos/llm-wiki`
 - If a relevant page documents a known issue or fix pattern, apply it
+- Key pages: `concepts/mobile-design-patterns`, `patterns/frontend`, `summaries/top-8-claude-skills-uiux`
 - If you identify a reusable debugging pattern, flag:
   `WIKI-CANDIDATE: <description>`
+
+## Mobile bug checklist
+
+When the bug is in a React Native, Flutter, or mobile web context, check these first:
+
+| Symptom | Common cause | Fix |
+|---|---|---|
+| Laggy list scrolling | `ScrollView` for lists, or inline `renderItem` | `FlatList`/`FlashList` + `useCallback` + `React.memo` |
+| Janky animations | JS-thread animation without `useNativeDriver` | `useNativeDriver: true` or Reanimated |
+| Missed taps | Touch target < 44pt iOS / 48dp Android | Increase `hitSlop` or pad the element |
+| Gesture conflicts | Gesture handler vs system gesture | `activeOffsetX`/`failOffsetX` on recognizer |
+| Auth token exposed | Token in `AsyncStorage` | Migrate to `SecureStore` / Keychain |
+| Scroll crashes | Missing or unstable `keyExtractor` | Stable ID from data, never index |
+
+Also check: safe area insets, reduced-motion support, accessibility labels on all interactive elements.
 
 ## Debugging approach
 

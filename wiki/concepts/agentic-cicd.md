@@ -162,3 +162,4 @@ Based on the household expense tracker reference project:
 - [[concepts/worktree-isolation]] — per-task filesystem isolation that feeds the CI pipeline
 - [[concepts/ralph-loop]] — outer loop driver; agentic CI/CD is the quality gate per iteration
 - [[syntheses/lean-agentic-workflow]] — the workflow this CI/CD pattern fits inside
+- [[concepts/llm-eval-pipeline]] — eval pipeline that feeds CI gates: golden dataset, code assertions, LLM-judge, production monitoring

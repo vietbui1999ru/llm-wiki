@@ -54,3 +54,4 @@ AI code can be syntactically correct, pass tests, and match style — while bein
 - [[summaries/optimized-review-process-with-agents]] — automated review pipeline with agent roles
 - [[summaries/automated-security-reviews]] — Claude Code /security-review command; built-in, no custom agent needed
 - [[concepts/owasp-security-checklist]] — full OWASP Top 10 + AI-specific security checklist for deep audits
+- [[entities/codegraphcontext]] — relationship-aware review: use CGC to find callers and blast radius before flagging cross-module changes

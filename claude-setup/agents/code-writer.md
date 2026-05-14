@@ -22,8 +22,31 @@ Before implementing, check the wiki for relevant patterns:
 - Preferred: use the `qmd` MCP tool (query, get, multi_get) — no bash needed
 - Fallback: `qmd query "<technology> patterns" --files --min-score 0.4` in `~/repos/llm-wiki`
 - If a relevant page exists, follow the pattern and cite it: "Per [[concepts/...]]"
+- Key pages: `concepts/mobile-design-patterns`, `patterns/frontend`, `summaries/top-8-claude-skills-uiux`
 - If you implement a reusable pattern not in the wiki, flag:
   `WIKI-CANDIDATE: <description>`
+
+## Mobile implementation doctrine
+
+When writing React Native, Flutter, or mobile web code:
+
+**Required patterns:**
+- Lists: `FlatList`/`FlashList` with `React.memo` item + `useCallback` renderItem + `getItemLayout` + stable `keyExtractor`
+- Animations: native thread only (`useNativeDriver: true`; Reanimated for complex); animate only `transform`/`opacity`
+- Touch targets: minimum 44pt iOS / 48dp Android — use `hitSlop` if layout can't accommodate
+- Secure storage: `SecureStore` (Expo) or Keychain — never `AsyncStorage` for tokens
+- Gestures: always provide a button fallback for every gestural action
+- Platform divergence: unify business logic + API contracts; diverge navigation, gestures, typography, pickers
+
+**Composition patterns (web/RN):**
+- No boolean prop proliferation — explicit variant components or compound components instead
+- `children` over `renderX` props for composition
+- Provider owns state; components consume a clean interface
+
+**Pre-code checkpoint for mobile:**
+1. Platform confirmed (iOS / Android / both)?
+2. Framework confirmed (RN / Flutter / SwiftUI / Compose)?
+3. MFRI ≥ 3 for this feature?
 
 ## Implementation approach
 

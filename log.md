@@ -16,6 +16,12 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
 ## [2026-05-12] update | claude-setup/agents/agent-delegator.md — added wiki-mcp (wiki_query MCP tool) as graph-aware synthesis path alongside qmd fast lookup; split knowledge access into fast lookup vs graph-aware query sections
 
+## [2026-05-13] lint — fixed broken wikilink concepts/self-refinement→summaries/self-refinement in preference-feedback-loop; added backlinks: codegraphcontext→ai-code-review, llm-eval-pipeline→agentic-cicd + verification-pipeline; patterns/ cluster (13 files) remains systemic orphan
+
+## [2026-05-13] ingest | CodeGraphContext README — entities/codegraphcontext.md; claude-init Step 0.5 (codebase scan + CGC decision gate + hybrid persistence); agent-delegator + code-reviewer updated with CGC query routing table; GUIDE.md §4 + §6 updated
+
+## [2026-05-13] ingest | LLM Eval Pipeline — 4 sources: pragmatic-engineer-llm-evals, hamel-evals-faq, selecting-ai-evals-tool, hamel-evals-skills; concepts/llm-eval-pipeline + concepts/rag-evaluation created
+
 ## [2026-05-11] update | GUIDE.md — added wiki-chat/wiki-index (LightRAG RAG) to §2 search, §3.1 skills, §6 playbooks; added docs-writer agent to §3.2 feature dev; added interactive wiki query and documentation playbooks
 
 ## [2026-05-11] build | wiki-chat TUI (LightRAG v2) — migrated from qmd+ollama to LightRAG graph-aware retrieval; phi4-mini + nomic-embed-text (768 dim); manifest-based incremental indexing; modes: local/global/hybrid/naive; ~/.local/bin/wiki-chat + wiki-index; summaries/agentic-search-vs-rag.md + summaries/local-rag-elasticsearch.md ingested to validate RAG stack choice
@@ -305,3 +311,12 @@ Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 - Stale claim (unconfirmed — needs ingest): syntheses/agent-primitive-selection treats background execution as subagent flag; new CC docs (raw/ "1" variants) may define background agents as a distinct primitive via agent view UI
 - Missing concept pages: OpenTelemetry/AI observability (3 raw sources uningested), entities/galactic, entities/switchman
 - Source gaps: OpenTelemetry AI (3 sources in raw/), Cloudflare Workers AI inference (1 source in raw/), new CC docs — background agents/agent view (8 files in raw/)
+
+## [2026-05-13] ingest | SpotMe — gym mode OpenCode plugin for deliberate practice
+
+## [2026-05-13] ingest | LLM Eval Pipeline — 4 sources (Pragmatic Engineer, Hamel FAQ, tool selection, evals skills plugin)
+
+Sources ingested: "A pragmatic guide to LLM evals for devs.md", "LLM Evals Everything You Need to Know.md", "Selecting The Right AI Evals Tool.md", "hamelsmuevals-skills...".
+New summaries: pragmatic-engineer-llm-evals, hamel-evals-faq, selecting-ai-evals-tool, hamel-evals-skills.
+New concept pages: llm-eval-pipeline, rag-evaluation.
+## [2026-05-13] ingest | Gesture Navigation Best Practices + Mobile Design SKILL.md + Top 8 Claude Skills for UI/UX

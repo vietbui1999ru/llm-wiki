@@ -56,6 +56,10 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/context-engineering-anthropic]] — Anthropic context engineering: JIT retrieval, compaction, note-taking, sub-agents; context editing API
 - [[summaries/docker-sandboxes]] — Docker Sandboxes: microVM isolation for coding agents; Docker-in-Docker safe; CC/Codex/Gemini/Copilot/Kiro support
 - [[summaries/llm-as-judge]] — 3 sources: LLM-as-judge evaluation pattern; pairwise vs direct scoring; G-Eval chain-of-thought; production monitoring incident; best practices and limitations
+- [[summaries/pragmatic-engineer-llm-evals]] — Hamel Husain + Pragmatic Engineer: three gulfs, error analysis flywheel (open/axial coding), golden dataset construction, CI/CD integration, NurtureBoss case study
+- [[summaries/hamel-evals-faq]] — Hamel evals FAQ (700+ engineers): binary vs Likert, generic metrics warning, guardrails vs evaluators, RAG eval split, agentic transition failure matrices
+- [[summaries/selecting-ai-evals-tool]] — Tool comparison (mid-2025): LangSmith/Braintrust/Arize Phoenix; 4 selection criteria; transparency-vs-magic anti-pattern
+- [[summaries/hamel-evals-skills]] — Claude Code plugin (`hamelsmu/evals-skills`): 7 skills including eval-audit, write-judge-prompt, validate-evaluator, evaluate-rag
 - [[summaries/cloudflare-agent-memory]] — Managed cross-session memory service: 5-channel RRF retrieval (FTS+key+HyDE+vector+message), 4-type taxonomy (Facts/Events/Instructions/Tasks), compaction-integrated ingest
 - [[summaries/rlhf-cai]] — RLHF/RLAIF/Constitutional AI/DPO: alignment training techniques; 3-stage RLHF pipeline; DPO as reward-model-free alternative; inspiration for preference-feedback-loop
 - [[summaries/self-refinement]] — Madaan et al. 2023: same-model iterative generate→critique→refine loop; no training required; self-evaluation bias limitation
@@ -67,6 +71,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/owasp-prompt-injection]] — OWASP LLM Prompt Injection Prevention: 9+ attack types (typoglycemia, Best-of-N power-law scaling, multimodal, RAG poisoning), 4-layer SecureLLMPipeline, dual-LLM pattern, model-based guardrails at 3 placements
 - [[summaries/owasp-mcp-security]] — OWASP MCP Security: 9 key risks (tool poisoning, rug pull, tool shadowing, confused deputy), 12 best practices incl. SHA-256 tool hash pinning, ECDSA message signing, bind to 127.0.0.1, mcp-scan
 - [[summaries/worktrees-parallel-agents]] — 4 failure modes of shared-repo multi-agent; what worktrees fix (file conflicts, lock contention) vs don't fix (runtime isolation, logical conflicts); worktree-per-task vs per-agent; Galactic, Block agent-task-queue, Switchman, Intent architecture
+- [[summaries/top-8-claude-skills-uiux]] — 8 UI/UX skills catalog + Agent Skills architecture (3-tier loading, supply chain risk); Vercel RN/React/composition skills, AccessLint, Anthropic frontend-design
 
 ## Entities
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
@@ -88,8 +93,11 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/opencode-dcp]] — `@tarquinen/opencode-dcp` npm plugin; Compress + dedup + purge-errors; global/project config; /dcp commands
 - [[entities/lean-session]] — OpenCode plugin; injects `.agents/` state into compaction; writes checkpoint on idle; 3 hooks: compacting/diff/idle
 - [[entities/dspy]] — Stanford framework for programming LMs via Signatures/Modules/Optimizers; GEPA optimizer: error-driven prompt refinement; automated prompt optimization without manual prompt engineering
+- [[entities/spotme]] — OpenCode "gym mode" plugin; counter-based exercise scaffolding; lite/medium/hard difficulty; portable SKILL.md for other harnesses
+- [[entities/codegraphcontext]] — Python MCP server + CLI; indexes codebases into graph DB (KuzuDB); Tree-sitter parsing; 20 languages; relationship discovery, blast radius, dead code; session or daemon persistence
 
 ## Concepts
+- [[concepts/mobile-design-patterns]] — mobile-first doctrine, MFRI scoring, Fitts' Law, gesture design, iOS/Android divergence matrix, RN/Flutter performance patterns, release checklist
 - [[concepts/unit-testing]] — AAA pattern, test doubles, naming convention, coverage philosophy, flaky test quarantine
 - [[concepts/cicd-testing]] — Testing pyramid, 6 test types, shift-left, pipeline stage map, relationship to verification-pipeline
 - [[concepts/context-window]] — Transformer constraint: O(n²) attention, KV cache, context rot, context awareness feature
@@ -138,6 +146,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/agentic-cicd]] — CI as external watchdog when agent IS the developer; gate sequence; staging-first; diff size cap; builder/deployer network split
 - [[concepts/error-budget]] — SRE error budget adapted to agent loops; retry/token/runtime/session budget axes; progress score; no-progress detection
 - [[concepts/llm-as-judge]] — LLM evaluates another LLM's output via structured prompt; pairwise vs direct scoring vs G-Eval; failure modes (self-bias, reward hacking, sycophancy); relation to RLHF
+- [[concepts/llm-eval-pipeline]] — Continuous quality system for LLM products: error analysis flywheel, golden/eval/regression datasets, code assertion vs LLM-judge split, CI gates, production monitoring, guardrails vs evaluators
+- [[concepts/rag-evaluation]] — RAG eval split: retrieval (Recall@k, Precision@k, MRR, nDCG) vs generation (faithfulness, answer relevance, context utilization); Ragas/DeepEval; Jason Liu 6-RAG-evals framework
 - [[concepts/preference-feedback-loop]] — cross-vendor judge evaluates agent outputs on 4-dimension rubric; pattern-triggered rule extraction; human approval gate; extends mistakes/ + memory/feedback_*
 - [[concepts/actor-model]] — actors as unit of concurrency; 3 primitives (send/spawn/become); mailbox semantics; no shared state; supervision trees + let-it-crash; virtual actor model (Orleans grains/silos); Erlang/Akka/Orleans/ProtoActor implementations
 

@@ -144,6 +144,6 @@ Implemented 2026-05-07.
 - [[concepts/llm-as-judge]] — evaluation mechanism used by the judge component
 - [[concepts/multi-vendor-adversarial-review]] — cross-vendor strategy for avoiding self-evaluation bias
 - [[concepts/agent-self-correction]] — wiki-oracle pull pattern; this system is an automatic judge push
-- [[concepts/self-refinement]] — within-turn same-model self-feedback (complements this; different scope)
+- [[summaries/self-refinement]] — within-turn same-model self-feedback (complements this; different scope)
 - [[summaries/rlhf-cai]] — RLHF/RLAIF/DPO background; inspiration for the preference signal pipeline
 - [[entities/dspy]] — programmatic prompt optimization (heavier alternative; requires training set; no human approval gate)

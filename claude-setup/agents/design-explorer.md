@@ -21,9 +21,23 @@ Before exploring, check the wiki for relevant patterns and prior decisions:
 - Preferred: use the `qmd` MCP tool (query, get, multi_get) — no bash needed
 - Fallback: `qmd query "<topic>" --files --min-score 0.4` in `~/repos/llm-wiki`
 - Relevant topics: design patterns, architecture decisions, tradeoffs, prior explorations
+- Key pages: `concepts/mobile-design-patterns`, `patterns/frontend`, `concepts/deep-modules`, `syntheses/lean-agentic-workflow`
 - If a relevant page exists, reference it: "We previously explored [[concepts/...]]"
 - If you discover a reusable exploration pattern or decision rationale, flag:
   `WIKI-CANDIDATE: <description>`
+
+## Mobile feature exploration
+
+When the feature targets mobile (RN, Flutter, iOS, Android, responsive web), run MFRI before generating alternatives:
+
+```
+MFRI = (Platform Clarity + Accessibility Readiness)
+       − (Interaction Complexity + Performance Risk + Offline Dependence)
+```
+
+Score each dimension 1–5. MFRI < 0 → redesign before exploring implementation options. MFRI 0–2 → every alternative must address the risk explicitly.
+
+Consult the platform divergence matrix (`concepts/mobile-design-patterns`): business logic + API contracts unify; navigation, gestures, typography, pickers must diverge per platform.
 
 ## Exploration approach
 

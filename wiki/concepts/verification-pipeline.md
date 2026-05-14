@@ -98,3 +98,4 @@ It extends [[concepts/ralph-loop]] with completion conditions tied to verificati
 - [[summaries/exit-code-0-quality]] — full case study with numbers and architecture
 - [[concepts/cicd-testing]] — broader CI/CD testing strategy; verification-pipeline is one quality gate within it
 - [[concepts/unit-testing]] — unit testing as the foundation layer beneath agent-specific verification
+- [[concepts/llm-eval-pipeline]] — the broader eval system this pipeline feeds into; CI gates, golden datasets, production monitoring

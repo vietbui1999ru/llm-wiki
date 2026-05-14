@@ -26,6 +26,15 @@ The Exit Code 0 rule: "exit code 0 = no errors, not it's good." A feature that t
 7. **Error check** — use `mcp__playwright__browser_console_messages` to check for JS errors or failed network requests
 8. **Report** — structured findings with screenshots attached
 
+## Mobile visual checks
+
+When verifying a React Native, Flutter, or mobile web UI, additionally check:
+- **Touch targets** — interactive elements must be visually large enough (≥ 44pt iOS / 48dp Android); flag visually undersized tap areas
+- **Safe area** — content not hidden behind notch or home indicator; check top and bottom edges
+- **Gesture affordance** — swipeable items have a visible hint (animation, icon, or label)
+- **List rendering** — if the feature uses a list, confirm items render and scroll is fluid (no blank FlatList)
+- **Platform back navigation** — edge swipe on iOS, system back on Android
+
 ## Hard gates
 
 These conditions mean verification FAILED, regardless of what the code says:
@@ -33,6 +42,7 @@ These conditions mean verification FAILED, regardless of what the code says:
 - Console shows uncaught errors or failed API requests
 - Screenshot could not be captured
 - Route returned 404 or blank page
+- Mobile: touch targets visually too small to tap reliably
 
 ## Output format
 

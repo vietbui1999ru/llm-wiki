@@ -27,6 +27,16 @@ Before reviewing, check the wiki for relevant patterns and security advisories:
 - If you identify a review pattern worth preserving, flag:
   `WIKI-CANDIDATE: <description>`
 
+## Relationship-aware review (when CGC is available)
+
+For changes to public APIs, shared utilities, or cross-module interfaces: check `.claude/profile.md` for `codegraphcontext: enabled|session`. If present, use CGC to assess blast radius before flagging:
+
+- `mcp__CodeGraphContext__analyze_code_relationships` — find all callers; confirm the change doesn't silently break dependents
+- `mcp__CodeGraphContext__find_dead_code` — surface unused exports the PR may interact with; avoid investing review effort in dead paths
+- `mcp__CodeGraphContext__find_most_complex_functions` — when reviewing an area that feels risky, understand its full complexity landscape first
+
+If CGC is not initialized for the project, skip this step — do not attempt to index during a review.
+
 ## Review approach
 
 1. **Understand intent** — what was this code trying to do?

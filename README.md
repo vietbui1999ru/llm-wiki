@@ -1,5 +1,11 @@
 # llm-wiki
 
+<div align="center">
+
+![llm-wiki graph view](assets/graphviewllm.gif)
+
+</div>
+
 A personal knowledge base on AI and agent engineering, maintained collaboratively by a human and an LLM. The human curates sources. The LLM writes, links, and maintains wiki pages. Both sides query and build on the accumulated knowledge over time.
 
 This is not a static documentation site. It is a **compounding knowledge system**: each source ingested enriches existing pages, surfaces contradictions, and creates new cross-links. Over time it becomes a queryable second brain on its domain.

@@ -73,6 +73,44 @@ If Q1 = no → write `codegraphcontext: disabled` immediately. Do not ask Q2.
 
 **Skip entirely for:** `~/repos/llm-wiki`, dotfiles repos, markdown-only repos (no source files detected).
 
+### Linting status check (coding projects only)
+
+At session start, after the CGC check:
+
+```bash
+grep "^linting:" .claude/profile.md 2>/dev/null
+```
+
+| Result | Action |
+|---|---|
+| `linting: enabled` | Remind: lint configs (`biome.json`, `eslint.config.*`, `.noslop`, etc.) are **protected** — do not edit them. Biome auto-fix runs at end of each turn. Pre-commit gate is active. |
+| `linting: disabled` | Silent skip. |
+| No output | Ask: "Enable linting for this project? (yes/no)" — if yes, run `/claude-init` linting step or install noslop manually. |
+
+**Override:** if user explicitly says "add linting" or "set up linting", run setup regardless of existing flag.
+
+### Slop register injection (coding projects only)
+
+After the linting check:
+
+```bash
+# Project-level register (highest priority)
+cat .claude/slop-register.md 2>/dev/null | grep -v "^#\|^$\|^\*empty" | wc -l
+
+# Global register
+grep -v "^#\|^$\|^\*(empty" ~/repos/llm-wiki/mistakes/slop-register.md 2>/dev/null | wc -l
+```
+
+| Result | Action |
+|---|---|
+| Project register has entries | Load `.claude/slop-register.md` into context — read it and treat every entry as a hard constraint on code generation |
+| Only global register has entries | Load `~/repos/llm-wiki/mistakes/slop-register.md` — same treatment |
+| Both empty or missing | Silent skip |
+
+**What "loaded into context" means**: read the file at session start and apply every listed pattern as a constraint — do not generate code that repeats a registered slop pattern.
+
+**Override:** if user says "show slop register" or "what's in the slop register", print the contents regardless of emptiness.
+
 ### skill check discipline (from superpowers)
 When superpowers is enabled, the `using-superpowers` skill loads this at startup.
 When it's not enabled, treat this rule as the equivalent:

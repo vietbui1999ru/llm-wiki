@@ -320,3 +320,17 @@ Sources ingested: "A pragmatic guide to LLM evals for devs.md", "LLM Evals Every
 New summaries: pragmatic-engineer-llm-evals, hamel-evals-faq, selecting-ai-evals-tool, hamel-evals-skills.
 New concept pages: llm-eval-pipeline, rag-evaluation.
 ## [2026-05-13] ingest | Gesture Navigation Best Practices + Mobile Design SKILL.md + Top 8 Claude Skills for UI/UX
+
+## [2026-05-15] ingest | CC Linting & Debugging — r/ClaudeCode Community
+
+Source: "ve been too afraid to ask, but... do we have linting and debugging in Claude Code? Be kind.md"
+New summary: cc-linting-debugging-reddit.
+Key insight captured: file-modifying linters must run in Stop hook (not PostToolUse) to avoid CC Edit file-state conflict.
+Informed linting hook architecture: lint-on-write.sh (PostToolUse, read-only), lint-autofix.sh (Stop, biome --write), protect-lint-configs.sh (PreToolUse, blocks config edits).
+
+## [2026-05-17] ingest | How to Avoid AI Code Slop + Clean Code in AI-Assisted Workflows
+
+Sources: "How to Avoid AI Code Slop.md", "What Is Clean Code? A Guide to Principles and Best Practices.md"
+New summaries: avoiding-ai-code-slop, clean-code-ai-assisted.
+Updated concept: ai-specific-pitfalls — added over-engineering, defensive overreach, cargo-cult patterns (3 new failure modes from Aviator source).
+Key new concepts: intent-driven verification (spec-first workflow), slop register (per-codebase AI failure pattern registry).

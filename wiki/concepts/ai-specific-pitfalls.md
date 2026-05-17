@@ -2,9 +2,9 @@
 title: "AI-Specific Code Pitfalls"
 type: concept
 tags: [ai-agents, code-review, pitfalls, security, testing]
-sources: [Review AI-generated code.md, General Best Practices for vetting AI Code.md]
+sources: [Review AI-generated code.md, General Best Practices for vetting AI Code.md, How to Avoid AI Code Slop.md, What Is Clean Code? A Guide to Principles and Best Practices.md]
 created: 2026-04-22
-updated: 2026-05-12
+updated: 2026-05-17
 ---
 
 # AI-Specific Code Pitfalls
@@ -30,6 +30,15 @@ Agent solves a simplified version of the problem. Misses a documented constraint
 
 **Context window blindness**
 Agent doesn't see all relevant code. Produces solutions that are locally correct but conflict with code in other files it wasn't given.
+
+**Over-engineering**
+AI is trained on enterprise patterns and production architectures. Asked for 15 lines, produces a 200-line abstraction layer anticipating generality nobody requested. Passes review because the code is technically correct.
+
+**Defensive overreach**
+Excessive try-catch blocks, silent error absorption, redundant logging. Code "handles" failures gracefully by swallowing them silently, making debugging substantially harder. Looks thorough; actually obscures failure modes.
+
+**Cargo-cult patterns**
+Copies patterns (retry logic, circuit breakers, error handling) without the reasoning behind them. The pattern is present; the precondition for using it is not. Hard to catch because the code looks idiomatic.
 
 ## Review heuristics
 

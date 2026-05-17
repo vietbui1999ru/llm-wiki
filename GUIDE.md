@@ -166,6 +166,8 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 | `code-review:code-review` | `/code-review`                          | Code review a pull request                                                                       |
 | `/review`                 | `/review`                               | Review a pull request (alias)                                                                    |
 | `/security-review`        | `/security-review`                      | Full OWASP + AI-specific security audit; structured threat report                                |
+| `/verify-spec`            | `/verify-spec`                          | After implementation: agent pass verifies each AC (pass/fail/partial), then generates test stubs for failing ACs |
+| `/capture-slop`           | `/capture-slop`                         | After code review or bug post-mortem: record a recurring AI failure pattern to the slop register |
 
 ---
 
@@ -190,13 +192,15 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 
 The mistakes pipeline: `capture-mistake` → individual `mistakes/YYYY-MM-DD-*.md` → `synthesize-mistakes` → `global-prevention-rules.md` → loaded every session.
 
+The slop pipeline: `capture-slop` → `mistakes/slop-register.md` (or `.claude/slop-register.md` per-project) → auto-loaded at session start when entries exist → applied as hard constraints on code generation.
+
 ---
 
 ### 3.6 Project setup & config
 
 | Skill                                     | Invoke                      | When to use                                                                |
 | ----------------------------------------- | --------------------------- | -------------------------------------------------------------------------- |
-| `/claude-init`                            | `/claude-init`              | Project onboarding — checks CGC flag in profile.md first; if missing, scans codebase and asks "Add CGC?" (session/daemon/no); then asks 7 questions to set up CLAUDE.md and profile.md |
+| `/claude-init`                            | `/claude-init`              | Project onboarding — checks CGC flag in profile.md first; if missing, scans codebase and asks "Add CGC?" (session/daemon/no); then asks 7 questions + offers linting (noslop+biome+shellcheck) to set up CLAUDE.md and profile.md |
 | `/init`                                   | `/init`                     | Initialize a new CLAUDE.md file                                            |
 | `update-config`                           | `/update-config`            | Configure settings.json: permissions, hooks, env vars, automated behaviors |
 | `keybindings-help`                        | `/keybindings-help`         | Customize keyboard shortcuts, rebind keys, chord bindings                  |
@@ -344,6 +348,17 @@ Enabled plugins that provide skills and hooks.
 | `claude-code-setup` | CC automation analysis and configuration |
 | `agent-sdk-dev` | Claude Agent SDK app scaffolding |
 
+### Global hooks (`~/.claude/hooks/`)
+
+Always-on hooks, wired in `settings.json`. No per-project setup needed.
+
+| Hook | Trigger | Script | Purpose |
+|---|---|---|---|
+| protect-lint-configs.sh | PreToolUse Write/Edit | blocks edit | Prevents Claude editing biome.json, .eslintrc*, .noslop, etc. |
+| enforce-agent-whitelist.sh | PreToolUse Agent | blocks unlisted | Bans unlisted `subagent_type`; whitelist = `~/.claude/agents/*.md` + known plugin agents |
+| lint-on-write.sh | PostToolUse Write/Edit | read-only report | shellcheck on .sh, jq on .json, biome check on .ts (if linting:enabled) |
+| lint-autofix.sh | Stop | auto-fix | biome check --write on changed .ts/.tsx (if linting:enabled in profile.md) |
+
 ---
 
 ## 6. Scenario Playbooks
@@ -356,13 +371,18 @@ Enabled plugins that provide skills and hooks.
     missing → scan codebase (file count, languages, infra)
               ask "Add CGC?" → session / daemon / no
               write flag to profile.md (no = disabled, never ask again)
-→ Asks 7 questions → writes profile.md + CLAUDE.md
+→ Asks 7 questions + linting offer → writes profile.md + CLAUDE.md
+    linting: enabled  → installs noslop (pre-commit quality gates), wires biome+shellcheck hooks
+    linting: disabled → hooks skip for this project
 
 Subsequent sessions (no /claude-init needed):
-→ startup rule auto-checks flag
+→ startup rule auto-checks codegraphcontext flag
     enabled  → verify index live
     session  → ask "re-index?"
     disabled → silent skip, no questions ever
+→ startup rule auto-checks linting flag
+    enabled  → reminder: lint configs are protected; biome auto-fix runs at Stop
+    disabled → silent skip
 
 After init — use query routing:
   "where is X defined"           → grep/ripgrep
@@ -373,6 +393,30 @@ After init — use query routing:
   "overall structure"            → CGC: get_repository_stats
 
 Override: say "check CGC for this repo" to re-run even if disabled.
+```
+
+### "I want to add linting to a project"
+```
+/claude-init  (or just say "add linting")
+→ Installs noslop quality gates as pre-commit hooks (per-project):
+    npx noslop@latest init ts    # TypeScript
+    npx noslop@latest init py    # Python
+→ Writes linting: enabled to .claude/profile.md
+
+Active hooks (always-on globally, no per-project setup):
+  PreToolUse  Write/Edit/MultiEdit → protect-lint-configs.sh
+              Blocks edits to: biome.json, .eslintrc*, .noslop, .golangci.yml, etc.
+              Prevents Claude from writing rule exceptions for itself
+  PostToolUse Write/Edit/MultiEdit → lint-on-write.sh (read-only reporters)
+              .sh  → shellcheck --severity=warning
+              .json → jq . validation
+              .ts/.tsx → biome check (only if linting:enabled)
+  Stop                             → lint-autofix.sh (auto-fix at end of turn)
+              biome check --write on changed .ts/.tsx files (only if linting:enabled)
+  Pre-commit                       → noslop quality gates (hard gate — blocks bad commits)
+              CC≤10, cognitive≤15, fn≤80lines, file≤350lines, params≤4, nesting≤4
+
+Override: say "add linting" to re-run setup even if linting:disabled.
 ```
 
 ### "I want to build a new feature"
@@ -397,6 +441,22 @@ After any code/plan/design response:
 → /judge triggers automatically (preference feedback loop)
 → /judge-report to see the full session evaluation history
 → On second consecutive low score for a dimension: rule drafted for approval
+```
+
+### "I want to prevent AI slop in my codebase"
+```
+Spec-first (prevent slop at source):
+1. /grill-me       → nail down scope + acceptance criteria before any code
+2. /to-prd         → capture as spec (GitHub issue or local PRD file)
+3. Implement       → /tdd or AI-assisted generation against the spec
+4. /verify-spec    → agent pass: each AC gets PASS/FAIL/PARTIAL in ~minutes
+                     → test stubs generated for failing ACs
+5. /tdd            → drive stubs to green (hard gate)
+
+Slop register (capture patterns to prevent recurrence):
+- After code review or /diagnose reveals a recurring AI failure:
+  /capture-slop → writes to mistakes/slop-register.md (or .claude/slop-register.md)
+- Register auto-loads at session start → applied as hard constraints
 ```
 
 ### "I want to learn by doing (not just copy)"

@@ -72,6 +72,9 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/owasp-mcp-security]] — OWASP MCP Security: 9 key risks (tool poisoning, rug pull, tool shadowing, confused deputy), 12 best practices incl. SHA-256 tool hash pinning, ECDSA message signing, bind to 127.0.0.1, mcp-scan
 - [[summaries/worktrees-parallel-agents]] — 4 failure modes of shared-repo multi-agent; what worktrees fix (file conflicts, lock contention) vs don't fix (runtime isolation, logical conflicts); worktree-per-task vs per-agent; Galactic, Block agent-task-queue, Switchman, Intent architecture
 - [[summaries/top-8-claude-skills-uiux]] — 8 UI/UX skills catalog + Agent Skills architecture (3-tier loading, supply chain risk); Vercel RN/React/composition skills, AccessLint, Anthropic frontend-design
+- [[summaries/cc-linting-debugging-reddit]] — r/ClaudeCode community: Stop hook for file-modifying linters (file-state conflict); PostToolUse read-only only; noslop quality gates; layered shellcheck/biome/pre-commit setup; gdb/Replay MCP/JetBrains debugger
+- [[summaries/avoiding-ai-code-slop]] — Intent-driven verification (spec-first before code generation); 6 slop failure modes incl. over-engineering/defensive overreach/cargo-cult; slop register; Aviator experiment: 65 AC verified in 6 min by second agent
+- [[summaries/clean-code-ai-assisted]] — Uncle Bob's clean code principles + AI-specific failure modes (long methods, duplicated logic, hardcoded secrets, insecure deps); research citations; AWS AI outage incident
 
 ## Entities
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated

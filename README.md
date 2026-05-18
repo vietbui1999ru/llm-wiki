@@ -388,6 +388,8 @@ council "your question here"
 
 ## Authoring Rules (for the LLM)
 
+- **Model tier auto-selection.** Before any task, classify complexity: Haiku for bounded mechanical work, Sonnet (default) for most tasks, Opus for architecture/security/irreversible decisions/cross-source synthesis. When spawning agents, always set the `model` param explicitly. If a task warrants Opus but the session runs on Sonnet, flag it before proceeding.
+- **Default stance: uncertain.** All answers, analysis, and reviews are provisional unless backed by a wiki page with a cited source or context7-verified current documentation. Training data alone is not sufficient — prefix unsourced claims with `(training data — verify)`.
 - **Cite sources precisely.** Self-reported README claims are not benchmarks. Write `(claimed, unverified)` for unverified numbers.
 - **Verify model names.** Check against a public provider catalog before adding to routing tables.
 - **Keep index.md in sync.** After updating a page's core claim, grep for all cross-references and check for drift.

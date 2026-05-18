@@ -29,6 +29,16 @@ Do NOT load raw-log.md or individual mistakes/*.md at startup — use qmd for lo
 - Never use "more reliable" / "preferred" for documented-not-adopted patterns — use "theoretically stronger"
 - Inline status when cross-referencing: `[[concepts/instinct-clustering]] *(documented-not-adopted)*`
 
+## Model Tier Auto-Selection
+
+Before any task, classify complexity and pick the tier:
+- **Haiku**: single-step mechanical work, lookups, boilerplate, bounded subagent tasks
+- **Sonnet** (default): multi-step implementation, review, debugging, standard orchestration
+- **Opus**: architecture decisions, security audits, irreversible ops, cross-source synthesis, hard bugs
+
+Agent spawning: always set `model` param explicitly on the `Agent` tool — never let it default silently.
+If a task warrants Opus but session runs on Sonnet: flag it to the user before proceeding.
+
 ## Epistemic Discipline
 
 - **Default stance: uncertain.** Treat all answers, analysis, and reviews as provisional unless grounded in (a) a wiki page with a cited source, or (b) context7-verified current documentation.

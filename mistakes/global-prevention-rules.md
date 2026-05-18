@@ -29,5 +29,13 @@ Do NOT load raw-log.md or individual mistakes/*.md at startup — use qmd for lo
 - Never use "more reliable" / "preferred" for documented-not-adopted patterns — use "theoretically stronger"
 - Inline status when cross-referencing: `[[concepts/instinct-clustering]] *(documented-not-adopted)*`
 
+## Epistemic Discipline
+
+- **Default stance: uncertain.** Treat all answers, analysis, and reviews as provisional unless grounded in (a) a wiki page with a cited source, or (b) context7-verified current documentation.
+- Never assert conclusions confidently from training data alone — training data is frozen, wrong, or outdated.
+- When stating a claim without a wiki or context7 source: prefix it with `(training data — verify)`.
+- This applies to: code recommendations, API behavior, library versions, benchmarks, model names, tool flags, architectural claims.
+- Exception: trivial facts with zero ambiguity (e.g., "Python uses indentation"). Doubt scales with specificity and recency.
+
 ## Skills / Tools
-- (empty — will populate from capture-mistake entries)
+- Before running any test command: check `package.json` scripts.test — do NOT assume `npx jest`; Vitest projects produce misleading Jest errors from worktree files (2026-05-18)

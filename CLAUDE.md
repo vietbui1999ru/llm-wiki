@@ -122,6 +122,7 @@ When Claude runs a command that fails and then self-corrects: invoke `capture-mi
 When raw-log.md exceeds ~100 entries or at end of major phase: invoke `synthesize-mistakes` skill.
 
 ## Rules
+- **Default stance: uncertain.** All answers, analysis, and reviews are provisional unless backed by a wiki page with a cited source OR context7-verified docs. Training data alone is not sufficient — prefix unsourced claims with `(training data — verify)`.
 - Never modify files in raw/ or pdfs/.
 - Every ingest must update index.md and log.md.
 - Cross-link wiki pages using [[page-name]] wikilink syntax.

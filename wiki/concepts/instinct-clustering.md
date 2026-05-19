@@ -1,11 +1,12 @@
 ---
 title: "Instinct Clustering (Homunculus Pattern)"
 type: concept
-tags: [memory, behavioral-learning, agent-harness, context-management, opencode]
-sources: ["Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md"]
-status: documented-not-adopted
+tags: [memory, behavioral-learning, agent-harness, context-management, opencode, continuous-learning]
+sources:
+  - "Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md"
+  - "vietbui1999rueverything-claude-code The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond..md"
 created: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-19
 ---
 
 # Instinct Clustering (Homunculus Pattern)
@@ -97,6 +98,30 @@ Instinct clustering is the only **implicit** pattern — it requires no agent ac
 
 ---
 
+## ECC v2 — Production Implementation
+
+[[entities/everything-claude-code]] (ECC) ships a concrete, production-grade implementation in `skills/continuous-learning-v2/`. This upgrades the pattern from theoretically described to **adoptable**.
+
+### ECC v1 (Stop-hook pipeline)
+`session-end.js` (Stop hook) → `evaluate-session.js` → writes to `skills/learned/`. Problem: without triage, duplicates accumulate.
+
+### ECC v2 (Instinct-based with confidence scoring)
+
+```
+/instinct-status      # view learned instincts with confidence scores
+/instinct-import      # import instincts from others / other sessions
+/instinct-export      # share your instinct collection
+/evolve               # cluster related instincts into reusable skills
+/prune                # delete expired instincts (30-day TTL)
+/learn-eval           # extract + evaluate patterns before saving
+```
+
+**Confidence scoring** is the key addition over v1 — it filters out low-signal patterns before injection, preventing prompt bloat from low-quality learned behaviors.
+
+**`/learn-eval` vs `/learn`**: `/learn` extracts and saves immediately; `/learn-eval` adds an evaluation step (confidence scoring, deduplication check) before writing. Prefer `/learn-eval` in production to avoid accumulating noise.
+
+---
+
 ## Honcho
 
 `toadi` in the r/opencodeCLI thread mentioned [Honcho](https://github.com/plastic-labs/honcho) as an alternative memory system: "It captures well. But my problem is that I can not make the models use the memories well." This is the adoption problem — memory systems that capture well but aren't queried are inert. Instinct injection at session start sidesteps this by pushing high-confidence patterns rather than waiting for the agent to pull.
@@ -109,4 +134,5 @@ Instinct clustering is the only **implicit** pattern — it requires no agent ac
 - [[concepts/agentic-memory-tool]] — explicit cross-session memory (Anthropic)
 - [[entities/mnemory]] — explicit cross-session memory (OSS)
 - [[entities/opencode]] — plugin system that implements this pattern
+- [[entities/everything-claude-code]] — ECC: production implementation of this pattern
 - [[concepts/context-compression]] — what gets injected competes with task context

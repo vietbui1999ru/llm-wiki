@@ -334,3 +334,17 @@ Sources: "How to Avoid AI Code Slop.md", "What Is Clean Code? A Guide to Princip
 New summaries: avoiding-ai-code-slop, clean-code-ai-assisted.
 Updated concept: ai-specific-pitfalls — added over-engineering, defensive overreach, cargo-cult patterns (3 new failure modes from Aviator source).
 Key new concepts: intent-driven verification (spec-first workflow), slop register (per-codebase AI failure pattern registry).
+
+## [2026-05-19] ingest | Everything Claude Code (ECC)
+
+Sources: "vietbui1999rueverything-claude-code The agent harness performance optimization system...md"
+New summaries: summaries/everything-claude-code
+New entities: entities/everything-claude-code, entities/agentshield
+Updated concepts:
+  - concepts/instinct-clustering — removed documented-not-adopted status; added ECC v2 as reference implementation (confidence scoring, /evolve, /prune, /learn-eval)
+  - concepts/context-compression — added strategic compaction checkpoints; token optimization settings (MAX_THINKING_TOKENS, CLAUDE_AUTOCOMPACT_PCT_OVERRIDE, CLAUDE_CODE_SUBAGENT_MODEL)
+  - concepts/context-window — added MCP server context cost section (claimed: 200K→~70K with too many MCPs; cap <10 servers, <80 tools)
+Updated comparisons:
+  - comparisons/cc-to-cross-platform-migration — updated hooks section with event counts (CC:8, OpenCode:20+, Cursor:15); added GitHub Copilot and Zed sections; DRY adapter pattern
+Key new patterns: hook runtime controls (ECC_HOOK_PROFILE env var), context injection modes (dev/review/research), skill creator from git history, AgentShield 3-agent security pipeline
+Note: component counts (60 agents, 232 skills, 102 rules) and impact numbers are claimed from ECC README — not independently verified.

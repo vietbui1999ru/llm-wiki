@@ -114,6 +114,29 @@ His argument: compaction introduces "sediment" — each compressed summary is im
 
 **OpenCode hook extension**: OpenCode exposes `experimental.session.compacting` — a hook that lets plugins inject domain state into compaction summaries or replace the compaction prompt entirely. This enables custom anchored iterative summarization at the harness level, more reliable than system-prompt instructions. See [[comparisons/claude-code-vs-opencode-plugins]].
 
+## Strategic Compaction Checkpoints
+
+From ECC's `strategic-compact` skill — explicit heuristics for *when* to compact:
+
+**Compact at logical seams:**
+- After research/exploration, before implementation begins
+- After completing a milestone, before starting the next task
+- After debugging session ends, before resuming feature work
+- After a failed approach, before trying a different strategy
+
+**Do not compact:**
+- Mid-implementation — you'll lose variable names, file paths, partial state
+- Mid-debugging — you'll lose the chain of reasoning that is the artifact
+
+**Token optimization settings** that complement compaction (from [[entities/everything-claude-code]]):
+- `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50` — compact at 50% of context (vs default 95%) — prevents quality degradation from near-full context
+- `MAX_THINKING_TOKENS=10000` — caps hidden thinking cost per request (claimed ~70% reduction)
+- `CLAUDE_CODE_SUBAGENT_MODEL=haiku` — subagents use a cheaper model tier
+
+All claimed impact numbers from ECC README; not independently verified. The pattern itself aligns with community consensus on token efficiency.
+
+---
+
 ## Related Pages
 
 - [[concepts/context-degradation]] — the failure modes compression prevents
@@ -121,3 +144,4 @@ His argument: compaction introduces "sediment" — each compressed summary is im
 - [[concepts/ralph-loop]] — filesystem as durable state across clean context windows (the complement to compression)
 - [[summaries/mattpocockworkflow]] — Pocock's workflow that makes clearing safe by externalizing state
 - [[concepts/dynamic-context-pruning]] — mid-session context reduction via Compress tool + deduplication + purge-errors; complements compaction
+- [[summaries/everything-claude-code]] — ECC's `strategic-compact` skill and token optimization settings

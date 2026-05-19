@@ -75,8 +75,11 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/cc-linting-debugging-reddit]] — r/ClaudeCode community: Stop hook for file-modifying linters (file-state conflict); PostToolUse read-only only; noslop quality gates; layered shellcheck/biome/pre-commit setup; gdb/Replay MCP/JetBrains debugger
 - [[summaries/avoiding-ai-code-slop]] — Intent-driven verification (spec-first before code generation); 6 slop failure modes incl. over-engineering/defensive overreach/cargo-cult; slop register; Aviator experiment: 65 AC verified in 6 min by second agent
 - [[summaries/clean-code-ai-assisted]] — Uncle Bob's clean code principles + AI-specific failure modes (long methods, duplicated logic, hardcoded secrets, insecure deps); research citations; AWS AI outage incident
+- [[summaries/everything-claude-code]] — ECC harness performance system: 60 agents/232 skills/hooks/rules; instinct-based continuous learning v2; AgentShield security scanner; token optimization settings; 9-harness cross-platform support
 
 ## Entities
+- [[entities/everything-claude-code]] — Agent harness performance system (ECC): plugin + manual install; 9-harness support; DRY adapter pattern; instinct clustering; AgentShield
+- [[entities/agentshield]] — Security scanner for CC configs: 5 scan categories (secrets/permissions/hooks/MCP/agents), 102 rules, 3-agent Opus red-team pipeline
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
 - [[entities/eggroll]] — Low-rank ES optimizer from Oxford; 100× GPU speedup over naïve ES; trains non-differentiable (int8) architectures; companion to EGG model
 - [[entities/qmd]] *(stub)* — Local hybrid markdown search engine (BM25 + vector); CLI + MCP server
@@ -138,7 +141,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/multi-vendor-adversarial-review]] — Using different model/vendor to review agent work; catches single-model blind spots; same-tier vs cross-vendor vs /council
 - [[concepts/branch-strategy-for-agents]] — head vs merge-to-head vs branch; when to use each; relation to worktrees and human-merge gates
 - [[concepts/agent-self-correction]] — wiki-as-runtime-oracle; deviation trigger table; qmd queries for re-alignment; zero startup overhead
-- [[concepts/instinct-clustering]] *(documented-not-adopted)* — behavioral pattern mining from tool-call telemetry; observe→cluster→inject pipeline; homunculus pattern
+- [[concepts/instinct-clustering]] — behavioral pattern mining from tool-call telemetry; observe→cluster→inject pipeline; homunculus pattern; ECC v2 is the reference implementation (confidence scoring, /evolve, /prune)
 - [[concepts/dynamic-context-pruning]] — mid-session context reduction via Compress tool (model-driven) + deduplication + purge-errors; complements compaction; `@tarquinen/opencode-dcp`
 - [[concepts/council-pattern]] — 3-stage multi-model deliberation: parallel dispatch → optional anonymized peer review → Chairman or human synthesis; Stage 2 optional; cost model; when to use
 - [[concepts/worktree-isolation]] — git worktrees for agent filesystem isolation; ToS-compliant sandboxing alternative; scope overlap, merge-before-cleanup; runtime isolation gap (ports); worktree-per-task vs per-agent; git worktree lock, rerere, sparse-checkout
@@ -180,7 +183,7 @@ Catalog of all pages. Updated on every ingest operation.
 ## Comparisons
 - [[comparisons/spec-driven-frameworks-vs-native]] — Heavy frameworks vs lean skills vs vanilla vs custom harness; community consensus; discrepancies with prior wiki
 - [[comparisons/claude-code-vs-opencode-plugins]] — Hook surface, compaction control, custom tools; OpenCode's compaction hook as key differentiator
-- [[comparisons/cc-to-cross-platform-migration]] — Full migration matrix: CC rules/skills/subagents/hooks/plugins → Gemini/OpenCode/Codex/Cursor; parity rating per layer
+- [[comparisons/cc-to-cross-platform-migration]] — Full migration matrix: CC rules/skills/subagents/hooks/plugins → Gemini/OpenCode/Codex/Cursor/Copilot/Zed; parity rating per layer; hook event counts; DRY adapter pattern
 
 ## Syntheses
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern

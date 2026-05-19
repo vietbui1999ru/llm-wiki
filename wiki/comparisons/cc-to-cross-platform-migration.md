@@ -1,8 +1,9 @@
 ---
 title: "Claude Code → Cross-Platform Migration Matrix"
 type: comparison
-tags: [cross-platform, migration, claude-code, opencode, codex, gemini, cursor]
-sources: []
+tags: [cross-platform, migration, claude-code, opencode, codex, gemini, cursor, copilot, zed]
+sources:
+  - "vietbui1999rueverything-claude-code The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond..md"
 urls:
   - "https://geminicli.com/docs/cli/gemini-md/"
   - "https://opencode.ai/docs/commands/"
@@ -78,13 +79,18 @@ Layer-by-layer mapping of CC assets to equivalent mechanisms on Gemini CLI, Open
 
 ## Hooks (Automated Triggers)
 
-| Asset | Claude Code | Gemini CLI | OpenCode | Codex | Cursor |
-|---|---|---|---|---|---|
-| System | `PreToolUse`, `PostToolUse`, `Stop` in `settings.json` | None | Plugin event system (`session.idle`, `session.compacting`, etc.) | None | None |
-| Current setup | PostToolUse on Bash → `publish-ai-kb.sh` | — | Already done: lean-compaction-plugin.ts | — | — |
-| **Parity** | — | None | Partial (different event model) | None | None |
+| Asset | Claude Code | Gemini CLI | OpenCode | Codex | Cursor | GitHub Copilot |
+|---|---|---|---|---|---|---|
+| System | `PreToolUse`, `PostToolUse`, `Stop` in `settings.json` | None | Plugin event system (20+ event types) | None | Project-local hook events (15 types) | None |
+| Event count | 8 types | — | 20+ types | — | 15 types | — |
+| Current setup | PostToolUse on Bash → `publish-ai-kb.sh` | — | Already done: lean-compaction-plugin.ts | — | — | — |
+| **Parity** | — | None | Highest (more events than CC) | None | Medium (different events, DRY adapter) | None |
 
-**Migration action**: OpenCode hook equivalent is the plugin system — already done (`lean-compaction-plugin.ts`). No hook equivalent on Gemini, Codex, or Cursor.
+**OpenCode leads on hooks**: OpenCode has more hook event types than Claude Code. Additional events include `file.edited`, `file.watcher.updated`, `message.updated`, `lsp.client.diagnostics`. The compaction hook (`session.compacting`) has no CC equivalent.
+
+**Cursor hook architecture**: Cursor has 15 hook types vs CC's 8. ECC uses a DRY adapter pattern — `adapter.js` transforms Cursor's stdin JSON to Claude Code's format, so the same `scripts/hooks/*.js` run on both harnesses. Notable Cursor-only hooks: `beforeSubmitPrompt` (secrets detection in prompts), `beforeTabFileRead` (blocks reading `.env`/`.pem` files).
+
+**Migration action**: OpenCode hook equivalent is the plugin system — already done (`lean-compaction-plugin.ts`). No hook equivalent on Gemini, Codex, or Copilot.
 
 ---
 
@@ -115,6 +121,28 @@ Layer-by-layer mapping of CC assets to equivalent mechanisms on Gemini CLI, Open
 `templates/council.py` — **100% portable**. Runs anywhere Python + GITHUB_TOKEN available. Platform-agnostic by design.
 
 ---
+
+## GitHub Copilot (VS Code)
+
+No hook system, no subagent API. Instruction + prompt layer only.
+
+| Component | Copilot equivalent |
+|---|---|
+| CLAUDE.md rules | `.github/copilot-instructions.md` (always-loaded) |
+| Skills | `.github/prompts/*.prompt.md` (on-demand) |
+| Per-task context | `.vscode/settings.json` per-task instruction files |
+| Hook automations | Not supported |
+| Subagents / agents | Not supported |
+
+**Practical limit**: Copilot delivers the ECC *philosophy* (standards, security, TDD, workflow) but not the *enforcement* (hooks, agents, isolation). Use for basic coding discipline on VS Code-centric teams; use Claude Code or Cursor for full harness enforcement.
+
+## Zed
+
+Project-local `.zed/` adapter. Writes ECC-managed files under `.zed/`, flattened rules, agents, commands, skills. No dedicated hook system. BYOK/OpenRouter credentials must be configured through Zed's settings UI, not in the repo.
+
+```bash
+./install.sh --profile minimal --target zed
+```
 
 ## What's Already Cross-Platform
 
@@ -147,7 +175,9 @@ Layer-by-layer mapping of CC assets to equivalent mechanisms on Gemini CLI, Open
 - [[summaries/opencode-commands-agents]] — OpenCode commands, rules, agents
 - [[summaries/codex-agents-skills]] — Codex TOML agents + native skills
 - [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules + background agents
+- [[summaries/everything-claude-code]] — ECC cross-harness parity table (source for Cursor/Copilot/Zed data)
 - [[entities/agents-md-format]] — AGENTS.md cross-tool compatibility table
+- [[entities/everything-claude-code]] — ECC entity with full cross-harness matrix
 - [[concepts/agent-context-instructions]] — the concept all these implement
 - [[concepts/agent-skills]] — CC skills; what each platform replaces
 - [[concepts/agent-subagents]] — CC subagents; migration target per platform

@@ -77,9 +77,24 @@ This means the same model has different effective context depending on how you a
 
 See [[summaries/claude-usage-limits]] for the full product-level limit model.
 
+## MCP Server Context Cost
+
+In Claude Code, each enabled MCP server contributes its tool descriptions to the system prompt, consuming tokens from the context window. ECC reports that running too many MCP servers can reduce the effective 200K window to approximately 70K tokens (claimed, unverified — no independent methodology cited).
+
+Practical limits recommended by ECC:
+- Keep under 10 MCP servers enabled per project
+- Keep under 80 active tools total
+
+Disable unused MCP servers via `/mcp` in Claude Code — these choices persist in `~/.claude.json`, not `settings.json` (which is not a reliable toggle for already-loaded servers).
+
+This is a practical instance of [[concepts/context-engineering]]: curating what's in context includes curating which tools are loaded, not just what content you send.
+
+---
+
 ## Related Pages
 
 - [[concepts/context-engineering]] — engineering discipline for curating what's in context
 - [[concepts/context-degradation]] — five named failure modes when context fills up
 - [[concepts/context-compression]] — strategies for compressing context to extend effective window
 - [[concepts/agentic-memory-tool]] — API primitives for managing long-running agent context
+- [[summaries/everything-claude-code]] — ECC's MCP count recommendations and token optimization settings

@@ -25,7 +25,11 @@ Do workers need to talk to each other?
 
 Is work genuinely parallel with non-overlapping file scope?
   → No: single session or sequential subagents
-  → Yes, 3-5 independent pieces: AGENT TEAM
+  → Yes, parallel bug investigation (reactive, short): /superpowers:dispatching-parallel-agents
+  → Yes, parallel feature implementation (proactive, structured tasks): AGENT TEAM or WORKTREE POOL
+      → tasks short (<30 min), ≤5: AGENT TEAM (in-process, shared task list)
+      → tasks long (>30 min), or >5 tasks, or need clean context: WORKTREE POOL
+          → invoke /spawn-parallel-agents skill
 ```
 
 ## Model Tier Routing
@@ -62,7 +66,24 @@ From [[concepts/agent-teams]] and DeepMind findings:
 - **Self-coordinating**: teammates claim tasks from shared list; lead synthesizes.
 - Unstructured "bags of agents" amplify errors **17.2x**. Coordination failures = 36.9% of all failures.
 
-Use teams for: parallel research/review, competing hypothesis debugging, cross-layer feature work.
+Use teams for: parallel research/review, competing hypothesis debugging, cross-layer feature work (tasks short enough to fit in one context window).
+
+## Worktree Pool Pattern
+
+Use instead of agent teams when:
+- Tasks take >30 min each (context would degrade before completion)
+- More than 5 parallel tasks (teams cap at ~5)
+- Each agent needs a clean, reproducible starting state
+- Tasks are independent features with no mid-task coordination
+
+**How it works:** each agent gets its own git worktree (isolated filesystem) + fresh context window. Agents claim tasks from a shared inbox in the main checkout via atomic `mv`. No in-process coordination — agents are fully independent processes.
+
+**Key principle:** task inbox lives in the main checkout (not in any worktree). All worktrees reach it via:
+```bash
+MAIN_REPO=$(dirname "$(git rev-parse --git-common-dir)")
+```
+
+See [[concepts/shared-task-queue]] and [[concepts/worktree-isolation]] for full design.
 
 ## Harness Principles
 
@@ -115,4 +136,13 @@ Each owns a distinct scope → lead synthesizes findings
 Spawn 3-5 teammates, each with a different theory
 Teammates debate and try to disprove each other
 Surviving theory = actual root cause
+```
+
+**Worktree pool (long parallel tasks):**
+```
+invoke /spawn-parallel-agents skill
+  → reads .agents/inbox/ (or open issue files)
+  → verifies non-overlapping file scope
+  → spawns N agents in isolated worktrees (isolation: "worktree")
+  → each agent claims its task, works, commits, signals done
 ```

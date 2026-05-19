@@ -8,6 +8,26 @@ allowed-tools: "Bash,Read"
 
 Load relevant wiki knowledge into context before proceeding with the task.
 
+## Step 0: Resolve library/tool docs via context7 (if applicable)
+
+If the task involves a specific library, framework, CLI tool, SDK, or API:
+
+```
+# 1. Resolve the library ID
+mcp__context7__resolve-library-id: {"libraryName": "<library name>"}
+
+# 2. Query relevant docs
+mcp__context7__query-docs: {"context7CompatibleLibraryID": "<id>", "topic": "<specific question>", "tokens": 3000}
+```
+
+When to invoke context7:
+- Before writing code that uses a library API or CLI
+- When uncertain about a flag, parameter, or method name
+- Before any `pip install`, `npm install`, or CLI invocation you haven't used recently
+- When the wiki summary for a tool exists but may be out of date
+
+Skip context7 when: the task is pure reasoning, git ops, or file manipulation with no external library.
+
 ## Step 1: Identify search terms
 
 Extract 2–3 keywords from the current task. Examples:
@@ -15,19 +35,28 @@ Extract 2–3 keywords from the current task. Examples:
 - "review for security" → search `security code review patterns`
 - "context window filling" → search `context compression degradation`
 
-## Step 2: Search the wiki
+## Step 2: Search wiki + mistakes
 
-Preferred — use the qmd MCP tool (already connected, no bash needed):
+Always search both collections:
+
 ```
+# Wiki knowledge
 qmd query: [{type:'lex', query:'TERM1'}, {type:'vec', query:'TERM2 TERM3'}]
-intent: 'brief description of what you're looking for'
+intent: 'what you're looking for'
 collection: 'wiki'
 minScore: 0.4
+
+# Past mistakes relevant to the task domain
+qmd query: [{type:'lex', query:'TERM1 error fix'}, {type:'vec', query:'TERM1 mistake prevention'}]
+intent: 'past errors in this domain'
+collection: 'wiki'
+minScore: 0.5
 ```
 
-Fallback — CLI:
+If qmd MCP unavailable, CLI fallback:
 ```bash
 cd ~/repos/llm-wiki && qmd query "TERM1 TERM2" --files --min-score 0.4
+cat mistakes/global-prevention-rules.md
 ```
 
 ## Step 3: Load relevant pages
@@ -50,10 +79,20 @@ If you discover a reusable pattern not in the wiki, flag:
 
 ## What's in the wiki
 
-**Agent engineering**: agent-harness, ralph-loop, agent-skills, agent-subagents, agent-teams, verification-pipeline, context-degradation, context-compression, tool-design-for-agents, agent-context-instructions, agentic-sandbox-controls, indirect-prompt-injection
+**Agent engineering**: agent-harness, ralph-loop, agent-skills, agent-subagents, agent-teams, verification-pipeline, context-degradation, context-compression, tool-design-for-agents, agent-context-instructions, agentic-sandbox-controls, indirect-prompt-injection, claude-code-plugins, domain-glossary
+
+**Development workflow**: unit-testing, cicd-testing, software-documentation, deep-modules
 
 **Code quality**: ai-code-review, ai-specific-pitfalls, contextual-retrieval, reranking, bm25
 
-**Infra**: web-fingerprinting, proxy-rotation, webrtc-ip-leak
+**ML / AI research**: evolution-strategies, summaries/openai-es-2017, summaries/es-llm-finetuning-2025, summaries/eggroll-2025, entities/eggroll
 
-**Tools**: entities/qmd, entities/pydoll, entities/ai-coding-agents
+**Infra / scraping**: web-fingerprinting, proxy-rotation, webrtc-ip-leak, entities/pydoll, entities/firecrawl
+
+**Document parsing / RAG**: entities/docling, summaries/docling, summaries/contextual-retrieval
+
+**Tools / entities**: entities/qmd, entities/ai-coding-agents
+
+**Plugins/workflows**: summaries/superpowers-plugin, summaries/mattpocockskills, summaries/mattpocockworkflow, summaries/firecrawl-mcp-server, summaries/claude-code-plugins-llm-wiki
+
+**Mistakes** (auto-loaded at startup): mistakes/global-prevention-rules.md — check before unfamiliar CLI ops

@@ -46,6 +46,9 @@ Supervisor pattern: one coordinator routes to specialized workers. State lives i
 not in agent memory. Workers receive isolated context per task. Completion signal required or loop
 never exits. See wiki: [[concepts/agent-harness]], [[concepts/ralph-loop]]
 
+When spawning subagents that produce code or commits: explicitly grant Bash/git permissions.
+Subagents without commit authority silently produce unreachable work — force the orchestrator to commit on their behalf or grant permissions upfront.
+
 ### Preference feedback loop (judge auto-invocation)
 After generating any **code output**, **implementation plan**, or **design/architecture response**:
 invoke `/judge` skill before ending the turn.

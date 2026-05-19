@@ -2,6 +2,10 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-19] ingest | Agentic Engineering Control Plane (product concept) — summaries/agentic-control-plane-concept.md; 4-layer architecture (execution/coordination/quality/experience); Phase 0–5 roadmap; Phase 0.5 five concrete additions; buy vs build decisions; cross-links to shared-task-queue, worktree-isolation, council-pattern
+
+## [2026-05-19] ingest | Control Plane Expansion Plan (synthesis) — syntheses/control-plane-expansion-plan.md; Phase 1 gap analysis table (6 requirements, coverage vs gap); tool landscape (buy: CodeRabbit/Langfuse/PromptFoo/GitHub Projects; build: registry/event-log/kanban-skill/approval-workflow); Phase 2 git-branch atomic claim design; Phase 3 council quality gate wiring
+
 ## [2026-05-12] new | concepts/worker-coordination — partial result coordination between parallel agents: contract-first, pipeline, filesystem blackboard, actor mailbox patterns; decision table; failure modes (silent dependency, partial write race, scope bleed)
 
 ## [2026-05-12] update | agent-primitive-selection — added partial-results branch to decision tree; links to concepts/worker-coordination

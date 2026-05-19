@@ -111,6 +111,40 @@ grep -v "^#\|^$\|^\*(empty" ~/repos/llm-wiki/mistakes/slop-register.md 2>/dev/nu
 
 **Override:** if user says "show slop register" or "what's in the slop register", print the contents regardless of emptiness.
 
+### Session state injection
+
+After the slop register check, at every session start:
+
+```bash
+grep "^status:" .claude/session-state.md 2>/dev/null
+```
+
+| Result | Action |
+|---|---|
+| `status: active` | Read `.claude/session-state.md` fully. Tell user: "Resuming session: [goal from state]. In progress: [in-progress list]. Next steps: [next session list]." Wait for user to confirm direction before starting work. |
+| `status: idle` | Silent skip — no injection. |
+| No output (file missing) | Silent skip. |
+
+**What "inject" means**: read the file and surface its contents as a brief resume summary. Do not auto-start implementation — let the user redirect if needed.
+
+**Override:** if user says "ignore session state" or "start fresh", skip injection regardless of status.
+
+#### Agent state files (multi-agent harness)
+
+Also scan for paused agent state files — run after the orchestrator check above:
+
+```bash
+MAIN_REPO=$(cd "$(dirname "$(git rev-parse --git-common-dir)")" && pwd 2>/dev/null)
+grep -l "^status: active" "${MAIN_REPO}/.agents/claimed/"*.state.md 2>/dev/null
+```
+
+| Result | Action |
+|---|---|
+| One or more `.state.md` files with `status: active` | For each: read `agent_task:` and `## In Progress` fields. Tell user: "Agent TASK-XXX has saved state — in progress: [summary]." |
+| No matches | Silent skip. |
+
+These are agents that hit the context threshold mid-task and saved. Surface them so the orchestrator can decide to resume, re-queue, or discard.
+
 ### skill check discipline (from superpowers)
 When superpowers is enabled, the `using-superpowers` skill loads this at startup.
 When it's not enabled, treat this rule as the equivalent:

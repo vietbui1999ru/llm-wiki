@@ -98,9 +98,11 @@ If the user has issue files (from `/to-issues`), move them to the inbox:
 
 ```bash
 mkdir -p "${MAIN_REPO}/.agents/inbox" "${MAIN_REPO}/.agents/claimed" "${MAIN_REPO}/.agents/done"
-# Add .agents/ to .gitignore if not already there
+# Add .agents/ and .agent-task-id to .gitignore if not already there
 grep -qxF '.agents/' "${MAIN_REPO}/.gitignore" 2>/dev/null \
   || echo '.agents/' >> "${MAIN_REPO}/.gitignore"
+grep -qxF '.agent-task-id' "${MAIN_REPO}/.gitignore" 2>/dev/null \
+  || echo '.agent-task-id' >> "${MAIN_REPO}/.gitignore"
 ```
 
 If the user describes tasks verbally, create task files yourself before proceeding:
@@ -161,6 +163,41 @@ mv "${MAIN_REPO}/.agents/inbox/TASK-001.md" \
    "${MAIN_REPO}/.agents/claimed/TASK-001.md"
 ```
 
+After the atomic move, write the task ID sentinel to the worktree root so hooks can
+identify which task this agent owns (env vars don't cross hook process boundaries):
+
+```bash
+# This runs inside the worktree after it's created — include in agent prompt instructions:
+echo "TASK-001" > .agent-task-id
+```
+
+Include this line in every agent's prompt (substituting the real task ID):
+```
+First action: run `echo "TASK-001" > .agent-task-id` to register your task identity.
+```
+
+After claiming, write an agent registry entry to `.agents/registry.json`:
+
+```bash
+REGISTRY="${MAIN_REPO}/.agents/registry.json"
+SESSION_ID="<agent-session-id-or-generated-uuid>"
+ENTRY="{\"id\":\"${SESSION_ID}\",\"task\":\"TASK-001\",\"status\":\"running\",\"started_at\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"machine\":\"$(hostname -s)\",\"model\":\"haiku\"}"
+
+# Append to agents array (jq required) or initialize:
+if [[ -f "$REGISTRY" ]]; then
+  jq --argjson e "$ENTRY" '.agents += [$e]' "$REGISTRY" > /tmp/registry_tmp && mv /tmp/registry_tmp "$REGISTRY"
+else
+  echo "{\"agents\":[$ENTRY]}" > "$REGISTRY"
+fi
+```
+
+Also append a `task_claimed` event to `.agents/events.jsonl`:
+
+```bash
+echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"event\":\"task_claimed\",\"task\":\"TASK-001\",\"agent\":\"${SESSION_ID}\"}" \
+  >> "${MAIN_REPO}/.agents/events.jsonl"
+```
+
 ---
 
 ## Step 5: Monitor and collect results
@@ -172,6 +209,8 @@ After all background agents complete, you will be notified. Then:
 3. For each completed worktree branch: merge to main (or open PR if `scope` touches shared interfaces)
 4. Move completed task files to `.agents/done/`
 5. Run `git worktree prune` to clean up
+6. Update `.agents/registry.json` — set each completed agent's `status` to `"done"` or `"failed"`
+7. Append `task_complete` or `task_failed` event to `.agents/events.jsonl`
 
 If any agent failed: the worktree branch and task file remain. Inspect, fix manually, or re-queue the task to inbox for a second wave.
 

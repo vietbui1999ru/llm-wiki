@@ -76,6 +76,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/avoiding-ai-code-slop]] — Intent-driven verification (spec-first before code generation); 6 slop failure modes incl. over-engineering/defensive overreach/cargo-cult; slop register; Aviator experiment: 65 AC verified in 6 min by second agent
 - [[summaries/clean-code-ai-assisted]] — Uncle Bob's clean code principles + AI-specific failure modes (long methods, duplicated logic, hardcoded secrets, insecure deps); research citations; AWS AI outage incident
 - [[summaries/everything-claude-code]] — ECC harness performance system: 60 agents/232 skills/hooks/rules; instinct-based continuous learning v2; AgentShield security scanner; token optimization settings; 9-harness cross-platform support
+- [[summaries/agentic-control-plane-concept]] — 4-layer control plane architecture (execution/coordination/quality/experience); Phase 0–5 roadmap; Phase 0.5 five concrete additions; buy vs build decisions
 
 ## Entities
 - [[entities/everything-claude-code]] — Agent harness performance system (ECC): plugin + manual install; 9-harness support; DRY adapter pattern; instinct clustering; AgentShield
@@ -189,3 +190,4 @@ Catalog of all pages. Updated on every ingest operation.
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern
 - [[syntheses/lean-agentic-workflow]] — Full stack: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes
 - [[syntheses/local-rag-wiki]] — two-path RAG stack: qmd (BM25+vector, Claude Code) + LightRAG graph (wiki-chat TUI + wiki-mcp MCP); qwen2.5:3b local or Haiku hybrid; manifest-based incremental indexing; post-commit automation
+- [[syntheses/control-plane-expansion-plan]] — Gap analysis (Phase 1 readiness), tool landscape (buy vs build), Phase 0.5–3 concrete steps for scaling to Agentic Engineering Control Plane

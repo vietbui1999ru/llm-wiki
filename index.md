@@ -70,6 +70,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/owasp-ai-security]] — 4 OWASP cheat sheets: AI Agent Security (8 practices, 11 risks) + Secure Coding with AI (14 threats incl. slopsquatting, rules file injection, CI/CD confused deputy, test fabrication) + Secure AI Model Ops (circuit breakers, chain-depth limits, DoW) + GitHub Actions Security ("clinejection" attack, SHA pinning)
 - [[summaries/owasp-prompt-injection]] — OWASP LLM Prompt Injection Prevention: 9+ attack types (typoglycemia, Best-of-N power-law scaling, multimodal, RAG poisoning), 4-layer SecureLLMPipeline, dual-LLM pattern, model-based guardrails at 3 placements
 - [[summaries/owasp-mcp-security]] — OWASP MCP Security: 9 key risks (tool poisoning, rug pull, tool shadowing, confused deputy), 12 best practices incl. SHA-256 tool hash pinning, ECDSA message signing, bind to 127.0.0.1, mcp-scan
+- [[summaries/aws-security-agent]] — AWS managed pen test service: target/accessible/out-of-scope domain split, credential injection patterns, IAM role scoping, out-of-scope URL hierarchy, launch checklist
+- [[summaries/owasp-web-security-stubs]] — Batch stubs for 26 OWASP cheat sheets (Next.js + ECS + Neon stack focus): SQLi, session, CSRF, XSS, IDOR, Docker, cloud arch, secrets, SSRF, DoS, deserialization, supply chain
 - [[summaries/worktrees-parallel-agents]] — 4 failure modes of shared-repo multi-agent; what worktrees fix (file conflicts, lock contention) vs don't fix (runtime isolation, logical conflicts); worktree-per-task vs per-agent; Galactic, Block agent-task-queue, Switchman, Intent architecture
 - [[summaries/top-8-claude-skills-uiux]] — 8 UI/UX skills catalog + Agent Skills architecture (3-tier loading, supply chain risk); Vercel RN/React/composition skills, AccessLint, Anthropic frontend-design
 - [[summaries/cc-linting-debugging-reddit]] — r/ClaudeCode community: Stop hook for file-modifying linters (file-state conflict); PostToolUse read-only only; noslop quality gates; layered shellcheck/biome/pre-commit setup; gdb/Replay MCP/JetBrains debugger
@@ -102,6 +104,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/dspy]] — Stanford framework for programming LMs via Signatures/Modules/Optimizers; GEPA optimizer: error-driven prompt refinement; automated prompt optimization without manual prompt engineering
 - [[entities/spotme]] — OpenCode "gym mode" plugin; counter-based exercise scaffolding; lite/medium/hard difficulty; portable SKILL.md for other harnesses
 - [[entities/codegraphcontext]] — Python MCP server + CLI; indexes codebases into graph DB (KuzuDB); Tree-sitter parsing; 20 languages; relationship discovery, blast radius, dead code; session or daemon persistence
+- [[entities/pentagi]] — OSS autonomous pen testing system (vxcontrol); 20+ tools in sandboxed Docker; orchestrator + researcher/developer/executor agents; pgvector + Neo4j memory; chain summarization for context; reference for our pentest-agent design
 
 ## Concepts
 - [[concepts/mobile-design-patterns]] — mobile-first doctrine, MFRI scoring, Fitts' Law, gesture design, iOS/Android divergence matrix, RN/Flutter performance patterns, release checklist
@@ -136,6 +139,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/wikilink-graph-extraction]] — Reducing LightRAG indexing cost by injecting Obsidian wikilink structure as extraction hints; ~40-55% token reduction; chunking_func hook; future direct graph injection path
 - [[concepts/verification-pipeline]] — Four-tier quality ladder: typecheck → visual verification → screenshot gate → design critique; origin failures; protocol rules
 - [[concepts/owasp-security-checklist]] — OWASP Top 10 checklist + AI-specific extensions: tool least-privilege, memory security, DoW, slopsquatting, test fabrication, CI/CD confused deputy, rules file injection; severity classification table
+- [[concepts/pentest-agent-design]] — Blueprint for Next.js + ECS Fargate + Neon pen test agent: supervisor + recon/web/db specialists, two-phase (black-box HTTP + gray-box AWS), safety constraints (scope lock, rate cap, read-only), findings.json + report.md output, wiki ingest pipeline
 - [[concepts/domain-glossary]] — CONTEXT.md pattern: shared language between dev and agent; token efficiency, consistent naming, reduced context distraction
 - [[concepts/deep-modules]] — Ousterhout's deep vs shallow modules; narrow interface, wide implementation; test boundary design; why AI produces shallow codebases by default
 - [[concepts/evolution-strategies]] — Black-box optimization via parameter perturbation; ES vs RL trade-offs; shared random seed trick; progression from gaming (2017) to LLM fine-tuning (2025)

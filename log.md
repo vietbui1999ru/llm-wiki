@@ -2,6 +2,13 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-21] ingest | Pen Testing — AWS Security Agent + PentAGI + OWASP Web Security Batch
+- summaries/aws-security-agent.md — AWS managed pen test service; target/accessible/out-of-scope domain split; credential injection; IAM scope patterns
+- entities/pentagi.md — OSS autonomous pen test system; orchestrator + 3 specialists; pgvector + Neo4j memory; chain summarization; Flow→Task→SubTask hierarchy
+- concepts/pentest-agent-design.md — synthesis blueprint for Next.js + ECS + Neon pen test agent; supervisor+specialists; two-phase (black-box + gray-box AWS); safety constraints; output pipeline
+- summaries/owasp-web-security-stubs.md — batch stubs for 26 OWASP cheat sheets (SQLi, session, CSRF, XSS, IDOR, Docker, cloud, secrets, SSRF, DoS, deserialization, supply chain)
+- index.md, log.md updated
+
 ## [2026-05-19] ingest | Agentic Engineering Control Plane (product concept) — summaries/agentic-control-plane-concept.md; 4-layer architecture (execution/coordination/quality/experience); Phase 0–5 roadmap; Phase 0.5 five concrete additions; buy vs build decisions; cross-links to shared-task-queue, worktree-isolation, council-pattern
 
 ## [2026-05-19] ingest | Control Plane Expansion Plan (synthesis) — syntheses/control-plane-expansion-plan.md; Phase 1 gap analysis table (6 requirements, coverage vs gap); tool landscape (buy: CodeRabbit/Langfuse/PromptFoo/GitHub Projects; build: registry/event-log/kanban-skill/approval-workflow); Phase 2 git-branch atomic claim design; Phase 3 council quality gate wiring

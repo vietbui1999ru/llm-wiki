@@ -59,6 +59,7 @@ Also: `/diagnose` — structured 6-phase debugging loop: feedback loop → repro
 |---|---|
 | `/grill-me` | General planning/design grilling |
 | `/write-a-skill` | Create new skills with proper structure |
+| `/handoff` | Compress focused context slice → markdown doc for a parallel fresh agent session |
 
 ## Key Concepts
 

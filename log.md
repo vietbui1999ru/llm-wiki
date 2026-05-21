@@ -2,6 +2,18 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-21] update | GitHub Issue as Handoff Artifact — gap patches
+- concepts/github-issue-handoff.md — patched: issue body format spec, return-handoff via comment, lean-session checkpoint interaction, fixed .agents/inbox/ materialization format, fixed GH Actions (self-hosted runner req), added recommendation + open questions
+
+## [2026-05-21] stub | GitHub Issue as Handoff Artifact
+- concepts/github-issue-handoff.md *(stub)* — synth of /handoff + /to-issues + shared-task-queue; GitHub issue as persistent handoff artifact; auto-dispatch via Actions webhook
+- index.md, log.md updated
+
+## [2026-05-21] ingest | Matt Pocock /handoff Skill
+- summaries/mattpoccock-handoff-skill.md — /handoff: parallel session fork via focused context slice; handoff vs compact; grilling→prototype→back; cross-agent; GitHub issue as handoff artifact
+- summaries/mattpocockskills.md — added /handoff to Productivity skill table
+- index.md, log.md updated
+
 ## [2026-05-21] ingest | Pen Testing — AWS Security Agent + PentAGI + OWASP Web Security Batch
 - summaries/aws-security-agent.md — AWS managed pen test service; target/accessible/out-of-scope domain split; credential injection; IAM scope patterns
 - entities/pentagi.md — OSS autonomous pen test system; orchestrator + 3 specialists; pgvector + Neo4j memory; chain summarization; Flow→Task→SubTask hierarchy

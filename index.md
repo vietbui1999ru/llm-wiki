@@ -3,8 +3,10 @@
 Catalog of all pages. Updated on every ingest operation.
 
 ## Summaries
-- [[summaries/mattpocockskills]] — Matt Pocock's engineering skills: 4 failure modes, 9 skills (grill-me, grill-with-docs, tdd, diagnose, zoom-out, to-prd, to-issues, improve-architecture, setup)
+- [[summaries/mattpocockskills]] — Matt Pocock's engineering skills: 4 failure modes, 10 skills (grill-me, grill-with-docs, tdd, diagnose, zoom-out, to-prd, to-issues, improve-architecture, setup, handoff)
 - [[summaries/mattpocockworkflow]] — Full AI coding workflow: grill→PRD→kanban DAG→AFK loop; smart zone; clear-over-compact; deep modules; push/pull standards; SandCastle parallelization
+- [[summaries/mattpoccock-handoff-skill]] — /handoff skill: fork a parallel session with a focused context slice; handoff vs compact; temp-file design; grilling→prototype→back pattern; cross-agent use
+- [[concepts/github-issue-handoff]] *(stub)* — GitHub issue as handoff artifact; bridges /handoff + /to-issues + shared-task-queue; auto-dispatch via Actions webhook
 - [[summaries/firecrawl-mcp-server]] — Firecrawl MCP: 14 tools for web scraping/crawling/search/extraction/browser automation for AI agents
 - [[summaries/superpowers-plugin]] — Superpowers v5.0.7: zero-dependency workflow plugin; Iron Law TDD/debugging; skill-first discipline; subagent execution
 - [[summaries/unit-testing-best-practices]] — 2 sources: 15 practices (naming, AAA, mocks, flaky tests, coverage philosophy), IBM fundamentals

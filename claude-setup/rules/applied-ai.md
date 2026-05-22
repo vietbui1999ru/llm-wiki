@@ -64,3 +64,21 @@ conversation turns, ingest summaries.
 The judge is silent on first strike. On second consecutive low score for the same dimension and
 response type, it drafts a corrective rule for human approval.
 See wiki: [[concepts/preference-feedback-loop]]
+
+### ralph-structured (proactive suggestion)
+
+Before starting any multi-step implementation task, check for these signals:
+- 3+ distinct deliverables mentioned in the request
+- "implement", "build", "create", "migrate", "refactor" at feature scope (not single-file edits)
+- Task explicitly mentions testing or verification as part of the work
+- Sequential dependencies described ("first X, then Y, then Z")
+- Task likely spans multiple context windows (>30 min of work)
+
+If any signal is present: suggest `/ralph-structured` **before proceeding**. Format:
+
+> "This looks like a multi-step task. `/ralph-structured` would break it into a
+> task list with one-task-per-iteration enforcement and stuckness protection (auto-skips
+> tasks stuck after 3 attempts). Want to use it, or proceed directly?"
+
+Do NOT auto-launch. Do NOT suggest it for: single-file edits, config changes, quick fixes,
+wiki ingests, or anything estimated under 3 steps.

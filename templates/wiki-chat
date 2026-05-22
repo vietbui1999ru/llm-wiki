@@ -16,7 +16,7 @@ Usage:
   wiki-chat --mode local       entity-focused (specific concept questions)
   wiki-chat --mode global      community summaries (cross-concept questions)
 
-Always uses qwen2.5:3b via ollama — fully local, no API cost.
+Always uses qwen2.5:7b via ollama — fully local, no API cost.
 
 Prompt commands:
   /mode local|global|hybrid|naive   switch query mode mid-session
@@ -53,7 +53,7 @@ EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 VALID_MODES = ("local", "global", "hybrid", "naive")
 
-LLM_MODEL  = "qwen2.5:3b"
+LLM_MODEL  = "qwen2.5:7b"
 _llm_func  = ollama_model_complete
 _llm_async = 1
 

@@ -19,17 +19,17 @@ Usage:
 Extraction backend (priority order, set env var in .env):
   ANTHROPIC_API_KEY=sk-ant-...  → Claude Haiku (best quality)
   OPENROUTER_API_KEY=sk-or-...  → OpenRouter (not yet implemented — stub only)
-  unset                         → qwen2.5:3b via ollama (fully local, FREE — recommended for --full)
+  unset                         → qwen2.5:7b via ollama (fully local, FREE — recommended for --full)
 
 COST WARNING — --full with Anthropic API:
   LightRAG runs 3 extraction phases per page (entity → relation → community),
   each with multiple LLM calls. At ~150 pages, expect $10–30 with Claude Haiku.
-  Use qwen2.5:3b (ollama, free) for full rebuilds. Reserve Haiku for incremental
+  Use qwen2.5:7b (ollama, free) for full rebuilds. Reserve Haiku for incremental
   updates where per-page cost (~$0.07–0.20) is acceptable.
 
 Requires:
   uv run --script wiki-index   (deps declared inline above)
-  ollama running with qwen2.5:3b + nomic-embed-text
+  ollama running with qwen2.5:7b + nomic-embed-text
 """
 from __future__ import annotations
 
@@ -84,7 +84,7 @@ elif _OPENROUTER_KEY:
     # base_url="https://openrouter.ai/api/v1", model e.g. "anthropic/claude-haiku-4-5"
     raise NotImplementedError("OpenRouter backend not yet implemented. Set ANTHROPIC_API_KEY or leave unset for local.")
 else:
-    LLM_MODEL      = "qwen2.5:3b"
+    LLM_MODEL      = "qwen2.5:7b"
     _llm_func      = ollama_model_complete
     _llm_max_async = 2
 
@@ -277,7 +277,7 @@ async def main() -> None:
         backend = "Anthropic Haiku" if _API_KEY else "OpenRouter"
         print(f"WARNING: --full with {backend} backend on {len(pages)} pages.")
         print(f"  LightRAG runs 3 extraction phases per page → expect $10–30+ in API costs.")
-        print(f"  Use qwen2.5:3b (unset API keys) for free full rebuilds.")
+        print(f"  Use qwen2.5:7b (unset API keys) for free full rebuilds.")
         print(f"  Pass --yes to confirm and proceed.")
         raise SystemExit(1)
 

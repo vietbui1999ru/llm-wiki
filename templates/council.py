@@ -80,11 +80,12 @@ async def ask(model: str, prompt: str) -> str:
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
             )
-            _, stderr = await proc.communicate(prompt.encode())
+            stdout, stderr = await proc.communicate(prompt.encode())
+            combined = (stdout.decode() + "\n" + stderr.decode()).strip()
             if proc.returncode != 0:
-                return f"[error from {model}: {stderr.decode().strip()[:200]}]"
+                return f"[error from {model}: {combined[:300]}]"
             if not tmp.exists():
-                return f"[error from {model}: no output file produced]"
+                return f"[error from {model}: no output — {combined[:200]}]"
             return tmp.read_text().strip()
         finally:
             tmp.unlink(missing_ok=True)

@@ -38,7 +38,7 @@ pip install lightrag-hku ollama rich prompt_toolkit mcp
 
 # Pull required ollama models
 ollama pull nomic-embed-text   # embeddings
-ollama pull qwen2.5:3b         # entity extraction + synthesis
+ollama pull qwen2.5:7b         # entity extraction + synthesis
 
 # Build graph index (one-time, ~30-60 min for 149 pages)
 wiki-index
@@ -47,7 +47,7 @@ wiki-index
 wiki-chat
 ```
 
-Models used: `qwen2.5:3b` for entity extraction + synthesis, `nomic-embed-text` for embeddings.
+Models used: `qwen2.5:7b` for entity extraction + synthesis, `nomic-embed-text` for embeddings.
 Index lives at `~/repos/llm-wiki/.lightrag/` (gitignored). Re-run `wiki-index` after bulk ingests,
 or use `/reindex` inside wiki-chat to pick up changed pages.
 

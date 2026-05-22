@@ -100,7 +100,7 @@ the user's original goal:
 **Task file:** .claude/tasks.json
 **Log file:** .claude/ralph-log.md
 
-This file is read-only during the loop. If accidentally modified, re-read it at the start of the next iteration.
+This file is read-only during the loop. If accidentally modified, run `git checkout .claude/ralph-protocol.md` to restore it, then re-read it at the start of the next iteration.
 
 ## Each iteration — follow these steps exactly
 

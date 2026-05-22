@@ -2,7 +2,7 @@
 title: "Memory Bank Pattern"
 type: concept
 tags: [cross-session-memory, agent-context-instructions, rules-vs-hooks, context-management]
-sources: ["coding-agent-rulesmemory.md at main.md", "coding-agent-rulesmemory.md at main 1.md"]
+sources: ["coding-agent-rulesmemory.md at main.md"]
 created: 2026-05-06
 updated: 2026-05-06
 ---

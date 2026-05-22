@@ -1,64 +1,37 @@
 # anthropic/claude-sonnet-4-6
 
-Per [[concepts/agent-skills]], [[concepts/agent-subagents]], [[syntheses/agent-primitive-selection]]:
+`★ Insight ─────────────────────────────────────`
+The core architectural distinction: a skill is **prompt expansion** (same context window, knowledge injection), while a subagent is **context isolation** (separate window, returns only a summary). Skills are cheaper (~1.5k tokens on invoke), subagents are heavier but keep main context clean. Think of skills as "load a specialist's mental model" and subagents as "delegate the task entirely."
+`─────────────────────────────────────────────────`
 
 ---
 
-## Core distinction
+## Skill vs Subagent
 
-**Skill** = prompt injection into your current context window. No new process, no isolation — just enriched instructions + modified tool permissions.
+**Skill** — injects instructions into the *current* context window when triggered. No separate model call, no isolation. The caller's conversation gains domain expertise and follows a workflow. Think: a specialist arriving in the same room and whispering a checklist.
 
-**Subagent** = a new Claude instance with its own context window. Delegates a task; returns only a summary.
+**Subagent** — runs in a *separate* context window with its own model, tools, and permission mode. Parent delegates; subagent works independently; only a summary returns. Main context stays clean. Think: delegating to another person who reports back.
 
----
-
-## The table that matters
+### At a glance
 
 | Dimension | Skill | Subagent |
 |---|---|---|
-| Context window | Shared (injected into caller) | Own isolated window |
-| Executes code? | No — prepares Claude to act | Yes — independent execution |
-| Parallelism | No | Yes (`background: true`) |
-| Persists state | No | Only if it writes files |
-| Tool restrictions | Via `allowed-tools` frontmatter | Via `tools` / `disallowedTools` frontmatter |
-| Context pollution | Yes — content stays in main window | No — only summary returned |
-| Token cost at load | ~100 tokens (metadata only) | Medium |
-| Token cost at invoke | ~1,500+ (full SKILL.md injected) | Full conversation in new window |
+| Context window | Caller's (no isolation) | Own window |
+| Token cost to trigger | ~1,500 tokens (prompt injection) | Medium–high (full inference loop) |
+| State / memory | None (session only) | None unless writes files or has `memory:` set |
+| Parallel execution | No | Yes (`background: true`) |
+| Tool restrictions | Via `allowed-tools:` in SKILL.md | Via `tools:` / `disallowedTools:` frontmatter |
+| File isolation | No | Optional (`isolation: worktree`) |
+| Best for | Reusable checklists, domain knowledge, workflow templates | Context-polluting tasks (test runs, log analysis), tool-restricted delegation |
 
----
+### When to reach for each
 
-## How each works mechanically
+**Skill** → domain knowledge fits in a prompt, reusable across sessions, no need to isolate side effects. Example: a TDD skill injects red-green-refactor discipline into the current session.
 
-**Skill invocation:**
-1. Claude sees skill metadata at startup (name + description, ~100 tokens)
-2. LLM reasoning decides to fire the skill
-3. Full `SKILL.md` injected as hidden `isMeta` message
-4. Claude continues from enriched context — same window, same conversation
+**Subagent** → task is self-contained, produces verbose output, benefits from tool restriction, or runs concurrently. Example: a `security-auditor` subagent audits auth code and returns a threat report — keeping all 200 lines of findings out of the main session.
 
-**Subagent invocation:**
-1. Parent delegates a task via `Agent` tool (or `@name` mention)
-2. New Claude instance spins up with its own system prompt (the subagent's markdown body)
-3. Works independently — can have different model, MCP servers, hooks, permissions
-4. Returns one summary message back to parent
+### How they interact
 
----
+Skills can be *preloaded into subagents* via `skills:` frontmatter — the subagent starts with that domain knowledge injected at turn 0. Subagents do NOT inherit the parent's currently-active skills automatically.
 
-## Decision rule (from the synthesis page)
-
-```
-Domain knowledge that fits in a prompt, reusable across sessions?
-  → SKILL
-
-Self-contained task that would pollute main context with verbose output?
-  → SUBAGENT
-
-Task needs different tool permissions than your current session?
-  → SUBAGENT
-
-Workers need to talk to each other?
-  → AGENT TEAM
-```
-
----
-
-Key gotcha: **subagents don't inherit parent skills**. If you want a subagent to have skill `X`, you must list it explicitly in the subagent's `skills:` frontmatter. The skill's full content gets injected at subagent startup.
+Per [[syntheses/agent-primitive-selection]]: if neither fits, the next step up is an **agent team** — multiple subagents with direct communication via shared task list and mailbox.

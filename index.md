@@ -31,6 +31,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/amazon-scraping-2026]] — DIY vs. managed API for Amazon scraping; detection mechanisms, legal context, data available
 - [[summaries/pydoll-network-fingerprinting]] — Pydoll deep-dive: OSI layers, TCP/TLS fingerprinting, WebRTC leaks, GDPR/CFAA legal framework
 - [[summaries/agent-harness-8min]] — YouTube (Caleb Bright): 3-layer evolution stack (prompt→context→harness); summarization failure as harness motivation; PRD→JSON→single-task loop architecture
+- [[summaries/acon-context-compression]] — KAIST/Microsoft 2025: adaptive guideline-optimized compression for long-horizon agents; 26-54% peak token reduction; KV-cache cost trap; distillable to small models
 - [[summaries/agent-harness-engineering]] — LangChain harness anatomy + OpenAI 5-month Codex case study: harness components, repo-as-record, mechanical enforcement
 - [[summaries/autoresearch-karpathy]] — Karpathy's autonomous ML experiment loop: agent modifies train.py, 5-min runs, val_bpb metric, program.md as control layer
 - [[summaries/docling]] — 3 sources: Docling document parser for AI; why parsing quality matters for RAG; layout-aware PDF → Markdown; vs Firecrawl; research paper pipeline
@@ -133,7 +134,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/agent-harness]] — Model + harness = agent; core components: filesystem, bash, sandbox, context management, long-horizon loops
 - [[concepts/ralph-loop]] — Harness pattern: intercept exit, reinjecting original prompt with clean context + durable filesystem state
 - [[concepts/context-degradation]] — Five named failure modes: lost-in-middle, poisoning, distraction, confusion, clash; thresholds and mitigations
-- [[concepts/context-compression]] — Three strategies; clear-over-compact now community consensus for coding; OpenCode compaction hooks
+- [[concepts/context-compression]] — Four strategies (incl. Acon adaptive guideline-optimized); clear-over-compact now community consensus for coding; KV-cache cost trap with history compression
 - [[concepts/tool-design-for-agents]] — Dual audience principle; error messages as agent recovery instructions; naming conventions
 - [[concepts/agent-skills]] — Skills as prompt templates: progressive disclosure, meta-tool architecture, SKILL.md structure, three loading levels
 - [[concepts/agent-subagents]] — Subagents: own context window, YAML frontmatter format, all fields, scopes, invocation patterns, fork mode

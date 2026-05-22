@@ -2,6 +2,12 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-22] ingest | Acon: Optimizing Context Compression for Long-horizon LLM Agents
+Created: wiki/summaries/acon-context-compression.md
+Updated: wiki/concepts/context-compression.md (added Strategy 4: adaptive guideline-optimized compression; KV-cache cost trap)
+Key finding: history compression can cost more than no compression due to KV-cache invalidation; observation compression avoids this.
+Note: "Top techniques to Manage Context Lengths in LLMs 1.md" is a duplicate of the already-ingested source — skipped.
+
 ## [2026-05-22] update | ralph-structured skill + auto-suggestion rule
 
 New skill: claude-setup/skills/ralph-structured/ — structured ralph loop with task

@@ -2,16 +2,16 @@
 title: "Context Compression Strategies"
 type: concept
 tags: [agent-engineering, context-management, compaction, harness, long-horizon]
-sources: []
+sources: ["Acon Optimizing Context Compression for Long-horizon LLM Agents.md"]
 created: 2026-04-25
-updated: 2026-05-04
+updated: 2026-05-22
 ---
 
 # Context Compression Strategies
 
 When agent sessions grow long, compression is mandatory. The wrong optimization target is *tokens per request* (minimize context size). The correct target is **tokens per task** — total tokens to complete a task, including re-fetch costs when compression loses critical information.
 
-## Three Strategies
+## Four Strategies
 
 ### 1. Anchored Iterative Summarization (recommended)
 Maintain a structured persistent summary with named sections: session intent, files modified, decisions made, next steps. When compaction triggers, summarize only the newly-truncated span and **merge** it into the existing summary — don't regenerate.
@@ -48,6 +48,23 @@ Generate a fresh detailed summary from scratch on each compression trigger.
 **Why it's worse**: Each regeneration can lose details that prior compressions handled correctly. Compounding across multiple cycles causes drift. Produces readable output but less reliable than anchored iterative across long sessions.
 
 **When acceptable**: Short sessions with a single compression event; when simplicity matters more than accuracy.
+
+### 4. Adaptive Guideline-Optimized Compression (research: Acon)
+Use an LLM to compress context guided by a **learned prompt** — the compression guideline is optimized from task failure signals, not handcrafted. Applies separately to interaction history (when length > threshold) and raw observations (when observation > threshold).
+
+**How it works**: Run agent with and without compression; find tasks where compression causes failure; feed contrastive pairs to an optimizer LLM to refine the guideline. Two alternating phases: utility maximization (fix failures) and compression maximization (shorten successes). Gradient-free — works with any API model.
+
+**Why it can outperform fixed-prompt compression**: The guideline learns environment-specific signals — what types of information cause failure when dropped (e.g., API auth tokens, account balances, due dates). Generic prompts miss these domain constraints.
+
+**When to use**: Multi-step agentic tasks with heterogeneous tool outputs; when generic summarization degrades task performance; when you have training trajectories to optimize from.
+
+**Cost warning**: History compression breaks KV-cache prefix stability, forcing recomputation — this can make total API cost *higher* than no compression. Observation compression avoids this: compress before the observation enters history. Prefer observation compression in cost-sensitive settings.
+
+**Distillation**: Once the large-model guideline is optimized, distill the compressor into a small model (e.g., Qwen3-14B via LoRA) to eliminate the overhead of calling a large LLM per step.
+
+Source: [[summaries/acon-context-compression]] (KAIST + Microsoft, 2025; AppWorld/OfficeBench/8-obj QA benchmarks)
+
+---
 
 ## Token Budget Allocation
 
@@ -145,3 +162,4 @@ All claimed impact numbers from ECC README; not independently verified. The patt
 - [[summaries/mattpocockworkflow]] — Pocock's workflow that makes clearing safe by externalizing state
 - [[concepts/dynamic-context-pruning]] — mid-session context reduction via Compress tool + deduplication + purge-errors; complements compaction
 - [[summaries/everything-claude-code]] — ECC's `strategic-compact` skill and token optimization settings
+- [[summaries/acon-context-compression]] — KAIST/Microsoft paper: adaptive guideline-optimized compression for long-horizon agents; KV-cache cost trap with history compression

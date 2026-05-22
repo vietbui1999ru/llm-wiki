@@ -4,7 +4,7 @@ type: concept
 tags: [multi-vendor, adversarial-review, orchestration, synthesis, cross-vendor]
 sources: ["karpathyllm-council LLM Council works together to answer your hardest questions.md", "Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md"]
 created: 2026-05-05
-updated: 2026-05-05
+updated: 2026-05-22
 ---
 
 # Council Pattern
@@ -73,7 +73,7 @@ Karpathy's implementation anonymizes identities in Stage 2. Without anonymizatio
 | **Karpathy llm-council** | All models in parallel | Anonymized peer review + ranking | Chairman LLM | Local web app; OpenRouter; Q&A focused |
 | **AgentOps `/council`** | All models in parallel | None | Surfaces disagreements | CLI; design decisions; human synthesizes |
 | **BMAD workflow** | Opus plans, Codex reviews | Iterative back-and-forth | Human decides | Sequential, not parallel |
-| **Our AGENTS.md `/council`** | GPT-4.1 + Grok + Codex via Pi AI | None | Human synthesizes | GitHub Models API; code/arch review |
+| **This repo `council`** | Sonnet 4.6 + GPT-5.4 (parallel, via `claude`/`codex` CLIs) | None | Chairman: Opus 4.6 | CLI-based; no API keys in script; voice files → `.council/`; git auto-commit |
 
 ---
 

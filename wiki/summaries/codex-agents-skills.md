@@ -2,13 +2,13 @@
 title: "Codex — Native Agents (TOML) and Skills"
 type: summary
 tags: [codex, openai, agents, skills, toml, cross-platform]
-sources: []
+sources: ["Custom instructions with AGENTS.md – Codex.md", "Harness engineering leveraging Codex in an agent-first world.md"]
 urls:
   - "https://developers.openai.com/codex/subagents"
   - "https://developers.openai.com/codex/guides/agents-md"
   - "https://developers.openai.com/codex/skills"
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-05-22
 ---
 
 # Codex — Native Agents (TOML) and Skills
@@ -61,24 +61,44 @@ Schema fields:
 
 ## Skills — First-Class Concept
 
-Codex has a native skills concept. Configuration references `agents/openai.yaml` for skill metadata:
+Codex has a native filesystem skill system. The skill body lives in `skills/<name>/SKILL.md`. Optional product metadata lives in `skills/<name>/agents/openai.yaml`.
 
-```yaml
-# agents/openai.yaml
-skills:
-  wiki-context:
-    description: Search the personal LLM wiki for patterns and concepts
-    invocation: explicit          # user must invoke; not ambient
-    tool_dependencies: [bash]     # tools this skill may use
-  security-audit:
-    description: Run OWASP security review on specified scope
-    invocation: auto              # Codex may auto-invoke when relevant
-    tool_dependencies: [bash, read]
+```text
+skills/
+  wiki-context/
+    SKILL.md
+    agents/openai.yaml
 ```
 
-Skills differ from AGENTS.md instructions: they are namespaced, invocable on demand, and can declare tool dependencies. Closer to CC's `Skill` tool mechanism than to ambient rules.
+Example metadata:
 
-**Migration**: CC `skills/*/SKILL.md` → Codex `agents/openai.yaml` skill entries + associated prompt file.
+```yaml
+interface:
+  display_name: "Wiki Context"
+  short_description: "Load llm-wiki context before technical work"
+  default_prompt: "Use $wiki-context to load relevant llm-wiki context before proceeding."
+```
+
+Skills differ from AGENTS.md instructions: they are namespaced, invocable on demand, and can carry product metadata or MCP dependencies. Closer to CC's `Skill` tool mechanism than to ambient rules.
+
+**Migration**: CC `skills/*/SKILL.md` → Codex `skills/*/SKILL.md`, with optional `skills/*/agents/openai.yaml`.
+
+---
+
+## Hooks
+
+Codex also supports repo-local hooks in `.codex/config.toml`.
+
+Minimal shape:
+
+```toml
+[hooks]
+PostToolUse = [
+  { matcher = "exec_command|apply_patch", hooks = [
+    { type = "command", command = "echo post-tool hook" }
+  ] }
+]
+```
 
 ---
 
@@ -89,8 +109,10 @@ Codex has three composable layers:
 ```
 ~/.codex/AGENTS.md          ← global ambient (user-level always-on)
 .codex/AGENTS.md            ← project ambient
+.codex/config.toml          ← project-local config + hooks
 .codex/agents/*.toml        ← named agents (spawnable subagents)
-agents/openai.yaml          ← skill metadata (invocable on demand)
+skills/*/SKILL.md           ← native skills
+skills/*/agents/openai.yaml ← optional skill metadata
 ```
 
 Compared to CC's:
@@ -101,7 +123,7 @@ claude-setup/agents/*.md          ← subagents (YAML frontmatter)
 claude-setup/skills/*/SKILL.md    ← skills (Skill tool)
 ```
 
-The layer-for-layer correspondence is close. The format differences are: TOML (Codex agents) vs YAML (CC), and `agents/openai.yaml` (Codex skills) vs `SKILL.md` (CC).
+The layer-for-layer correspondence is close. The main format differences are: TOML (Codex agents) vs YAML (CC), plus Codex native `skills/*/SKILL.md` with optional per-skill `openai.yaml` metadata.
 
 ---
 

@@ -2,6 +2,21 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-22] update | Council setup — CLI-based, file output, git auto-commit
+
+Updated: skills/council/SKILL.md — new invocation (`council` alias), architecture (claude + codex CLIs, no API keys, .council/ file output, auto-commit)
+Updated: concepts/council-pattern.md — implementations table: replaced stale "Our AGENTS.md /council" row with current setup (Sonnet 4.6 + GPT-5.4 voices, Opus 4.6 chairman)
+Architecture: templates/council.py uses subprocess to claude/codex CLIs; codex exec -o writes plain text (no JSON parsing); voices → .council/voice_*.md; synthesis → .council/synthesis.md; git commit fires after each run
+
+## [2026-05-22] ingest | Codex native stack — TOML agents, skills, .codex/ setup
+
+Sources: "Custom instructions with AGENTS.md – Codex.md", "Harness engineering leveraging Codex in an agent-first world.md"
+Updated entities: entities/codex — expanded from stub; full 3-layer stack (AGENTS.md + config.toml + TOML agents + skills); migration table from CC
+Updated summaries: summaries/codex-agents-skills — corrected YAML→TOML; added skills layer; sources populated
+Updated comparisons: comparisons/cc-to-cross-platform-migration — Codex skills row updated with native skills/openai.yaml
+Updated entities: entities/agents-md-format — Codex row expanded with full layer description
+Applied to repo: .codex/ (AGENTS.md, config.toml, agents/*.toml), skills/ (wiki-context, council, security-patterns, agent-orchestration)
+
 ## [2026-05-21] update | GitHub Issue as Handoff Artifact — gap patches
 - concepts/github-issue-handoff.md — patched: issue body format spec, return-handoff via comment, lean-session checkpoint interaction, fixed .agents/inbox/ materialization format, fixed GH Actions (self-hosted runner req), added recommendation + open questions
 

@@ -1,0 +1,6 @@
+[hooks]
+PostToolUse = [
+  { matcher = "exec_command|apply_patch", hooks = [
+    { type = "command", command = "cd ~/repos/llm-wiki && git diff --name-only HEAD 2>/dev/null | grep -q 'log\\.md' && ./scripts/publish-ai-kb.sh || true" }
+  ] }
+]

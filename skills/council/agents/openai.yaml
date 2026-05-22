@@ -1,0 +1,5 @@
+interface:
+  display_name: "Council"
+  short_description: "Run multi-model council with Codex included"
+  default_prompt: "Use $council to run the repo's council workflow for a design or security decision."
+

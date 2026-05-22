@@ -4,7 +4,7 @@ type: entity
 tags: [agent-context-instructions, cross-provider, standards, linux-foundation]
 sources: ["AGENTS.md", "Custom instructions with AGENTS.md – Codex.md", "Rules.md"]
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-05-22
 ---
 
 # AGENTS.md (format)
@@ -39,7 +39,7 @@ Each tool implements its own discovery and layering on top of the format:
 
 | Tool | Discovery details |
 |---|---|
-| **Codex** | `~/.codex/` global + project root→CWD walk; `AGENTS.override.md` override; 32 KiB limit. Also has TOML custom agents (`.codex/agents/*.toml`) and native skills (`agents/openai.yaml`) as separate layers beyond AGENTS.md. |
+| **Codex** | `~/.codex/` global + project root→CWD walk; `AGENTS.override.md` override; 32 KiB limit. Also has TOML custom agents (`.codex/agents/*.toml`), repo-local hooks in `.codex/config.toml`, and native skills (`skills/*/SKILL.md`, optional `skills/*/agents/openai.yaml`) as separate layers beyond AGENTS.md. |
 | **OpenCode** | `AGENTS.md > CLAUDE.md` per directory; `~/.config/opencode/AGENTS.md` global; `rules:` array in `opencode.json` for multi-file without duplicating into AGENTS.md |
 | **Claude Code** | Does not read AGENTS.md; uses CLAUDE.md with @-import for multi-file composition |
 | **Aider** | Requires `read: AGENTS.md` in `.aider.conf.yml` |

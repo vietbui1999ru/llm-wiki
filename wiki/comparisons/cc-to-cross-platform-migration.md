@@ -14,7 +14,7 @@ urls:
   - "https://developers.openai.com/codex/skills"
   - "https://forum.cursor.com/t/cursor-rules-in-background-agents/105598"
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-05-22
 ---
 
 # Claude Code → Cross-Platform Migration Matrix
@@ -42,17 +42,17 @@ Layer-by-layer mapping of CC assets to equivalent mechanisms on Gemini CLI, Open
 
 | Asset | Claude Code | Gemini CLI | OpenCode | Codex | Cursor |
 |---|---|---|---|---|---|
-| Mechanism | `SKILL.md` + `Skill` tool invocation | `.gemini/commands/*.toml` + `activate_skill` | `.opencode/commands/*.md` slash commands | `agents/openai.yaml` skill entries | None (inline only) |
-| Invocation | `/skill-name` or Skill tool | `/command-name` (TOML) or `activate_skill` (skills) | `/command-name {{args}}` in chat | `invocation: explicit` or `auto` | N/A |
-| Arguments | Via skill prompt | `{{args}}`, `!{shell}`, `@{file}` in TOML | `{{argument_name}}` template slots | Via `tool_dependencies` | N/A |
-| Shell execution | Bash tool | `!{shell}` injection with confirmation | `$(command)` injection | Via `bash` tool_dependency | N/A |
-| Agent binding | Skill loads into current session | N/A | Command can route to specific agent | Per skill config | N/A |
+| Mechanism | `SKILL.md` + `Skill` tool invocation | `.gemini/commands/*.toml` + `activate_skill` | `.opencode/commands/*.md` slash commands | `skills/<name>/SKILL.md` + `skills/<name>/agents/openai.yaml` | None (inline only) |
+| Invocation | `/skill-name` or Skill tool | `/command-name` (TOML) or `activate_skill` (skills) | `/command-name {{args}}` in chat | `$skill-name` or implicit skill injection | N/A |
+| Arguments | Via skill prompt | `{{args}}`, `!{shell}`, `@{file}` in TOML | `{{argument_name}}` template slots | Via the skill body and optional default prompt | N/A |
+| Shell execution | Bash tool | `!{shell}` injection with confirmation | `$(command)` injection | Via normal Codex tool use from skill instructions | N/A |
+| Agent binding | Skill loads into current session | N/A | Command can route to specific agent | Native skill injection; optional MCP deps in metadata | N/A |
 | **Parity** | — | High | High | Medium | Low (inline only) |
 
 **Migration action**:
 - Gemini: copy TOML commands to `.gemini/commands/`; content format is nearly identical; copy skills to `.gemini/skills/`
 - OpenCode: create `.opencode/commands/wiki-context.md`, `.opencode/commands/security-patterns.md` etc.
-- Codex: add entries to `agents/openai.yaml` + reference prompt file
+- Codex: create `skills/<name>/SKILL.md` and optional `skills/<name>/agents/openai.yaml`
 - Cursor: inline skill content as sections in rules file (ambient, not invokable)
 
 ---
@@ -81,16 +81,16 @@ Layer-by-layer mapping of CC assets to equivalent mechanisms on Gemini CLI, Open
 
 | Asset | Claude Code | Gemini CLI | OpenCode | Codex | Cursor | GitHub Copilot |
 |---|---|---|---|---|---|---|
-| System | `PreToolUse`, `PostToolUse`, `Stop` in `settings.json` | None | Plugin event system (20+ event types) | None | Project-local hook events (15 types) | None |
+| System | `PreToolUse`, `PostToolUse`, `Stop` in `settings.json` | None | Plugin event system (20+ event types) | `hooks` in `config.toml` | Project-local hook events (15 types) | None |
 | Event count | 8 types | — | 20+ types | — | 15 types | — |
-| Current setup | PostToolUse on Bash → `publish-ai-kb.sh` | — | Already done: lean-compaction-plugin.ts | — | — | — |
-| **Parity** | — | None | Highest (more events than CC) | None | Medium (different events, DRY adapter) | None |
+| Current setup | PostToolUse on Bash → `publish-ai-kb.sh` | — | Already done: lean-compaction-plugin.ts | Can mirror project-local shell hooks | — | — |
+| **Parity** | — | None | Highest (more events than CC) | Medium | Medium (different events, DRY adapter) | None |
 
 **OpenCode leads on hooks**: OpenCode has more hook event types than Claude Code. Additional events include `file.edited`, `file.watcher.updated`, `message.updated`, `lsp.client.diagnostics`. The compaction hook (`session.compacting`) has no CC equivalent.
 
 **Cursor hook architecture**: Cursor has 15 hook types vs CC's 8. ECC uses a DRY adapter pattern — `adapter.js` transforms Cursor's stdin JSON to Claude Code's format, so the same `scripts/hooks/*.js` run on both harnesses. Notable Cursor-only hooks: `beforeSubmitPrompt` (secrets detection in prompts), `beforeTabFileRead` (blocks reading `.env`/`.pem` files).
 
-**Migration action**: OpenCode hook equivalent is the plugin system — already done (`lean-compaction-plugin.ts`). No hook equivalent on Gemini, Codex, or Copilot.
+**Migration action**: OpenCode hook equivalent is the plugin system — already done (`lean-compaction-plugin.ts`). Codex supports repo-local hooks via `.codex/config.toml`, but plugin parity is still separate. Gemini and Copilot still have no equivalent here.
 
 ---
 
@@ -154,7 +154,7 @@ Project-local `.zed/` adapter. Writes ECC-managed files under `.zed/`, flattened
 | Wiki knowledge base (`wiki/`) | 100% portable — markdown + qmd |
 | qmd search | Portable (CLI + MCP) |
 | Rule file *content* (`rules/*.md`) | Portable — only loading mechanism differs |
-| Skill file *content* (`skills/*/SKILL.md`) | Content portable — mechanism is CC-only |
+| Skill file *content* (`skills/*/SKILL.md`) | Portable to Codex native skills with small metadata shim |
 
 ---
 
@@ -165,7 +165,7 @@ Project-local `.zed/` adapter. Writes ECC-managed files under `.zed/`, flattened
 | Cursor official `.cursor/rules` spec | `Cursor official docs .cursor/rules format` |
 | Cursor official background agents | `Cursor official docs background agents` |
 | OpenCode agents schema full JSON spec | `OpenCode agents schema mode primary subagent` |
-| Codex skills `openai.yaml` examples | `Codex skills openai.yaml examples invocation` |
+| Codex hook docs / examples | `Codex hooks config.toml PostToolUse matcher command` |
 
 ---
 

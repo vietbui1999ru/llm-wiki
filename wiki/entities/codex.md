@@ -8,7 +8,7 @@ urls:
   - "https://developers.openai.com/codex/guides/agents-md"
   - "https://developers.openai.com/codex/skills"
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-05-22
 ---
 
 # OpenAI Codex
@@ -62,21 +62,42 @@ Schema:
 
 ## Skills
 
-Codex has a first-class skills concept. Metadata in `agents/openai.yaml`:
+Codex has a first-class skills concept. The native entrypoint is `skills/<name>/SKILL.md`, with optional product metadata in `skills/<name>/agents/openai.yaml`.
 
-```yaml
-skills:
-  wiki-context:
-    description: Search the personal LLM wiki for relevant patterns
-    invocation: explicit          # must be invoked; not ambient
-    tool_dependencies: [bash]
-  security-audit:
-    description: OWASP security review on specified scope
-    invocation: auto              # Codex may auto-invoke when relevant
-    tool_dependencies: [bash, read]
+```text
+skills/
+  wiki-context/
+    SKILL.md
+    agents/openai.yaml
 ```
 
-Skills are namespaced and invocable on demand — closer to CC's `Skill` tool mechanism than to ambient AGENTS.md rules.
+Example metadata:
+
+```yaml
+interface:
+  display_name: "Wiki Context"
+  short_description: "Load llm-wiki context before technical work"
+  default_prompt: "Use $wiki-context to load relevant llm-wiki context before proceeding."
+```
+
+Skills are invocable on demand and can also be injected implicitly when allowed by policy. This is closer to CC's `Skill` tool mechanism than to ambient AGENTS.md rules.
+
+---
+
+## Hooks
+
+Codex supports repo-local hooks in `config.toml`, including events such as `PostToolUse`.
+
+Minimal pattern:
+
+```toml
+[hooks]
+PostToolUse = [
+  { matcher = "exec_command|apply_patch", hooks = [
+    { type = "command", command = "echo post-tool hook" }
+  ] }
+]
+```
 
 ---
 
@@ -85,8 +106,10 @@ Skills are namespaced and invocable on demand — closer to CC's `Skill` tool me
 ```
 ~/.codex/AGENTS.md          ← global ambient
 .codex/AGENTS.md            ← project ambient
+.codex/config.toml          ← project-local hooks and config
 .codex/agents/*.toml        ← named spawnable agents
-agents/openai.yaml          ← skill metadata
+skills/*/SKILL.md           ← native skills
+skills/*/agents/openai.yaml ← optional skill UI metadata
 ```
 
 ---
@@ -97,8 +120,8 @@ agents/openai.yaml          ← skill metadata
 |---|---|
 | `CLAUDE.md` + `@-imports` | `AGENTS.md` layered discovery |
 | `agents/*.md` (YAML frontmatter) | `.codex/agents/*.toml` |
-| `skills/*/SKILL.md` | `agents/openai.yaml` skill entries + prompt file |
-| `settings.json` hooks | None |
+| `skills/*/SKILL.md` | `skills/*/SKILL.md` + optional `skills/*/agents/openai.yaml` |
+| `settings.json` hooks | `.codex/config.toml` hooks |
 | Plugins | None |
 
 See [[comparisons/cc-to-cross-platform-migration]] for full matrix.

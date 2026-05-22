@@ -100,7 +100,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/pi-agent]] — TypeScript unified multi-provider LLM API (pi-mono); council/adversarial review layer; GitHub Copilot Models integration
 - [[entities/karpathy-llm-council]] — Karpathy's 3-stage council web app: parallel dispatch → anonymized peer review → Chairman synthesis; OpenRouter-based reference implementation
 - [[entities/agents-md-format]] — AGENTS.md format entity: origin, per-tool implementations (Codex/OpenCode/CC/Aider/Gemini), multi-file strategies
-- [[entities/codex]] *(stub)* — OpenAI Codex CLI; pioneered AGENTS.md format; AGENTS.override.md layering; 32 KiB chain limit
+- [[entities/codex]] — OpenAI Codex CLI; AGENTS.md + TOML agents + native skills (3-layer stack); CC migration mapping; hooks via config.toml
 - [[entities/opencode-dcp]] — `@tarquinen/opencode-dcp` npm plugin; Compress + dedup + purge-errors; global/project config; /dcp commands
 - [[entities/lean-session]] — OpenCode plugin; injects `.agents/` state into compaction; writes checkpoint on idle; 3 hooks: compacting/diff/idle
 - [[entities/dspy]] — Stanford framework for programming LMs via Signatures/Modules/Optimizers; GEPA optimizer: error-driven prompt refinement; automated prompt optimization without manual prompt engineering

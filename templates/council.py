@@ -1,135 +1,182 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.11"
+# dependencies = []
+# ///
 """
 council.py — dispatch a question to your LLM council, surface disagreements.
 
+Requires: claude (Claude Code CLI) and codex (OpenAI Codex CLI) on PATH.
+No API keys needed — each CLI uses its own stored auth.
+
+Voice outputs are written to .council/ for git tracking and cross-run diffs.
+
 Reads from env (set via env-model-routing.sh):
-  GITHUB_TOKEN               — GitHub PAT with models:read scope
-  GITHUB_MODELS_ENDPOINT     — defaults to https://models.inference.ai.azure.com
-  OPENCODE_MODEL_COUNCIL     — primary council voice (default: openai/gpt-4.1)
-  OPENCODE_MODEL_COUNCIL_FAST— fast adversarial pass (default: xai/grok-code-fast)
-  OPENCODE_MODEL_COUNCIL_CODE— chairman model (default: openai/o1)
+  OPENCODE_MODEL_COUNCIL      — council voice A (default: anthropic/claude-sonnet-4-6)
+  OPENCODE_MODEL_COUNCIL_FAST — council voice B (default: openai/gpt-5.4)
+  OPENCODE_MODEL_COUNCIL_CODE — chairman model  (default: anthropic/claude-opus-4-6)
+  COUNCIL_DIR                 — output directory (default: .council)
+
+Routing:
+  anthropic/* → claude -p --model <id>  (stdout captured)
+  openai/*    → codex -m <id> exec -o <tmp> -a never  (file output, no JSON parsing)
 
 Usage:
-  council.py "should we use optimistic or pessimistic locking here?"
-  echo "question" | council.py
-  council.py --chairman "question"   # Stage 1 + 2 (peer review) + 3 (Chairman)
-  council.py --add openai/gpt-4o "question"  # add a third voice
-
-Requires: pip install openai
-Install:  cp council.py ~/bin/council && chmod +x ~/bin/council
+  uv run council.py "should we use optimistic or pessimistic locking here?"
+  echo "question" | uv run council.py
+  uv run council.py --chairman "question"
+  uv run council.py --add openai/gpt-5.3-codex "question"
 """
 
 import asyncio
 import os
 import sys
 import argparse
+import tempfile
 import textwrap
-from openai import AsyncOpenAI
+from pathlib import Path
 
-ENDPOINT = os.getenv("GITHUB_MODELS_ENDPOINT", "https://models.inference.ai.azure.com")
-TOKEN    = os.getenv("GITHUB_TOKEN", "")
-MODEL_A  = os.getenv("OPENCODE_MODEL_COUNCIL",      "openai/gpt-4.1")
-MODEL_B  = os.getenv("OPENCODE_MODEL_COUNCIL_FAST", "xai/grok-code-fast")
-CHAIRMAN = os.getenv("OPENCODE_MODEL_COUNCIL_CODE", "openai/o1")
+MODEL_A  = os.getenv("OPENCODE_MODEL_COUNCIL",      "anthropic/claude-sonnet-4-6")
+MODEL_B  = os.getenv("OPENCODE_MODEL_COUNCIL_FAST", "openai/gpt-5.4")
+CHAIRMAN = os.getenv("OPENCODE_MODEL_COUNCIL_CODE", "anthropic/claude-opus-4-6")
 
 SEP  = "─" * 64
 SEP2 = "═" * 64
 
 
-async def ask(client: AsyncOpenAI, model: str, messages: list) -> str:
-    resp = await client.chat.completions.create(model=model, messages=messages)
-    return resp.choices[0].message.content or ""
+def _is_anthropic(model: str) -> bool:
+    return model.startswith("anthropic/")
+
+
+def _model_id(model: str) -> str:
+    return model.split("/", 1)[1] if "/" in model else model
+
+
+async def ask(model: str, prompt: str) -> str:
+    """Run model with prompt via CLI. Returns response text."""
+    mid = _model_id(model)
+
+    if _is_anthropic(model):
+        cmd = ["claude", "-p", "--model", mid]
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await proc.communicate(prompt.encode())
+        if proc.returncode != 0:
+            return f"[error from {model}: {stderr.decode().strip()[:200]}]"
+        return stdout.decode().strip()
+
+    else:
+        # codex exec -o writes final assistant message as plain text — no JSON parsing needed
+        tmp = Path(tempfile.mktemp(suffix=".md"))
+        try:
+            cmd = ["codex", "-m", mid, "-a", "never", "exec", "-o", str(tmp)]
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            _, stderr = await proc.communicate(prompt.encode())
+            if proc.returncode != 0:
+                return f"[error from {model}: {stderr.decode().strip()[:200]}]"
+            if not tmp.exists():
+                return f"[error from {model}: no output file produced]"
+            return tmp.read_text().strip()
+        finally:
+            tmp.unlink(missing_ok=True)
 
 
 async def run(question: str, extra: list[str], chairman: bool) -> None:
-    if not TOKEN:
-        sys.exit("error: GITHUB_TOKEN not set — source env-model-routing.sh first")
+    council_dir = Path(os.getenv("COUNCIL_DIR", ".council"))
+    council_dir.mkdir(exist_ok=True)
 
-    client = AsyncOpenAI(base_url=ENDPOINT, api_key=TOKEN)
     models = [MODEL_A, MODEL_B] + extra
+    voice_labels = [chr(ord("a") + i) for i in range(len(models))]
+    voice_files  = [council_dir / f"voice_{lbl}.md" for lbl in voice_labels]
 
     print(f"\n{SEP2}")
     print(f"  Council: {', '.join(models)}")
     print(f"  Question: {textwrap.shorten(question, 55)}")
+    print(f"  Output: {council_dir}/")
     print(SEP2)
 
-    # Stage 1: parallel dispatch — each model answers independently
-    stage1 = [ask(client, m, [{"role": "user", "content": question}]) for m in models]
-    responses: list[str] = await asyncio.gather(*stage1)
+    # Stage 1: parallel dispatch — all voices answer independently
+    responses: list[str] = await asyncio.gather(*[ask(m, question) for m in models])
 
-    for model, resp in zip(models, responses):
-        print(f"\n▸ {model}\n")
-        print(resp.strip())
-        print()
+    for model, resp, path in zip(models, responses, voice_files):
+        path.write_text(f"# {model}\n\n{resp}\n")
+        print(f"  ▸ {model} → {path}")
 
     if not chairman:
-        print(SEP2 + "\n")
+        await _git_commit(council_dir, question)
+        print(f"\n{SEP2}\n")
         return
 
-    # Stage 2: anonymized peer review — each model reviews all others, identity hidden
-    # Voices labeled by number only so no model can favor its own provider.
-    print(SEP)
-    print("  Stage 2: peer review (anonymized)...\n")
-
-    all_voices = "\n\n".join(f"[Voice {i+1}]:\n{r.strip()}" for i, r in enumerate(responses))
-
-    review_prompt = (
-        f"The following responses were given to this question:\n\n"
-        f"Question: {question}\n\n"
-        f"{all_voices}\n\n"
-        "You do not know which AI produced which response.\n"
-        "Review each voice for: accuracy, completeness, and reasoning quality.\n"
-        "Which is strongest overall, and what does each miss or get wrong?\n"
-        "Be critical. Do not give equal praise to all."
-    )
-
-    review_tasks = [
-        ask(client, m, [{"role": "user", "content": review_prompt}])
-        for m in models
-    ]
-    reviews: list[str] = await asyncio.gather(*review_tasks)
-
-    for model, review in zip(models, reviews):
-        print(f"  Reviewer: {model}\n")
-        print(review.strip())
-        print()
-
-    # Stage 3: Chairman synthesis — has first-pass responses + peer reviews
-    print(SEP)
+    # Stage 2: Chairman reads voice files and synthesizes
+    print(f"\n{SEP}")
     print(f"  Chairman: {CHAIRMAN} — synthesizing...\n")
 
-    peer_reviews = "\n\n".join(
-        f"[Reviewer {i+1}]:\n{r.strip()}" for i, r in enumerate(reviews)
+    voices_block = "\n\n---\n\n".join(
+        f"## Voice {lbl.upper()} — {model}\n\n{path.read_text().strip()}"
+        for lbl, model, path in zip(voice_labels, models, voice_files)
     )
-    synthesis = (
-        f"You are the Chairman of a {len(models)}-model council.\n\n"
+
+    synthesis_prompt = (
+        f"You are the Chairman of a {len(models)}-voice council.\n\n"
         f"Question: {question}\n\n"
-        f"First-pass responses:\n{all_voices}\n\n"
-        f"Peer reviews (each model reviewed the others anonymously):\n{peer_reviews}\n\n"
+        f"Council responses:\n\n{voices_block}\n\n"
         "Produce:\n"
         "1. **Points of agreement** — what all voices converge on\n"
         "2. **Points of disagreement** — genuine divergences, not just phrasing\n"
-        "3. **Synthesized answer** — your best answer, weighted by peer review signal\n\n"
+        "3. **Synthesized answer** — your best answer, weighted by reasoning quality\n\n"
         "Be direct. Do not average away real disagreements."
     )
 
-    chairman_resp = await ask(client, CHAIRMAN, [{"role": "user", "content": synthesis}])
-    print(chairman_resp.strip())
+    synthesis = await ask(CHAIRMAN, synthesis_prompt)
+
+    synthesis_path = council_dir / "synthesis.md"
+    synthesis_path.write_text(
+        f"# Chairman: {CHAIRMAN}\n\n"
+        f"## Question\n\n{question}\n\n"
+        f"## Council\n\n"
+        + "\n".join(f"- Voice {lbl.upper()}: {m} → {p.name}" for lbl, m, p in zip(voice_labels, models, voice_files))
+        + f"\n\n## Synthesis\n\n{synthesis}\n"
+    )
+    print(f"  ▸ {CHAIRMAN} → {synthesis_path}")
+    await _git_commit(council_dir, question)
     print(f"\n{SEP2}\n")
+
+
+async def _git_commit(council_dir: Path, question: str) -> None:
+    label = textwrap.shorten(question, 60, placeholder="...")
+    for cmd in (
+        ["git", "add", str(council_dir)],
+        ["git", "commit", "-m", f"council: {label}"],
+    ):
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        await proc.wait()
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Dispatch to LLM council via GitHub Models API"
+        description="Dispatch to LLM council via claude and codex CLIs"
     )
     parser.add_argument("question", nargs="?", help="Question to ask the council")
     parser.add_argument(
         "--chairman", action="store_true",
-        help=f"Full 3-stage council: parallel → anonymized peer review → Chairman ({CHAIRMAN})"
+        help=f"Run Opus chairman synthesis after voices ({CHAIRMAN})"
     )
     parser.add_argument(
         "--add", metavar="MODEL", action="append", default=[],
-        help="Add an extra council voice (repeatable)"
+        help="Add an extra council voice; prefix with anthropic/ or openai/"
     )
     args = parser.parse_args()
 

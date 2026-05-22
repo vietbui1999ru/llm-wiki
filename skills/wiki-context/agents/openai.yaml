@@ -1,0 +1,11 @@
+interface:
+  display_name: "Wiki Context"
+  short_description: "Load llm-wiki context before technical work"
+  default_prompt: "Use $wiki-context to load relevant llm-wiki context before proceeding."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "qmd"
+      description: "Local qmd wiki search MCP server"
+

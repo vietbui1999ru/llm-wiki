@@ -17,14 +17,17 @@ export OPENCODE_REASONING_WORKER="high"
 export OPENCODE_MODEL_MINI="claude-haiku-4-5"
 export OPENCODE_REASONING_MINI="low"
 
-# Council — cross-vendor adversarial review via GitHub Models
-# Requires: export GITHUB_TOKEN=<your PAT with models:read scope>
-# Models available at: https://github.com/marketplace/models
-export OPENCODE_MODEL_COUNCIL="openai/gpt-4.1"          # GPT-4.1 (cross-vendor: different training from Claude)
-export OPENCODE_MODEL_COUNCIL_FAST="xai/grok-code-fast"  # Quick adversarial pass
-export OPENCODE_MODEL_COUNCIL_CODE="openai/o1"           # Codex for code review
+# Council — cross-vendor adversarial review
+# Requires: GITHUB_TOKEN (models:read) for openai/* models
+#           ANTHROPIC_API_KEY for anthropic/* models
+export OPENCODE_MODEL_COUNCIL="anthropic/claude-sonnet-4-6"     # council voice A
+export OPENCODE_REASONING_COUNCIL="high"
+export OPENCODE_MODEL_COUNCIL_FAST="openai/gpt-5.4"             # council voice B
+export OPENCODE_REASONING_COUNCIL_FAST="medium"
+export OPENCODE_MODEL_COUNCIL_CODE="anthropic/claude-opus-4-6"  # chairman/decider
+export OPENCODE_REASONING_COUNCIL_CODE="high"
 
-# GitHub Models endpoint (Copilot subscriber access)
+# GitHub Models endpoint (for openai/* council models)
 export GITHUB_MODELS_ENDPOINT="https://models.inference.ai.azure.com"
 
 # OpenCode Go subscription model pool (if using Go plan instead of direct API)

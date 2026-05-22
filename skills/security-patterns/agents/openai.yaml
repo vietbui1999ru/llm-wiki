@@ -1,0 +1,5 @@
+interface:
+  display_name: "Security Patterns"
+  short_description: "Run OWASP and agent-security review"
+  default_prompt: "Use $security-patterns to review this change or design for security risks."
+

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Agent Orchestration"
+  short_description: "Choose skill, subagent, or council shape"
+  default_prompt: "Use $agent-orchestration to choose the right workflow shape for this task."
+

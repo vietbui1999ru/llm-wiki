@@ -31,7 +31,8 @@ tasks and ask:
 ### Step 1: Parse the goal
 
 The user's goal is the argument passed to this skill invocation. If no argument was
-provided, ask: "What's the goal for this loop?"
+provided, ask: "What's the goal for this loop?" If the response is empty or too
+vague, ask clarifying questions until you can write a one-sentence goal statement.
 
 ### Step 2: Generate task list
 
@@ -99,7 +100,7 @@ the user's original goal:
 **Task file:** .claude/tasks.json
 **Log file:** .claude/ralph-log.md
 
-Do NOT modify this file during the loop.
+This file is read-only during the loop. If accidentally modified, re-read it at the start of the next iteration.
 
 ## Each iteration — follow these steps exactly
 
@@ -112,9 +113,10 @@ Do NOT modify this file during the loop.
    - Print a summary: "Loop complete. [N done, M blocked]"
    - For each blocked task, print: "BLOCKED: [id] — [title] — [acceptance_criteria]"
    - Then output exactly: <promise>ALL_TASKS_DONE</promise>
+   Do not proceed to step 4. The loop will terminate automatically after this output.
 
-4. Increment the task's `"attempts"` counter in `tasks.json` **before starting work**.
-   Use the Edit tool — do not rewrite the entire file.
+4. Increment the task's `"attempts"` counter **before starting work**:
+   Read `.claude/tasks.json`, increment `attempts` for this task, then write the entire file back using the Write tool. Do not use Edit — partial JSON edits create inconsistent state.
 
 5. Work **only** on this task. Do not touch any other task.
 
@@ -137,14 +139,18 @@ Do NOT modify this file during the loop.
 If `--kanban` was passed by the user:
 
 ```bash
-REPO=$(git rev-parse --show-toplevel 2>/dev/null) || REPO="."
-mkdir -p "${REPO}/.agents/inbox" "${REPO}/.agents/claimed" "${REPO}/.agents/done"
+if ! command -v jq >/dev/null 2>&1; then
+  echo "jq not found — skipping kanban sync. Install with: brew install jq (macOS) or apt install jq (Linux)"
+else
+  REPO=$(git rev-parse --show-toplevel 2>/dev/null) || REPO="."
+  mkdir -p "${REPO}/.agents/inbox" "${REPO}/.agents/claimed" "${REPO}/.agents/done"
 
-# Mirror all pending tasks to inbox
-jq -r '.[] | select(.status == "pending") | "\(.id)\t\(.title)"' .claude/tasks.json | \
-  while IFS=$'\t' read -r task_id title; do
-    echo "# ${task_id}: ${title}" > "${REPO}/.agents/inbox/${task_id}.md"
-  done
+  # Mirror all pending tasks to inbox
+  jq -r '.[] | select(.status == "pending") | "\(.id)\t\(.title)"' .claude/tasks.json | \
+    while IFS=$'\t' read -r task_id title; do
+      echo "# ${task_id}: ${title}" > "${REPO}/.agents/inbox/${task_id}.md"
+    done
+fi
 ```
 
 ### Step 6: Add .gitignore entries

@@ -2,6 +2,16 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-22] ingest | Agent Harness Explained in 8min (Caleb Bright, YouTube)
+
+Source: "Agent Harness explained in 8min...md"
+New summary: summaries/agent-harness-8min
+Updated concepts:
+  - concepts/context-engineering — added Historical Origin section (4K token pressure narrative); added Three-Layer Stack section (additive framing)
+  - concepts/agent-harness — added "Why Harness Engineering Emerged" section: summarization false-completion failure mode as the motivating problem; term coined early 2026
+  - concepts/ralph-loop — added "Canonical Loop Architecture" section: PRD→JSON→single-task-per-iteration pattern; one-task design rule
+Novel content: historical pressure narrative, summarization-as-fidelity-bottleneck failure mode, PRD→JSON→single-task loop as named architecture, additive 3-layer stack framing
+
 ## [2026-05-22] update | Council setup — CLI-based, file output, git auto-commit
 
 Updated: skills/council/SKILL.md — new invocation (`council` alias), architecture (claude + codex CLIs, no API keys, .council/ file output, auto-commit)

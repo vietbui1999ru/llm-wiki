@@ -5,8 +5,9 @@ tags: [agent-engineering, harness, context-management, sandbox, filesystem, auto
 sources:
   - "The Anatomy of an Agent Harness.md"
   - "Harness engineering leveraging Codex in an agent-first world.md"
+  - "Agent Harness explained in 8min...md"
 created: 2026-04-25
-updated: 2026-04-25
+updated: 2026-05-22
 ---
 
 # Agent Harness
@@ -16,6 +17,21 @@ A harness is the system that wraps a language model to make its intelligence use
 **Agent = Model + Harness**
 
 Without a harness, a model can only take in data and output text in a single turn. The harness is what turns that into a work engine.
+
+**Term coined**: early 2026, though the pattern existed before the term.
+
+## Why Harness Engineering Emerged
+
+Context engineering (tool calling, MCP, RAG) enabled longer-duration tasks as context windows grew — but exposed a specific failure mode: **context summarization as a fidelity bottleneck**.
+
+When a task ran long enough to fill the context window, the agent would summarize its prior work and continue. In practice:
+
+- The agent was bounded by its own ability to accurately summarize prior work
+- Summarization caused false completion signals — the agent assumed tasks were done when they weren't
+- Features were oversimplified or silently skipped; the summarized state marked them "verified"
+- Tasks appeared partially finished with no reliable way to resume accurately
+
+Subagent hierarchies and swarms were early attempts to work around this. The harness pattern formalizes the solution: fresh context per iteration, with durable filesystem state carrying work forward. See [[concepts/ralph-loop]] for the loop mechanism.
 
 ## Core Components
 

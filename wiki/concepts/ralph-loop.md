@@ -5,8 +5,9 @@ tags: [agent-engineering, harness, long-horizon, autonomy, context-management]
 sources:
   - "The Anatomy of an Agent Harness.md"
   - "Harness engineering leveraging Codex in an agent-first world.md"
+  - "Agent Harness explained in 8min...md"
 created: 2026-04-25
-updated: 2026-04-25
+updated: 2026-05-22
 ---
 
 # Ralph Loop
@@ -44,6 +45,25 @@ loop:
 The filesystem is the memory. Clean context means no context rot, no accumulated noise, no degraded reasoning from a full window. The agent reconstructs where it is from durable artifacts, then continues.
 
 This is the same reason `autoresearch` runs 5-minute bounded experiments in a loop rather than one long run — each iteration is self-contained and comparable; state persists in `train.py` modifications.
+
+## Canonical Loop Architecture (PRD → JSON → Single Task)
+
+The pattern that emerged across independent implementations (Ralph, Anthropic's demo, coding agents):
+
+```
+1. Generate requirements document (PRD) — full scope of the work
+2. Decompose into structured task list (JSON file on filesystem)
+3. Loop:
+   a. Select one task from the list
+   b. Start fresh context: re-inject prompt + read current filesystem state
+   c. Implement, test, and document that task
+   d. Mark complete in the task file
+4. Repeat until task list exhausted
+```
+
+Key design rule: **one task per iteration**. Selecting only one task per fresh context prevents the agent from context-poisoning itself by trying to track multiple in-flight changes across a long context.
+
+Both Ralph and Anthropic's minimal harness demo are noted for their small repository size — the architecture is simple, the complexity was solved at the pattern level.
 
 ## In Practice (OpenAI Codex case study)
 

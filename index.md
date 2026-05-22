@@ -30,6 +30,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/anti-bot-evasion-tactics]] — Community techniques for bypassing anti-bot systems: fingerprinting layers, Cloudflare, proxy rotation, free vs. hybrid stacks
 - [[summaries/amazon-scraping-2026]] — DIY vs. managed API for Amazon scraping; detection mechanisms, legal context, data available
 - [[summaries/pydoll-network-fingerprinting]] — Pydoll deep-dive: OSI layers, TCP/TLS fingerprinting, WebRTC leaks, GDPR/CFAA legal framework
+- [[summaries/agent-harness-8min]] — YouTube (Caleb Bright): 3-layer evolution stack (prompt→context→harness); summarization failure as harness motivation; PRD→JSON→single-task loop architecture
 - [[summaries/agent-harness-engineering]] — LangChain harness anatomy + OpenAI 5-month Codex case study: harness components, repo-as-record, mechanical enforcement
 - [[summaries/autoresearch-karpathy]] — Karpathy's autonomous ML experiment loop: agent modifies train.py, 5-min runs, val_bpb metric, program.md as control layer
 - [[summaries/docling]] — 3 sources: Docling document parser for AI; why parsing quality matters for RAG; layout-aware PDF → Markdown; vs Firecrawl; research paper pipeline

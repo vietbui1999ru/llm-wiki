@@ -5,8 +5,9 @@ tags: [context-engineering, agents, prompt-engineering, jit-retrieval, attention
 sources:
   - "Effective context engineering for AI agents.md"
   - "Context windows.md"
+  - "Agent Harness explained in 8min...md"
 created: 2026-04-27
-updated: 2026-05-12
+updated: 2026-05-22
 ---
 
 # Context Engineering
@@ -70,6 +71,24 @@ For tasks spanning tens of minutes to hours:
 **Structured note-taking**: agent writes a persistent NOTES.md or similar; reads back on context reset. Provides durable memory with minimal overhead. Example: Claude playing Pokémon maintains accurate tallies across thousands of game steps via self-written notes.
 
 **Sub-agent architectures**: specialist subagents with isolated context windows perform deep work; return distilled summaries (~1-2K tokens) to the lead agent. Lead agent maintains high-level plan; subagents handle parallel exploration. See [[concepts/agent-subagents]].
+
+## Historical Origin
+
+Context engineering emerged from constraint pressure. Early models operated in ~4K token windows — small enough that any useful agent had to actively *recycle* that space. Engineers could no longer simply prompt; they had to curate what lived in the window at all times. Tool calling, MCP, and RAG were the response: load only what the task requires, discard the rest.
+
+As context windows grew, context engineering enabled longer-duration tasks — but eventually hit its own failure mode: **summarization-caused false completion** (see [[concepts/agent-harness]] for the full narrative).
+
+## The Three-Layer Stack
+
+Prompt engineering, context engineering, and harness engineering are additive layers, not replacements:
+
+| Layer | Responsibility |
+|---|---|
+| Prompt Engineering | Agent persona/identity — who the agent is |
+| Context Engineering | State management — what information the agent has |
+| Harness Engineering | Environment + iteration structure — how the agent loops |
+
+See [[concepts/agent-harness]] for the harness layer. Context engineering is the middle layer — it remains load-bearing even inside a harness.
 
 ## Context Engineering vs. Prompt Engineering
 

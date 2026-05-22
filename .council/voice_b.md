@@ -1,0 +1,10 @@
+# openai/gpt-5.4
+
+[error from openai/gpt-5.4: error: unexpected argument '-a' found
+
+  tip: to pass '-a' as a value, use '-- -a'
+
+Usage: codex exec [OPTIONS] [PROMPT]
+       codex exec [OPTIONS] <COMMAND> [ARGS]
+
+For more information, try '--help]

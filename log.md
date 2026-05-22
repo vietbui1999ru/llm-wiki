@@ -2,6 +2,12 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-22] update | ralph-structured skill + auto-suggestion rule
+
+New skill: claude-setup/skills/ralph-structured/ — structured ralph loop with task
+decomposition, one-task-per-iteration, stuckness protection (3 attempts), iteration log, optional
+kanban sync. Updated rule: applied-ai.md — auto-suggestion for multi-step tasks.
+
 ## [2026-05-22] ingest | Agent Harness Explained in 8min (Caleb Bright, YouTube)
 
 Source: "Agent Harness explained in 8min...md"

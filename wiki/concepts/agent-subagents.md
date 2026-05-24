@@ -115,6 +115,18 @@ Spawn a teammate using the security-reviewer agent type to audit the auth module
 ```
 Teammate honors the definition's `tools` and `model`. Definition body appended to teammate system prompt (not replacing it). `skills` and `mcpServers` frontmatter NOT applied in teammate mode.
 
+## Model Tiering for Subagent Types
+
+Match model capability to task type — cheaper models for mechanical work, stronger models for reasoning:
+
+| Task type | Model | Rationale |
+|---|---|---|
+| Read-only exploration (grep, find, ls) | Haiku | Mechanical; inability to write = safe default |
+| Web research / synthesis | Sonnet | Needs reasoning to synthesize multi-page output |
+| Full implementation | Sonnet/Opus | Arbitrary complexity; cost justified by output quality |
+
+Source: [[summaries/pi-subagents-extension]] — Pi Subagents extension practice.
+
 ## When to Use Subagents (not main conversation)
 
 - Task produces verbose output (test runs, log analysis, doc fetches)

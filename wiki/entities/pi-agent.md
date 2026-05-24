@@ -2,7 +2,7 @@
 title: "Pi Agent (pi-mono)"
 type: entity
 tags: [agent-harness, multi-provider, typescript, coding-agent, council]
-sources: ["pi-monopackagescoding-agent at main.md"]
+sources: ["pi-monopackagescoding-agent at main.md", "Simple Pi Subagents.md"]
 created: 2026-05-04
 updated: 2026-05-04
 ---
@@ -84,6 +84,18 @@ Rate limits on GitHub Models: ~150 req/day free tier; higher for GitHub Team/Ent
 ## Session Sharing
 
 Pi Agent supports publishing sessions to Hugging Face via `badlogic/pi-share-hf`. Useful for OSS projects — contributes real-world agent sessions to training data.
+
+---
+
+## Pi Subagents Extension
+
+A community extension by Amos Blomqvist (`amosblomqvist/pi-subagents`) that adds a `spawn_subagent` tool to the Pi coding agent. Lets the master agent delegate exploration and research to cheaper, purpose-built subagents — keeping the main context window lean.
+
+Three shipped agent types: Scout (Haiku, read-only filesystem), Researcher (Sonnet, web search/fetch), Worker (Sonnet/Opus, full tools + can spawn its own scouts and researchers).
+
+Each agent is a markdown file: frontmatter declares tools, model, allowed sub-agents; body is the system prompt. Depth limiting via `agents` allowlist field — prevents recursive runaway. Default max depth: 3 layers.
+
+See [[summaries/pi-subagents-extension]] for full details.
 
 ---
 

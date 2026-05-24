@@ -408,3 +408,19 @@ Updated comparisons:
   - comparisons/cc-to-cross-platform-migration — updated hooks section with event counts (CC:8, OpenCode:20+, Cursor:15); added GitHub Copilot and Zed sections; DRY adapter pattern
 Key new patterns: hook runtime controls (ECC_HOOK_PROFILE env var), context injection modes (dev/review/research), skill creator from git history, AgentShield 3-agent security pipeline
 Note: component counts (60 agents, 232 skills, 102 rules) and impact numbers are claimed from ECC README — not independently verified.
+
+## [2026-05-24] ingest | Simple Pi Subagents (YouTube — Amos Blomqvist)
+
+Source: `raw/Simple Pi Subagents.md` (YouTube transcript + repo link)
+Repo: https://github.com/amosblomqvist/pi-subagents
+
+New summaries: summaries/pi-subagents-extension
+Updated entities:
+  - entities/pi-agent — added Pi Subagents Extension section; added source to frontmatter
+Updated concepts:
+  - concepts/agent-subagents — added Model Tiering for Subagent Types section (Haiku/Sonnet/Opus heuristic)
+Updated index.md:
+  - Added summaries/pi-subagents-extension entry
+  - Updated entities/pi-agent entry description
+
+Key patterns: proactive exploration offloading (delegate planning-phase file reads to cheap subagents before context bloat occurs); model tiering heuristic (mechanical/read-only→Haiku, reasoning/research→Sonnet, full capability→Sonnet/Opus); spawn depth limiting via frontmatter allowlist; per-subagent observability (nested tool call tree + cost metrics per agent).

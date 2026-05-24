@@ -100,7 +100,7 @@ From the Opus audit. Not yet implemented. Review before doing.
 | Wiki-context invocation has 3 trigger definitions | **Done** | wiki-startup.md declares project override; superpowers-integration.md references skill-invocation.md |
 | Superpowers skill overrides are incomplete | **Done** | Full audit in superpowers-integration.md; "Partial" skills documented |
 | Unified priority statement in CLAUDE.md | **Done** | Added to top of dotfiles CLAUDE.md |
-| No monitoring for silent subagent failures | Open | High — needs agent completion signal |
+| No monitoring for silent subagent failures | **Blocked on Phase 0.5** | See control plane plan: [[syntheses/control-plane-expansion-plan]] Steps 1+2 (events.jsonl + registry.json) provide the completion signal. Sub-item below works with current setup. |
 
 ### Judge timing fix (Low effort — do next)
 `applied-ai.md:56-62`: change "invoke /judge" to clarify it runs POST-GENERATION at end of turn. Add: "Timing: judge runs after generating output. Superpowers skill checks run before responding. These are compatible: skills first, generate, then judge."
@@ -150,3 +150,78 @@ Add to top of `~/.claude/CLAUDE.md` (the dotfiles version):
 4. **Pattern-match trigger, not probability estimate.** Skill invocation should be "task matches pattern X → invoke skill Y", not "if there's any chance skill Y applies." Pattern matching is mechanical; probability estimation is not.
 
 5. **Plugin integration, not competition.** Superpowers skills are additive tools. They should extend what the rules define, not compete with them. The rules define *when* to invoke; superpowers defines *how* to execute.
+
+---
+
+## Sub-Item: Lightweight Completion Signal (Current Setup, No New Infra)
+
+**Problem:** Silent subagent failures are undetectable — an agent stops, but there's no signal distinguishing "finished task" from "crashed mid-task."
+
+**Control plane dependency:** Full solution requires Phase 0.5 Steps 1+2 (events.jsonl schema, registry.json). See [[syntheses/control-plane-expansion-plan]].
+
+**What works today:** The Stop hook (`lint-autofix.sh`) already emits `session_end` to `.agents/events.jsonl` for repos with a `.agents/` dir. `CLAUDE_SESSION_ID` env var is available. `.agents/claimed/` dir convention is in place.
+
+**Lightweight sub-item — extend Stop hook with orphan detection:**
+
+```bash
+# In lint-autofix.sh (Stop hook), after existing session_end emit:
+
+# Check if this session claimed a task that hasn't moved to done/
+SESSION_ID="${CLAUDE_SESSION_ID:-}"
+if [ -n "$SESSION_ID" ] && [ -d "${REPO_ROOT}/.agents/claimed" ]; then
+  ORPHAN=$(grep -rl "session_id: ${SESSION_ID}" "${REPO_ROOT}/.agents/claimed/" 2>/dev/null | head -1)
+  if [ -n "$ORPHAN" ]; then
+    TASK=$(basename "$ORPHAN" .md)
+    EVENT="{\"ts\":\"${TS}\",\"event\":\"task_failed\",\"task\":\"${TASK}\",\"session\":\"${SESSION_ID}\",\"reason\":\"session_end_without_completion\"}"
+    echo "$EVENT" >> "${REPO_ROOT}/.agents/events.jsonl"
+    echo "WARNING: Task ${TASK} still in claimed/ at session end — possible silent failure."
+  fi
+fi
+```
+
+**What this gives you now:**
+- Visible warning when session ends with a claimed-but-not-done task
+- `task_failed` event in events.jsonl (same schema Phase 0.5 will use)
+- Zero new infra — uses existing Stop hook, existing `.agents/` dirs, existing `CLAUDE_SESSION_ID`
+
+**What it doesn't give you (needs Phase 0.5):**
+- Cross-agent visibility (you only see your own session's orphans)
+- Registry query ("which agents are running right now?")
+- Structured board view showing failures alongside other task states
+
+**When to implement:** Now, before Phase 0.5. It's additive — Phase 0.5 builds on the same events.jsonl.
+
+---
+
+## Pi Agent Integration Note
+
+Pi (`badlogic/pi-mono`) and Claude Code are separate CLI tools. They don't share a plugin system or subagent protocol. Three ways to combine them:
+
+### Option A: Apply Pi's concepts natively in Claude Code (recommended)
+Pi's Scout/Researcher/Worker pattern maps directly to Claude Code's native subagent system:
+- Scout → `explore.md` agent (Haiku, read-only) — **already built**
+- Researcher → could be a `researcher.md` agent (Sonnet, web tools only)
+- Worker → `code-writer.md` (Sonnet, full tools) — **already exists**
+
+No Pi installation needed. The model tiering heuristic is already in `model-routing.md`. This is the zero-friction path.
+
+### Option B: Pi as a Bash subprocess from Claude Code
+Pi can run non-interactively (the Pi subagents extension itself spawns Pi as a subprocess). Claude Code could call Pi via the Bash tool:
+
+```bash
+pi "explore the auth module and summarize the session flow" --no-interactive
+```
+
+**Prerequisite:** Pi must support a non-interactive / single-shot mode (check `pi --help`). If it only runs interactively, this won't work cleanly.
+
+**Use case:** when you specifically want Pi's TUI, token cost display, or Pi-specific tools for a subtask, and want Claude Code to orchestrate that output.
+
+### Option C: Parallel sessions (tmux panes)
+Run Pi in one pane, Claude Code in another. Coordinate via shared files (`.agents/`, shared workspace). Pi reads files Claude Code writes, and vice versa. Manual coordination — no automated handoff.
+
+**Practical recommendation:** Start with Option A (already done). Try Option B if you want to experiment with Pi's specific capabilities (e.g. its web tools or council features). Option C is for deliberate parallel human-supervised workflows, not automation.
+
+**Pi subagent concepts already applied to this setup:**
+- Model tiering heuristic (Haiku/Sonnet/Opus per task type) — in `model-routing.md`
+- Exploration offloading — `explore.md` agent
+- Depth limiting via allowlist — `enforce-agent-whitelist.sh` + frontmatter `agents:` field

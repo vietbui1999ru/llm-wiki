@@ -5,6 +5,9 @@
 These apply by default at every session. No user prompt needed.
 
 ### wiki-context (proactive)
+**Project-level override:** In this repo, wiki-context is always-invoke — overrides the
+domain-triggered pattern in `~/.claude/rules/skill-invocation.md`.
+
 Before any technical task, design discussion, architecture question, or agent work:
 invoke `wiki-context` skill to load relevant patterns from ~/repos/llm-wiki.
 

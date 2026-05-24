@@ -1,7 +1,7 @@
 # Agent System Redesign Plan
 
 Created: 2026-05-24
-Status: Phase 1 complete (quick wins applied). Phase 2 (full redesign) pending.
+Status: Phase 1 complete. Phase 2 quick wins complete (2026-05-24). Remaining: silent subagent failure monitoring (High effort, deferred).
 
 Source: Opus architectural audit + grilling session on hooks/rules boundary.
 
@@ -96,9 +96,10 @@ From the Opus audit. Not yet implemented. Review before doing.
 
 | Gap | Status | Effort |
 |---|---|---|
-| Judge timing collision (applied-ai.md says POST, superpowers says PRE) | Open | Low — one line fix in applied-ai.md |
-| Wiki-context invocation has 3 trigger definitions | Open | Medium — consolidate into skill-invocation.md |
-| Superpowers skill overrides are incomplete (only covers TDD, brainstorm, caveman) | Open | Medium — audit all superpowers skills |
+| Judge timing collision (applied-ai.md says POST, superpowers says PRE) | **Done** | Timing clarified in applied-ai.md: skills pre, judge post |
+| Wiki-context invocation has 3 trigger definitions | **Done** | wiki-startup.md declares project override; superpowers-integration.md references skill-invocation.md |
+| Superpowers skill overrides are incomplete | **Done** | Full audit in superpowers-integration.md; "Partial" skills documented |
+| Unified priority statement in CLAUDE.md | **Done** | Added to top of dotfiles CLAUDE.md |
 | No monitoring for silent subagent failures | Open | High — needs agent completion signal |
 
 ### Judge timing fix (Low effort — do next)

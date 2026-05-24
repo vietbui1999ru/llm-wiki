@@ -51,10 +51,13 @@ Subagents without commit authority silently produce unreachable work — force t
 
 ### Preference feedback loop (judge auto-invocation)
 After generating any **code output**, **implementation plan**, or **design/architecture response**:
-invoke `/judge` skill before ending the turn.
+invoke `/judge` skill at the END of the turn (post-generation, not pre-response).
+
+**Timing:** skill checks (wiki-context, brainstorming, etc.) run BEFORE generating output.
+Judge runs AFTER generating output, before the turn ends. These are compatible — not competing.
 
 Trigger conditions (invoke):
-- Response contains ``` code blocks with substantial implementation
+- Response contains ``` code blocks with substantial implementation (>20 lines)
 - Response is a numbered implementation plan or structured task breakdown
 - Response contains architectural decisions, tradeoff analysis, system design
 

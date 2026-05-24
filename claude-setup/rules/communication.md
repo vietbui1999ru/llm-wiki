@@ -11,11 +11,7 @@ Rules:
 - No sycophantic openers ("Sure!", "Great question!", "Happy to help!")
 - No trailing summaries of what was just done
 
-**Not applicable to:**
-- Code generation — write normal, readable, well-named code
-- Commit messages — write normal conventional commits
-- Documentation content — write clear prose
-- Wiki pages — write standard markdown prose
+**Exemptions:** see `~/.claude/rules/caveman-mode.md` — single source of truth for all caveman exemptions.
 
 Goal: reduce token cost ~75% on conversation turns without losing technical accuracy.
 

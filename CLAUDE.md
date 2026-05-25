@@ -1,6 +1,8 @@
 # LLM Wiki — Schema and Operating Instructions
 
 @mistakes/global-prevention-rules.md
+@claude-setup/rules/wiki-context-override.md
+@claude-setup/rules/agent-orchestration-default.md
 
 This is a personal knowledge wiki maintained collaboratively between Viet and Claude.
 Claude owns the wiki layer entirely. Viet curates sources and asks questions.

@@ -33,6 +33,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/agent-harness-8min]] — YouTube (Caleb Bright): 3-layer evolution stack (prompt→context→harness); summarization failure as harness motivation; PRD→JSON→single-task loop architecture
 - [[summaries/acon-context-compression]] — KAIST/Microsoft 2025: adaptive guideline-optimized compression for long-horizon agents; 26-54% peak token reduction; KV-cache cost trap; distillable to small models
 - [[summaries/pi-subagents-extension]] — Pi Subagents extension: proactive exploration offloading to prevent context bloat; Scout/Researcher/Worker agent types; Haiku/Sonnet/Opus model tiering; depth limiting via frontmatter allowlist
+- [[summaries/opencode-go-pi-primary-harness]] — OpenCode Go ($10/mo open model subscription) + pi as primary coding harness; difficulty-tiered model routing; pueue for parallel delegation; srt sandboxing; subscription arbitrage vs Claude Code/Codex
 - [[summaries/agent-harness-engineering]] — LangChain harness anatomy + OpenAI 5-month Codex case study: harness components, repo-as-record, mechanical enforcement
 - [[summaries/autoresearch-karpathy]] — Karpathy's autonomous ML experiment loop: agent modifies train.py, 5-min runs, val_bpb metric, program.md as control layer
 - [[summaries/docling]] — 3 sources: Docling document parser for AI; why parsing quality matters for RAG; layout-aware PDF → Markdown; vs Firecrawl; research paper pipeline
@@ -100,7 +101,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/agentops]] — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
 - [[entities/gemini-cli]] — Google's Gemini CLI: GEMINI.md + TOML commands + activate_skill; high parity with CC; hooks + subagents (experimental)
 - [[entities/opencode]] — Open-source Claude Code alternative; plugin system with compaction hooks, custom tools, 30+ event surface
-- [[entities/pi-agent]] — TypeScript unified multi-provider LLM API (pi-mono); council/adversarial review layer; GitHub Copilot Models integration; Pi Subagents extension (amosblomqvist)
+- [[entities/pi-agent]] — pi-coding-agent CLI (pi-mono); primary harness for open-model workloads + council/adversarial review layer; difficulty-tiered model routing; pueue parallel delegation; srt sandboxing; Pi Subagents extension
+- [[entities/opencode-go]] — OpenCode Go: $10/mo open-model subscription (DeepSeek V4 Pro, Kimi K2.6, Qwen3.6, etc.); subscription arbitrage alternative to Anthropic/OpenAI plans
 - [[entities/karpathy-llm-council]] — Karpathy's 3-stage council web app: parallel dispatch → anonymized peer review → Chairman synthesis; OpenRouter-based reference implementation
 - [[entities/agents-md-format]] — AGENTS.md format entity: origin, per-tool implementations (Codex/OpenCode/CC/Aider/Gemini), multi-file strategies
 - [[entities/codex]] — OpenAI Codex CLI; AGENTS.md + TOML agents + native skills (3-layer stack); CC migration mapping; hooks via config.toml

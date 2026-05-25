@@ -424,3 +424,23 @@ Updated index.md:
   - Updated entities/pi-agent entry description
 
 Key patterns: proactive exploration offloading (delegate planning-phase file reads to cheap subagents before context bloat occurs); model tiering heuristic (mechanical/read-only→Haiku, reasoning/research→Sonnet, full capability→Sonnet/Opus); spawn depth limiting via frontmatter allowlist; per-subagent observability (nested tool call tree + cost metrics per agent).
+
+## [2026-05-25] ingest | OpenCode Go + pi as Primary Coding Harness
+
+Source: "Why You Should Try OpenCode Go and pi-coding-agent.md"
+New summaries: summaries/opencode-go-pi-primary-harness
+New entities: entities/opencode-go
+Updated entities:
+  - entities/pi-agent — corrected framing from "council layer only" to "primary coding agent + council"; added AGENTS.md confirmation; added difficulty-tiered model routing table; added pueue parallel delegation pattern; added srt sandboxing section; added OpenCode Go to related pages
+Updated index.md:
+  - Added summaries/opencode-go-pi-primary-harness
+  - Updated entities/pi-agent description (primary harness framing)
+  - Added entities/opencode-go
+
+Key patterns captured:
+- Subscription arbitrage: OpenCode Go ($10/mo) for bulk open-model tokens; Codex for high-reasoning tasks — similar cost to $100 plan
+- Difficulty-tiered model routing in AGENTS.md: high/medium/low tiers with explicit fallback chains across providers
+- pueue for background parallel agent delegation (persistent queue, log inspection, wait primitives)
+- srt (Anthropic Sandbox Runtime) as standalone sandboxing tool for harnesses without built-in permission systems
+
+Skipped (off-topic): "Code Smells.md", "Replace Magic Number with Symbolic Constant.md", "Too long..md"

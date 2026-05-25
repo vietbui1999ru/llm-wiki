@@ -37,8 +37,10 @@ flowchart TD
 
     subgraph MERGE["Orchestrator: integrate"]
         REVIEW["code-reviewer agent<br>per completed task"]
+        COUNCIL_GATE{"design-risk?"}
+        COUNCIL_RUN["pi -p peer review<br>--model openai-codex/gpt-5.3-codex<br>--no-session"]
         MERGE_WT["merge worktrees<br>into main branch"]
-        VERIFY["verify + council<br>if design-risk"]
+        VERIFY["verify"]
     end
 
     START --> GRILL --> PRD --> ISSUES --> INBOX_WRITE --> WORKTREES
@@ -52,7 +54,9 @@ flowchart TD
     STATUS -->|poll or notify| MERGE
     MOVE_DONE --> KANBAN
 
-    MERGE --> REVIEW --> MERGE_WT --> VERIFY
+    MERGE --> REVIEW --> COUNCIL_GATE
+    COUNCIL_GATE -->|yes| COUNCIL_RUN --> MERGE_WT
+    COUNCIL_GATE -->|no| MERGE_WT --> VERIFY
 ```
 
 ---
@@ -80,13 +84,15 @@ flowchart TD
     end
 
     subgraph DESIGN["Design / decision"]
-        COUNCIL["council.py --chairman<br>Sonnet + GPT → Opus synthesis"]
+        COUNCIL_Q{"scope?"}
+        QUICK["pi -p peer review<br>openai-codex/gpt-5.3-codex<br>--no-session<br>advisory output only"]
+        FULL["council.py --chairman<br>Voice A: Sonnet (claude -p)<br>Voice B: Codex (pi -p)<br>Chair: Opus synthesis"]
         COUNCIL_OUT[".council/voice_*.md<br>+ synthesis.md<br>auto-committed"]
     end
 
     subgraph IMPL["Implementation work"]
         PLAN["to-prd + to-issues<br>decompose into tasks"]
-        SHORT["in-process agents<br>≤5 tasks, &lt;30 min each"]
+        SHORT["in-process agents<br>≤5 tasks, <30 min each"]
         RALPH_S["ralph-structured<br>goal → tasks.json → /ralph-loop<br>one-task-per-iteration<br>stuckness protection (3 attempts)"]
         LONG["worktree pool<br>spawn-parallel-agents<br>claim-task protocol"]
     end
@@ -97,8 +103,14 @@ flowchart TD
     end
 
     subgraph MISTAKES["Continuous: error capture"]
-        ERR_HOOK["PostToolUse hook<br>capture-bash-error.sh<br>→ mistakes/raw-log.md"]
+        ERR_HOOK["PostToolUse:Bash hook<br>capture-bash-error.sh<br>→ mistakes/raw-log.md"]
         SYNTH["synthesize-mistakes<br>distill → global-prevention-rules.md"]
+    end
+
+    subgraph SAFETY["Always-on hooks"]
+        BASH_GATE["PreToolUse:Bash<br>enforce-bash-safety.sh<br>blocks: rm -rf / home,<br>force-push main/master,<br>git reset --hard origin/"]
+        JUDGE_REM["PostToolUse:Write/Edit<br>judge-reminder.sh<br>≥25 lines → JUDGE-REMINDER"]
+        AGENT_WL["PreToolUse:Agent<br>enforce-agent-whitelist.sh<br>blocks unknown subagent_type<br>requires explicit model: param"]
     end
 
     VIET --> DROP_SRC --> PDF_HOOK --> INGEST --> WIKI_WRITE --> GIT_CMT
@@ -106,14 +118,26 @@ flowchart TD
 
     VIET -->|"ask question"| SKILL_Q & CHAT_Q & MCP_Q
 
-    VIET -->|"hard design call"| COUNCIL --> COUNCIL_OUT
+    VIET -->|"architecture/security/irreversible"| COUNCIL_Q
+    COUNCIL_Q -->|"quick check"| QUICK
+    COUNCIL_Q -->|"full synthesis"| FULL --> COUNCIL_OUT
 
     VIET -->|"build something"| PLAN --> SHORT & RALPH_S & LONG
 
     VIET -->|"wrapping up"| SAVE --> NEXT
 
     ERR_HOOK -.->|"~100 entries"| SYNTH
+
+    BASH_GATE -.-o IMPL
+    JUDGE_REM -.-o IMPL
+    AGENT_WL -.-o IMPL
 ```
+
+**Council trigger conditions** (use DESIGN path, not IMPL):
+- New service, inter-system protocol, or data model design
+- Auth, permissions, secrets, trust boundary changes
+- Schema migrations or destructive git ops
+- Use quick `pi -p` for a single advisory check; full `council.py` when synthesis across voices is needed
 
 ---
 

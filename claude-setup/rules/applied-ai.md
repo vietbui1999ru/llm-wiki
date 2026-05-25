@@ -85,3 +85,33 @@ If any signal is present: suggest `/ralph-structured` **before proceeding**. For
 
 Do NOT auto-launch. Do NOT suggest it for: single-file edits, config changes, quick fixes,
 wiki ingests, or anything estimated under 3 steps.
+
+### Council trigger (Codex peer review via Pi subprocess)
+
+Before committing to **architectural decisions**, **security-relevant changes**, or **irreversible operations** — fire a one-shot Codex second opinion via Pi subprocess.
+
+Trigger conditions (invoke before acting, not after):
+- New service, inter-system protocol, or data model design decision
+- Auth, permissions, secrets, or trust boundary changes
+- Schema migrations, destructive git ops, data deletions
+- Any design where you have already committed to a direction and need adversarial review
+
+Quick council (advisory, one Codex voice):
+```bash
+pi -p "Peer review: [decision summary]. Context: [relevant details]. Flag concerns." \
+   --model openai-codex/gpt-5.3-codex --no-session --no-extensions --no-skills
+```
+
+Full council (two voices + Opus synthesis):
+```bash
+council.py --chairman "Should we [decision]?"
+# Voice A: Sonnet via claude -p
+# Voice B: Codex via pi -p --model openai-codex/gpt-5.3-codex --no-session
+# Chairman: Opus synthesizes disagreements
+```
+
+Rules:
+- Output is **advisory** — synthesize disagreements, do not defer blindly to Codex
+- Codex and Claude have different training biases; disagreement is signal, not noise
+- Pi is a subprocess tool — its output is read directly by the orchestrator, not via `.agents/` coordination bus
+- Do NOT invoke for: routine implementation, single-file edits, config changes, ingest operations, tasks under 30 min

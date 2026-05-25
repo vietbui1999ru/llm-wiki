@@ -355,7 +355,9 @@ Always-on hooks, wired in `settings.json`. No per-project setup needed.
 | Hook | Trigger | Script | Purpose |
 |---|---|---|---|
 | protect-lint-configs.sh | PreToolUse Write/Edit | blocks edit | Prevents Claude editing biome.json, .eslintrc*, .noslop, etc. |
-| enforce-agent-whitelist.sh | PreToolUse Agent | blocks unlisted | Bans unlisted `subagent_type`; whitelist = `~/.claude/agents/*.md` + known plugin agents |
+| enforce-agent-whitelist.sh | PreToolUse Agent | blocks unlisted | Bans unlisted `subagent_type`; whitelist = `~/.claude/agents/*.md` + known plugin agents; requires explicit `model:` param |
+| enforce-bash-safety.sh | PreToolUse Bash | blocks command | Hard gate on: `rm -rf /` or `~`, `git push --force` to main/master, `git reset --hard origin/` |
+| judge-reminder.sh | PostToolUse Write/Edit | injects reminder | After writing ≥25 lines to any code file, injects `JUDGE-REMINDER` into context — prompts /judge invocation |
 | lint-on-write.sh | PostToolUse Write/Edit | read-only report | shellcheck on .sh, jq on .json, biome check on .ts (if linting:enabled) |
 | lint-autofix.sh | Stop | auto-fix | biome check --write on changed .ts/.tsx (if linting:enabled in profile.md) |
 
@@ -579,6 +581,19 @@ Periodically: /synthesize-mistakes
 → Rules loaded every session from that point on
 ```
 
+### "I need a second opinion on an architecture or security decision"
+```
+Quick (advisory Codex check):
+  pi -p "Peer review: [decision]. Flag concerns." \
+     --model openai-codex/gpt-5.3-codex --no-session --no-extensions --no-skills
+→ Codex output is advisory — synthesize, don't defer
+
+Full (two voices + Opus synthesis):
+  council.py --chairman "Should we [decision]?"
+→ Voice A: Sonnet, Voice B: Codex, Chairman: Opus
+→ Output written to .council/ and auto-committed
+```
+
 ### "Context is getting long — ending the session"
 ```
 /save-session
@@ -623,7 +638,67 @@ git worktree remove .worktrees/name  # clean up when done
 
 ---
 
-## 8. Tips
+## 8. LLM Council
+
+The council system provides a cross-vendor second opinion using Codex (via Pi subprocess) alongside Claude. Pi is **not** in the agent fleet — it's a stateless subprocess called when you need adversarial review from a model with different training biases.
+
+### When to use
+
+Invoke council before committing to:
+- Architectural decisions (new service, data model, inter-system protocol)
+- Security-relevant changes (auth, permissions, secrets, trust boundaries)
+- Irreversible operations (schema migrations, destructive git ops, data deletions)
+
+Do NOT use for: routine implementation, single-file edits, config changes, wiki ingests.
+
+### Quick council (advisory — one Codex voice)
+
+```bash
+pi -p "Peer review: [decision summary]. Context: [details]. Flag concerns." \
+   --model openai-codex/gpt-5.3-codex \
+   --no-session \
+   --no-extensions \
+   --no-skills
+```
+
+Output is advisory — synthesize disagreements yourself, don't defer blindly.
+
+### Full council (two voices + Opus synthesis)
+
+```bash
+council.py --chairman "Should we [decision]?"
+```
+
+- **Voice A:** Sonnet (`claude -p --model claude-sonnet-4-6`)
+- **Voice B:** Codex (`pi -p --model openai-codex/gpt-5.3-codex --no-session`)
+- **Chairman:** Opus synthesizes disagreements → `.council/synthesis.md`
+- Output auto-committed to `.council/`
+
+### What Pi is (and isn't)
+
+Pi is a separate terminal coding harness (`@earendil-works/pi-coding-agent`). In this setup:
+- Default provider: `openai-codex` (ChatGPT Team plan)
+- Used exclusively as subprocess for council Voice B — only Pi produces stdout-clean output
+- `opencode run -m github-copilot/gpt-5.2-codex` → ✅ stdout-compatible with ANSI filter: `sed 's/\x1b\[[0-9;]*m//g' | grep -v "^>" | grep -v "^[[:space:]]*$"` — usable as council Voice C
+- Does **not** share Claude Code hooks, `.agents/` coordination, or skill invocation contract
+
+### OpenCode integration status
+
+OpenCode (`opencode` CLI v1.14.30) is installed, configured, and has its full rule stack loaded.
+
+| Capability | Status |
+|---|---|
+| Full rule stack (editing, model-routing, skill-invocation, applied-ai) | ✅ Fixed |
+| Agent fleet aligned to Claude Code roles (github-copilot/ models) | ✅ Fixed |
+| `opencode/` prefix models (Zen subscription) | ⏳ Add payment method at opencode.ai/workspace billing |
+| `opencode run` as council Voice C (GPT via Copilot) | ✅ stdout-compatible with ANSI filter |
+| TUI interactive sessions | ✅ Works via authenticated providers |
+
+**To unlock `opencode/` models (GPT-5.3-codex, Gemini-3.1-pro, etc.):** add a payment method to the OpenCode workspace. Once done: migrate Pi to `opencode` provider and retire the ChatGPT Team subscription.
+
+---
+
+## 9. Tips
 
 **Force wiki search in any session:**
 ```

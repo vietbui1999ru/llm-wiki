@@ -25,11 +25,11 @@ graph TD
         SKILL_WC[wiki-context skill]
     end
 
-    subgraph REVIEW["Council / Review"]
-        COUNCIL[council.py]
-        VOICE_A[Voice A — Sonnet]
-        VOICE_B[Voice B — GPT]
-        CHAIR[Chairman — Opus]
+    subgraph COUNCIL["Council / Review"]
+        COUNCIL_PY[council.py]
+        VOICE_A[Voice A — Sonnet<br>claude -p --model claude-sonnet-4-6]
+        VOICE_B[Voice B — Codex<br>pi -p --model openai-codex/gpt-5.3-codex<br>--no-session]
+        CHAIR[Chairman — Opus<br>claude -p --model claude-opus-4-7]
     end
 
     subgraph CONFIG["Config Distribution"]
@@ -49,7 +49,7 @@ graph TD
     SETUP -->|symlinks| DOTFILES
     DOTFILES -->|stow| HOME_CLAUDE
 
-    COUNCIL --> VOICE_A & VOICE_B
+    COUNCIL_PY --> VOICE_A & VOICE_B
     VOICE_A & VOICE_B --> CHAIR
 ```
 
@@ -151,30 +151,52 @@ graph TD
 sequenceDiagram
     participant User
     participant council.py
-    participant VoiceA as Voice A (Sonnet)
-    participant VoiceB as Voice B (GPT-5.4)
-    participant Chair as Chairman (Opus)
+    participant VoiceA as Voice A (Sonnet / claude -p)
+    participant VoiceB as Voice B (Codex / pi -p)
+    participant Chair as Chairman (Opus / claude -p)
     participant Files as .council/ files
     participant Git
 
     User->>council.py: question [--chairman] [--add MODEL]
 
     par parallel dispatch
-        council.py->>VoiceA: ask via `claude -p --model`
-        council.py->>VoiceB: ask via `codex exec -o tmpfile`
+        council.py->>VoiceA: claude -p --model claude-sonnet-4-6
+        council.py->>VoiceB: pi -p --model openai-codex/gpt-5.3-codex --no-session
     end
 
     VoiceA-->>Files: voice_a.md
     VoiceB-->>Files: voice_b.md
 
     alt --chairman flag set
-        council.py->>Chair: synthesis prompt\n(all voice files concatenated)
+        council.py->>Chair: claude -p --model claude-opus-4-7\n(synthesis prompt — all voice files concatenated)
         Chair-->>Files: synthesis.md
     end
 
     council.py->>Git: git add .council/ && git commit
     council.py-->>User: stdout summary
 ```
+
+**Voice B is a Pi subprocess** — `pi -p --no-session` produces clean stdout. `opencode run` also writes response to stdout but with a 3-line ANSI header; strip it with:
+```bash
+opencode run "question" -m github-copilot/gpt-5.2-codex 2>/dev/null \
+  | sed 's/\x1b\[[0-9;]*m//g' | grep -v "^>" | grep -v "^[[:space:]]*$"
+```
+
+**Quick council (no council.py):**
+```bash
+# Voice B — Pi (GPT-5.3-codex, clean stdout)
+pi -p "peer review: [question]" --model openai-codex/gpt-5.3-codex --no-session --no-extensions --no-skills
+
+# Voice C — OpenCode run (GPT-5.2-codex via Copilot, filterable stdout)
+opencode run "peer review: [question]" -m github-copilot/gpt-5.2-codex 2>/dev/null \
+  | sed 's/\x1b\[[0-9;]*m//g' | grep -v "^>" | grep -v "^[[:space:]]*$"
+```
+
+**Provider status (validated):**
+- `openai-codex/` via Pi → ✅ clean stdout (ChatGPT Team subscription)
+- `github-copilot/gpt-5.2-codex` via `opencode run` → ✅ filterable stdout (Copilot subscription)
+- `github-copilot/claude-sonnet-4.5` via `opencode run` → ❌ model_not_supported (Claude via Copilot unsupported in run mode)
+- `opencode/` via Pi → ⏳ add payment method at opencode.ai/workspace billing to unlock
 
 ---
 
@@ -239,19 +261,44 @@ graph LR
 
 ```mermaid
 flowchart TD
-    subgraph CLAUDE_HOOKS["Claude Code hooks (settings.local.json)"]
-        UPS[UserPromptSubmit\nhook]
-        PTU[PostToolUse:Bash\nhook]
+    subgraph PRETOOL["PreToolUse hooks"]
+        PTU_BASH[PreToolUse:Bash]
+        PTU_WRITE[PreToolUse:Write/Edit]
+        PTU_AGENT[PreToolUse:Agent]
+    end
+
+    subgraph POSTTOOL["PostToolUse hooks"]
+        POST_BASH[PostToolUse:Bash]
+        POST_WRITE[PostToolUse:Write/Edit]
+    end
+
+    subgraph STOP_HOOK["Stop hook"]
+        STOP[Stop]
+    end
+
+    subgraph UPS_HOOK["UserPromptSubmit hook"]
+        UPS[UserPromptSubmit]
     end
 
     subgraph GIT_HOOKS["Git hooks"]
         PC[post-commit hook]
     end
 
-    UPS -->|detect 'ingest *.pdf'| DOCLING_RUN[run docling\n→ /tmp/docling-wiki-out/]
+    PTU_BASH --> BASH_GATE["enforce-bash-safety.sh<br>blocks: rm -rf / or ~<br>git push --force to main/master<br>git reset --hard origin/"]
 
-    PTU --> ERR_CAP[capture-bash-error.sh\nlog exit≠0 → mistakes/raw-log.md]
-    PTU --> PUB_KB[publish-ai-kb.sh\nwhen log.md changes\n→ ~/.claude/wiki/ai-kb/00-index.md]
+    PTU_WRITE --> LINT_PROTECT["protect-lint-configs.sh<br>blocks edits to:<br>biome.json, .eslintrc*, .noslop,<br>.golangci.yml, .shellcheckrc"]
+
+    PTU_AGENT --> AGENT_WL["enforce-agent-whitelist.sh<br>blocks unknown subagent_type<br>requires explicit model: param<br>whitelist = ~/.claude/agents/*.md"]
+
+    POST_BASH --> ERR_CAP["capture-bash-error.sh<br>exit≠0 → mistakes/raw-log.md"]
+    POST_BASH --> PUB_KB["publish-ai-kb.sh<br>when log.md changes<br>→ ~/.claude/wiki/ai-kb/00-index.md"]
+
+    POST_WRITE --> JUDGE_REM["judge-reminder.sh<br>≥25 lines written to code file<br>→ JUDGE-REMINDER in context"]
+    POST_WRITE --> LINT_REPORT["lint-on-write.sh (read-only)<br>.sh → shellcheck<br>.json → jq validation<br>.ts → biome check"]
+
+    STOP --> LINT_FIX["lint-autofix.sh<br>biome check --write on .ts/.tsx<br>(if linting:enabled)<br>+ session_end event"]
+
+    UPS --> DOCLING_RUN["detect 'ingest *.pdf'<br>→ run docling<br>→ /tmp/docling-wiki-out/"]
 
     PC -->|wiki/ or index.md changed| QMD_SYNC[qmd update + embed\nforeground, incremental]
     PC -->|.lightrag/ exists| LIGHTRAG_BG[wiki-index\nbackground, incremental]
@@ -259,6 +306,11 @@ flowchart TD
     ERR_CAP -.->|accumulates| RAW_LOG[mistakes/raw-log.md]
     RAW_LOG -.->|synthesize-mistakes skill| GLOBAL_RULES[global-prevention-rules.md]
 ```
+
+**Hook enforcement layer** (deterministic — shell exit code, not model reasoning):
+- `exit 2` = block the tool call entirely (bash safety, agent whitelist, lint protection)
+- `exit 0` = allow, with optional stdout message to model context (judge reminder, lint report)
+- Stop hook fires at end of every turn regardless of tool calls
 
 ---
 
@@ -271,15 +323,15 @@ graph TD
     DELEGATOR[agent-delegator\norchestrator]
 
     subgraph IMPL["Implementation"]
-        CW[code-writer]
-        CWF[code-writer-fast\nboilerplate]
+        CW[code-writer\nSonnet]
+        CWF[code-writer-fast\nHaiku — boilerplate]
     end
 
     subgraph REVIEW["Review / QA"]
-        CR[code-reviewer]
-        AR[architecture-reviewer]
-        DC[design-critic]
-        SA[security-auditor]
+        CR[code-reviewer\nSonnet]
+        AR[architecture-reviewer\nOpus]
+        DC[design-critic\nSonnet]
+        SA[security-auditor\nOpus]
     end
 
     subgraph DEBUG["Debug / Test"]
@@ -289,9 +341,9 @@ graph TD
     end
 
     subgraph EXPLORE["Explore / Plan"]
-        DE[design-explorer]
-        PLAN[Plan agent]
-        EX[Explore agent]
+        DE[design-explorer\nOpus]
+        PLAN[Plan agent\nOpus]
+        EX[Explore agent\nHaiku — read-only]
     end
 
     subgraph OPS["Ops / Docs"]
@@ -299,6 +351,10 @@ graph TD
         DW[docs-writer]
         PHM[project-health-monitor]
         SSR[session-report-generator]
+    end
+
+    subgraph COUNCIL["Council (subprocess — not fleet)"]
+        PI_SUB["pi -p --model openai-codex/gpt-5.3-codex<br>--no-session<br>Codex peer review — advisory only<br>reads stdout, not .agents/ bus"]
     end
 
     USER --> DELEGATOR
@@ -309,4 +365,8 @@ graph TD
     PHM -.->|reports bugs to| BDT & FDT
     DE -.->|feeds requirements to| CW
     AR -.->|validates before| CW
+
+    DELEGATOR -.->|arch/security/irreversible| PI_SUB
 ```
+
+**Pi is not in the agent fleet.** It is a thin subprocess called via Bash when a Codex second opinion is needed. It does not share the Claude Code hooks system, `.agents/` coordination bus, or skill invocation contract.

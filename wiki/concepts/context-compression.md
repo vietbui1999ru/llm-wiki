@@ -2,9 +2,11 @@
 title: "Context Compression Strategies"
 type: concept
 tags: [agent-engineering, context-management, compaction, harness, long-horizon]
-sources: ["Acon Optimizing Context Compression for Long-horizon LLM Agents.md"]
+sources:
+  - "Acon Optimizing Context Compression for Long-horizon LLM Agents.md"
+  - "Evaluating Context Compression for AI Agents.md"
 created: 2026-04-25
-updated: 2026-05-22
+updated: 2026-05-25
 ---
 
 # Context Compression Strategies
@@ -151,6 +153,17 @@ From ECC's `strategic-compact` skill — explicit heuristics for *when* to compa
 - `CLAUDE_CODE_SUBAGENT_MODEL=haiku` — subagents use a cheaper model tier
 
 All claimed impact numbers from ECC README; not independently verified. The pattern itself aligns with community consensus on token efficiency.
+
+---
+
+## Serialization Format (orthogonal layer)
+
+Compression (selection) and serialization (encoding) are independent axes:
+- Compress first: select what context to keep
+- Then serialize efficiently: encode it with minimal token overhead
+
+Schema-first formats (ONTO, TOON) achieve 40-60% reduction on structured data vs JSON.
+Most valuable for: large homogeneous datasets injected into prompts. See [[concepts/llm-serialization-formats]].
 
 ---
 

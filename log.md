@@ -494,3 +494,27 @@ Skill audit findings:
 Key decisions:
 - isMeta is NOT a SKILL.md frontmatter field — it's an internal CC message flag; proposed "isMeta audit" was a misread of the skills deep dive; skipped
 - memory-sync Stop hook deferred — memory_20250818 API too new; file-based approach still appropriate
+
+## [2026-05-25] ingest | ONTO + TOON + Factory eval + SAC (autoencoding-free context compression)
+
+Sources:
+- raw/ONTO A Token-Efficient Columnar Notation for LLM Input Optimization.md
+- raw/TOON vs. JSON Deconstructing the Token Economy of Data Serialization in Large Language Model….md
+- raw/Evaluating Context Compression for AI Agents.md
+- pdfs/17241_Autoencoding_Free_Contex.pdf (parsed via Docling)
+
+New pages:
+- wiki/concepts/llm-serialization-formats.md — ONTO/TOON schema-first formats; 40-60% token reduction; format comparison table; packaging vs distillation distinction
+- wiki/summaries/factory-context-compression-eval.md — Factory.ai eval: anchored iterative summarization wins; probe-based eval methodology; 36K real coding-agent messages
+- wiki/summaries/sac-context-compression.md — SAC: anchor tokens + bidirectional attention; no AE objective; 6.7-23.5% F1 gain at 15× compression; scales to 8B
+
+Updated:
+- wiki/concepts/context-compression.md — added Serialization Format section (orthogonal to compression strategies)
+
+Key insights:
+- ONTO/TOON are indie/research projects; benchmarks are synthetic — flag as unverified in production recommendations
+- SAC eliminates autoencoding objective; AE and LM gradients are near-orthogonal (interference is the mechanism)
+- Factory eval confirms anchored iterative summarization > opaque (OpenAI) > regenerative (Anthropic) on real coding sessions
+- SAC is training-time infrastructure choice, not an operational tactic; distinct from ACON (test-time) and anchored summarization (runtime)
+
+Comprehension check: skipped (user explicit)

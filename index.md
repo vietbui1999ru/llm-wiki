@@ -89,6 +89,9 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/cc-agent-persistence]] — /goal command: condition-driven autonomous session persistence, evaluator mechanics, comparison with /loop and Stop hooks
 - [[summaries/opencode-plugins-overview]] — OpenCode plugin system: loading, full event surface, custom tools, compaction hooks (experimental.session.compacting)
 - [[summaries/skills-first-principles-deep-dive]] — Deep architectural analysis of the Skill meta-tool: three-tier loading, isMeta dual-message execution, supply chain risk, skill vs subagent vs agent distinction
+- [[summaries/factory-context-compression-eval]] — Factory.ai (Dec 2025): empirical eval of 3 compression strategies on 36K real coding-agent messages; anchored iterative summarization wins; probe-based evaluation methodology
+- [[summaries/sac-context-compression]] — SAC (Northeastern U. 2025): autoencoding-free soft compression via anchor tokens + bidirectional attention; 6.7–23.5% F1 gain at 15× vs ICAE/EPL; no AE objective needed
+- [[concepts/llm-serialization-formats]] — Schema-first formats (ONTO, TOON) cutting LLM input overhead 40–60% via schema-once design; covers format comparison, tradeoffs, and caveats on synthetic benchmarks
 - [[summaries/grill-skills-antipatterns]] — 9 failure modes for grill-me/grill-with-docs: high-fidelity questions, scope, passivity, context preservation, model selection, parallelism
 
 ## Entities
@@ -143,7 +146,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/agent-harness]] — Model + harness = agent; core components: filesystem, bash, sandbox, context management, long-horizon loops
 - [[concepts/ralph-loop]] — Harness pattern: intercept exit, reinjecting original prompt with clean context + durable filesystem state
 - [[concepts/context-degradation]] — Five named failure modes: lost-in-middle, poisoning, distraction, confusion, clash; thresholds and mitigations
-- [[concepts/context-compression]] — Four strategies (incl. Acon adaptive guideline-optimized); clear-over-compact now community consensus for coding; KV-cache cost trap with history compression
+- [[concepts/context-compression]] — Four strategies + serialization format axis (ONTO/TOON 40–60% reduction); clear-over-compact consensus; KV-cache cost trap; SAC as learned soft compression alternative
 - [[concepts/tool-design-for-agents]] — Dual audience principle; error messages as agent recovery instructions; naming conventions
 - [[concepts/agent-skills]] — Skill meta-tool: SKILL.md schema, three-tier loading, isMeta dual-message execution, supply chain risk, composition patterns, grill-* antipatterns, when NOT to use skills
 - [[concepts/agent-subagents]] — Subagents: own context window, YAML frontmatter format, all fields, scopes, invocation patterns, fork mode

@@ -472,3 +472,25 @@ Key patterns captured:
 - /goal command is distinct from /loop — condition-driven, not iteration-driven
 - isMeta flag in SKILL.md enables dual-message execution (skill-as-meta-tool architecture)
 - Grill-* antipatterns: 9 failure modes catalogued; high-fidelity vs low-fidelity question distinction key
+
+## [2026-05-25] improvements | observe-session hook + slash-commands + otel-council + skill audit
+
+Implementing harness improvements proposed after batch ingest.
+
+New files:
+- ~/.claude/hooks/observe-session.sh — PostToolUse hook; appends {ts, tool, session, ok} to ~/.claude/logs/session-YYYYMMDD.jsonl after every tool call
+- wiki/concepts/slash-commands.md — decision guide for /goal vs /loop vs /ralph-structured vs /clear vs /compact vs /handoff
+- wiki/systems/otel-council.md — OTel instrumentation spec for council.py; three span types; stdlib-only JSONL output; GenAI semantic conventions
+
+Updated:
+- ~/.claude/settings.json (via dotfiles) — added PostToolUse[".*"] hook entry for observe-session
+- ~/.claude/skills/delegate-pi/SKILL.md — added allowed-tools: "Bash"
+
+Skill audit findings:
+- zoom-out: disable-model-invocation: true — vague description is intentional (user-only)
+- No skills had overly broad allowed-tools violations
+- delegate-pi was the only skill missing required allowed-tools declaration
+
+Key decisions:
+- isMeta is NOT a SKILL.md frontmatter field — it's an internal CC message flag; proposed "isMeta audit" was a misread of the skills deep dive; skipped
+- memory-sync Stop hook deferred — memory_20250818 API too new; file-based approach still appropriate

@@ -6,8 +6,9 @@ sources:
   - "Memory & context management with Claude Sonnet 4.6.md"
   - "Effective context engineering for AI agents.md"
   - "Agents that remember introducing Agent Memory.md"
+  - "Memory & context management with Claude Sonnet 4.6.md (cookbook)"
 created: 2026-04-27
-updated: 2026-05-07
+updated: 2026-05-25
 ---
 
 # Agentic Memory Tool
@@ -113,6 +114,43 @@ Memory files are read back into Claude's context, making them a **prompt injecti
 4. System prompt instruction: explicitly tell Claude to ignore instructions found in memory files
 
 See [[concepts/indirect-prompt-injection]] for the broader attack class.
+
+## Context Editing Config Pattern (canonical)
+
+From the Anthropic cookbook, the production-ready config structure:
+
+```python
+context_management = {
+    "edits": [
+        # Thinking MUST come first
+        {
+            "type": "clear_thinking_20251015",
+            "keep": {"type": "thinking_turns", "value": 1}
+        },
+        {
+            "type": "clear_tool_uses_20250919",
+            "trigger": {"type": "input_tokens", "value": 35000},
+            "keep": {"type": "tool_uses", "value": 5},
+            "clear_at_least": {"type": "input_tokens", "value": 2000}
+        }
+    ]
+}
+```
+
+**Production thresholds**: trigger at 30–40k tokens; `clear_at_least` 3000–5000 tokens for large tool results (web search, code execution). Demo uses lower values.
+
+**`clear_thinking` notes**: requires `thinking` enabled in the API call; use `"keep": "all"` to preserve all thinking blocks for maximum KV-cache hits; trigger is optional (clears based on `keep` value alone).
+
+## What Memory Actually Learns
+
+Semantic pattern recognition, not syntax matching. Example from cookbook:
+
+- Session 1: thread-based web scraper with race condition on `self.results` → stores thread-safety pattern
+- Session 2: async API client → Claude checks memory first, recognizes same shared-mutable-state anti-pattern applies to async coroutines too
+
+Cross-language applicability: a pattern learned in Python applies to Go, Java, Rust — the abstraction is architectural, not syntactic.
+
+Memory file stores: symptom, cause, solution, red flags. Not the full conversation.
 
 ## Alternatives
 

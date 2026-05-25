@@ -8,7 +8,7 @@ sources:
   - "Prompt Optimization for Language Models with DSPy GEPA.md"
   - "Programming—not prompting—LMs¶.md"
 created: 2026-05-07
-updated: 2026-05-07
+updated: 2026-05-25
 ---
 
 # DSPy
@@ -52,10 +52,19 @@ Optimizers take a compiled DSPy program, a training set, and a metric function. 
 
 | Optimizer | Strategy |
 |---|---|
-| `BootstrapFewShot` | Generate + filter few-shot examples from training traces |
-| `MIPRO` | Multi-prompt instruction optimization with Bayesian search |
+| `BootstrapFewShot` / `BootstrapRS` | Generate + filter few-shot examples from training traces |
+| `MIPROv2` | Multi-prompt instruction optimization with Bayesian search (bootstrapping → grounded proposal → discrete search) |
 | `GEPA` | Error-driven prompt augmentation via a reflection LM (see below) |
-| `BootstrapFinetune` | Fine-tune weights from generated traces |
+| `BootstrapFinetune` | Fine-tune model weights from generated traces |
+| `BetterTogether` | Compose MIPROv2 + BootstrapFinetune sequentially for joint prompt+weight optimization |
+| `Ensemble` | Combine top-N candidate programs from an optimizer run to scale inference-time compute |
+
+**MIPROv2 internals (three stages):**
+1. **Bootstrapping** — run program many times, collect traces, filter to high-scoring trajectories
+2. **Grounded proposal** — use LLM to draft many candidate instructions per prompt, informed by code + data + traces
+3. **Discrete search** — mini-batch sampling; scores candidate (instruction, few-shot) combos; updates a surrogate model
+
+Optimizers can be **composed**: run MIPROv2, feed output into MIPROv2 again or into BootstrapFinetune. This is the essence of BetterTogether.
 
 ## GEPA Optimizer
 
@@ -79,20 +88,54 @@ Optimizers take a compiled DSPy program, a training set, and a metric function. 
 optimized_rag = teleprompter.compile(RAGPipeline(), trainset=train_data)
 ```
 
+## Pipeline Patterns
+
+Common pipeline compositions used in DSPy programs:
+
+| Pattern | Modules | Use case |
+|---|---|---|
+| **RAG** | `Retrieve` → `ChainOfThought` | Fetch context, then reason over it |
+| **Agent loop** | `ReAct` | Interleave reasoning + tool calls |
+| **Code execution** | `ProgramOfThought` | Generate + run code; return result |
+| **Ensemble** | `MultiChainComparison` | Sample N chains; pick best by internal scoring |
+| **Multi-hop RAG** | `Retrieve` → `ChainOfThought` → `Retrieve` → `ChainOfThought` | Iterative retrieval + synthesis |
+
+DSPy evaluates on the **final output** of multi-stage pipelines. Every module in the chain can be optimized jointly — you don't need to optimize each step individually.
+
+**Two-LM optimization setup** (from dbreunig walkthrough):
+```python
+tp = dspy.MIPROv2(
+    metric=validate_category,
+    prompt_model=large_lm,  # generates candidate prompts
+    task_model=small_lm     # evaluated against training set
+)
+```
+This lets a stronger model craft better prompt candidates while the smaller/cheaper model is benchmarked. Prevents overfitting to the small model's quirks.
+
 ## When to Use DSPy
 
 **Use DSPy when:**
 - You have a measurable metric (exact match, F1, a reward function)
-- You have a training set of (input, expected output) pairs
+- You have a training set of (input, expected output) pairs — even a few dozen suffices for BootstrapFewShot
 - The pipeline has multiple steps that interact
 - You want repeatable optimization rather than manual prompt iteration
+- Task runs at scale (amortizes compilation cost)
 
 **Do not use DSPy when:**
 - One-off queries with no metric or training data
 - Adding complexity isn't justified (a single well-crafted prompt may outperform)
 - Latency-sensitive paths where compilation overhead matters
+- Zero labeled examples — optimizers have no signal without training data
+
+**Practical cost note**: a typical simple optimization run costs ~$2 USD and ~20 minutes. Multi-step pipelines with large LMs can cost more. Save the optimized program with `.save()` to avoid re-running.
+
+## Caveats
+
+- DSPy optimizes for your metric — if the metric is underspecified, the optimizer will game it
+- Compiled prompts can be hard to read/debug compared to hand-written prompts
+- `when_to_use` in MIPROv2 output: check for overfitting (very specific instructions that don't generalize)
 
 ## Relation to Other Wiki Pages
 
 - [[concepts/context-engineering]] — DSPy's compiler is an automated form of prompt-level context engineering
-- [[summaries/dspy]] — full source synthesis with GEPA numbers and limitations
+- [[summaries/dspy]] — full source synthesis with GEPA numbers, limitations, and when DSPy makes sense table

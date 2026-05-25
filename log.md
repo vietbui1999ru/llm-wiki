@@ -444,3 +444,31 @@ Key patterns captured:
 - srt (Anthropic Sandbox Runtime) as standalone sandboxing tool for harnesses without built-in permission systems
 
 Skipped (off-topic): "Code Smells.md", "Replace Magic Number with Symbolic Constant.md", "Too long..md"
+
+## [2026-05-25] batch-ingest | OpenTelemetry cluster + Memory/Context + CC Teams + Skills + DSPy
+
+Parallel ingest of 15 source files across 3 specialist agents. Delegate-pi skill created as harness artifact.
+
+New pages:
+- wiki/concepts/llm-observability.md — 8 OTel sources synthesized; GenAI semantic conventions, span types, metrics, multi-agent trace correlation, production tools
+- wiki/entities/opentelemetry.md — OTel entity: three signals, incubating GenAI conventions, instrumentation approaches, Collector config
+- wiki/summaries/cc-memory-context-docs.md — Anthropic memory cookbook: memory_20250818 + context editing API
+- wiki/summaries/cc-agent-persistence.md — /goal command mechanics and evaluator internals
+- wiki/summaries/opencode-plugins-overview.md — OpenCode plugin system: event surface, compaction hooks
+- wiki/summaries/skills-first-principles-deep-dive.md — Skill meta-tool architecture: isMeta dual-message, three-tier loading, supply chain risk
+- wiki/summaries/grill-skills-antipatterns.md — 9 failure modes for grill-me/grill-with-docs
+
+Updated pages:
+- wiki/concepts/agentic-memory-tool.md — canonical context editing config + semantic learning patterns
+- wiki/summaries/cc-agent-teams.md — agent view UI, supervisor process, worktree isolation details
+- wiki/concepts/agent-skills.md — composition patterns, grill-* antipatterns, when NOT to use skills
+- wiki/entities/dspy.md — MIPROv2 internals, BetterTogether/Ensemble optimizers, pipeline patterns
+
+Harness artifact:
+- ~/.claude/skills/delegate-pi/SKILL.md — new skill wrapping pi subprocess delegation (council/delegate/subagent modes)
+
+Key patterns captured:
+- OTel GenAI semantic conventions still incubating — flag in all observability recommendations
+- /goal command is distinct from /loop — condition-driven, not iteration-driven
+- isMeta flag in SKILL.md enables dual-message execution (skill-as-meta-tool architecture)
+- Grill-* antipatterns: 9 failure modes catalogued; high-fidelity vs low-fidelity question distinction key

@@ -58,7 +58,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules, background agents, parity gaps vs CC
 - [[summaries/cursor-cloud-agents]] — Cursor Cloud Agents: microVM isolation, GitHub/GitLab workflow, remote desktop control, cross-agent support
 - [[summaries/cc-auto-mode]] — CC auto mode: 2-stage classifier, threat model, 17% FNR on overeager actions, deny-and-continue
-- [[summaries/cc-agent-teams]] — CC agent teams (experimental): shared task list, teammate direct messaging, TeammateIdle/TaskCompleted hooks
+- [[summaries/cc-agent-teams]] — CC experimental agent teams + agent view UI (claude agents): background session management, supervisor process, worktree isolation, PR status tracking, TeammateIdle/TaskCompleted hooks
 - [[summaries/context-engineering-anthropic]] — Anthropic context engineering: JIT retrieval, compaction, note-taking, sub-agents; context editing API
 - [[summaries/docker-sandboxes]] — Docker Sandboxes: microVM isolation for coding agents; Docker-in-Docker safe; CC/Codex/Gemini/Copilot/Kiro support
 - [[summaries/llm-as-judge]] — 3 sources: LLM-as-judge evaluation pattern; pairwise vs direct scoring; G-Eval chain-of-thought; production monitoring incident; best practices and limitations
@@ -85,6 +85,11 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/clean-code-ai-assisted]] — Uncle Bob's clean code principles + AI-specific failure modes (long methods, duplicated logic, hardcoded secrets, insecure deps); research citations; AWS AI outage incident
 - [[summaries/everything-claude-code]] — ECC harness performance system: 60 agents/232 skills/hooks/rules; instinct-based continuous learning v2; AgentShield security scanner; token optimization settings; 9-harness cross-platform support
 - [[summaries/agentic-control-plane-concept]] — 4-layer control plane architecture (execution/coordination/quality/experience); Phase 0–5 roadmap; Phase 0.5 five concrete additions; buy vs build decisions
+- [[summaries/cc-memory-context-docs]] — Anthropic cookbook: memory_20250818 tool + context editing API (clear_tool_uses + clear_thinking), four memory storage types, token budgeting, security
+- [[summaries/cc-agent-persistence]] — /goal command: condition-driven autonomous session persistence, evaluator mechanics, comparison with /loop and Stop hooks
+- [[summaries/opencode-plugins-overview]] — OpenCode plugin system: loading, full event surface, custom tools, compaction hooks (experimental.session.compacting)
+- [[summaries/skills-first-principles-deep-dive]] — Deep architectural analysis of the Skill meta-tool: three-tier loading, isMeta dual-message execution, supply chain risk, skill vs subagent vs agent distinction
+- [[summaries/grill-skills-antipatterns]] — 9 failure modes for grill-me/grill-with-docs: high-fidelity questions, scope, passivity, context preservation, model selection, parallelism
 
 ## Entities
 - [[entities/everything-claude-code]] — Agent harness performance system (ECC): plugin + manual install; 9-harness support; DRY adapter pattern; instinct clustering; AgentShield
@@ -108,10 +113,11 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/codex]] — OpenAI Codex CLI; AGENTS.md + TOML agents + native skills (3-layer stack); CC migration mapping; hooks via config.toml
 - [[entities/opencode-dcp]] — `@tarquinen/opencode-dcp` npm plugin; Compress + dedup + purge-errors; global/project config; /dcp commands
 - [[entities/lean-session]] — OpenCode plugin; injects `.agents/` state into compaction; writes checkpoint on idle; 3 hooks: compacting/diff/idle
-- [[entities/dspy]] — Stanford framework for programming LMs via Signatures/Modules/Optimizers; GEPA optimizer: error-driven prompt refinement; automated prompt optimization without manual prompt engineering
+- [[entities/dspy]] — Stanford DSPy framework: Signatures/Modules, expanded optimizer table (MIPROv2 internals, BetterTogether, Ensemble), pipeline patterns, two-LM optimization setup, practical caveats on metric gaming
 - [[entities/spotme]] — OpenCode "gym mode" plugin; counter-based exercise scaffolding; lite/medium/hard difficulty; portable SKILL.md for other harnesses
 - [[entities/codegraphcontext]] — Python MCP server + CLI; indexes codebases into graph DB (KuzuDB); Tree-sitter parsing; 20 languages; relationship discovery, blast radius, dead code; session or daemon persistence
 - [[entities/pentagi]] — OSS autonomous pen testing system (vxcontrol); 20+ tools in sandboxed Docker; orchestrator + researcher/developer/executor agents; pgvector + Neo4j memory; chain summarization for context; reference for our pentest-agent design
+- [[entities/opentelemetry]] — CNCF-graduated vendor-neutral observability framework; three signals, GenAI semantic conventions (incubating), instrumentation approaches, Collector config, compatible backends for AI workloads
 
 ## Concepts
 - [[concepts/mobile-design-patterns]] — mobile-first doctrine, MFRI scoring, Fitts' Law, gesture design, iOS/Android divergence matrix, RN/Flutter performance patterns, release checklist
@@ -119,7 +125,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/cicd-testing]] — Testing pyramid, 6 test types, shift-left, pipeline stage map, relationship to verification-pipeline
 - [[concepts/context-window]] — Transformer constraint: O(n²) attention, KV cache, context rot, context awareness feature
 - [[concepts/context-engineering]] — Discipline of curating minimal high-signal tokens: JIT retrieval, compaction, note-taking, sub-agents
-- [[concepts/agentic-memory-tool]] — memory_20250818 API, context editing, cross-session learning, memory poisoning security; Mnemory as OSS parallel
+- [[concepts/agentic-memory-tool]] — Anthropic beta API for file-based cross-session memory (memory_20250818) + in-session context editing (clear_tool_uses + clear_thinking); canonical config pattern, semantic learning, memory poisoning security
 - [[concepts/software-documentation]] — Doc types (Diátaxis), audiences (including AI agents), principles, structure for doc-hosting platforms
 - [[concepts/claude-code-plugins]] — Plugin structure, manifest format, namespacing, symlink gotcha, when to use plugins vs. personal config
 - [[concepts/compounding-knowledge-base]] — Knowledge bases that accumulate compiled structure vs. RAG's per-query retrieval
@@ -139,7 +145,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/context-degradation]] — Five named failure modes: lost-in-middle, poisoning, distraction, confusion, clash; thresholds and mitigations
 - [[concepts/context-compression]] — Four strategies (incl. Acon adaptive guideline-optimized); clear-over-compact now community consensus for coding; KV-cache cost trap with history compression
 - [[concepts/tool-design-for-agents]] — Dual audience principle; error messages as agent recovery instructions; naming conventions
-- [[concepts/agent-skills]] — Skills as prompt templates: progressive disclosure, meta-tool architecture, SKILL.md structure, three loading levels
+- [[concepts/agent-skills]] — Skill meta-tool: SKILL.md schema, three-tier loading, isMeta dual-message execution, supply chain risk, composition patterns, grill-* antipatterns, when NOT to use skills
 - [[concepts/agent-subagents]] — Subagents: own context window, YAML frontmatter format, all fields, scopes, invocation patterns, fork mode
 - [[concepts/agent-teams]] — Agent teams: lead+teammates+task list+mailbox; when to use vs subagents; quality gate hooks; best practices
 - [[concepts/worker-coordination]] — Partial result passing between parallel workers: contract-first, pipeline, filesystem blackboard, actor mailbox; decision table; failure modes
@@ -168,6 +174,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/rag-evaluation]] — RAG eval split: retrieval (Recall@k, Precision@k, MRR, nDCG) vs generation (faithfulness, answer relevance, context utilization); Ragas/DeepEval; Jason Liu 6-RAG-evals framework
 - [[concepts/preference-feedback-loop]] — cross-vendor judge evaluates agent outputs on 4-dimension rubric; pattern-triggered rule extraction; human approval gate; extends mistakes/ + memory/feedback_*
 - [[concepts/actor-model]] — actors as unit of concurrency; 3 primitives (send/spawn/become); mailbox semantics; no shared state; supervision trees + let-it-crash; virtual actor model (Orleans grains/silos); Erlang/Akka/Orleans/ProtoActor implementations
+- [[concepts/llm-observability]] — Observability patterns for LLM and agent systems: OpenTelemetry GenAI semantic conventions (incubating), span types, metrics, sampling, multi-agent trace correlation, production monitoring tools
 
 ## Patterns
 - [[patterns/principles]] — SOLID (SRP/OCP/LSP/ISP/DIP), DRY, YAGNI, KISS, Law of Demeter, SoC, composition over inheritance; per-principle violation patterns and decision table

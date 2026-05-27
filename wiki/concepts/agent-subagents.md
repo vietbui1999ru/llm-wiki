@@ -5,8 +5,9 @@ tags: [agent-engineering, subagents, context-isolation, delegation, claude-code]
 sources:
   - "Create custom subagents.md"
   - "Orchestrate teams of Claude Code sessions.md"
+  - "Simple Pi Subagents.md"
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-05-27
 ---
 
 # Agent Subagents
@@ -125,7 +126,13 @@ Match model capability to task type — cheaper models for mechanical work, stro
 | Web research / synthesis | Sonnet | Needs reasoning to synthesize multi-page output |
 | Full implementation | Sonnet/Opus | Arbitrary complexity; cost justified by output quality |
 
-Source: [[summaries/pi-subagents-extension]] — Pi Subagents extension practice.
+Source: Pi Subagents extension practice (Amos Blomqvist).
+
+**Depth limiting via spawn allowlist**: each subagent's frontmatter `agents` field lists which sub-agent types it can spawn. Default cap: 3 layers (Master → Worker → Scout/Researcher). Workers can spawn Scouts/Researchers but not other Workers. Implementation: no hard technical cap — `agents:` field enforces it declaratively.
+
+**Non-interactive limitation**: subagents cannot ask the user questions. Anything requiring clarification mid-execution must be handled by the orchestrator or designed to avoid requiring it.
+
+**Exploration offloading pattern**: delegate read-only exploration to Haiku-class subagents *before* context bloat occurs (not as a reaction to bloat). The master agent keeps its context window clean for execution, not exploration.
 
 ## When to Use Subagents (not main conversation)
 
@@ -140,4 +147,5 @@ Source: [[summaries/pi-subagents-extension]] — Pi Subagents extension practice
 - [[concepts/agent-skills]] — skills and how to preload them into subagents
 - [[concepts/agent-harness]] — harness components; subagents as delegation primitive
 - [[concepts/context-compression]] — why context isolation matters
+- [[concepts/context-degradation]] — context-distraction failure mode; exploration offloading as proactive fix
 - [[syntheses/agent-primitive-selection]] — decision tree for choosing between skills, subagents, and teams

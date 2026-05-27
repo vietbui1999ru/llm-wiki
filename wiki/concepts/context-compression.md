@@ -5,8 +5,9 @@ tags: [agent-engineering, context-management, compaction, harness, long-horizon]
 sources:
   - "Acon Optimizing Context Compression for Long-horizon LLM Agents.md"
   - "Evaluating Context Compression for AI Agents.md"
+  - "pdfs/17241_Autoencoding_Free_Contex.pdf"
 created: 2026-04-25
-updated: 2026-05-25
+updated: 2026-05-27
 ---
 
 # Context Compression Strategies
@@ -62,9 +63,29 @@ Use an LLM to compress context guided by a **learned prompt** — the compressio
 
 **Cost warning**: History compression breaks KV-cache prefix stability, forcing recomputation — this can make total API cost *higher* than no compression. Observation compression avoids this: compress before the observation enters history. Prefer observation compression in cost-sensitive settings.
 
-**Distillation**: Once the large-model guideline is optimized, distill the compressor into a small model (e.g., Qwen3-14B via LoRA) to eliminate the overhead of calling a large LLM per step.
+**Distillation**: Once the large-model guideline is optimized, distill the compressor into a small model (e.g., Qwen3-14B via LoRA) to eliminate the overhead of calling a large LLM per step. Distilled compressors retain >95% of teacher accuracy across all benchmarks.
 
-Source: [[summaries/acon-context-compression]] (KAIST + Microsoft, 2025; AppWorld/OfficeBench/8-obj QA benchmarks)
+**Benchmark results** (AppWorld / OfficeBench / 8-obj QA): 26–54% peak token reduction; maintained or improved task performance. Small agent improvement (Qwen3-14B): +32% AppWorld, +20% OfficeBench, +46% QA.
+
+Source: Acon paper (KAIST + Microsoft, 2025; AppWorld/OfficeBench/8-obj QA benchmarks)
+
+---
+
+## Key Results from Compression Evaluation (Factory.ai, 2025)
+
+Factory.ai evaluated three production compression approaches on 36,611 messages from real software engineering agent sessions. Grading via GPT-5.2 LLM judge, six dimensions (accuracy, context awareness, artifact trail, completeness, continuity, instruction following).
+
+| Method | Overall | Accuracy | Context | Artifact | Continuity |
+|---|---|---|---|---|---|
+| Factory (anchored iterative) | **3.70** | **4.04** | **4.01** | **2.45** | 3.80 |
+| Anthropic (regenerative structured) | 3.44 | 3.74 | 3.56 | 2.33 | 3.67 |
+| OpenAI (opaque /compact) | 3.35 | 3.43 | 3.64 | 2.19 | **3.77** |
+
+Compression ratios: Factory 98.6%, Anthropic 98.7%, OpenAI 99.3%.
+
+Key finding: **artifact trail is unsolved** — all methods scored 2.19–2.45 / 5.0 on tracking file modifications. Summarization alone cannot reliably track file state across long sessions; dedicated artifact indexing in the harness is likely needed.
+
+Accuracy gap: Factory 4.04 vs OpenAI 3.43 (0.61 difference) — reflects file paths and error codes surviving compression. OpenAI's opaque endpoint treats file paths as "low-entropy content" and discards them, which is catastrophically wrong for coding agents.
 
 ---
 
@@ -110,7 +131,7 @@ system = "You are a code assistant. Current time is provided per-request."
 
 ## Clear Over Compact — Now Community Consensus
 
-Matt Pocock (see [[summaries/mattpocockworkflow]]) argues against compacting and prefers hard context clears:
+Matt Pocock argues against compacting and prefers hard context clears:
 
 > "I much prefer my AI to behave like the guy from Memento because this state is always the same. Every time you do it, you clear and you go back to the beginning."
 
@@ -167,12 +188,31 @@ Most valuable for: large homogeneous datasets injected into prompts. See [[conce
 
 ---
 
+## Research: Learned Soft Compression (SAC)
+
+Distinct from the operational strategies above — SAC is a model architecture that produces compressed KV representations for serving. Not a drop-in tactic for Claude Code sessions.
+
+**Semantic-Anchor Compression (SAC)** — Northeastern University / NiuTrans Research, 2025. Code: https://github.com/lx-Meteors/SAC
+
+Core argument: autoencoding-based training objectives (ICAE, 500xCompressor, EPL) conflict with downstream task requirements — AE gradient and LM gradient are nearly orthogonal in parameter space, so optimizing one impairs the other.
+
+**SAC method**: select anchor tokens directly from context (uniform chunking at compression ratio `r`), augment each with a learnable anchor embedding, apply bidirectional attention in the encoder (anchors see full context). Decoder remains causally masked. No autoencoding objective — trains on downstream task loss only.
+
+**Results at 15× compression (vs EPL, second-best baseline), Llama-3.2-1B backbone:**
+- In-domain MRQA: +6.7% F1 / +8.2% EM
+- Out-of-domain MRQA: +6.9% F1 / +9.2% EM
+- vs ICAE: +23.5% F1 / +26.8% EM
+- Long-context summarization (32K input): SAC 18.49 avg ROUGE-1 F1 vs EPL 17.61
+- Scales to 3B and 8B without diminishing returns
+
+Limitations: requires LoRA fine-tuning; benchmarks limited to MRQA/QMSum/GovReport; frontier-scale generalizability unverified.
+
+---
+
 ## Related Pages
 
 - [[concepts/context-degradation]] — the failure modes compression prevents
 - [[concepts/agent-harness]] — where compaction fits in the harness component model
 - [[concepts/ralph-loop]] — filesystem as durable state across clean context windows (the complement to compression)
-- [[summaries/mattpocockworkflow]] — Pocock's workflow that makes clearing safe by externalizing state
 - [[concepts/dynamic-context-pruning]] — mid-session context reduction via Compress tool + deduplication + purge-errors; complements compaction
-- [[summaries/everything-claude-code]] — ECC's `strategic-compact` skill and token optimization settings
-- [[summaries/acon-context-compression]] — KAIST/Microsoft paper: adaptive guideline-optimized compression for long-horizon agents; KV-cache cost trap with history compression
+- [[entities/everything-claude-code]] — ECC's `strategic-compact` skill and token optimization settings

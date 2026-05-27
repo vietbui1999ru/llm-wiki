@@ -4,7 +4,7 @@ type: entity
 tags: [agent-harness, multi-provider, typescript, coding-agent, council]
 sources: ["pi-monopackagescoding-agent at main.md", "Simple Pi Subagents.md", "Why You Should Try OpenCode Go and pi-coding-agent.md"]
 created: 2026-05-04
-updated: 2026-05-25
+updated: 2026-05-27
 ---
 
 # Pi Agent (pi-mono)
@@ -123,7 +123,7 @@ Three shipped agent types: Scout (Haiku, read-only filesystem), Researcher (Sonn
 
 Each agent is a markdown file: frontmatter declares tools, model, allowed sub-agents; body is the system prompt. Depth limiting via `agents` allowlist field — prevents recursive runaway. Default max depth: 3 layers.
 
-See [[summaries/pi-subagents-extension]] for full details.
+Three shipped agent types: Scout (Haiku, read-only filesystem), Researcher (Sonnet, web search/fetch), Worker (Sonnet/Opus, full tools + can spawn its own scouts and researchers). Depth limiting via `agents` allowlist field prevents recursive runaway. Default max depth: 3 layers.
 
 ---
 
@@ -133,4 +133,5 @@ See [[summaries/pi-subagents-extension]] for full details.
 - [[comparisons/claude-code-vs-opencode-plugins]] — OpenCode as primary harness
 - [[entities/opencode]] — alternative primary harness; Pi AI as its council layer
 - [[entities/opencode-go]] — OpenCode Go subscription; primary open-model provider in source AGENTS.md
+- [[concepts/multi-vendor-adversarial-review]] — adversarial review pattern Pi AI enables
 - [[concepts/agent-self-correction]] — wiki-as-oracle; Pi AI for cross-vendor review

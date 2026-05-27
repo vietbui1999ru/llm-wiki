@@ -2,6 +2,12 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-05-27] consolidation | wiki restructure — summary→concept/entity merge
+
+Merged ~66 summaries into existing concept/entity/synthesis pages. Strategy: concept wins (compounding knowledge base pattern). Three buckets: entity absorptions (15), concept absorptions (~43), kept as-is (~22). Net reduction: ~188 → ~122 pages. index.md and wikilinks cleaned.
+
+## [2026-05-26] synthesis | Agent Diff Viewer — Real-Time Code Review Tool
+
 ## [2026-05-22] ingest | Acon: Optimizing Context Compression for Long-horizon LLM Agents
 Created: wiki/summaries/acon-context-compression.md
 Updated: wiki/concepts/context-compression.md (added Strategy 4: adaptive guideline-optimized compression; KV-cache cost trap)
@@ -518,3 +524,8 @@ Key insights:
 - SAC is training-time infrastructure choice, not an operational tactic; distinct from ACON (test-time) and anchored summarization (runtime)
 
 Comprehension check: skipped (user explicit)
+
+## [2026-05-26] ingest | Copilot Agent Customization Structure (awesome-copilot-agents)
+- Created: wiki/summaries/copilot-agent-structure.md
+- Updated: wiki/summaries/ai-agent-technical-debt.md — added Copilot cloud agent specifics section
+- Updated: index.md

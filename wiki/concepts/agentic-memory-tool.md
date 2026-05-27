@@ -6,14 +6,26 @@ sources:
   - "Memory & context management with Claude Sonnet 4.6.md"
   - "Effective context engineering for AI agents.md"
   - "Agents that remember introducing Agent Memory.md"
-  - "Memory & context management with Claude Sonnet 4.6.md (cookbook)"
 created: 2026-04-27
-updated: 2026-05-25
+updated: 2026-05-27
 ---
 
 # Agentic Memory Tool
 
 Anthropic's client-side memory and context editing primitives for building agents that persist knowledge across sessions and manage long-running context efficiently. Currently in **beta**.
+
+## Anthropic Memory Storage Taxonomy
+
+Four tiers from Anthropic's framing:
+
+| Type | What it is | Lifetime |
+|---|---|---|
+| **In-context** | Current conversation messages | Single session |
+| **External** | Files, DBs outside the LLM | Persistent, app-managed |
+| **In-weights** | Training data baked into model | Fixed at training time |
+| **In-cache** | KV cache for stable prompt prefixes | Across requests, same prefix |
+
+The `memory_20250818` tool bridges in-context and external: Claude writes to files (external), reads them back into context as needed.
 
 ## Memory Tool (`memory_20250818`)
 
@@ -188,4 +200,3 @@ For simple projects and single-vendor setups: `memory_20250818` is lower frictio
 - [[concepts/indirect-prompt-injection]] — security risk in memory files
 - [[entities/mnemory]] — OSS self-hosted parallel to this tool
 - [[summaries/cloudflare-agent-memory]] — managed memory service with 5-channel retrieval
-- [[summaries/context-window-cluster]] — consolidated source summary

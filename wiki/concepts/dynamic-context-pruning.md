@@ -154,8 +154,7 @@ They are **complementary, not competing**: lean-session shapes the compaction su
 
 ## Related Pages
 
-- [[entities/opencode-dcp]] — the plugin itself
-- [[summaries/opencode-dcp]] — full source synthesis
+- [[entities/opencode-dcp]] — the plugin itself (config reference, commands, prompt cache trade-off)
 - [[concepts/context-compression]] — compression strategy taxonomy
 - [[entities/opencode]] — host harness
 - [[concepts/context-degradation]] — failure modes DCP prevents (distraction, confusion)

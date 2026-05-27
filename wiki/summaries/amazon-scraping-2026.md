@@ -77,6 +77,6 @@ Switch to a managed API when engineering hours spent on proxy rotation and CAPTC
 
 ## Related Pages
 
-- [[summaries/anti-bot-evasion-tactics]] — proxy rotation, stealth tools, Cloudflare bypass
+- [[concepts/proxy-rotation]] — proxy rotation, stealth tools, Cloudflare bypass
 - [[concepts/web-fingerprinting]] — why DIY HTTP clients fail at the TLS layer
 - [[entities/pydoll]] — open-source alternative for browser-level automation with fingerprint evasion

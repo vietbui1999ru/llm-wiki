@@ -4,7 +4,7 @@ type: entity
 tags: [opencode, open-models, subscription, cost, multi-provider]
 sources: ["Why You Should Try OpenCode Go and pi-coding-agent.md"]
 created: 2026-05-25
-updated: 2026-05-25
+updated: 2026-05-27
 ---
 
 # OpenCode Go
@@ -44,9 +44,14 @@ Pi-coding-agent authenticates against OpenCode Go's endpoint alongside: ChatGPT 
 
 ---
 
+## Motivation for Switching
+
+Triggering factors cited in source: Claude Code no longer allows Opus on the $20 plan; Claude Code reportedly blocks third-party tool strings; open models (Kimi K2.6, DeepSeek V4, Qwen3.6) now benchmark near frontier models at 1/5–1/20th cost.
+
+Author's recommended stack: OpenCode Go ($10/mo) + Codex ($20–$100/mo) for rate limit headroom and access to gpt-5.4/5.5 for reviews.
+
 ## Related Pages
 
 - [[entities/pi-agent]] — primary CLI used with OpenCode Go in source
 - [[entities/opencode]] — parent OpenCode project
-- [[summaries/opencode-go-pi-primary-harness]] — source summary with model tables and patterns
 - [[comparisons/cc-to-cross-platform-migration]] — Go as a migration destination

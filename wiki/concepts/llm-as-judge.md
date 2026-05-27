@@ -7,7 +7,7 @@ sources:
   - "LLM-As-Judge 7 Best Practices & Evaluation Templates.md"
   - "Custom LLM-as-a-Judge Evaluations.md"
 created: 2026-05-07
-updated: 2026-05-12
+updated: 2026-05-27
 ---
 
 # LLM-as-Judge
@@ -115,4 +115,3 @@ LLM-as-judge can *generate* the preference data (pairwise comparisons) that feed
 - [[concepts/verification-pipeline]] — LLM-as-judge as the evaluation mechanism in the review tier
 - [[concepts/agentic-cicd]] — trace-level evaluation as a quality gate in agentic pipelines
 - [[entities/dspy]] — DSPy optimizes prompts including judge prompts; LLM-as-judge can be a DSPy module
-- [[summaries/llm-as-judge]] — source; pairwise vs direct scoring, G-Eval, production incident, failure modes

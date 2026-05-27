@@ -69,7 +69,7 @@ PWA available for mobile (iOS Safari, Android Chrome).
 
 ## Related Pages
 
-- [[summaries/cc-agent-teams]] — CC's experimental multi-agent system
 - [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules + background agent config
 - [[comparisons/cc-to-cross-platform-migration]] — cross-platform migration matrix
 - [[concepts/worktree-isolation]] — CC's approach to agent filesystem isolation
+- [[concepts/agent-teams]] — CC experimental agent teams architecture

@@ -8,7 +8,7 @@ sources:
   - "Prompt Optimization for Language Models with DSPy GEPA.md"
   - "Programming—not prompting—LMs¶.md"
 created: 2026-05-07
-updated: 2026-05-25
+updated: 2026-05-27
 ---
 
 # DSPy
@@ -78,7 +78,7 @@ Optimizers can be **composed**: run MIPROv2, feed output into MIPROv2 again or i
 
 **Two-LM setup**: fast main LM handles inference at scale; strong reasoning LM (e.g., a larger model or one with extended thinking) handles error analysis. This separates inference cost from optimization cost.
 
-**Claimed result**: outperforms RL-based methods on math reasoning benchmarks (claimed, unverified — see [[summaries/dspy]] for qualification).
+**Claimed result**: outperforms RL-based methods on math reasoning benchmarks (claimed, unverified — self-reported in arxiv 2507.19457, no independent replication available at time of writing).
 
 ## Compilation
 
@@ -138,4 +138,4 @@ This lets a stronger model craft better prompt candidates while the smaller/chea
 ## Relation to Other Wiki Pages
 
 - [[concepts/context-engineering]] — DSPy's compiler is an automated form of prompt-level context engineering
-- [[summaries/dspy]] — full source synthesis with GEPA numbers, limitations, and when DSPy makes sense table
+- [[concepts/agent-harness]] — DSPy programs can function as components inside a broader agent harness

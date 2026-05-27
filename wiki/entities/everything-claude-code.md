@@ -5,7 +5,7 @@ tags: [claude-code, agent-harness, plugin, cross-platform, open-source]
 sources:
   - "vietbui1999rueverything-claude-code The agent harness performance optimization system. Skills, instincts, memory, security, and research-first development for Claude Code, Codex, Opencode, Cursor and beyond..md"
 created: 2026-05-19
-updated: 2026-05-19
+updated: 2026-05-27
 ---
 
 # Everything Claude Code (ECC)
@@ -111,6 +111,36 @@ export ECC_SESSION_START_CONTEXT=off    # disable entirely for local/low-context
 
 ---
 
+## Token Optimization
+
+Recommended `~/.claude/settings.json`:
+
+```json
+{
+  "model": "sonnet",
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+  }
+}
+```
+
+| Setting | Default | Recommended | Impact |
+|---|---|---|---|
+| `model` | opus | sonnet | ~60% cost reduction (claimed) |
+| `MAX_THINKING_TOKENS` | 31,999 | 10,000 | ~70% reduction in hidden thinking cost (claimed) |
+| `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` | 95 | 50 | Earlier compaction → better quality in long sessions |
+| `CLAUDE_CODE_SUBAGENT_MODEL` | inherits | haiku | Subagents use cheaper model |
+
+All impact numbers claimed from ECC README; not independently verified.
+
+**MCP context cost**: too many active MCP servers can reduce the effective 200K context window to ~70K (claimed, unverified). Recommended cap: under 10 MCPs, under 80 active tools.
+
+**Strategic compaction** (via `strategic-compact` skill) — compact at: end of research/exploration phase, after completing a milestone, after a failed approach. Do NOT compact mid-implementation (lose variable names, file paths, partial state).
+
+---
+
 ## ECC 2.0 (Alpha)
 
 Rust control plane in `ecc2/` — builds locally, exposes `dashboard`, `start`, `sessions`, `status`, `stop`, `resume`, `daemon`. Not a general release; alpha quality. Tkinter desktop dashboard also available via `npm run dashboard` or `python3 ecc_dashboard.py`.
@@ -119,7 +149,6 @@ Rust control plane in `ecc2/` — builds locally, exposes `dashboard`, `start`, 
 
 ## Related Wiki Pages
 
-- [[summaries/everything-claude-code]] — full feature summary and token optimization settings
 - [[entities/agentshield]] — ECC's security scanning component
 - [[concepts/instinct-clustering]] — continuous learning v2 pattern
 - [[comparisons/cc-to-cross-platform-migration]] — cross-harness migration matrix

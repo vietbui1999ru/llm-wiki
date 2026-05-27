@@ -95,4 +95,3 @@ When writing tools for Claude agents (MCP tools, harness tools, bash wrappers):
 ## Related Pages
 
 - [[concepts/agent-harness]] — harness architecture where tools live; bash as general-purpose tool
-- [[summaries/agent-harness-engineering]] — OpenAI case study: tool legibility as agent performance lever

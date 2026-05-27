@@ -8,7 +8,7 @@ sources:
   - "How to Use Git Worktrees for Parallel AI Agent Execution.md"
   - "Parallel agents + git worktrees real-world experience?.md"
 created: 2026-05-05
-updated: 2026-05-12
+updated: 2026-05-27
 ---
 
 # Worktree Isolation
@@ -58,13 +58,13 @@ The precondition for safe worktree isolation is **non-overlapping file scope** b
 ✗ Agent A: src/domains/        Agent B: src/domains/auth/   — overlap: B is inside A's scope
 ```
 
-Scope overlap causes merge conflicts even with worktree isolation — agents edit different checkouts of the same files, then both try to merge. [[summaries/exit-code-0-quality]] documents scope overlap detection as a required orchestration primitive.
+Scope overlap causes merge conflicts even with worktree isolation — agents edit different checkouts of the same files, then both try to merge. Scope overlap detection is a required orchestration primitive.
 
 ---
 
 ## Merge Protocol
 
-**Merge-before-cleanup** rule (from [[summaries/exit-code-0-quality]]): always merge the worktree branch before removing the worktree. Removing first loses any uncommitted or unmerged work.
+**Merge-before-cleanup** rule: always merge the worktree branch before removing the worktree. Removing first loses any uncommitted or unmerged work.
 
 ```zsh
 # Correct order
@@ -103,7 +103,6 @@ Dangeresque (host-native) uses worktrees + tool filtering. SandCastle runs Claud
 | [[entities/dangeresque]] | One worktree per task; worker runs in isolation; adversarial reviewer reads result |
 | [[entities/sandcastle]] | Worktree + sandboxed container per task; branch strategy as a first-class parameter |
 | [[concepts/agent-subagents]] | `isolation: "worktree"` in frontmatter; cleaned up automatically if no changes |
-| [[summaries/exit-code-0-quality]] | Strict directory scope + separate worktree; discovery relay between waves |
 
 ---
 
@@ -181,6 +180,16 @@ State carried between tasks lives in: commits, branch history, `.agents/decision
 
 ---
 
+## Reference Orchestrators Using Worktrees
+
+| Tool | How it uses worktrees |
+|---|---|
+| Augment Code Intent | Coordinator → Specialists (Investigate/Implement/Verify/Critique/Debug/Review) → Verifier; living spec as shared coordination artifact; BYOA (Claude Code/Codex/OpenCode as implementers) |
+| Switchman | File claiming; prevents logical scope overlap upfront |
+| Overstory (jayminwest/overstory) | FIFO merge queue + watchdog for larger agent fleets |
+| Galactic (idolaman/galactic) | Per-worktree local IP (127.0.0.2, 127.0.0.3...) |
+| Dagger Container-Use | Worktrees + container runtime for full isolation at both layers |
+
 ## Related Pages
 
 - [[concepts/shared-task-queue]] — filesystem inbox with atomic claim semantics; how agents discover tasks at startup across worktrees
@@ -189,6 +198,4 @@ State carried between tasks lives in: commits, branch history, `.agents/decision
 - [[concepts/context-compression]] — clear-over-compact; worktrees make clearing safe
 - [[entities/dangeresque]] — lightweight host-native orchestrator using worktrees
 - [[entities/sandcastle]] — TypeScript lib; worktree + container combination
-- [[summaries/exit-code-0-quality]] — scope overlap detection, merge-before-cleanup protocol
-- [[summaries/worktrees-parallel-agents]] — runtime isolation gap, per-task vs per-agent, galactic, block agent-task-queue
 - [[concepts/agent-subagents]] — `isolation: "worktree"` parameter

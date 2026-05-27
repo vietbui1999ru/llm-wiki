@@ -87,4 +87,3 @@ Ask: *Is the agent ignoring something I told it earlier?* That's lost-in-middle 
 - [[concepts/context-compression]] — the three strategies for active compaction
 - [[concepts/agent-harness]] — harness-level context management (compaction, masking, offloading)
 - [[concepts/ralph-loop]] — loop pattern that manages context across multiple windows using filesystem state
-- [[summaries/mattpocockworkflow]] — source of the smart zone / dumb zone model and 100k threshold

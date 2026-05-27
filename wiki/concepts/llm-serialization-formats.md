@@ -126,6 +126,4 @@ The correct order: compress first (select), then serialize efficiently (encode).
 
 ## Related Pages
 
-- [[concepts/context-compression]] — compression (selection) as the orthogonal layer to serialization (encoding)
-- [[summaries/acon-context-compression]] — adaptive compression for long-horizon agents; composes with serialization format choice
-- [[summaries/factory-context-compression-eval]] — empirical evaluation of compression approaches for coding agents
+- [[concepts/context-compression]] — compression (selection) as the orthogonal layer to serialization (encoding); includes Acon and Factory.ai evaluation results

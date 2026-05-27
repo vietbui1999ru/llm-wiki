@@ -114,7 +114,6 @@ RAG evaluation is a specialized sub-system of the broader [[concepts/llm-eval-pi
 
 - [[concepts/llm-as-judge]] — LLM-judge implementation for generation metrics
 - [[concepts/llm-eval-pipeline]] — parent concept; RAG eval is a specialized sub-system
-- [[concepts/contextual-retrieval]] — preprocessing technique to improve retrieval quality before evaluation
-- [[summaries/contextual-retrieval]] — Anthropic's 49–67% retrieval failure reduction technique
+- [[concepts/contextual-retrieval]] — preprocessing technique to improve retrieval quality before evaluation; Anthropic's 49–67% retrieval failure reduction technique
 - [[summaries/agentic-search-vs-rag]] — graph/agentic search vs flat RAG: 99% fewer tokens, 2× IoU
 - [[summaries/local-rag-elasticsearch]] — local RAG stack patterns

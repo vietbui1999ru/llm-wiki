@@ -84,7 +84,6 @@ A codebase is too shallow if:
 
 ## Related Pages
 
-- [[summaries/mattpocockworkflow]] — deep modules in the context of the full AI coding workflow
 - [[concepts/unit-testing]] — test boundaries, AAA pattern, behavior-not-implementation testing
 - [[concepts/agent-harness]] — agent operating within bounded scope (module) vs. full graph
 - [[concepts/agent-context-instructions]] — CONTEXT.md as a way to communicate module structure to agents

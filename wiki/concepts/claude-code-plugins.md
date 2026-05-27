@@ -6,7 +6,7 @@ sources:
   - "Claude Code Plugins - llm-wiki as plugin.md"
   - "wshobsonagents Intelligent automation and multi-agent orchestration for Claude Code.md"
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-05-27
 ---
 
 # Claude Code Plugins
@@ -90,13 +90,26 @@ Use personal `~/.claude/skills/` when:
 - One machine, personal productivity only
 - No need for namespacing
 
+## Plugin Priority Stack
+
+When a plugin's skills conflict with CLAUDE.md rules:
+
+1. **User's CLAUDE.md/AGENTS.md** — highest priority
+2. **Plugin skills** — override default Claude behavior
+3. **Default system prompt** — lowest priority
+
+Plugins coexist with custom CLAUDE.md; they do not replace it. User instructions win on conflicts.
+
+## Iron Law Pattern
+
+Some plugins (e.g., Superpowers) encode "Iron Laws" — non-negotiable process rules enforced via skill instructions. Example: "Write code before a test? Delete it. Start over." This is stricter than soft guidance in CLAUDE.md. Enable/disable: `"plugin-name": true/false` in `~/.claude/settings.json`. Auto-reload via `/reload-plugins`.
+
 ## wshobson Plugin Ecosystem
 
-The wshobson/agents repo (184 agents, 78 plugins) demonstrates large-scale plugin use: plugins group related agents and skills by domain, with a `PluginEval` framework for testing plugin quality gates. See [[summaries/wshobson-agent-orchestration]].
+The wshobson/agents repo (184 agents, 78 plugins) demonstrates large-scale plugin use: plugins group related agents and skills by domain, with a `PluginEval` framework for testing plugin quality gates.
 
 ## Related Pages
 
 - [[concepts/agent-skills]] — SKILL.md format, progressive disclosure, three loading levels
 - [[concepts/agent-subagents]] — agents bundled in plugins follow the same YAML frontmatter format
 - [[summaries/claude-code-plugins-llm-wiki]] — practical guide for wrapping llm-wiki as a plugin
-- [[summaries/wshobson-agent-orchestration]] — large-scale plugin ecosystem example

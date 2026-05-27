@@ -6,8 +6,10 @@ sources:
   - "Agent Skills.md"
   - "Claude Agent Skills A First Principles Deep Dive.md"
   - "9 Things People Get Wrong With My grill-* skills.md"
+  - "mattpocockskills Skills for Real Engineers. Straight from my .claude directory..md"
+  - "Top 8 Claude Skills for UIUX Engineers.md"
 created: 2026-04-26
-updated: 2026-05-25
+updated: 2026-05-27
 ---
 
 # Agent Skills
@@ -61,8 +63,13 @@ model: inherit                # optional; inherit | sonnet | opus | haiku | full
 version: "1.0.0"              # optional; metadata only
 disable-model-invocation: false  # optional; true = user-only invocation via /skill-name
 mode: false                   # optional; true = appears in "Mode Commands" section
+argument-hint: "<path>"       # optional; merges slash-command functionality into skill
 ---
 ```
+
+**Undocumented field**: `when_to_use` appears in source code — appended to description with " - " separator. Not in official docs; avoid in production until documented.
+
+**Custom slash commands** are now merged into skills via the `argument-hint` frontmatter field — no separate slash command format.
 
 ### Progressive Disclosure
 
@@ -75,6 +82,10 @@ Three loading levels — only what's needed enters context:
 | **Resources** | As referenced | Effectively unlimited | Scripts (output only), reference files, assets |
 
 **Critical:** Script code never enters context — only script output. A 500-line Python script in `scripts/` costs ~0 tokens; only what it prints is visible to Claude.
+
+**`references/` vs `assets/`**: `references/` (markdown docs) cost tokens — text is read into context via the Read tool. `assets/` (templates, images) cost zero tokens — referenced by path only, never read into context. Prefer `assets/` for large binary or template files.
+
+The `Skill` meta-tool's description contains a dynamically generated `<available_skills>` block with a **15,000 character budget** for listing all loaded skills. Near this limit, skill descriptions may be truncated — keep descriptions concise.
 
 ## Skill Scopes (Claude Code)
 
@@ -122,6 +133,8 @@ Skills from untrusted sources are a prompt injection vector. A malicious SKILL.m
 - Exfiltrate data via network calls
 - Execute arbitrary bash
 
+Snyk ToxicSkills research found prompt injection in **36% of tested skills**, with 1,467 malicious payloads found across the ecosystem. Always read `SKILL.md` and bundled scripts before installing. `Bash` in `allowed-tools` warrants extra scrutiny.
+
 Rule: treat Skills like software packages — only use from trusted sources.
 
 ## Skill Composition Patterns
@@ -136,7 +149,7 @@ Skills do not call other skills directly. Composition happens through the shared
 
 ## Grill-* Skills: Specific Antipatterns
 
-The `/grill-me` and `/grill-with-docs` skills fail in predictable ways. See [[summaries/grill-skills-antipatterns]] for full breakdown. Key patterns:
+The `/grill-me` and `/grill-with-docs` skills fail in predictable ways. Key patterns:
 
 | Antipattern | Fix |
 |---|---|
@@ -168,5 +181,3 @@ Prefer direct prompting for: quick one-shot tasks, tasks fully specified in cont
 - [[concepts/agent-teams]] — teams and skill loading behavior
 - [[concepts/indirect-prompt-injection]] — attack vector via malicious skill content
 - [[concepts/claude-code-plugins]] — plugin system that namespaces and bundles skills
-- [[summaries/skills-first-principles-deep-dive]] — deep architectural analysis of the Skill meta-tool, isMeta execution model, and supply chain risk
-- [[summaries/grill-skills-antipatterns]] — 9 failure modes for grill-me / grill-with-docs

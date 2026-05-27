@@ -2,9 +2,14 @@
 title: "OpenCode"
 type: entity
 tags: [agent-harness, plugins, CLI, compaction, alternative-to-claude-code]
-sources: ["Plugins for Opencode.md", "Agents-opencode.md", "Rules.md", "Config.md"]
+sources:
+  - "Plugins for Opencode.md"
+  - "Agents-opencode.md"
+  - "Rules.md"
+  - "Config.md"
+  - "Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md"
 created: 2026-05-04
-updated: 2026-05-12
+updated: 2026-05-27
 ---
 
 # OpenCode
@@ -90,6 +95,45 @@ Claude Code's equivalent is MCP server registration — a heavier setup. OpenCod
 
 ---
 
+## Commands — Skill Equivalent
+
+Commands are `.opencode/commands/*.md` files (or global `~/.config/opencode/commands/`). Each file is a Markdown template that becomes a slash command.
+
+```markdown
+---
+name: wiki-context
+description: Search the personal LLM wiki for relevant patterns
+---
+Search the wiki for: {{query}}
+Run: qmd query "{{query}}" --files
+```
+
+Features: `{{argument_name}}` template slots, `$(command)` shell injection, `@path/to/file.md` file injection, agent binding (force execution via a specific agent).
+
+**Command → Agent binding** (stronger than CC's skill model — routes to a different model entirely):
+```markdown
+---
+name: security-audit
+agent: security-auditor
+---
+Run a full OWASP security audit on: {{scope}}
+```
+
+## Rules — Ambient Context
+
+Load reusable instruction files without putting everything in AGENTS.md:
+
+```jsonc
+{
+  "rules": [
+    "~/.config/opencode/rules/core.md",
+    ".opencode/rules/project.md"
+  ]
+}
+```
+
+Migration: CC `claude-setup/rules/*.md` → OpenCode `rules` array in `opencode.json`. Same files, different loading mechanism.
+
 ## Agent Model
 
 OpenCode distinguishes three modes:
@@ -174,9 +218,43 @@ Config files are **merged not replaced** — conflicting keys override, non-conf
 
 **TUI settings** live in a separate `tui.json` file — not in `opencode.json`.
 
-See [[summaries/opencode-config]] for full reference.
+**Managed settings (enterprise)**: deploy `.mobileconfig` via MDM (Jamf, Kandji, FleetDM) using `ai.opencode.managed` PayloadType for settings users cannot override. `opencode debug config` shows resolved config including managed preferences.
+
+**Inline agent definition** in config:
+```jsonc
+{
+  "agent": {
+    "code-reviewer": {
+      "model": "anthropic/claude-sonnet-4-5",
+      "prompt": "You are a code reviewer.",
+      "tools": { "write": false, "edit": false }
+    }
+  }
+}
+```
 
 ---
+
+## Community Model-Routing Patterns
+
+From r/opencodeCLI community (2026-05-03, n≈30 responses):
+
+| Role | Model | Notes |
+|---|---|---|
+| Planning / council | GLM-5.1, Opus 4.7 | Strong consensus |
+| Reasoning / bug hunt | DeepSeek V4 Flash (max reasoning) | Cheaper than Pro; max reasoning is the unlock |
+| Open-ended implementation | DeepSeek V4 Pro, GLM-5.1 | Strong |
+| Fast targeted changes | DeepSeek V4 Flash, Qwen 3.6 Plus | Fast + cheap |
+| Adversarial review | DeepSeek V4 Pro, Qwen 3.6 Plus | Different training = different blindspots |
+| UI / frontend | Kimi K2.6, Gemini | Visual reasoning strength |
+
+**Key insight** (settings-opencode author): "You need a good harness. Use specialized agents, skills, hooks — anything that helps you have the outcome you desire." Model capability < workflow structure.
+
+**DeepSeek reasoning effort**: set max reasoning via `ctrl+t` or config when using direct API. Resellers (OpenRouter) may not support reasoning effort — use direct API.
+
+**Opus as orchestrator pattern**: Opus generates a bash script that dispatches other models, deciding which model fits each task + capping expensive model quotas. Moves model routing from static config to dynamic agent decision.
+
+**Auto-learned skill accumulation**: running CC + OpenCode simultaneously with session-learning hooks creates duplicate skills (e.g., three versions of the same skill name). Periodic triage required. See [[concepts/instinct-clustering]].
 
 ## Relation to Existing Wiki
 
@@ -185,4 +263,3 @@ See [[summaries/opencode-config]] for full reference.
 - [[concepts/agent-harness]] — OpenCode is a complete harness implementation; compare components
 - [[entities/ai-coding-agents]] — OpenCode is part of the AI coding agent ecosystem
 - [[concepts/claude-code-plugins]] — Claude Code's plugin system (what OpenCode extends)
-- [[summaries/opencode-model-switching-reddit]] — community model-routing patterns: GLM-5.1 planning, DeepSeek Flash max-reasoning, multi-vendor adversarial review

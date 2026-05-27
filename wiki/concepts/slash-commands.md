@@ -5,8 +5,9 @@ tags: [claude-code, workflow, session-management, orchestration]
 sources:
   - "Keep Claude working toward a goal.md"
   - "Memory & context management with Claude Sonnet 4.6.md"
+  - "handoff is my new favourite skill.md"
 created: 2026-05-25
-updated: 2026-05-25
+updated: 2026-05-27
 ---
 
 # Claude Code Slash Commands
@@ -19,7 +20,13 @@ Decision guide for session control and persistence commands. Covers WHEN to use 
 
 ### /goal — condition-driven persistence
 
-Runs autonomously until a boolean condition evaluates true. Has an internal evaluator sub-agent that checks the condition after each step.
+Runs autonomously until a boolean condition evaluates true. After each turn, a Haiku-class evaluator model checks the condition; if not met, Claude starts another turn with the evaluator's reason as guidance. Internally a session-scoped Stop hook. Evaluator reads only the transcript — cannot run shell commands.
+
+**Condition writing guide**: one measurable end state (test result, build exit code, file count, empty queue); include constraints ("no other test file is modified"); optionally bound duration ("or stop after 20 turns"). Max 4,000 characters.
+
+Non-interactive use: `claude -p "/goal CHANGELOG.md has an entry for every PR merged this week"`
+
+**Requirements**: workspace must have trust dialog accepted (part of hooks system); unavailable when `disableAllHooks` or `allowManagedHooksOnly` is set.
 
 Best for:
 - "Keep working until all tests pass"
@@ -70,9 +77,21 @@ Always run /save-session before /clear, never /clear first.
 
 ### /handoff — parallel session fork
 
-Forks a parallel Claude Code session with a focused context slice. The forked session can prototype independently while the main session continues. GitHub issues can serve as handoff artifacts — context passed via issue body rather than re-narrating inline.
+Forks a parallel Claude Code session with a focused context slice. The forked session runs independently while the main session continues uninterrupted.
 
-See [[summaries/mattpoccock-handoff-skill]] for implementation detail.
+**Handoff document properties:**
+- Saved to `$TMPDIR` — coordination artifact, not documentation; shouldn't persist in codebase
+- Focused on stated purpose (caller must describe the next session's focus)
+- Uses pointers to existing files/issues rather than duplicating content (keeps doc small)
+- Includes "suggest skills" section so next session invokes the right skill without user specifying
+- Redacts sensitive data (API keys, passwords, PII)
+
+**Key patterns:**
+- **Grilling → prototype → return**: hit ungrillable question in grilling session → handoff to prototype → prototype runs to 169k+ tokens → generates return handoff with learnings → parent grilling session resumes
+- **Grilling → issue filing**: out-of-scope task surfaces during grilling → handoff with "file a GitHub issue" purpose → short-lived agent creates issue and terminates
+- **Cross-agent review**: same handoff doc consumed by a different agent (Claude Code → Codex); enables adversarial review with no infrastructure
+
+**GitHub issue as handoff**: a GitHub issue is a persistent, shareable handoff artifact. See [[concepts/github-issue-handoff]] for the issue-based vs temp-file handoff tradeoffs.
 
 ---
 
@@ -118,5 +137,5 @@ Rule: prefer /compact while still mid-task. Use /clear only at a clean boundary 
 ## Related Pages
 
 - [[concepts/ralph-loop]] — underlying harness pattern; one-task-per-iteration discipline
-- [[summaries/mattpoccock-handoff-skill]] — /handoff implementation and use cases
-- [[summaries/cc-agent-persistence]] — /goal pattern and evaluator sub-agent detail
+- [[concepts/github-issue-handoff]] — issue-based handoff vs temp-file handoff
+- [[concepts/context-degradation]] — smart/dumb zone; why 120k is the practical limit for a grilling session

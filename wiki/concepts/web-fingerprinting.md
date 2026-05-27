@@ -7,8 +7,12 @@ sources:
   - "Network Fundamentals - Pydoll - Async Web Automation Library.md"
   - "Anti-bot score and scope for flagging scraping (how to avoid being flagged).md"
   - "Bypassing Cloudflare with Puppeteer Stealth Mode - What Works and What Doesn't.md"
+  - "Legal & Ethical - Pydoll - Async Web Automation Library.md"
+  - "How can one rotate proxies to avoid CAPTCHA while web scraping?.md"
+  - "Max success in web scraping with open-source or free tools.md"
+  - "Pros and Cons of Free, Paid, Hybrid Web Scraping Stack for Amazon.md"
 created: 2026-04-23
-updated: 2026-04-23
+updated: 2026-05-27
 ---
 
 # Web Fingerprinting
@@ -25,8 +29,9 @@ Signals extracted before any browser JavaScript runs, at the TCP/TLS connection:
 
 **TCP fingerprint** (kernel-set, cannot be changed by proxies or browsers):
 - Initial window size, MSS, TCP options order, TTL
-- Different per OS: Windows=65535/128, Linux=29200/64, macOS=65535/64
+- Per OS: Windows 10/11=window 65535/TTL 128/options MSS+NOP+WS+NOP+NOP+SACK_PERM; Linux=29200/64/MSS+SACK_PERM+TS+NOP+WS; macOS=65535/64
 - Detected with tools like p0f, Nmap OS detection
+- HTTP and SOCKS proxies operate above TCP layer — they cannot modify TCP handshake characteristics; real OS always exposed to network observers
 
 **TLS fingerprint (JA3/JA4)**:
 - Cipher suite list, TLS extensions, their order, ALPN protocols in the Client Hello
@@ -53,6 +58,26 @@ Readable via JavaScript after the connection is accepted:
 | Header consistency | Accept-Language matching navigator.language |
 
 `playwright-stealth` / `playwright-extra` patch these JS properties. CDP-native tools (Pydoll) avoid `navigator.webdriver` entirely.
+
+## Proxy Layer Positioning
+
+| OSI Layer | Protocol | Proxy Type | TCP Fingerprint Visible? |
+|---|---|---|---|
+| 7 (Application) | HTTP, HTTPS | HTTP proxy | Yes — full content visible; can read/modify headers, cookies, body |
+| 5 (Session) | — | SOCKS proxy | Yes — protocol-agnostic; cannot inspect content; HTTPS end-to-end |
+| 4 (Transport) | TCP/UDP | — | Always — below all proxies |
+
+Most proxies only handle TCP. UDP traffic (WebRTC, DNS, QUIC/HTTP3) bypasses proxy configuration entirely. Use `--disable-quic` Chrome flag to force HTTP/2 over TCP for QUIC mitigation.
+
+## WebRTC IP Leak
+
+The most common cause of IP leakage in proxied automation. WebRTC uses STUN servers over UDP to discover the real public IP — this happens below the browser's proxy layer. JavaScript on the page can trigger discovery with ~10 lines via `RTCPeerConnection` and Google STUN servers.
+
+Mitigation (Pydoll API):
+```python
+options.webrtc_leak_protection = True  # force WebRTC through proxy only
+# or nuclear: options.add_argument('--disable-features=WebRTC')
+```
 
 ### Layer 3: Behavioral
 
@@ -84,6 +109,53 @@ Conversely, no layer alone is a silver bullet: disabling `navigator.webdriver` d
 4. **Residential/mobile proxies**: fix IP reputation and help match expected TLS from those ISPs
 5. **Continuous adaptation**: fingerprinting evolves monthly; static evasion setups degrade
 
+## Cloudflare Tiers
+
+**Standard Cloudflare (no Turnstile):** Two flags defeat detection on most sites:
+```js
+{ headless: false, args: ["--disable-blink-features=AutomationControlled", "--window-size=1920,1080"] }
+```
+`headless: false` forces a real visible browser process; `--disable-blink-features=AutomationControlled` removes the `navigator.webdriver` JS property.
+
+**Cloudflare Turnstile:** Analyzes mouse trajectories, behavioral patterns, advanced fingerprinting. Cannot be passed programmatically. Workarounds: `puppeteer-real-browser` (community library, reported to solve Turnstile in some cases); Chrome Debug Port + MCP (attach to real user-profile Chrome instance with existing auth cookies — zero automation flags set).
+
+## Free vs. Hybrid Stack
+
+| Aspect | Free/Open-Source | Hybrid (OSS + paid proxies) |
+|---|---|---|
+| Success rate | 50–75% | 90–99% |
+| Scale | 10–100 req/hr | 1k–10k+/hr |
+| Cost | $0 + time | $50–300/mo |
+| Sites | Simple/static OK; fails protected | All sites including Amazon |
+
+**Free stack**: Playwright/Puppeteer (headless=false), playwright-stealth, free proxy lists, rotated user-agents, random delays 2–10s, human-like mouse/scroll.
+**Hybrid recommended**: Playwright + playwright-stealth + mobile/4G proxies (Proxies.sx, VoidMob, Bright Data) + 2Captcha for CAPTCHA fallback.
+
+Takeaway: free-only suits learning and prototypes. Paid proxies are the minimum addition for production reliability on anti-bot-protected sites.
+
+## Alternative Stealth Tools
+
+- **curl-cffi** (Python) — mimics real Chrome TLS fingerprints; effective against basic detection without a headless browser
+- **Camoufox** — stealth-optimized Firefox build
+- **playwright-extra / Patchright** — extended stealth patches for Playwright
+- **nodriver / undetected-chromedriver** — community alternatives; results vary by target site
+- **FlareSolverr** — proxy service that solves Cloudflare challenges
+
+## Legal and Ethical Framework
+
+| Region | Key Law | Constraint |
+|---|---|---|
+| EU | GDPR | IP addresses are personal data; lawful basis required for collection |
+| USA | CFAA, state laws | Circumventing access controls may violate computer fraud law |
+| China | Cybersecurity Law | Only approved VPN/proxy services permitted |
+
+**hiQ v. LinkedIn (2022):** Scraping publicly available data generally permitted; circumventing technological barriers may still violate CFAA.
+**QVC v. Resultly (2020):** Excessive requests constitute trespass to chattels — volume and server impact matter, not just technical access.
+
+Ethical minimum: respect `robots.txt`; rate-limit (1+ second minimum between requests, ≤5 concurrent per site); collect only what you need.
+
+High-risk targets to avoid: banking/financial (fraud detection), government portals (legal penalties), healthcare (HIPAA), e-commerce account creation (permanent bans).
+
 ## Practical Tool Map
 
 | Layer | Problem | Tool |
@@ -100,5 +172,3 @@ Conversely, no layer alone is a silver bullet: disabling `navigator.webdriver` d
 - [[concepts/proxy-rotation]] — proxy types and their effect on network fingerprint
 - [[concepts/webrtc-ip-leak]] — UDP-level bypass that defeats otherwise-correct proxy setup
 - [[entities/pydoll]] — library with systematic fingerprint evasion support
-- [[summaries/pydoll-network-fingerprinting]] — Pydoll's detailed treatment of all three layers
-- [[summaries/anti-bot-evasion-tactics]] — practical community techniques

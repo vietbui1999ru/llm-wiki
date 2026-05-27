@@ -76,8 +76,8 @@ Agents do NOT need to load this entire page at startup. They load it only when t
 | Model tier | [[syntheses/agent-primitive-selection]] |
 | Editing policy | Applied from CLAUDE.md rules |
 | Context saturation | [[concepts/context-compression]] |
-| Pre-implementation | [[summaries/mattpocockworkflow]] (grill phase) |
-| Vertical slices | [[summaries/mattpocockworkflow]] (kanban phase) |
+| Pre-implementation | [[syntheses/lean-agentic-workflow]] (grill phase) |
+| Vertical slices | [[syntheses/lean-agentic-workflow]] (kanban phase) |
 | Auto-commit | Personal rules: `superpowers-integration.md` (brainstorming auto-commit override) |
 | Adversarial review | [[concepts/multi-vendor-adversarial-review]] |
 | Branch strategy | [[concepts/branch-strategy-for-agents]] |
@@ -119,6 +119,6 @@ See [[summaries/self-refinement]] for source details.
 - [[concepts/multi-vendor-adversarial-review]] — when to trigger council
 - [[concepts/branch-strategy-for-agents]] — worktree and merge decisions
 - [[concepts/rules-vs-hooks]] — why hook enforcement is stronger than pull-based self-correction
-- [[summaries/mattpocockworkflow]] — the core workflow agents self-correct toward
+- [[syntheses/lean-agentic-workflow]] — the core workflow agents self-correct toward
 - [[summaries/self-refinement]] — Self-Refine paper (same-model iterative refinement; related but distinct)
 - [[concepts/preference-feedback-loop]] — automatic judge-driven correction (complements agent self-correction)

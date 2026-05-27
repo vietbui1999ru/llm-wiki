@@ -83,7 +83,7 @@ A hook inspects the file being edited and injects the relevant rules file.
 
 Both rules and hooks that instruct the agent to invoke commands (e.g., "run tests before finishing") face the same fundamental problem: the agent is asked to self-enforce its own constraints. This works better with hooks (the system runs the command) than with rules (the agent decides whether to run it).
 
-From [[summaries/agents-md-critique]]:
+From the AGENTS.md critique (Wand, 2026-05-06):
 > "No agent will reliably follow any such instructions — even assuming there is no ambiguity — nor is such behavior enforceable by the orchestrator managing the agent."
 
 ---
@@ -103,7 +103,6 @@ From [[summaries/agents-md-critique]]:
 
 ## Related Pages
 
-- [[summaries/agents-md-critique]] — the critique that motivated this distinction
 - [[entities/agents-md-format]] — the rules approach (AGENTS.md format)
 - [[concepts/agent-context-instructions]] — what both approaches implement
 - [[concepts/memory-bank-pattern]] — hybrid approach that escapes single-file limits

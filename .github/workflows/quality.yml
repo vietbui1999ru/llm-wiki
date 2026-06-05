@@ -11,9 +11,9 @@ jobs:
     name: Markdown Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Lint markdown
-        uses: DavidAnson/markdownlint-cli2-action@v16
+        uses: DavidAnson/markdownlint-cli2-action@v17
         with:
           globs: "**/*.md"
 
@@ -21,6 +21,6 @@ jobs:
     name: AI Slop Quality Gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: aislop Quality Gate
         uses: scanaislop/aislop@v0.10.2

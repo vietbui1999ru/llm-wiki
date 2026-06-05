@@ -2,6 +2,15 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-06-05] synthesis | Pi Orchestration Architecture
+Created: wiki/syntheses/pi-orchestration-architecture.md
+Distilled from grill session: orchestrator choice, pueue dispatch, task scoping, OpenCode Go model routing, status artifact design (resolved/unresolvedFiles/retryCount/needsHuman), two review modes (interactive vs headless), retry limit (MAX_RETRIES=3), human-commits-last.
+Implemented: pi-diff-review extension in DiffViewer repo — status artifact, retry tracking, Myers diff, session_compacted cleanup.
+
+## [2026-06-04] ingest | Building pi in a World of Slop — Mario Zechner
+Created: wiki/summaries/pi-building-in-world-of-slop.md
+Updated: wiki/entities/pi-agent.md (design philosophy, Terminal Bench result, self-modifying, YOLO security, pi as OpenCode's agent core)
+
 ## [2026-05-27] consolidation | wiki restructure — summary→concept/entity merge
 
 Merged ~66 summaries into existing concept/entity/synthesis pages. Strategy: concept wins (compounding knowledge base pattern). Three buckets: entity absorptions (15), concept absorptions (~43), kept as-is (~22). Net reduction: ~188 → ~122 pages. index.md and wikilinks cleaned.
@@ -529,3 +538,21 @@ Comprehension check: skipped (user explicit)
 - Created: wiki/summaries/copilot-agent-structure.md
 - Updated: wiki/summaries/ai-agent-technical-debt.md — added Copilot cloud agent specifics section
 - Updated: index.md
+
+## [2026-05-28] ingest | OpenCode Headless & Programmatic Interface (CLI.md + Server.md)
+
+New pages:
+- wiki/summaries/opencode-headless-api.md — `opencode run`, `opencode serve`, HTTP API, warm-server pattern, async/sync messages, SSE, ACP protocol, experimental orchestration flags
+
+Updated:
+- wiki/entities/opencode.md — added Headless & Programmatic Mode section; updated sources frontmatter
+- index.md — added summary entry, updated opencode entity description
+
+Key insights:
+- `opencode run "prompt"` = headless subprocess mode (pi -p equivalent) — confirms Claude → OpenCode → Pi chain is viable
+- Architecture is server-first: every opencode invocation embeds a server; TUI is just a client
+- Warm-server pattern: `opencode serve` once, `opencode run --attach` for repeated calls — avoids MCP cold-boot
+- HTTP API enables full programmatic control: create sessions, send sync/async prompts, fork sessions, respond to permissions, stream events via SSE
+- `OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS` and `SCOUT` flags signal native parallel delegation coming
+
+Comprehension check: skipped (user explicit)

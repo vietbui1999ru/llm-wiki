@@ -2,7 +2,12 @@
 
 Catalog of all pages. Updated on every ingest operation.
 
+## Syntheses
+- [[syntheses/pi-orchestration-architecture]] — Pueue-dispatched pi workers, diff-review gate, status artifact, retry limit, two-mode review (interactive vs headless), human-commits-last
+
 ## Summaries
+- [[summaries/pi-building-in-world-of-slop]] — Pi origin story: minimal harness thesis, 4-tool architecture, self-modifying extensions, Terminal Bench 6th, anti-slop philosophy (Mario Zechner talk)
+- [[summaries/opencode-headless-api]] — `opencode run` (subprocess), `opencode serve` (HTTP API), warm-server pattern, sync/async messages, SSE events, programmatic permission approval
 - [[concepts/github-issue-handoff]] *(stub)* — GitHub issue as handoff artifact; bridges /handoff + /to-issues + shared-task-queue; auto-dispatch via Actions webhook
 - [[summaries/claude-code-plugins-llm-wiki]] — Plugin structure, manifest, skill-to-wiki mapping, symlink gotcha, launch commands
 - [[summaries/llm-wiki-pattern]] — Summary of Karpathy's LLM wiki pattern: architecture, operations, tooling, Memex connection
@@ -42,7 +47,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/mnemory]] — Self-hosted MCP cross-session memory: Qdrant vector search + S3/MinIO artifact store; OSS alternative to Anthropic memory tool
 - [[entities/agentops]] — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
 - [[entities/gemini-cli]] — Google's Gemini CLI: GEMINI.md + TOML commands + activate_skill; high parity with CC; hooks + subagents (experimental)
-- [[entities/opencode]] — Open-source Claude Code alternative; plugin system with compaction hooks, custom tools, 30+ event surface
+- [[entities/opencode]] — Open-source Claude Code alternative; plugin system, compaction hooks, custom tools, headless `run`/`serve` modes, full HTTP API
 - [[entities/pi-agent]] — pi-coding-agent CLI (pi-mono); primary harness for open-model workloads + council/adversarial review layer; difficulty-tiered model routing; pueue parallel delegation; srt sandboxing; Pi Subagents extension
 - [[entities/opencode-go]] — OpenCode Go: $10/mo open-model subscription (DeepSeek V4 Pro, Kimi K2.6, Qwen3.6, etc.); subscription arbitrage alternative to Anthropic/OpenAI plans
 - [[entities/karpathy-llm-council]] — Karpathy's 3-stage council web app: parallel dispatch → anonymized peer review → Chairman synthesis; OpenRouter-based reference implementation

@@ -1,10 +1,14 @@
 ---
 title: "Pi Agent (pi-mono)"
 type: entity
-tags: [agent-harness, multi-provider, typescript, coding-agent, council]
-sources: ["pi-monopackagescoding-agent at main.md", "Simple Pi Subagents.md", "Why You Should Try OpenCode Go and pi-coding-agent.md"]
+tags: [agent-harness, multi-provider, typescript, coding-agent, council, minimal-harness, self-modifying]
+sources:
+  - "pi-monopackagescoding-agent at main.md"
+  - "Simple Pi Subagents.md"
+  - "Why You Should Try OpenCode Go and pi-coding-agent.md"
+  - "Building pi in a World of Slop — Mario Zechner.md"
 created: 2026-05-04
-updated: 2026-05-27
+updated: 2026-06-04
 ---
 
 # Pi Agent (pi-mono)
@@ -124,6 +128,25 @@ Three shipped agent types: Scout (Haiku, read-only filesystem), Researcher (Sonn
 Each agent is a markdown file: frontmatter declares tools, model, allowed sub-agents; body is the system prompt. Depth limiting via `agents` allowlist field — prevents recursive runaway. Default max depth: 3 layers.
 
 Three shipped agent types: Scout (Haiku, read-only filesystem), Researcher (Sonnet, web search/fetch), Worker (Sonnet/Opus, full tools + can spawn its own scouts and researchers). Depth limiting via `agents` allowlist field prevents recursive runaway. Default max depth: 3 layers.
+
+---
+
+## Design Philosophy (from "Building pi in a World of Slop")
+
+Pi's design is a direct reaction to context management failures in Claude Code and OpenCode:
+- CC system prompt changes every release; reminders injected mid-context with "may or may not be relevant" phrasing
+- OpenCode prunes tool outputs after a token threshold; injects LSP errors on every edit call
+- Neither gives full observability into what's happening to context
+
+**Minimal system prompt thesis**: models are post-trained as coding agents — they don't need 10,000 tokens explaining what one is. Pi's system prompt is a few lines. Skills (markdown files) are added begrudgingly.
+
+**Terminal Bench**: Pi scored 6th globally *before* compaction. Terminal Bench's own winner is a tmux-only harness with no file tools, no subagents — scores higher than native model harnesses. Validates: minimal harness > feature-heavy harness for coding tasks.
+
+**Self-modifying**: Pi ships documentation + extension code examples. The agent writes its own extensions on demand. Hot reload during session — game-dev iteration speed.
+
+**YOLO by default**: no permission dialogs. Security handled by extensions the user builds (or asks Pi to build). `srt` fills the gap for host-level sandboxing.
+
+**Pi as OpenCode's built-in agent core**: Peter embedded Pi inside OpenCode. Pi went from personal project → hit by every OpenCode instance's bot traffic.
 
 ---
 

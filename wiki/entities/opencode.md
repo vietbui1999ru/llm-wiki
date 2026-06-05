@@ -8,6 +8,8 @@ sources:
   - "Rules.md"
   - "Config.md"
   - "Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md"
+  - "CLI.md"
+  - "Server.md"
 created: 2026-05-04
 updated: 2026-05-27
 ---
@@ -255,6 +257,61 @@ From r/opencodeCLI community (2026-05-03, n≈30 responses):
 **Opus as orchestrator pattern**: Opus generates a bash script that dispatches other models, deciding which model fits each task + capping expensive model quotas. Moves model routing from static config to dynamic agent decision.
 
 **Auto-learned skill accumulation**: running CC + OpenCode simultaneously with session-learning hooks creates duplicate skills (e.g., three versions of the same skill name). Periodic triage required. See [[concepts/instinct-clustering]].
+
+---
+
+## Headless & Programmatic Mode
+
+### `opencode run` — Subprocess / Non-interactive
+
+The `pi -p` equivalent. Runs a single prompt and exits:
+
+```bash
+opencode run "Refactor the auth module"
+opencode run --model anthropic/claude-sonnet-4-6 --agent Build "task"
+opencode run --dangerously-skip-permissions "automated task"
+```
+
+Key flags: `--model`, `--agent`, `--attach`, `--continue`, `--session`, `--fork`, `--file`, `--format json`, `--variant`, `--dangerously-skip-permissions`.
+
+### `opencode serve` — Persistent HTTP Server
+
+Every `opencode` (TUI) run starts an embedded HTTP server; TUI is just a client. `opencode serve` exposes the same server standalone without TUI. Full OpenAPI 3.1 spec at `http://<host>:<port>/doc`.
+
+**Warm-server pattern** (avoids MCP cold-boot on every invocation):
+```bash
+opencode serve --port 4096 &
+opencode run --attach http://localhost:4096 "task 1"
+opencode run --attach http://localhost:4096 "task 2"
+```
+
+### Key HTTP Endpoints
+
+| Method | Path | Notes |
+|---|---|---|
+| `POST` | `/session` | Create session |
+| `POST` | `/session/:id/message` | Send prompt, wait for response (sync) |
+| `POST` | `/session/:id/prompt_async` | Send prompt, return 204 (async) |
+| `POST` | `/session/:id/fork` | Fork session at a message |
+| `POST` | `/session/:id/abort` | Abort running session |
+| `POST` | `/session/:id/permissions/:id` | Programmatic permission approval |
+| `GET` | `/event` | SSE stream of all bus events |
+| `GET` | `/agent` | List available agents |
+| `POST` | `/mcp` | Add MCP server dynamically |
+
+### ACP Protocol
+
+`opencode acp` = stdin/stdout nd-JSON server for IDE embedding (no HTTP overhead).
+
+### Experimental Orchestration Flags
+
+- `OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS` — background subagent tasks
+- `OPENCODE_EXPERIMENTAL_SCOUT` — Scout subagent (read-only fast search)
+- `OPENCODE_EXPERIMENTAL_PLAN_MODE` — plan mode
+
+See [[summaries/opencode-headless-api]] for full API reference and orchestration patterns.
+
+---
 
 ## Relation to Existing Wiki
 

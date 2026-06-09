@@ -2,6 +2,39 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-06-08] ingest | What is an Agent Harness? — Parallel AI
+
+New pages:
+- wiki/summaries/what-is-an-agent-harness-parallel-ai.md — Parallel AI explainer; orchestrator/framework/harness taxonomy, DeepAgents, ICML 2025 modular harness, model-agnostic property
+
+Updated:
+- wiki/concepts/agent-harness.md — added Harness vs. Orchestrator vs. Framework section; model-agnostic property (with caveat); Real-World Harness Examples table; updated sources frontmatter
+- index.md — added summary entry; updated concept entry description
+
+Key new material vs existing wiki:
+- Explicit 3-way taxonomy: framework (building blocks) → orchestrator (control flow) → harness (capabilities/side-effects); previously conflated
+- DeepAgents: LangChain's general-purpose harness positioned as open-source Claude Code; default prompts + file system + planning utils baked in
+- ICML 2025 modular harness: toggleable perception/memory/reasoning modules; improved win rates in game environments vs. unharnessed baseline
+- Model-agnostic property: one harness, swappable models via standard tool-call interfaces; routing between models possible; caveat: overfitting risk documented in wiki
+- "Test harness" (SE) disambiguation: different concept, context-specific usage only
+
+Comprehension check: skipped (user explicit)
+
+## [2026-06-08] ingest | Headroom — context compression layer (chopratejas/headroom)
+
+Created: wiki/entities/headroom.md
+Updated: wiki/concepts/context-compression.md (added CCR as 5th strategy, content-type-aware routing section)
+Updated: index.md
+
+Net new vs existing wiki:
+- CCR (reversible compression with retrieval) — fifth compression pattern; complements anchored iterative
+- Content-type-aware routing — JSON/AST/prose dispatch to different algorithms
+- CacheAligner — automated prefix stabilization (vs our manual KV-cache design rules)
+- `headroom learn` — automated CLAUDE.md failure mining (vs manual capture-mistake workflow)
+
+Benchmark claims marked (claimed, unverified) — self-reported README only.
+Comprehension check: skipped (user explicit)
+
 ## [2026-06-05] synthesis | Pi Orchestration Architecture
 Created: wiki/syntheses/pi-orchestration-architecture.md
 Distilled from grill session: orchestrator choice, pueue dispatch, task scoping, OpenCode Go model routing, status artifact design (resolved/unresolvedFiles/retryCount/needsHuman), two review modes (interactive vs headless), retry limit (MAX_RETRIES=3), human-commits-last.

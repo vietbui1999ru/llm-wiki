@@ -6,6 +6,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[syntheses/pi-orchestration-architecture]] — Pueue-dispatched pi workers, diff-review gate, status artifact, retry limit, two-mode review (interactive vs headless), human-commits-last
 
 ## Summaries
+- [[summaries/what-is-an-agent-harness-parallel-ai]] — Parallel AI explainer: orchestrator/framework/harness taxonomy, DeepAgents, ICML 2025 modular harness, model-agnostic property; supplements [[concepts/agent-harness]]
 - [[summaries/pi-building-in-world-of-slop]] — Pi origin story: minimal harness thesis, 4-tool architecture, self-modifying extensions, Terminal Bench 6th, anti-slop philosophy (Mario Zechner talk)
 - [[summaries/opencode-headless-api]] — `opencode run` (subprocess), `opencode serve` (HTTP API), warm-server pattern, sync/async messages, SSE events, programmatic permission approval
 - [[concepts/github-issue-handoff]] *(stub)* — GitHub issue as handoff artifact; bridges /handoff + /to-issues + shared-task-queue; auto-dispatch via Actions webhook
@@ -34,6 +35,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/llm-serialization-formats]] — Schema-first formats (ONTO, TOON) cutting LLM input overhead 40–60% via schema-once design; covers format comparison, tradeoffs, and caveats on synthetic benchmarks
 
 ## Entities
+- [[entities/headroom]] — Context compression proxy/library/MCP for AI agents; ContentRouter (JSON/AST/prose), CacheAligner, CCR reversible compression, cross-agent memory, `headroom learn` failure mining
 - [[entities/everything-claude-code]] — Agent harness performance system (ECC): plugin + manual install; 9-harness support; DRY adapter pattern; instinct clustering; AgentShield
 - [[entities/agentshield]] — Security scanner for CC configs: 5 scan categories (secrets/permissions/hooks/MCP/agents), 102 rules, 3-agent Opus red-team pipeline
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
@@ -82,7 +84,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/web-fingerprinting]] — Multi-layer browser/network/behavioral fingerprinting used by anti-bot systems; evasion principles
 - [[concepts/proxy-rotation]] — Proxy types by OSI layer, rotation strategies, limits vs. full fingerprinting evasion
 - [[concepts/webrtc-ip-leak]] — WebRTC UDP bypass of proxy configuration; ICE/STUN mechanism and mitigations
-- [[concepts/agent-harness]] — Model + harness = agent; core components: filesystem, bash, sandbox, context management, long-horizon loops
+- [[concepts/agent-harness]] — Model + harness = agent; core components: filesystem, bash, sandbox, context management, long-horizon loops; orchestrator/harness/framework distinction; model-agnostic property
 - [[concepts/ralph-loop]] — Harness pattern: intercept exit, reinjecting original prompt with clean context + durable filesystem state
 - [[concepts/context-degradation]] — Five named failure modes: lost-in-middle, poisoning, distraction, confusion, clash; thresholds and mitigations
 - [[concepts/context-compression]] — Four strategies + serialization format axis (ONTO/TOON 40–60% reduction); clear-over-compact consensus; KV-cache cost trap; SAC as learned soft compression alternative

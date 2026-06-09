@@ -52,6 +52,18 @@ Generate a fresh detailed summary from scratch on each compression trigger.
 
 **When acceptable**: Short sessions with a single compression event; when simplicity matters more than accuracy.
 
+### 5. CCR — Reversible Compression with Retrieval
+
+Compress aggressively into the context window; store originals locally; expose a retrieval tool so the LLM fetches full content on demand. The model decides what to retrieve at inference time rather than the compressor predicting relevance upfront.
+
+**When CCR wins**: large tool outputs where the relevant 10% varies by query — the agent can't predict upfront what it needs. CCR avoids the prediction problem by deferring selection to inference.
+
+**Limitation**: requires the LLM to recognize when it's missing information and call the retrieval tool. If the model doesn't know what it dropped, it won't ask. Anchored summarization is more reliable when critical information is structurally predictable.
+
+**Implementation**: [[entities/headroom]] ships CCR via `headroom_retrieve` MCP tool.
+
+---
+
 ### 4. Adaptive Guideline-Optimized Compression (research: Acon)
 Use an LLM to compress context guided by a **learned prompt** — the compression guideline is optimized from task failure signals, not handcrafted. Applies separately to interaction history (when length > threshold) and raw observations (when observation > threshold).
 
@@ -68,6 +80,22 @@ Use an LLM to compress context guided by a **learned prompt** — the compressio
 **Benchmark results** (AppWorld / OfficeBench / 8-obj QA): 26–54% peak token reduction; maintained or improved task performance. Small agent improvement (Qwen3-14B): +32% AppWorld, +20% OfficeBench, +46% QA.
 
 Source: Acon paper (KAIST + Microsoft, 2025; AppWorld/OfficeBench/8-obj QA benchmarks)
+
+---
+
+## Content-Type-Aware Routing
+
+Generic text compression treats all context as prose. A more effective approach dispatches by content type:
+
+| Content Type | Compressor | Why |
+|---|---|---|
+| JSON / structured data | SmartCrusher (rule-based) | Arrays of dicts compress far more than prose — deduplicate keys, elide null fields |
+| Source code | CodeCompressor (AST-aware) | AST structure enables semantic pruning — remove docstrings, redundant signatures |
+| Prose / logs / unstructured | Kompress-base (ML model) | Structure-agnostic; trained on agentic traces |
+
+**Why it matters**: applying a prose compressor to JSON wastes compression potential; applying an ML model to source code misses AST-level redundancy. Content-type routing makes compression composition additive.
+
+**Implementation**: [[entities/headroom]] ContentRouter automates this dispatch.
 
 ---
 

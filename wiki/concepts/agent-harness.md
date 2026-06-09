@@ -6,8 +6,10 @@ sources:
   - "The Anatomy of an Agent Harness.md"
   - "Harness engineering leveraging Codex in an agent-first world.md"
   - "Agent Harness explained in 8min...md"
+  - "wshobsonagents Intelligent automation and multi-agent orchestration for Claude Code.md"
+  - "What is an agent harness in the context of large-language models?.md"
 created: 2026-04-25
-updated: 2026-05-22
+updated: 2026-06-08
 ---
 
 # Agent Harness
@@ -18,7 +20,29 @@ A harness is the system that wraps a language model to make its intelligence use
 
 Without a harness, a model can only take in data and output text in a single turn. The harness is what turns that into a work engine.
 
-**Term coined**: early 2026, though the pattern existed before the term.
+**Term coined**: early 2026, though the pattern existed before the term. Emerged as the third layer in an additive stack:
+
+| Layer | Responsibility |
+|---|---|
+| Prompt Engineering | Agent persona/identity (system prompt) |
+| Context Engineering | State management (tool calling, MCP, RAG) |
+| Harness Engineering | Environment + iteration structure |
+
+Each layer is additive — harness does not deprecate context engineering.
+
+## Harness vs. Orchestrator vs. Framework
+
+Three terms that are often conflated:
+
+| Term | Responsibility |
+|---|---|
+| **Framework** | Building blocks/libraries — LangChain, LlamaIndex. Provides abstractions for tools, memory, chains of prompts. |
+| **Orchestrator** | Brain/control flow — *when* and *how* to call the model; implements reasoning loops (ReAct, tree-of-thought); parses chain-of-thought to determine next step. |
+| **Harness** | Hands/capabilities — tools, memory, environment; manages input/output side-effects. |
+
+A harness typically *uses* a framework. An orchestrator *drives* the harness. Together they determine real-world agent effectiveness more than model capability increments do. Example stack: LangChain (framework) → LangGraph (runtime/orchestrator) → DeepAgents (harness).
+
+**Model-agnostic property**: a harness built on standard tool-call interfaces (Anthropic tool use, OpenAI function calling) can swap the underlying model without rewriting harness logic — only prompt format details change. Some harnesses route across multiple models (smaller for simple steps, larger for complex ones). *Caveat*: models post-trained with a specific harness in the loop may overfit to its tool logic — changing tool behavior can degrade performance even if the interface is standard.
 
 ## Why Harness Engineering Emerged
 
@@ -97,13 +121,13 @@ Combines all primitives for autonomous multi-session work:
 
 ## Harness Design Principles (from practice)
 
-**Progressive disclosure over front-loading.** A short entry point (AGENTS.md as table of contents, ~100 lines) pointing to structured deeper sources is better than one large instruction file. Large files: crowd out task context, become non-guidance when everything is "important," rot instantly, can't be mechanically verified.
+**Progressive disclosure over front-loading.** A short entry point (AGENTS.md as table of contents, ~100 lines) pointing to structured deeper sources is better than one large instruction file. Large files: crowd out task context, become non-guidance when everything is "important," rot instantly, can't be mechanically verified. CI enforces the knowledge base: linters validate cross-links, coverage, and freshness. A recurring **doc-gardening agent** scans for stale docs and opens fix PRs.
 
 **Repository as the system of record.** Anything not in the repo doesn't exist for the agent. Slack decisions, tribal knowledge, undocumented conventions — all illegible. Push context into versioned repo artifacts.
 
 **Enforce invariants, not implementations.** Architectural rules encoded as custom linters with remediation instructions in error messages are more reliable than documentation. They apply to every line simultaneously.
 
-**Application legibility.** Wire the app's own observability (logs, metrics, traces, screenshots) into the agent runtime so it can self-validate without human QA involvement.
+**Application legibility.** Wire the app's own observability (logs, metrics, traces, screenshots) into the agent runtime so it can self-validate without human QA involvement. Codex case study implementation: per-worktree app boot, Chrome DevTools Protocol for DOM snapshots + screenshots, ephemeral Loki/Victoria metrics+traces per worktree (torn down after task). Prompts like "ensure service startup < 800ms" become tractable. Single Codex runs regularly work 6+ hours unattended.
 
 **Entropy / garbage collection.** Agent-generated code replicates existing patterns — including bad ones. Background cleanup agents scanning for deviations on a daily cadence prevent debt from compounding.
 
@@ -111,7 +135,7 @@ Combines all primitives for autonomous multi-session work:
 
 Frontier coding agents (Claude Code, Codex) are post-trained with harness in the loop. Models improve at primitives their harness designers prioritized. Side effects:
 - Models can overfit to their training harness; changing tool logic degrades performance
-- The best harness for a specific task may not be the one the model was trained with — harness optimization per domain is a real lever
+- The best harness for a specific task may not be the one the model was trained with — harness optimization per domain is a real lever. Example: LangChain improved a benchmark from Top 30 → Top 5 on Terminal Bench 2.0 via harness changes alone, with no model change.
 
 ## Minimal Harness Example
 
@@ -123,11 +147,21 @@ Karpathy's `autoresearch` is a deliberately minimal harness:
 
 See [[summaries/autoresearch-karpathy]] for details.
 
+## Real-World Harness Examples
+
+| Harness | Notes |
+|---|---|
+| **Claude Agent SDK** | Anthropic's general-purpose harness; auto-compaction, tool use, initializer/coding-agent pattern for long tasks; claude-progress.txt for session handoff |
+| **LangChain DeepAgents** | Open-source equivalent of Claude Code; default prompts, tool handling, planning utils, virtual filesystem; uses LangChain + LangGraph as substrate |
+| **Karpathy's autoresearch** | Deliberate minimal harness: program.md skill, bash + code modification, single val_bpb metric, 5-min train→eval loop; see [[summaries/autoresearch-karpathy]] |
+| **ICML 2025 modular harness** | Game-playing harness with toggleable perception/memory/reasoning modules; improved win rates vs. unharnessed baseline across all tested games |
+
+**Minimal vs. feature-heavy trade-off**: Terminal Bench 2.0 found the most minimal harness (tmux keystrokes + read output, no file tools, no subagents) outperformed native model harnesses across model families. LangChain improved Terminal Bench from Top 30 → Top 5 via harness changes alone — no model change. Domain matters: game-playing benefits from structured perception/memory; coding tasks favor minimalism. Harness optimization per domain is a real lever.
+
 ## Related Pages
 
 - [[concepts/ralph-loop]] — the long-horizon loop pattern
 - [[concepts/agent-context-instructions]] — standards docs / AGENTS.md as context injection
 - [[concepts/agentic-sandbox-controls]] — OS-level security for sandbox execution
-- [[summaries/agent-harness-engineering]] — full theory + 5-month case study
 - [[summaries/autoresearch-karpathy]] — minimal harness instantiation for autonomous ML research
 - [[concepts/tool-design-for-agents]] — dual audience principle; error messages as agent recovery instructions

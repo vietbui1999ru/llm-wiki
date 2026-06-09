@@ -9,7 +9,7 @@ sources:
   - "Custom commands.md"
   - "Tools reference.md"
 created: 2026-05-07
-updated: 2026-05-07
+updated: 2026-05-27
 ---
 
 # Gemini CLI
@@ -39,7 +39,7 @@ Google's open-source CLI for the Gemini model family. Significantly more capable
 
 ## Context System: GEMINI.md
 
-Hierarchical instruction loading (see [[summaries/gemini-cli-rules]]):
+Hierarchical instruction loading:
 
 1. `~/.gemini/GEMINI.md` — global, all sessions
 2. Project-root `GEMINI.md` — workspace scope
@@ -107,9 +107,19 @@ Shell shorthand: `!command` runs `run_shell_command`. `@path` triggers `read_man
 
 ---
 
+## Migration Mapping (CC → Gemini)
+
+| CC asset | Gemini equivalent |
+|---|---|
+| `~/.claude/CLAUDE.md` | `~/.gemini/GEMINI.md` |
+| `claude-setup/rules/*.md` | Same files, referenced via `@rules/*.md` imports |
+| `claude-setup/skills/*/SKILL.md` | `.gemini/skills/*/SKILL.md` + `activate_skill` |
+| `.claude/commands/*.toml` | `.gemini/commands/*.toml` (same format) |
+| `claude-setup/agents/*.md` | Experimental subagents (not production-ready) |
+| `templates/AGENTS.md` | Not natively read; use GEMINI.md or configure `context.fileName` |
+
 ## Related Pages
 
-- [[summaries/gemini-cli-rules]] — GEMINI.md spec detail
 - [[comparisons/cc-to-cross-platform-migration]] — full migration matrix
 - [[entities/agents-md-format]] — AGENTS.md; Gemini can be configured to read it
 - [[concepts/agent-skills]] — skill architecture comparison (CC vs Gemini)

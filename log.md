@@ -2,6 +2,54 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-06-08] ingest | What is an Agent Harness? — Parallel AI
+
+New pages:
+- wiki/summaries/what-is-an-agent-harness-parallel-ai.md — Parallel AI explainer; orchestrator/framework/harness taxonomy, DeepAgents, ICML 2025 modular harness, model-agnostic property
+
+Updated:
+- wiki/concepts/agent-harness.md — added Harness vs. Orchestrator vs. Framework section; model-agnostic property (with caveat); Real-World Harness Examples table; updated sources frontmatter
+- index.md — added summary entry; updated concept entry description
+
+Key new material vs existing wiki:
+- Explicit 3-way taxonomy: framework (building blocks) → orchestrator (control flow) → harness (capabilities/side-effects); previously conflated
+- DeepAgents: LangChain's general-purpose harness positioned as open-source Claude Code; default prompts + file system + planning utils baked in
+- ICML 2025 modular harness: toggleable perception/memory/reasoning modules; improved win rates in game environments vs. unharnessed baseline
+- Model-agnostic property: one harness, swappable models via standard tool-call interfaces; routing between models possible; caveat: overfitting risk documented in wiki
+- "Test harness" (SE) disambiguation: different concept, context-specific usage only
+
+Comprehension check: skipped (user explicit)
+
+## [2026-06-08] ingest | Headroom — context compression layer (chopratejas/headroom)
+
+Created: wiki/entities/headroom.md
+Updated: wiki/concepts/context-compression.md (added CCR as 5th strategy, content-type-aware routing section)
+Updated: index.md
+
+Net new vs existing wiki:
+- CCR (reversible compression with retrieval) — fifth compression pattern; complements anchored iterative
+- Content-type-aware routing — JSON/AST/prose dispatch to different algorithms
+- CacheAligner — automated prefix stabilization (vs our manual KV-cache design rules)
+- `headroom learn` — automated CLAUDE.md failure mining (vs manual capture-mistake workflow)
+
+Benchmark claims marked (claimed, unverified) — self-reported README only.
+Comprehension check: skipped (user explicit)
+
+## [2026-06-05] synthesis | Pi Orchestration Architecture
+Created: wiki/syntheses/pi-orchestration-architecture.md
+Distilled from grill session: orchestrator choice, pueue dispatch, task scoping, OpenCode Go model routing, status artifact design (resolved/unresolvedFiles/retryCount/needsHuman), two review modes (interactive vs headless), retry limit (MAX_RETRIES=3), human-commits-last.
+Implemented: pi-diff-review extension in DiffViewer repo — status artifact, retry tracking, Myers diff, session_compacted cleanup.
+
+## [2026-06-04] ingest | Building pi in a World of Slop — Mario Zechner
+Created: wiki/summaries/pi-building-in-world-of-slop.md
+Updated: wiki/entities/pi-agent.md (design philosophy, Terminal Bench result, self-modifying, YOLO security, pi as OpenCode's agent core)
+
+## [2026-05-27] consolidation | wiki restructure — summary→concept/entity merge
+
+Merged ~66 summaries into existing concept/entity/synthesis pages. Strategy: concept wins (compounding knowledge base pattern). Three buckets: entity absorptions (15), concept absorptions (~43), kept as-is (~22). Net reduction: ~188 → ~122 pages. index.md and wikilinks cleaned.
+
+## [2026-05-26] synthesis | Agent Diff Viewer — Real-Time Code Review Tool
+
 ## [2026-05-22] ingest | Acon: Optimizing Context Compression for Long-horizon LLM Agents
 Created: wiki/summaries/acon-context-compression.md
 Updated: wiki/concepts/context-compression.md (added Strategy 4: adaptive guideline-optimized compression; KV-cache cost trap)
@@ -424,3 +472,120 @@ Updated index.md:
   - Updated entities/pi-agent entry description
 
 Key patterns: proactive exploration offloading (delegate planning-phase file reads to cheap subagents before context bloat occurs); model tiering heuristic (mechanical/read-only→Haiku, reasoning/research→Sonnet, full capability→Sonnet/Opus); spawn depth limiting via frontmatter allowlist; per-subagent observability (nested tool call tree + cost metrics per agent).
+
+## [2026-05-25] ingest | OpenCode Go + pi as Primary Coding Harness
+
+Source: "Why You Should Try OpenCode Go and pi-coding-agent.md"
+New summaries: summaries/opencode-go-pi-primary-harness
+New entities: entities/opencode-go
+Updated entities:
+  - entities/pi-agent — corrected framing from "council layer only" to "primary coding agent + council"; added AGENTS.md confirmation; added difficulty-tiered model routing table; added pueue parallel delegation pattern; added srt sandboxing section; added OpenCode Go to related pages
+Updated index.md:
+  - Added summaries/opencode-go-pi-primary-harness
+  - Updated entities/pi-agent description (primary harness framing)
+  - Added entities/opencode-go
+
+Key patterns captured:
+- Subscription arbitrage: OpenCode Go ($10/mo) for bulk open-model tokens; Codex for high-reasoning tasks — similar cost to $100 plan
+- Difficulty-tiered model routing in AGENTS.md: high/medium/low tiers with explicit fallback chains across providers
+- pueue for background parallel agent delegation (persistent queue, log inspection, wait primitives)
+- srt (Anthropic Sandbox Runtime) as standalone sandboxing tool for harnesses without built-in permission systems
+
+Skipped (off-topic): "Code Smells.md", "Replace Magic Number with Symbolic Constant.md", "Too long..md"
+
+## [2026-05-25] batch-ingest | OpenTelemetry cluster + Memory/Context + CC Teams + Skills + DSPy
+
+Parallel ingest of 15 source files across 3 specialist agents. Delegate-pi skill created as harness artifact.
+
+New pages:
+- wiki/concepts/llm-observability.md — 8 OTel sources synthesized; GenAI semantic conventions, span types, metrics, multi-agent trace correlation, production tools
+- wiki/entities/opentelemetry.md — OTel entity: three signals, incubating GenAI conventions, instrumentation approaches, Collector config
+- wiki/summaries/cc-memory-context-docs.md — Anthropic memory cookbook: memory_20250818 + context editing API
+- wiki/summaries/cc-agent-persistence.md — /goal command mechanics and evaluator internals
+- wiki/summaries/opencode-plugins-overview.md — OpenCode plugin system: event surface, compaction hooks
+- wiki/summaries/skills-first-principles-deep-dive.md — Skill meta-tool architecture: isMeta dual-message, three-tier loading, supply chain risk
+- wiki/summaries/grill-skills-antipatterns.md — 9 failure modes for grill-me/grill-with-docs
+
+Updated pages:
+- wiki/concepts/agentic-memory-tool.md — canonical context editing config + semantic learning patterns
+- wiki/summaries/cc-agent-teams.md — agent view UI, supervisor process, worktree isolation details
+- wiki/concepts/agent-skills.md — composition patterns, grill-* antipatterns, when NOT to use skills
+- wiki/entities/dspy.md — MIPROv2 internals, BetterTogether/Ensemble optimizers, pipeline patterns
+
+Harness artifact:
+- ~/.claude/skills/delegate-pi/SKILL.md — new skill wrapping pi subprocess delegation (council/delegate/subagent modes)
+
+Key patterns captured:
+- OTel GenAI semantic conventions still incubating — flag in all observability recommendations
+- /goal command is distinct from /loop — condition-driven, not iteration-driven
+- isMeta flag in SKILL.md enables dual-message execution (skill-as-meta-tool architecture)
+- Grill-* antipatterns: 9 failure modes catalogued; high-fidelity vs low-fidelity question distinction key
+
+## [2026-05-25] improvements | observe-session hook + slash-commands + otel-council + skill audit
+
+Implementing harness improvements proposed after batch ingest.
+
+New files:
+- ~/.claude/hooks/observe-session.sh — PostToolUse hook; appends {ts, tool, session, ok} to ~/.claude/logs/session-YYYYMMDD.jsonl after every tool call
+- wiki/concepts/slash-commands.md — decision guide for /goal vs /loop vs /ralph-structured vs /clear vs /compact vs /handoff
+- wiki/systems/otel-council.md — OTel instrumentation spec for council.py; three span types; stdlib-only JSONL output; GenAI semantic conventions
+
+Updated:
+- ~/.claude/settings.json (via dotfiles) — added PostToolUse[".*"] hook entry for observe-session
+- ~/.claude/skills/delegate-pi/SKILL.md — added allowed-tools: "Bash"
+
+Skill audit findings:
+- zoom-out: disable-model-invocation: true — vague description is intentional (user-only)
+- No skills had overly broad allowed-tools violations
+- delegate-pi was the only skill missing required allowed-tools declaration
+
+Key decisions:
+- isMeta is NOT a SKILL.md frontmatter field — it's an internal CC message flag; proposed "isMeta audit" was a misread of the skills deep dive; skipped
+- memory-sync Stop hook deferred — memory_20250818 API too new; file-based approach still appropriate
+
+## [2026-05-25] ingest | ONTO + TOON + Factory eval + SAC (autoencoding-free context compression)
+
+Sources:
+- raw/ONTO A Token-Efficient Columnar Notation for LLM Input Optimization.md
+- raw/TOON vs. JSON Deconstructing the Token Economy of Data Serialization in Large Language Model….md
+- raw/Evaluating Context Compression for AI Agents.md
+- pdfs/17241_Autoencoding_Free_Contex.pdf (parsed via Docling)
+
+New pages:
+- wiki/concepts/llm-serialization-formats.md — ONTO/TOON schema-first formats; 40-60% token reduction; format comparison table; packaging vs distillation distinction
+- wiki/summaries/factory-context-compression-eval.md — Factory.ai eval: anchored iterative summarization wins; probe-based eval methodology; 36K real coding-agent messages
+- wiki/summaries/sac-context-compression.md — SAC: anchor tokens + bidirectional attention; no AE objective; 6.7-23.5% F1 gain at 15× compression; scales to 8B
+
+Updated:
+- wiki/concepts/context-compression.md — added Serialization Format section (orthogonal to compression strategies)
+
+Key insights:
+- ONTO/TOON are indie/research projects; benchmarks are synthetic — flag as unverified in production recommendations
+- SAC eliminates autoencoding objective; AE and LM gradients are near-orthogonal (interference is the mechanism)
+- Factory eval confirms anchored iterative summarization > opaque (OpenAI) > regenerative (Anthropic) on real coding sessions
+- SAC is training-time infrastructure choice, not an operational tactic; distinct from ACON (test-time) and anchored summarization (runtime)
+
+Comprehension check: skipped (user explicit)
+
+## [2026-05-26] ingest | Copilot Agent Customization Structure (awesome-copilot-agents)
+- Created: wiki/summaries/copilot-agent-structure.md
+- Updated: wiki/summaries/ai-agent-technical-debt.md — added Copilot cloud agent specifics section
+- Updated: index.md
+
+## [2026-05-28] ingest | OpenCode Headless & Programmatic Interface (CLI.md + Server.md)
+
+New pages:
+- wiki/summaries/opencode-headless-api.md — `opencode run`, `opencode serve`, HTTP API, warm-server pattern, async/sync messages, SSE, ACP protocol, experimental orchestration flags
+
+Updated:
+- wiki/entities/opencode.md — added Headless & Programmatic Mode section; updated sources frontmatter
+- index.md — added summary entry, updated opencode entity description
+
+Key insights:
+- `opencode run "prompt"` = headless subprocess mode (pi -p equivalent) — confirms Claude → OpenCode → Pi chain is viable
+- Architecture is server-first: every opencode invocation embeds a server; TUI is just a client
+- Warm-server pattern: `opencode serve` once, `opencode run --attach` for repeated calls — avoids MCP cold-boot
+- HTTP API enables full programmatic control: create sessions, send sync/async prompts, fork sessions, respond to permissions, stream events via SSE
+- `OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS` and `SCOUT` flags signal native parallel delegation coming
+
+Comprehension check: skipped (user explicit)

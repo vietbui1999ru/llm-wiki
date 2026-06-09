@@ -41,7 +41,6 @@ Uses CDP directly rather than WebDriver (Selenium/Playwright), which eliminates 
 
 ## Related Pages
 
-- [[summaries/pydoll-network-fingerprinting]] — deep summary of Pydoll's network and fingerprinting docs
 - [[concepts/web-fingerprinting]] — the detection model Pydoll is designed to evade
 - [[concepts/webrtc-ip-leak]] — the leak vector Pydoll's `webrtc_leak_protection` addresses
 - [[concepts/proxy-rotation]] — proxy types and strategies Pydoll supports

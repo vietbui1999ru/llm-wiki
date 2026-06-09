@@ -82,4 +82,4 @@ Dangeresque is the lighter-weight choice for individuals; SandCastle for teams o
 - [[concepts/agentic-sandbox-controls]] — OS-level sandbox recommendation; host-native as ToS-compliant alternative
 - [[concepts/agent-harness]] — harness architecture
 - [[concepts/ralph-loop]] — minimal harness pattern; Dangeresque adds adversarial review on top
-- [[summaries/mattpocockworkflow]] — workflow that Dangeresque implements
+- [[syntheses/lean-agentic-workflow]] — workflow that Dangeresque implements

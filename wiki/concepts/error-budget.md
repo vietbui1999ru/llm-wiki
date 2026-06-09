@@ -10,7 +10,7 @@ urls:
   - "https://theneuralmaze.substack.com/p/hidden-technical-debt-in-agentic"
   - "https://uplatz.com/blog/self-healing-pipelines-architecting-resilient-systems-with-event-driven-workflows-auto-rollback-and-intelligent-retry-mechanisms/"
 created: 2026-05-06
-updated: 2026-05-12
+updated: 2026-05-27
 ---
 
 # Error Budget (Agentic)
@@ -138,7 +138,5 @@ All three are needed. Retry count alone doesn't stop an agent that tries 100 dif
 
 - [[concepts/self-healing-loop]] — the retry/rollback/escalation pattern budgets govern
 - [[concepts/agentic-cicd]] — where error rate budgets are monitored (staging health)
-- [[summaries/self-healing-cicd-implementations]] — Windmill retry semantics; ArgoCD rollback trigger
 - [[concepts/ralph-loop]] — the outer loop that session budgets constrain
 - [[concepts/verification-pipeline]] — what passes/fails that feeds the error rate
-- [[summaries/error-budget-agentic]] — source; SRE origin, four budget axes, progress score, rollback as first-class pattern

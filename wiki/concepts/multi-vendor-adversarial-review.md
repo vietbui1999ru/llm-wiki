@@ -105,5 +105,4 @@ See [[concepts/llm-as-judge]] for the full pattern including when to use rubric-
 - [[syntheses/agent-primitive-selection]] — model tier routing; cross-vendor as an extension
 - [[entities/dangeresque]] — adversarial reviewer built into the pipeline
 - [[entities/agentops]] — `/council` as formalized multi-vendor consensus
-- [[summaries/mattpocockworkflow]] — Sonnet→Opus as single-vendor tiering
 - [[concepts/llm-as-judge]] — the evaluation mechanism used in the cross-vendor reviewer role

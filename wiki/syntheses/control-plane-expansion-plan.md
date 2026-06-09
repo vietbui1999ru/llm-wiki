@@ -4,14 +4,14 @@ type: synthesis
 tags: [agent-orchestration, control-plane, multi-agent, planning, gap-analysis]
 sources: []
 created: 2026-05-19
-updated: 2026-05-19
+updated: 2026-05-27
 ---
 
 # Control Plane Expansion Plan
 
 Synthesizes gap analysis, tool landscape research, and concrete Phase 0.5 implementation steps for expanding the current agent setup toward a full Agentic Engineering Control Plane.
 
-Source concept: [[summaries/agentic-control-plane-concept]]
+Source concept: 4-layer control plane architecture (execution/coordination/quality/experience layers)
 
 ## Current Setup Inventory
 
@@ -163,7 +163,6 @@ Phase 2 → 3: Wire council evaluators into Stop hook quality check.
 
 ## Related Pages
 
-- [[summaries/agentic-control-plane-concept]] — source product document
 - [[concepts/shared-task-queue]] — current coordination primitive
 - [[concepts/worktree-isolation]] — agent filesystem isolation
 - [[concepts/council-pattern]] — quality deliberation layer

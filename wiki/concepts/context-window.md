@@ -5,8 +5,11 @@ tags: [context-window, transformers, kv-cache, context-rot, llm-architecture]
 sources:
   - "Context windows.md"
   - "LLM context windows what they are & how they work.md"
+  - "Top techniques to Manage Context Lengths in LLMs.md"
+  - "Effective context engineering for AI agents.md"
+  - "Memory & context management with Claude Sonnet 4.6.md"
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-27
 ---
 
 # Context Window
@@ -91,10 +94,30 @@ This is a practical instance of [[concepts/context-engineering]]: curating what'
 
 ---
 
+## Six Management Techniques
+
+| Technique | Mechanism | Pros | Cons |
+|---|---|---|---|
+| Truncation | Cut tokens once limit reached; prioritize must-have content | Simple, low overhead | May cut critical info |
+| Model routing | Route large inputs to higher-context models (LiteLLM) | No data loss | Higher cost |
+| Memory buffering | Summarize every N messages; preserve key entities | Adaptive, customizable | Short-term only |
+| Hierarchical summarization | Chunk → summarize → re-summarize (pyramid) | Scalable, flexible | Cumulative error risk |
+| Context compression | Remove redundancy; 40-60% token reduction | Maintains continuity | Quality-dependent |
+| RAG | Retrieve only relevant chunks at query time | Scales to large corpora | Retrieval latency, setup complexity |
+
+**Decision guide:**
+- Sourced Q&A → RAG
+- Multi-session chat → memory buffering
+- Long documents (books, legal) → hierarchical summarization
+- High token cost → context compression
+- Sensitive/regulated content → RAG with exact retrieval (no summarization)
+
+---
+
 ## Related Pages
 
 - [[concepts/context-engineering]] — engineering discipline for curating what's in context
 - [[concepts/context-degradation]] — five named failure modes when context fills up
 - [[concepts/context-compression]] — strategies for compressing context to extend effective window
 - [[concepts/agentic-memory-tool]] — API primitives for managing long-running agent context
-- [[summaries/everything-claude-code]] — ECC's MCP count recommendations and token optimization settings
+- [[entities/everything-claude-code]] — ECC's MCP count recommendations and token optimization settings

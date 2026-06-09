@@ -2,9 +2,9 @@
 title: "Spec-Driven Frameworks vs Native Claude Code"
 type: comparison
 tags: [frameworks, agent-workflow, planning, orchestration, spec-driven]
-sources: ["Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md"]
+sources: ["Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md", "AGENTS md gets it wrong in 2 ways.md"]
 created: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-27
 ---
 
 # Spec-Driven Frameworks vs Native Claude Code
@@ -158,14 +158,42 @@ For a non-engineer building mid-complexity product:
 
 ---
 
+## AGENTS.md Format Critique (Wand, 2026-05-06)
+
+The AGENTS.md standard (and equivalents: CLAUDE.md monoliths, Cursor single-rule-files) fails in two ways:
+
+**Wrong abstraction — single file doesn't scale:**
+- Cannot hold all project context without becoming unmaintainable
+- Nested AGENTS.md assumes false constraints: single-file-edit scope, directory = domain scope, no ambiguity between parent/child rules
+- Most importantly: **agents will not reliably follow rule-file-selection instructions** — compliance is not enforceable by the orchestrator
+- Better: `@path/to/file.md` composition (Claude Code), multiple scoped rule files (Cursor), or hooks that load context programmatically
+
+**Content guidance too narrow:**
+Most examples restrict to coding style, build/test commands, micro-architecture. Missing — what AI can't infer from code:
+
+| Missing context | Why it matters |
+|---|---|
+| Project lifecycle stage | MVP vs. mature product drives simplicity/robustness tradeoff |
+| User locations and personas | Affects latency requirements, compliance, UI/UX |
+| Domain objects and external relationships | What is a `Subscription` and where does it come from? |
+| Business context of user flows | Why does checkout have this edge case? |
+| Feature-specific tradeoffs | Latency vs. resiliency — which matters here? |
+
+"The AI can't read the room." Every conversation starts with a junior dev needing re-onboarding. Build commands are not enough.
+
+**Wand's alternative**: many single-purpose files + global rules repo via symlink + Memory Bank (`_memory/` hierarchy loaded via repomix at session start). See [[concepts/memory-bank-pattern]], [[entities/agents-md-format]] (critique section), and [[concepts/rules-vs-hooks]].
+
+**Implication for this comparison**: the lean CLAUDE.md + skills approach partially addresses the content narrowness problem (skills pull domain-specific context), but still benefits from `@` composition to avoid the single-file scale problem.
+
+---
+
 ## Related Pages
 
-- [[summaries/spec-driven-frameworks-reddit]] — community thread this analysis is based on
-- [[summaries/mattpocockworkflow]] — lean skills workflow in detail
-- [[summaries/superpowers-plugin]] — Superpowers detail
 - [[entities/dangeresque]] — host-native orchestrator
 - [[entities/sandcastle]] — parallel orchestrator with container isolation
 - [[concepts/multi-vendor-adversarial-review]] — cross-vendor judge pattern
 - [[concepts/branch-strategy-for-agents]] — merge strategy taxonomy
 - [[concepts/agentic-sandbox-controls]] — OS-level sandbox recommendation (needs update re: ToS)
 - [[concepts/context-compression]] — clear-over-compact debate
+- [[concepts/memory-bank-pattern]] — cross-session memory alternative Wand uses
+- [[concepts/rules-vs-hooks]] — hooks architecturally superior to static files for dynamic context

@@ -2,13 +2,13 @@
 title: "OpenAI Codex"
 type: entity
 tags: [ai-coding-agents, openai, cli, agent-harness, toml, skills]
-sources: ["Custom instructions with AGENTS.md – Codex.md"]
+sources: ["Custom instructions with AGENTS.md – Codex.md", "Harness engineering leveraging Codex in an agent-first world.md"]
 urls:
   - "https://developers.openai.com/codex/subagents"
   - "https://developers.openai.com/codex/guides/agents-md"
   - "https://developers.openai.com/codex/skills"
 created: 2026-05-06
-updated: 2026-05-22
+updated: 2026-05-27
 ---
 
 # OpenAI Codex
@@ -21,11 +21,32 @@ OpenAI's AI coding CLI. Pioneered the AGENTS.md format. Has a richer native exte
 
 Reads `AGENTS.md` as ambient layered instructions:
 - Discovery: global `~/.codex/AGENTS.md` → project root → CWD walk
-- Override: `AGENTS.override.md` takes precedence over `AGENTS.md`
+- Override: `AGENTS.override.md` takes precedence over `AGENTS.md` at the same directory level (useful for temporary local overrides; `rm AGENTS.override.md` to restore default)
 - Limit: 32 KiB default instruction chain (`project_doc_max_bytes`)
-- Profiles: `CODEX_HOME` env var for multiple setups
+- Merge order: root→CWD concatenated, joined by blank lines; **later (closer to CWD) wins**
+- Profiles: `CODEX_HOME` env var for multiple setups (e.g., `CODEX_HOME=$(pwd)/.codex codex exec "..."`)
 
-See [[summaries/codex-agents-md]] for full layering details.
+Raise the 32 KiB limit or add fallback filenames in `~/.codex/config.toml`:
+
+```toml
+project_doc_max_bytes = 65536
+project_doc_fallback_filenames = ["TEAM_GUIDE.md", ".agents.md"]
+```
+
+**Verification:**
+```bash
+# See what instructions Codex loaded
+codex --ask-for-approval never "Summarize the current instructions."
+```
+
+**Troubleshooting:**
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Nothing loads | Empty file / wrong workspace root | Verify `codex status` |
+| Wrong guidance | AGENTS.override.md higher in tree | Find and remove override |
+| Fallback name ignored | Not in `project_doc_fallback_filenames` | Add to config, restart |
+| Instructions truncated | Hit 32 KiB limit | Raise `project_doc_max_bytes` or split files |
 
 ---
 
@@ -130,7 +151,7 @@ See [[comparisons/cc-to-cross-platform-migration]] for full matrix.
 
 ## Related Pages
 
-- [[summaries/codex-agents-md]] — AGENTS.md layering and discovery
-- [[summaries/codex-agents-skills]] — TOML agents and skills detail
 - [[entities/agents-md-format]] — AGENTS.md cross-tool compatibility
 - [[comparisons/cc-to-cross-platform-migration]] — full migration matrix
+- [[concepts/agent-subagents]] — CC subagent model for comparison
+- [[concepts/agent-skills]] — CC skills model for comparison

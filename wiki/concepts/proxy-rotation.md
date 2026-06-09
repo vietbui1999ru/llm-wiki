@@ -67,7 +67,7 @@ For production: use a paid service that exposes a single rotating endpoint (e.g.
 - Rate-limit even with rotating proxies: ≥1s between requests, ≤5 concurrent per target
 - Proxy rotation to bypass explicit rate limits violates most ToS
 - Bypassing geo-blocks may violate content licensing agreements
-- See [[summaries/pydoll-network-fingerprinting]] for jurisdiction-specific legal context (GDPR, CFAA)
+- See [[entities/pydoll]] for jurisdiction-specific legal context (GDPR, CFAA)
 
 ## Limits of Proxy Rotation
 
@@ -83,5 +83,4 @@ Proxy rotation is a prerequisite, not a complete solution.
 
 - [[concepts/web-fingerprinting]] — the full detection model that proxy rotation addresses only one layer of
 - [[concepts/webrtc-ip-leak]] — UDP bypass that defeats proxy rotation
-- [[summaries/anti-bot-evasion-tactics]] — practical proxy rotation techniques and tool choices
 - [[entities/pydoll]] — async Python library with built-in SOCKS5 proxy support including auth workaround

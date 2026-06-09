@@ -7,7 +7,7 @@ sources:
   - "pdfs/2509.24372v2.pdf"
   - "pdfs/2511.16652v2.pdf"
 created: 2026-04-30
-updated: 2026-04-30
+updated: 2026-05-27
 ---
 
 # Evolution Strategies (ES)
@@ -58,6 +58,38 @@ Communication cost: O(n) scalars per iteration regardless of model size.
 | OpenAI ES | 2017 | ~millions of params | Competitive with A3C on Atari; 3D humanoid in 10 min |
 | ES-LLM | 2025 | 1B+ params | Outperforms GRPO/PPO on Countdown across all LLM families |
 | EGGROLL | 2025 | Hyperscale | Pretrains integer RNNs; competitive with GRPO on reasoning |
+
+## Key Results by Paper
+
+### OpenAI ES (Salimans et al., 2017) — 1703.03864
+
+| Task | Result |
+|---|---|
+| MuJoCo 3D Humanoid | Solved in 10 minutes (1,440 workers) |
+| Atari (1 hr ES) | Better than 1-day A3C on 23/51 games |
+| MuJoCo data efficiency | Matches TRPO with ≤10× more data |
+
+Qualitative finding: ES found diverse gaits (walking sideways, backwards) that TRPO never found — parameter-space exploration vs action-space exploration produces qualitatively different solutions.
+
+Additional techniques: antithetic sampling (evaluate ε, -ε pairs), fitness shaping (rank-transform returns), weight decay, virtual batch normalization.
+
+### ES-LLM (Qiu et al., 2025) — 2509.24372
+
+Population size N=30, full-parameter LLM fine-tuning at 1B+ params. Fixed hyperparameters across all LLM families.
+
+**Countdown task (symbolic reasoning, outcome-only rewards):**
+
+| Model | Original | Best RL | ES (ours) |
+|---|---|---|---|
+| Qwen-2.5-0.5B | 0.1% | 13.5% | **14.4%** |
+| Qwen-2.5-1.5B | 0.7% | 31.0% | **37.3%** |
+| Qwen-2.5-3B | 10.0% | 43.8% | **60.5%** |
+
+RL required per-model grid search and still underperformed. ES used fixed hyperparameters across all.
+
+Reward hacking finding: RL optimizing a conciseness reward degenerated into brevity-hacking (near-empty responses). ES produced genuinely shorter responses without exploiting the reward — population-average optimization is structurally harder to hack than single-policy optimization.
+
+Memory advantage: no gradients → no optimizer states → inference-only memory footprint.
 
 ## Relation to other concepts
 

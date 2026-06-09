@@ -91,5 +91,4 @@ Without a clear completion signal, the loop becomes an infinite loop or terminat
 ## Related Pages
 
 - [[concepts/agent-harness]] — harness component model; Ralph Loop as one primitive
-- [[summaries/agent-harness-engineering]] — theory and case study showing Ralph Loop in production
 - [[summaries/autoresearch-karpathy]] — the 5-min experiment loop as a bounded Ralph Loop analog

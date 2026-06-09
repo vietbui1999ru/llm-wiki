@@ -4,7 +4,7 @@ type: concept
 tags: [rag, retrieval, embeddings, bm25, search, llm]
 sources: [Contextual Retrieval in AI Systems.md]
 created: 2026-04-22
-updated: 2026-04-22
+updated: 2026-05-27
 ---
 
 # Contextual Retrieval
@@ -64,4 +64,3 @@ Source: `raw/Codebases are uniquely hard to search semantically.md`
 - [[concepts/reranking]] — post-retrieval filtering that stacks with contextual retrieval gains
 - [[concepts/compounding-knowledge-base]] — alternative pattern where context is pre-compiled into wiki pages rather than prepended at index time
 - [[entities/qmd]] — local search engine using the BM25 + vector hybrid this technique validates
-- [[summaries/contextual-retrieval]] — Anthropic source; full performance numbers and cost model

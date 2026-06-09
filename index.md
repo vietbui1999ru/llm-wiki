@@ -2,90 +2,40 @@
 
 Catalog of all pages. Updated on every ingest operation.
 
+## Syntheses
+- [[syntheses/pi-orchestration-architecture]] — Pueue-dispatched pi workers, diff-review gate, status artifact, retry limit, two-mode review (interactive vs headless), human-commits-last
+
 ## Summaries
-- [[summaries/mattpocockskills]] — Matt Pocock's engineering skills: 4 failure modes, 10 skills (grill-me, grill-with-docs, tdd, diagnose, zoom-out, to-prd, to-issues, improve-architecture, setup, handoff)
-- [[summaries/mattpocockworkflow]] — Full AI coding workflow: grill→PRD→kanban DAG→AFK loop; smart zone; clear-over-compact; deep modules; push/pull standards; SandCastle parallelization
-- [[summaries/mattpoccock-handoff-skill]] — /handoff skill: fork a parallel session with a focused context slice; handoff vs compact; temp-file design; grilling→prototype→back pattern; cross-agent use
+- [[summaries/what-is-an-agent-harness-parallel-ai]] — Parallel AI explainer: orchestrator/framework/harness taxonomy, DeepAgents, ICML 2025 modular harness, model-agnostic property; supplements [[concepts/agent-harness]]
+- [[summaries/pi-building-in-world-of-slop]] — Pi origin story: minimal harness thesis, 4-tool architecture, self-modifying extensions, Terminal Bench 6th, anti-slop philosophy (Mario Zechner talk)
+- [[summaries/opencode-headless-api]] — `opencode run` (subprocess), `opencode serve` (HTTP API), warm-server pattern, sync/async messages, SSE events, programmatic permission approval
 - [[concepts/github-issue-handoff]] *(stub)* — GitHub issue as handoff artifact; bridges /handoff + /to-issues + shared-task-queue; auto-dispatch via Actions webhook
-- [[summaries/firecrawl-mcp-server]] — Firecrawl MCP: 14 tools for web scraping/crawling/search/extraction/browser automation for AI agents
-- [[summaries/superpowers-plugin]] — Superpowers v5.0.7: zero-dependency workflow plugin; Iron Law TDD/debugging; skill-first discipline; subagent execution
-- [[summaries/unit-testing-best-practices]] — 2 sources: 15 practices (naming, AAA, mocks, flaky tests, coverage philosophy), IBM fundamentals
-- [[summaries/cicd-testing]] — testing pyramid, 6 test types, pipeline stage map, shift-left, continuous testing
-- [[summaries/context-window-cluster]] — 5 sources: context window fundamentals, context engineering, 6 management techniques, memory tool API
-- [[summaries/software-documentation]] — 2 sources: principles (clear/concise/structured), doc types, README template, organization
-- [[summaries/mintlify-docs-guide]] — 8 sources: Diátaxis 4-type framework, AI agents as explicit audience, navigation for LLM retrieval, maintenance strategies
 - [[summaries/claude-code-plugins-llm-wiki]] — Plugin structure, manifest, skill-to-wiki mapping, symlink gotcha, launch commands
-- [[summaries/wshobson-agent-orchestration]] — wshobson/agents: 184 agents, 78 plugins, 150 skills; three-tier Opus/Sonnet/Haiku model routing; PluginEval framework
-- [[summaries/exit-code-0-quality]] — 198 agents, 30 campaigns: four-tier verification pipeline, campaign persistence, parallel worktree isolation, five protocol rules from failures
-- [[summaries/automated-security-reviews]] — Claude Code /security-review command + GitHub Actions; built-in, no custom agent needed
 - [[summaries/llm-wiki-pattern]] — Summary of Karpathy's LLM wiki pattern: architecture, operations, tooling, Memex connection
-- [[summaries/contextual-retrieval]] — Anthropic's Contextual Retrieval: chunk context prepending reduces RAG retrieval failure by 49–67%
 - [[summaries/agentic-search-vs-rag]] — Experiment: graph/agentic search vs flat RAG; 99% fewer tokens, 2× IoU; RAG only wins on dependency recall; validates LightRAG for wiki
 - [[summaries/local-rag-elasticsearch]] — Local RAG with Elasticsearch + LocalAI: retrieval 14ms, LLM dominates (16s); model size/speed trade-offs; stack patterns
-- [[summaries/agentic-sandbox-security]] — NVIDIA AI Red Team: mandatory OS-level sandbox controls for AI coding agents; indirect prompt injection as primary threat
-- [[summaries/ai-agent-technical-debt]] — Using AI agents for systematic debt reduction: two modes, agentic safety model, metrics
-- [[summaries/ai-code-vetting-practices]] — Condensed checklist for vetting AI-generated code: static analysis → readability → security → tests
-- [[summaries/optimized-review-process-with-agents]] — Automated review pipeline with AI agents: context instructions, security autofix, human role
-- [[summaries/reviewing-ai-generated-code]] — 8-step process for reviewing AI-generated code; AI-specific pitfalls and self-reviewing agent pattern
-- [[summaries/anti-bot-evasion-tactics]] — Community techniques for bypassing anti-bot systems: fingerprinting layers, Cloudflare, proxy rotation, free vs. hybrid stacks
+- [[summaries/ai-agent-technical-debt]] — Using AI agents for systematic debt reduction: two modes, agentic safety model, Copilot cloud agent workflow, metrics
+- [[summaries/copilot-agent-structure]] — Copilot customization taxonomy: 5 artifact types (instructions/prompts/agents/skills/MCPs), file placement in .github/, custom agents vs portable skills, repo setup
 - [[summaries/amazon-scraping-2026]] — DIY vs. managed API for Amazon scraping; detection mechanisms, legal context, data available
-- [[summaries/pydoll-network-fingerprinting]] — Pydoll deep-dive: OSI layers, TCP/TLS fingerprinting, WebRTC leaks, GDPR/CFAA legal framework
-- [[summaries/agent-harness-8min]] — YouTube (Caleb Bright): 3-layer evolution stack (prompt→context→harness); summarization failure as harness motivation; PRD→JSON→single-task loop architecture
-- [[summaries/acon-context-compression]] — KAIST/Microsoft 2025: adaptive guideline-optimized compression for long-horizon agents; 26-54% peak token reduction; KV-cache cost trap; distillable to small models
-- [[summaries/pi-subagents-extension]] — Pi Subagents extension: proactive exploration offloading to prevent context bloat; Scout/Researcher/Worker agent types; Haiku/Sonnet/Opus model tiering; depth limiting via frontmatter allowlist
-- [[summaries/agent-harness-engineering]] — LangChain harness anatomy + OpenAI 5-month Codex case study: harness components, repo-as-record, mechanical enforcement
 - [[summaries/autoresearch-karpathy]] — Karpathy's autonomous ML experiment loop: agent modifies train.py, 5-min runs, val_bpb metric, program.md as control layer
-- [[summaries/docling]] — 3 sources: Docling document parser for AI; why parsing quality matters for RAG; layout-aware PDF → Markdown; vs Firecrawl; research paper pipeline
-- [[summaries/openai-es-2017]] — OpenAI 2017: ES as scalable RL alternative; shared random seed trick; linear worker scaling; solved MuJoCo humanoid in 10 min
-- [[summaries/es-llm-finetuning-2025]] — Cognizant+MIT 2025: first billion-param ES LLM fine-tuning; pop size 30; outperforms GRPO/PPO on Countdown; no reward hacking
-- [[summaries/eggroll-2025]] — Oxford 2025: EGGROLL low-rank perturbations; 100× GPU speedup; 91% batch inference throughput; trains integer quantized models
 - [[summaries/claude-usage-limits]] — Usage vs. length limits; 200K product context window vs 1M API; shared budget across all surfaces; tools/connectors token-expensive per request
-- [[summaries/spec-driven-frameworks-reddit]] — r/ClaudeCode community synthesis: frameworks vs native CC; Dangeresque/SandCastle/Mnemory/AgentOps; clear-over-compact as consensus; OpenCode plugins
-- [[summaries/opencode-model-switching-reddit]] — r/opencodeCLI community: harness > model; GLM-5.1 > Kimi K2.6; DeepSeek Flash max reasoning unlock; multi-model pipeline patterns
-- [[summaries/agents-md-spec]] — AGENTS.md format spec: 60k+ projects, Linux Foundation steward, nested precedence, cross-tool compatibility table
-- [[summaries/codex-agents-md]] — Codex layering: global→CWD walk, AGENTS.override.md, 32 KiB limit, profile via CODEX_HOME
-- [[summaries/agents-md-critique]] — Critique of AGENTS.md: single-file abstraction wrong, compliance unenforceable, content too shallow; hooks + Memory Bank as alternatives
 - [[summaries/sparc-cursor-cline-rules]] — SPARC framework: 5 principles, 5 workflow phases, Memory Bank integration; mostly a structured AGENTS.md template
-- [[summaries/opencode-dcp]] — OpenCode DCP plugin: Compress (model-driven, range/message modes) + deduplication + purge-errors; ~85% cache hit vs 90% without; /dcp commands
 - [[summaries/claude-code-permissions-settings]] — CC settings schema: permissions.allow/ask/deny/defaultMode, bypassPermissions, sandbox.enabled (Bash-only), filesystem+network rules; corrects old allowedTools schema
-- [[summaries/self-healing-cicd-implementations]] — Dagger (AI diagnose→patch→validate), ArgoCD (revision-based rollback), Windmill (per-step retry + exponential backoff)
-- [[summaries/error-budget-agentic]] — SRE error budget origin; agentic adaptation: retry/token/runtime/session budgets; progress score; rollback as first-class pattern
-- [[summaries/gemini-cli-rules]] — GEMINI.md: global/workspace/JIT discovery, @file.md imports, TOML commands, CC migration mapping
-- [[summaries/opencode-commands-agents]] — OpenCode commands (.opencode/commands/*.md), rules array, agents JSON config, command→agent binding
-- [[summaries/opencode-config]] — OpenCode JSON config: 8-level precedence, merge semantics, TUI/server/compaction/permission options, variable substitution, MDM managed settings
-- [[summaries/codex-agents-skills]] — Codex TOML agents (.codex/agents/*.toml), native skills (agents/openai.yaml), 3-layer stack, CC migration mapping
 - [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules, background agents, parity gaps vs CC
 - [[summaries/cursor-cloud-agents]] — Cursor Cloud Agents: microVM isolation, GitHub/GitLab workflow, remote desktop control, cross-agent support
 - [[summaries/cc-auto-mode]] — CC auto mode: 2-stage classifier, threat model, 17% FNR on overeager actions, deny-and-continue
-- [[summaries/cc-agent-teams]] — CC agent teams (experimental): shared task list, teammate direct messaging, TeammateIdle/TaskCompleted hooks
-- [[summaries/context-engineering-anthropic]] — Anthropic context engineering: JIT retrieval, compaction, note-taking, sub-agents; context editing API
-- [[summaries/docker-sandboxes]] — Docker Sandboxes: microVM isolation for coding agents; Docker-in-Docker safe; CC/Codex/Gemini/Copilot/Kiro support
-- [[summaries/llm-as-judge]] — 3 sources: LLM-as-judge evaluation pattern; pairwise vs direct scoring; G-Eval chain-of-thought; production monitoring incident; best practices and limitations
-- [[summaries/pragmatic-engineer-llm-evals]] — Hamel Husain + Pragmatic Engineer: three gulfs, error analysis flywheel (open/axial coding), golden dataset construction, CI/CD integration, NurtureBoss case study
-- [[summaries/hamel-evals-faq]] — Hamel evals FAQ (700+ engineers): binary vs Likert, generic metrics warning, guardrails vs evaluators, RAG eval split, agentic transition failure matrices
-- [[summaries/selecting-ai-evals-tool]] — Tool comparison (mid-2025): LangSmith/Braintrust/Arize Phoenix; 4 selection criteria; transparency-vs-magic anti-pattern
+- [[summaries/aws-security-agent]] — AWS managed pen test service: target/accessible/out-of-scope domain split, credential injection patterns, IAM role scoping, out-of-scope URL hierarchy, launch checklist
 - [[summaries/hamel-evals-skills]] — Claude Code plugin (`hamelsmu/evals-skills`): 7 skills including eval-audit, write-judge-prompt, validate-evaluator, evaluate-rag
 - [[summaries/cloudflare-agent-memory]] — Managed cross-session memory service: 5-channel RRF retrieval (FTS+key+HyDE+vector+message), 4-type taxonomy (Facts/Events/Instructions/Tasks), compaction-integrated ingest
 - [[summaries/rlhf-cai]] — RLHF/RLAIF/Constitutional AI/DPO: alignment training techniques; 3-stage RLHF pipeline; DPO as reward-model-free alternative; inspiration for preference-feedback-loop
 - [[summaries/self-refinement]] — Madaan et al. 2023: same-model iterative generate→critique→refine loop; no training required; self-evaluation bias limitation
-- [[summaries/dspy]] — DSPy signatures/modules/optimizers stack; GEPA error-driven prompt augmentation; when to use vs plain prompting; limitations
-- [[summaries/living-dangerously-with-claude]] — Willison talk: YOLO mode productivity vs. lethal trifecta risk; sandbox-exec macOS pattern; why AI-layer defenses are insufficient
 - [[summaries/awesome-software-architecture]] — mehdihadeli curated list: topic taxonomy for software architecture (DDD, microservices, distributed patterns, design principles, messaging tools, DevOps); reference index, not prose
 - [[summaries/hn-junior-devs-and-ai]] — HN community: AI amplifies existing ability; juniors lack evaluation frame; repetition/debugging gap; agentic tools harmful for beginners; 7 actionable heuristics
-- [[summaries/owasp-ai-security]] — 4 OWASP cheat sheets: AI Agent Security (8 practices, 11 risks) + Secure Coding with AI (14 threats incl. slopsquatting, rules file injection, CI/CD confused deputy, test fabrication) + Secure AI Model Ops (circuit breakers, chain-depth limits, DoW) + GitHub Actions Security ("clinejection" attack, SHA pinning)
-- [[summaries/owasp-prompt-injection]] — OWASP LLM Prompt Injection Prevention: 9+ attack types (typoglycemia, Best-of-N power-law scaling, multimodal, RAG poisoning), 4-layer SecureLLMPipeline, dual-LLM pattern, model-based guardrails at 3 placements
-- [[summaries/owasp-mcp-security]] — OWASP MCP Security: 9 key risks (tool poisoning, rug pull, tool shadowing, confused deputy), 12 best practices incl. SHA-256 tool hash pinning, ECDSA message signing, bind to 127.0.0.1, mcp-scan
-- [[summaries/aws-security-agent]] — AWS managed pen test service: target/accessible/out-of-scope domain split, credential injection patterns, IAM role scoping, out-of-scope URL hierarchy, launch checklist
-- [[summaries/owasp-web-security-stubs]] — Batch stubs for 26 OWASP cheat sheets (Next.js + ECS + Neon stack focus): SQLi, session, CSRF, XSS, IDOR, Docker, cloud arch, secrets, SSRF, DoS, deserialization, supply chain
-- [[summaries/worktrees-parallel-agents]] — 4 failure modes of shared-repo multi-agent; what worktrees fix (file conflicts, lock contention) vs don't fix (runtime isolation, logical conflicts); worktree-per-task vs per-agent; Galactic, Block agent-task-queue, Switchman, Intent architecture
-- [[summaries/top-8-claude-skills-uiux]] — 8 UI/UX skills catalog + Agent Skills architecture (3-tier loading, supply chain risk); Vercel RN/React/composition skills, AccessLint, Anthropic frontend-design
 - [[summaries/cc-linting-debugging-reddit]] — r/ClaudeCode community: Stop hook for file-modifying linters (file-state conflict); PostToolUse read-only only; noslop quality gates; layered shellcheck/biome/pre-commit setup; gdb/Replay MCP/JetBrains debugger
-- [[summaries/avoiding-ai-code-slop]] — Intent-driven verification (spec-first before code generation); 6 slop failure modes incl. over-engineering/defensive overreach/cargo-cult; slop register; Aviator experiment: 65 AC verified in 6 min by second agent
-- [[summaries/clean-code-ai-assisted]] — Uncle Bob's clean code principles + AI-specific failure modes (long methods, duplicated logic, hardcoded secrets, insecure deps); research citations; AWS AI outage incident
-- [[summaries/everything-claude-code]] — ECC harness performance system: 60 agents/232 skills/hooks/rules; instinct-based continuous learning v2; AgentShield security scanner; token optimization settings; 9-harness cross-platform support
-- [[summaries/agentic-control-plane-concept]] — 4-layer control plane architecture (execution/coordination/quality/experience); Phase 0–5 roadmap; Phase 0.5 five concrete additions; buy vs build decisions
+- [[concepts/llm-serialization-formats]] — Schema-first formats (ONTO, TOON) cutting LLM input overhead 40–60% via schema-once design; covers format comparison, tradeoffs, and caveats on synthetic benchmarks
 
 ## Entities
+- [[entities/headroom]] — Context compression proxy/library/MCP for AI agents; ContentRouter (JSON/AST/prose), CacheAligner, CCR reversible compression, cross-agent memory, `headroom learn` failure mining
 - [[entities/everything-claude-code]] — Agent harness performance system (ECC): plugin + manual install; 9-harness support; DRY adapter pattern; instinct clustering; AgentShield
 - [[entities/agentshield]] — Security scanner for CC configs: 5 scan categories (secrets/permissions/hooks/MCP/agents), 102 rules, 3-agent Opus red-team pipeline
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
@@ -99,17 +49,19 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/mnemory]] — Self-hosted MCP cross-session memory: Qdrant vector search + S3/MinIO artifact store; OSS alternative to Anthropic memory tool
 - [[entities/agentops]] — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
 - [[entities/gemini-cli]] — Google's Gemini CLI: GEMINI.md + TOML commands + activate_skill; high parity with CC; hooks + subagents (experimental)
-- [[entities/opencode]] — Open-source Claude Code alternative; plugin system with compaction hooks, custom tools, 30+ event surface
-- [[entities/pi-agent]] — TypeScript unified multi-provider LLM API (pi-mono); council/adversarial review layer; GitHub Copilot Models integration; Pi Subagents extension (amosblomqvist)
+- [[entities/opencode]] — Open-source Claude Code alternative; plugin system, compaction hooks, custom tools, headless `run`/`serve` modes, full HTTP API
+- [[entities/pi-agent]] — pi-coding-agent CLI (pi-mono); primary harness for open-model workloads + council/adversarial review layer; difficulty-tiered model routing; pueue parallel delegation; srt sandboxing; Pi Subagents extension
+- [[entities/opencode-go]] — OpenCode Go: $10/mo open-model subscription (DeepSeek V4 Pro, Kimi K2.6, Qwen3.6, etc.); subscription arbitrage alternative to Anthropic/OpenAI plans
 - [[entities/karpathy-llm-council]] — Karpathy's 3-stage council web app: parallel dispatch → anonymized peer review → Chairman synthesis; OpenRouter-based reference implementation
 - [[entities/agents-md-format]] — AGENTS.md format entity: origin, per-tool implementations (Codex/OpenCode/CC/Aider/Gemini), multi-file strategies
 - [[entities/codex]] — OpenAI Codex CLI; AGENTS.md + TOML agents + native skills (3-layer stack); CC migration mapping; hooks via config.toml
 - [[entities/opencode-dcp]] — `@tarquinen/opencode-dcp` npm plugin; Compress + dedup + purge-errors; global/project config; /dcp commands
 - [[entities/lean-session]] — OpenCode plugin; injects `.agents/` state into compaction; writes checkpoint on idle; 3 hooks: compacting/diff/idle
-- [[entities/dspy]] — Stanford framework for programming LMs via Signatures/Modules/Optimizers; GEPA optimizer: error-driven prompt refinement; automated prompt optimization without manual prompt engineering
+- [[entities/dspy]] — Stanford DSPy framework: Signatures/Modules, expanded optimizer table (MIPROv2 internals, BetterTogether, Ensemble), pipeline patterns, two-LM optimization setup, practical caveats on metric gaming
 - [[entities/spotme]] — OpenCode "gym mode" plugin; counter-based exercise scaffolding; lite/medium/hard difficulty; portable SKILL.md for other harnesses
 - [[entities/codegraphcontext]] — Python MCP server + CLI; indexes codebases into graph DB (KuzuDB); Tree-sitter parsing; 20 languages; relationship discovery, blast radius, dead code; session or daemon persistence
 - [[entities/pentagi]] — OSS autonomous pen testing system (vxcontrol); 20+ tools in sandboxed Docker; orchestrator + researcher/developer/executor agents; pgvector + Neo4j memory; chain summarization for context; reference for our pentest-agent design
+- [[entities/opentelemetry]] — CNCF-graduated vendor-neutral observability framework; three signals, GenAI semantic conventions (incubating), instrumentation approaches, Collector config, compatible backends for AI workloads
 
 ## Concepts
 - [[concepts/mobile-design-patterns]] — mobile-first doctrine, MFRI scoring, Fitts' Law, gesture design, iOS/Android divergence matrix, RN/Flutter performance patterns, release checklist
@@ -117,7 +69,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/cicd-testing]] — Testing pyramid, 6 test types, shift-left, pipeline stage map, relationship to verification-pipeline
 - [[concepts/context-window]] — Transformer constraint: O(n²) attention, KV cache, context rot, context awareness feature
 - [[concepts/context-engineering]] — Discipline of curating minimal high-signal tokens: JIT retrieval, compaction, note-taking, sub-agents
-- [[concepts/agentic-memory-tool]] — memory_20250818 API, context editing, cross-session learning, memory poisoning security; Mnemory as OSS parallel
+- [[concepts/agentic-memory-tool]] — Anthropic beta API for file-based cross-session memory (memory_20250818) + in-session context editing (clear_tool_uses + clear_thinking); canonical config pattern, semantic learning, memory poisoning security
 - [[concepts/software-documentation]] — Doc types (Diátaxis), audiences (including AI agents), principles, structure for doc-hosting platforms
 - [[concepts/claude-code-plugins]] — Plugin structure, manifest format, namespacing, symlink gotcha, when to use plugins vs. personal config
 - [[concepts/compounding-knowledge-base]] — Knowledge bases that accumulate compiled structure vs. RAG's per-query retrieval
@@ -132,12 +84,12 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/web-fingerprinting]] — Multi-layer browser/network/behavioral fingerprinting used by anti-bot systems; evasion principles
 - [[concepts/proxy-rotation]] — Proxy types by OSI layer, rotation strategies, limits vs. full fingerprinting evasion
 - [[concepts/webrtc-ip-leak]] — WebRTC UDP bypass of proxy configuration; ICE/STUN mechanism and mitigations
-- [[concepts/agent-harness]] — Model + harness = agent; core components: filesystem, bash, sandbox, context management, long-horizon loops
+- [[concepts/agent-harness]] — Model + harness = agent; core components: filesystem, bash, sandbox, context management, long-horizon loops; orchestrator/harness/framework distinction; model-agnostic property
 - [[concepts/ralph-loop]] — Harness pattern: intercept exit, reinjecting original prompt with clean context + durable filesystem state
 - [[concepts/context-degradation]] — Five named failure modes: lost-in-middle, poisoning, distraction, confusion, clash; thresholds and mitigations
-- [[concepts/context-compression]] — Four strategies (incl. Acon adaptive guideline-optimized); clear-over-compact now community consensus for coding; KV-cache cost trap with history compression
+- [[concepts/context-compression]] — Four strategies + serialization format axis (ONTO/TOON 40–60% reduction); clear-over-compact consensus; KV-cache cost trap; SAC as learned soft compression alternative
 - [[concepts/tool-design-for-agents]] — Dual audience principle; error messages as agent recovery instructions; naming conventions
-- [[concepts/agent-skills]] — Skills as prompt templates: progressive disclosure, meta-tool architecture, SKILL.md structure, three loading levels
+- [[concepts/agent-skills]] — Skill meta-tool: SKILL.md schema, three-tier loading, isMeta dual-message execution, supply chain risk, composition patterns, grill-* antipatterns, when NOT to use skills
 - [[concepts/agent-subagents]] — Subagents: own context window, YAML frontmatter format, all fields, scopes, invocation patterns, fork mode
 - [[concepts/agent-teams]] — Agent teams: lead+teammates+task list+mailbox; when to use vs subagents; quality gate hooks; best practices
 - [[concepts/worker-coordination]] — Partial result passing between parallel workers: contract-first, pipeline, filesystem blackboard, actor mailbox; decision table; failure modes
@@ -166,6 +118,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/rag-evaluation]] — RAG eval split: retrieval (Recall@k, Precision@k, MRR, nDCG) vs generation (faithfulness, answer relevance, context utilization); Ragas/DeepEval; Jason Liu 6-RAG-evals framework
 - [[concepts/preference-feedback-loop]] — cross-vendor judge evaluates agent outputs on 4-dimension rubric; pattern-triggered rule extraction; human approval gate; extends mistakes/ + memory/feedback_*
 - [[concepts/actor-model]] — actors as unit of concurrency; 3 primitives (send/spawn/become); mailbox semantics; no shared state; supervision trees + let-it-crash; virtual actor model (Orleans grains/silos); Erlang/Akka/Orleans/ProtoActor implementations
+- [[concepts/llm-observability]] — Observability patterns for LLM and agent systems: OpenTelemetry GenAI semantic conventions (incubating), span types, metrics, sampling, multi-agent trace correlation, production monitoring tools
+- [[concepts/slash-commands]] — Decision guide for Claude Code session commands: when to use /goal, /loop, /ralph-structured, /clear, /compact, /save-session, /handoff, and how they differ
 
 ## Patterns
 - [[patterns/principles]] — SOLID (SRP/OCP/LSP/ISP/DIP), DRY, YAGNI, KISS, Law of Demeter, SoC, composition over inheritance; per-principle violation patterns and decision table
@@ -200,3 +154,5 @@ Catalog of all pages. Updated on every ingest operation.
 - [[syntheses/lean-agentic-workflow]] — Full stack: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes
 - [[syntheses/local-rag-wiki]] — two-path RAG stack: qmd (BM25+vector, Claude Code) + LightRAG graph (wiki-chat TUI + wiki-mcp MCP); qwen2.5:3b local or Haiku hybrid; manifest-based incremental indexing; post-commit automation
 - [[syntheses/control-plane-expansion-plan]] — Gap analysis (Phase 1 readiness), tool landscape (buy vs build), Phase 0.5–3 concrete steps for scaling to Agentic Engineering Control Plane
+- [[syntheses/agent-diff-viewer]] — Localhost real-time diff viewer for Claude Code: PostToolUse hooks → Hono SSE → diff2html browser UI; per-turn grouped diffs; clipboard→tmux steer injection; dotfiles-portable daemon
+- [[systems/otel-council]] — OTel instrumentation for council.py: three span types (session/voice/chairman), zero-dependency JSONL file output, GenAI semantic convention attributes, jq trace queries

@@ -5,7 +5,7 @@ tags: [agent-engineering, verification, quality, testing, visual-verification, h
 sources:
   - "Exit Code 0 Is Not Quality What 198 Autonomous Agents Taught Me About AI Orchestration.md"
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-05-27
 ---
 
 # Verification Pipeline
@@ -90,12 +90,19 @@ The verification pipeline is an instantiation of the harness principle "Applicat
 
 It extends [[concepts/ralph-loop]] with completion conditions tied to verification passing rather than code existing.
 
+## Production Results (reference implementation)
+
+The four-tier pipeline was built and validated across: 198 agents spawned, 32 fleet sessions, 30 campaigns completed, 296 features delivered, 90.6% session completion rate, 3.1% merge conflict rate, 0 circuit breaker activations.
+
+**Discovery relay**: findings from Wave N are compressed and injected into Wave N+1's context — prevents agents from reinventing each other's decisions across parallel waves.
+
+**Scope overlap circuit breaker**: 1 file-scope conflict = pause wave; 2 conflicts = stop session entirely.
+
 ## Related Pages
 
 - [[concepts/agent-harness]] — harness design principles including application legibility and entropy/GC
 - [[concepts/ralph-loop]] — completion conditions; verification as the exit signal
 - [[concepts/agentic-sandbox-controls]] — sandbox security; visual verification runs in a real browser (security boundary)
-- [[summaries/exit-code-0-quality]] — full case study with numbers and architecture
 - [[concepts/cicd-testing]] — broader CI/CD testing strategy; verification-pipeline is one quality gate within it
 - [[concepts/unit-testing]] — unit testing as the foundation layer beneath agent-specific verification
 - [[concepts/llm-eval-pipeline]] — the broader eval system this pipeline feeds into; CI gates, golden datasets, production monitoring

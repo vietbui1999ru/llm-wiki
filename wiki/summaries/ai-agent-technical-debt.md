@@ -4,7 +4,7 @@ type: summary
 tags: [ai-agents, technical-debt, refactoring, automation]
 sources: [Using GitHub Copilot to reduce technical debt.md]
 created: 2026-04-22
-updated: 2026-04-22
+updated: 2026-05-26
 ---
 
 # Using AI Agents to Reduce Technical Debt
@@ -36,6 +36,28 @@ Give agents a standards document encoding team conventions before generation. Se
 | Debt PRs merged/week | 2–3× increase |
 | Linter warnings | trending down |
 | Test coverage | trending up |
+
+## Copilot cloud agent: specifics
+
+GitHub-specific implementation of the agentic task model:
+
+**Triggering:** Create a GitHub issue describing the task precisely (what files, what change, what to keep). Assign the issue to the **Copilot** user — the actual GitHub user account, not a label.
+
+**What Copilot does automatically:**
+1. Sets up development environment
+2. Opens a draft PR on a `copilot/*` branch
+3. Makes the changes, runs tests
+4. Finalizes PR and requests your review
+
+**Safety boundaries:**
+- Can only push to `copilot/*` branches — hard limit, not configurable
+- Cannot merge — requires human approval
+- All commits auditable in PR history
+- Branch protections and CI/CD checks run normally before any merge
+
+**Iteration:** Leave review comments → Copilot updates the PR based on feedback. Repeat until correct, then approve and merge.
+
+**Custom instructions:** `.github/copilot-instructions.md` encodes team standards. See [[summaries/copilot-agent-structure]] for full customization file structure.
 
 ## Key insight
 

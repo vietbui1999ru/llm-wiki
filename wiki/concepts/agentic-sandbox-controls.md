@@ -2,14 +2,29 @@
 title: "Agentic Sandbox Controls"
 type: concept
 tags: [security, sandboxing, agents, OS-controls, secret-injection]
-sources: ["Practical Security Guidance for Sandboxing Agentic Workflows and Managing Execution Risk.md"]
+sources:
+  - "Practical Security Guidance for Sandboxing Agentic Workflows and Managing Execution Risk.md"
+  - "Docker Sandboxes Run Claude Code and More Safely.md"
+  - "Living dangerously with Claude.md"
 created: 2026-04-22
-updated: 2026-05-12
+updated: 2026-05-27
 ---
 
 # Agentic Sandbox Controls
 
 OS-level security controls for AI coding agents, as defined by the NVIDIA AI Red Team. The core insight: application-level controls (tool call interception, allowlists) are insufficient because they lose visibility once a subprocess starts. Effective controls must operate at the OS layer.
+
+AI coding agents run with the same OS permissions as the developer and execute arbitrary code by design. This makes the **attack surface equivalent to a computer use agent**.
+
+## The Lethal Trifecta
+
+The most dangerous class of prompt injection scenarios (Simon Willison):
+
+> **Lethal trifecta** = access to private data + exposure to untrusted content + ability to externally communicate
+
+Any LLM system with all three is exploitable for data exfiltration. A file containing `grep -r "hp_" ~/.` (GitHub token prefixes) sent to an attacker URL is a concrete example — the agent treats file content as instructions.
+
+**Why AI-layer defenses don't work:** An imperfect classifier (95% detection) still allows 1 in 20 injections to succeed. Against a headless agent running continuously, that rate is exploitable. Defense must be structural, not probabilistic.
 
 ## The subprocess escape problem
 
@@ -92,7 +107,7 @@ This is ToS-compliant (host-native, not Docker) and directly cuts the exfiltrati
 
 **Deprecation warning**: `sandbox-exec` has been marked deprecated in Apple docs since at least 2017. Still functional and used by Codex CLI as of 2025, but long-term availability is uncertain.
 
-See: [[summaries/living-dangerously-with-claude]]
+See: [[concepts/indirect-prompt-injection]] (lethal trifecta section)
 
 ## Autonomous / Unattended Mode (`--dangerously-skip-permissions`)
 
@@ -142,6 +157,39 @@ Using this flag on a developer machine with full credentials is equivalent to un
 
 See: [[summaries/claude-code-permissions-settings]], [[concepts/self-healing-loop]], [[concepts/agentic-cicd]]
 
+## Docker Sandboxes (microVM Isolation)
+
+Docker's hosted sandbox product runs Claude Code, Codex CLI, Copilot CLI, Gemini CLI, and Kiro in isolated microVM environments. Fills the gap between:
+
+| Approach | Problem |
+|---|---|
+| CC native Seatbelt/bubblewrap | Not consistent across platforms; interrupts Docker-in-Docker |
+| Containers | Agent can't run Docker itself |
+| Full VMs | Slow, manual, hard to reuse |
+
+**What Docker Sandboxes provide:**
+- Each agent in a dedicated microVM (hypervisor-level boundary)
+- Only project workspace mounted — host untouched
+- Docker-in-Docker safe — agents build/run containers inside microVM, no access to host Docker daemon
+- Network allow/deny lists
+- Fast reset: delete sandbox → fresh microVM in seconds
+
+**When to prefer CC native sandbox**: Linux/WSL2, no Docker Desktop, lightweight isolation sufficient.
+
+**Sandbox hierarchy by isolation strength** (Willison):
+1. Cloud-hosted (Anthropic web, OpenAI Codex Cloud, Gemini Jules) — strongest, no local risk
+2. Docker Sandboxes / microVM — hypervisor-level local isolation
+3. `sandbox-exec` + HTTP proxy (macOS) — OS-level, host-native, ToS-compliant
+4. CC native sandbox (Seatbelt/bubblewrap) — process namespace only
+
+## Remaining Vulnerabilities (even with mandatory controls)
+
+- Malicious hooks or MCP init commands ingested before sandboxing activates
+- Kernel exploits (mitigated by virtualization)
+- Agent access to secrets (mitigated by secret injection)
+- Approval caching bugs in the agentic IDE
+- Stale sandbox state accumulation
+
 ## Related concepts
 
 - [[concepts/indirect-prompt-injection]]
@@ -150,6 +198,4 @@ See: [[summaries/claude-code-permissions-settings]], [[concepts/self-healing-loo
 - [[entities/ai-coding-agents]]
 - [[entities/dangeresque]] — host-native alternative to container sandboxing
 - [[entities/sandcastle]] — hybrid: Claude on host, tools in container
-- [[summaries/agentic-sandbox-security]] — NVIDIA AI Red Team source; full tiered denylist and secret injection details
-- [[summaries/docker-sandboxes]] — microVM isolation for coding agents; Docker-in-Docker safe; CC/Codex/Gemini/Copilot/Kiro support
-- [[summaries/owasp-ai-security]] — OWASP S5 runtime sandboxing; --dangerously-skip-permissions risks; rules files as persistent steering
+- [[concepts/owasp-security-checklist]] — OWASP AI agent security controls; --dangerously-skip-permissions risks; rules files as persistent steering

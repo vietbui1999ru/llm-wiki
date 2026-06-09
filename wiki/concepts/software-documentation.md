@@ -9,8 +9,12 @@ sources:
   - "Organize navigation.md"
   - "Understand your audience.md"
   - "Maintenance.md"
+  - "Introduction.md"
+  - "Style and tone.md"
+  - "Tracking success.md"
+  - "Using media.md"
 created: 2026-04-27
-updated: 2026-05-11
+updated: 2026-05-27
 ---
 
 # Software Documentation
@@ -98,7 +102,5 @@ AI coding agents (Claude Code, Codex) can generate and maintain documentation au
 
 - [[concepts/agent-context-instructions]] — CLAUDE.md as a form of living documentation
 - [[entities/ai-coding-agents]] — AI tools that automate documentation generation
-- [[summaries/software-documentation]] — consolidated source summary
-- [[summaries/mintlify-docs-guide]] — Diátaxis framework, AI audience, maintenance strategies
 - [[concepts/contextual-retrieval]] — navigation structure affects retrieval quality
 - [[concepts/domain-glossary]] — consistent terminology is a shared principle

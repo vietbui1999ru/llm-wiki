@@ -1,6 +1,9 @@
 # LLM Wiki — Schema and Operating Instructions
 
 @mistakes/global-prevention-rules.md
+@claude-setup/rules/applied-ai.md
+@claude-setup/rules/wiki-context-override.md
+@claude-setup/rules/agent-orchestration-default.md
 
 This is a personal knowledge wiki maintained collaboratively between Viet and Claude.
 Claude owns the wiki layer entirely. Viet curates sources and asks questions.
@@ -15,44 +18,6 @@ assets/                # Images downloaded from sources (use Obsidian hotkey or 
 claude-setup/scripts/  # Versioned setup scripts. Install manually — see Setup section below.
 index.md               # Catalog of all wiki pages. Updated on every ingest.
 log.md                 # Append-only chronological record of all operations.
-
-## Setup (one-time, after cloning)
-
-After cloning this repo, install the git hooks:
-
-```bash
-cp claude-setup/scripts/post-commit .git/hooks/post-commit
-chmod +x .git/hooks/post-commit
-```
-
-**What it does:** runs `qmd update && qmd embed` after any commit that touches `wiki/`,
-`index.md`, or `log.md` — keeps the search index current automatically.
-
-Also install wiki-chat + wiki-index + wiki-mcp (LightRAG graph-aware Q&A):
-```bash
-cp templates/wiki-chat ~/.local/bin/wiki-chat
-cp templates/wiki-index ~/.local/bin/wiki-index
-cp templates/wiki-mcp ~/.local/bin/wiki-mcp
-chmod +x ~/.local/bin/wiki-chat ~/.local/bin/wiki-index ~/.local/bin/wiki-mcp
-pip install lightrag-hku ollama rich prompt_toolkit mcp
-
-# Pull required ollama models
-ollama pull nomic-embed-text   # embeddings
-ollama pull qwen2.5:7b         # entity extraction + synthesis
-
-# Build graph index (one-time, ~30-60 min for 149 pages)
-wiki-index
-
-# Then chat
-wiki-chat
-```
-
-Models used: `qwen2.5:7b` for entity extraction + synthesis, `nomic-embed-text` for embeddings.
-Index lives at `~/repos/llm-wiki/.lightrag/` (gitignored). Re-run `wiki-index` after bulk ingests,
-or use `/reindex` inside wiki-chat to pick up changed pages.
-
-`wiki-mcp` is an MCP server wrapping LightRAG — add to OpenCode/Claude Code as a local MCP for
-zero-API-cost wiki queries. Wire-up in `~/.config/opencode/opencode.json` under `mcp.wiki-rag`.
 
 ## Frontmatter for wiki pages
 
@@ -103,11 +68,6 @@ When Viet says "lint the wiki":
 3. Identify concepts mentioned but lacking their own page.
 4. Suggest 3-5 sources to look for next based on gaps.
 5. Append to log.md: `## [YYYY-MM-DD] lint`
-
-## Search
-qmd is installed and indexed on this directory.
-Run searches with: `qmd query "<terms>"`
-Run full hybrid search: `qmd query "<terms>" --files --min-score 0.3`
 
 ## context7 lookup rule
 Before using any library, framework, CLI tool, or API — resolve current docs via context7 MCP:

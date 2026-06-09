@@ -9,6 +9,7 @@ Personal reference for Viet. Covers: active rules, the wiki, all installed skill
 These behaviors are always active. No need to invoke them — Claude follows them automatically.
 
 ### Communication
+
 | Rule                       | Behavior                                                                                                          |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | **Caveman mode**           | All natural language compressed — no articles, no filler, fragments OK. Does NOT apply to code, commits, or docs. |
@@ -22,6 +23,7 @@ These behaviors are always active. No need to invoke them — Claude follows the
 - Order: `wiki-context` first → then process skills (debugging, brainstorming) → then implementation skills.
 
 ### Auto-invocation (wiki-startup)
+
 | Trigger                                                 | Skill invoked         |
 | ------------------------------------------------------- | --------------------- |
 | Any technical task, design question, agent work         | `wiki-context`        |
@@ -36,6 +38,7 @@ After any response containing:
 Claude invokes `/judge` before ending the turn. Silent on first strike. On second consecutive low score for the same dimension, drafts a corrective rule for approval.
 
 ### Domain-specific rules
+
 | Domain | Rule |
 |---|---|
 | **Learning** (C, Go, Embedded, CUDA, Kubernetes, Terraform, Ansible) | Small examples only, explain terms on first use, no scaffolds |

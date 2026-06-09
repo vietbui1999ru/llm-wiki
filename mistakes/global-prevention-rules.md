@@ -5,6 +5,7 @@ Do NOT load raw-log.md or individual mistakes/*.md at startup — use qmd for lo
 
 ## CLI / Shell
 - docling: flag is `--output`, not `--output-dir` (confirmed 2026-04-30)
+- docling: `docling-slim` is missing `pypdfium2` — verify with `docling --version` before running; full install is `uv tool install docling` (2026-05-26)
 - Before any unfamiliar CLI flag or API: resolve via context7 first (`resolve-library-id` → `query-docs`), not `--help` or memory
 
 ## Wiki Authoring

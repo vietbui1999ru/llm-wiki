@@ -9,7 +9,7 @@ updated: 2026-05-04
 
 # SandCastle
 
-TypeScript library by Matt Pocock for running Claude Code agents in parallel across isolated git worktrees and sandboxed containers. The production-grade implementation of the AFK parallelization pattern described in [[summaries/mattpocockworkflow]].
+TypeScript library by Matt Pocock for running Claude Code agents in parallel across isolated git worktrees and sandboxed containers. The production-grade implementation of the AFK parallelization pattern from the lean agentic workflow.
 
 GitHub: https://github.com/mattpocock/sandcastle
 
@@ -83,7 +83,7 @@ Enables per-task cost tracking — useful for calibrating which task types justi
 
 ## Relation to Existing Wiki
 
-- [[summaries/mattpocockworkflow]] — SandCastle implements the AFK parallel pattern described there
+- [[syntheses/lean-agentic-workflow]] — SandCastle implements the AFK parallel pattern described there
 - [[entities/dangeresque]] — host-native alternative; simpler setup, no container dependency
 - [[concepts/agent-harness]] — SandCastle is a harness implementation
 - [[concepts/ralph-loop]] — same loop pattern, different implementation

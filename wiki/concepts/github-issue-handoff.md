@@ -219,10 +219,8 @@ jobs:
 
 ## Related Pages
 
-- [[summaries/mattpoccock-handoff-skill]] — /handoff skill design; temp-file form; grilling→prototype→back pattern
-- [[summaries/mattpocockskills]] — /to-issues: PRD → vertical-slice issues; /to-prd: session → issue
+- [[syntheses/lean-agentic-workflow]] — lean-session checkpoint; full grill→PRD→AFK loop; /handoff and /to-issues as components
 - [[concepts/shared-task-queue]] — atomic `.agents/inbox/` claim protocol; task file format spec
-- [[syntheses/lean-agentic-workflow]] — lean-session checkpoint; full grill→PRD→AFK loop
 - [[concepts/agent-harness]] — broader orchestration harness context
 
 *Stub — expand when a dedicated source is ingested.*

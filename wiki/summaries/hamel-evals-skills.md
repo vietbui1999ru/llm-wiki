@@ -50,5 +50,5 @@ Restart Claude Code. Skills appear as `/evals-skills:<skill-name>`.
 ## Relation to Existing Wiki
 
 - [[concepts/llm-eval-pipeline]] — the process these skills support
-- [[summaries/hamel-evals-faq]] — extended guidance; all the concepts behind the skills
+- [[concepts/llm-as-judge]] — underlying evaluation mechanism the skills operationalize
 - [[concepts/agent-skills]] — the skills system in Claude Code

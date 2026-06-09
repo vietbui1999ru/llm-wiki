@@ -4,7 +4,7 @@ type: concept
 tags: [agent-engineering, harness, autonomy, retry, rollback, failure-recovery]
 sources: []
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-05-27
 ---
 
 # Self-Healing Loop
@@ -144,7 +144,27 @@ Without structured output, the outer harness cannot distinguish "agent is thinki
 
 Dagger handles the "analyze and patch" half; ArgoCD handles the "rollback on deploy failure" half; Windmill provides the retry scheduling primitive that both can use.
 
-See: [[summaries/self-healing-cicd-implementations]]
+**Dagger flow** (AI-driven CI layer): detect failure → agent analyzes log → patches code scoped to relevant file → reruns only the failing gate (not full suite) → posts reviewed diff to PR; agent does not auto-merge.
+
+**ArgoCD rollback** (deploy layer):
+```bash
+# Store known-good revision before deploy
+current_revision=$(argocd app get myapp --output json | jq -r .status.sync.revision)
+argocd app set myapp --revision $new_sha && argocd app sync myapp --prune --timeout 300
+argocd app wait myapp --health --timeout 120
+op_phase=$(argocd app get myapp --output json | jq -r .status.operationState.phase)
+health=$(argocd app get myapp --output json | jq -r .status.health.status)
+if [[ "$op_phase" != "Succeeded" || "$health" != "Healthy" ]]; then
+  argocd app set myapp --revision $current_revision && argocd app sync myapp --prune
+fi
+```
+Two-condition check (op phase + health) prevents false positives. Rollback is re-sync to stored revision — idempotent.
+
+**Windmill retry config** (workflow step layer):
+```typescript
+retry: { exponential: { attempts: 5, multiplier: 2, seconds: 10, random_factor: 0.5 } }
+```
+Per-step retry with exponential backoff + jitter; each attempt gets a fresh isolated execution context.
 
 ---
 

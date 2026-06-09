@@ -86,4 +86,3 @@ Automated: check whether detected IPs include anything other than the proxy IP.
 - [[concepts/proxy-rotation]] — proxy types and UDP support matrix
 - [[concepts/web-fingerprinting]] — WebRTC leak as one vector in the multi-layer detection system
 - [[entities/pydoll]] — `webrtc_leak_protection` property and CDP-based mitigations
-- [[summaries/pydoll-network-fingerprinting]] — full network fundamentals including ICE/STUN protocol details

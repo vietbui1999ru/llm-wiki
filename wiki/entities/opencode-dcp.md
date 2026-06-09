@@ -6,7 +6,7 @@ sources:
   - "Opencode-DCPopencode-dynamic-context-pruning Dynamic context pruning plugin for OpenCode - intelligently manages conversation context to optimize token usage.md"
   - "Quick Start Install DCP Plugin  opencode-dynamic-context-pruning.md"
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-05-27
 ---
 
 # opencode-dcp
@@ -65,8 +65,45 @@ DCP-specific config (separate from `opencode.jsonc`), searched in order, later o
 
 `~/.config/opencode/logs/dcp/daily/` — when `debug: true` is set in config.
 
+## Key Config Knobs
+
+DCP config at `~/.config/opencode/dcp.jsonc` (auto-created on first run). All defaults live in code; only override what you need.
+
+```jsonc
+"compress": {
+  "mode": "range",          // "range" (default) or "message" (experimental)
+  "permission": "allow",    // "allow" | "ask" | "deny"
+  "minContextLimit": 50000, // below this: reminders off
+  "maxContextLimit": 100000,// above this: strong nudges every nudgeFrequency fetches
+  "nudgeFrequency": 5,
+  "protectUserMessages": false,
+  "summaryBuffer": true
+}
+"strategies": {
+  "deduplication": { "enabled": true },
+  "purgeErrors": { "enabled": true, "turns": 4 }
+}
+```
+
+Both limits accept absolute numbers or `"X%"` of model context. Per-model overrides via `modelMinLimits`/`modelMaxLimits`.
+
+Other knobs: `enabled`, `debug`, `pruneNotification` (`"off"|"minimal"|"detailed"`), `manualMode.enabled`, `turnProtection`, `protectedFilePatterns`, `experimental.allowSubAgents`, `experimental.customPrompts`.
+
+## Prompt Cache Trade-Off
+
+DCP rewrites outgoing requests, invalidating prompt-cache prefixes from the prune point onward. Plugin author's measurements: ~85% cache hit rate with DCP vs ~90% without. Lost cache reads trade against token savings and fewer hallucinations from stale content. No cache impact for request-based billing (GitHub Copilot) or uniform-rate pricing (Cerebras).
+
+## Layer Relationship
+
+| Layer | When it fires | What it does |
+|---|---|---|
+| OpenCode built-in compaction | Token threshold | End-of-context summarization |
+| lean-session plugin | Same as built-in | Shapes compaction prompt via `experimental.session.compacting` |
+| DCP | On LLM fetch (dedup/purge) + model decision (compress) | Keeps active payload lean |
+
+These compose: DCP keeps context lean → compaction fires later on cleaner input → lean-session shapes what survives compaction.
+
 ## Related Pages
 
 - [[concepts/dynamic-context-pruning]] — what it does and why
-- [[summaries/opencode-dcp]] — full source synthesis
 - [[entities/opencode]] — host harness

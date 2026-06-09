@@ -4,7 +4,7 @@ type: entity
 tags: [agent-context-instructions, cross-provider, standards, linux-foundation]
 sources: ["AGENTS.md", "Custom instructions with AGENTS.md – Codex.md", "Rules.md"]
 created: 2026-05-06
-updated: 2026-05-22
+updated: 2026-05-27
 ---
 
 # AGENTS.md (format)
@@ -48,6 +48,18 @@ Each tool implements its own discovery and layering on top of the format:
 
 ---
 
+## Migration
+
+```bash
+# Rename existing AGENT.md and create backward-compatible symlink
+mv AGENT.md AGENTS.md && ln -s AGENTS.md AGENT.md
+```
+
+**Aider** (`.aider.conf.yml`) — requires opt-in:
+```yaml
+read: AGENTS.md
+```
+
 ## Multi-file Strategies
 
 The base format is single-file. Tools extend it differently:
@@ -61,8 +73,6 @@ The base format is single-file. Tools extend it differently:
 
 ## Related Pages
 
-- [[summaries/agents-md-spec]] — detailed spec and compatibility table
-- [[summaries/codex-agents-md]] — Codex layering mechanisms
-- [[summaries/agents-md-critique]] — why single-file is the wrong abstraction
-- [[concepts/rules-vs-hooks]] — static rules vs. dynamic hooks
+- [[entities/codex]] — Codex layering mechanisms (AGENTS.override.md, 32 KiB limit, fallback filenames)
+- [[concepts/rules-vs-hooks]] — static rules vs. dynamic hooks; critique of single-file abstraction
 - [[concepts/agent-context-instructions]] — the concept this format implements

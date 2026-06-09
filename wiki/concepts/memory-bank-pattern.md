@@ -116,7 +116,7 @@ ReadMemory → ANALYZE → PLAN → ACT → VERIFY → REFLECT → DOCUMENT
 | knowledgeBase | N/A | Lazy-loaded by relevance |
 | Scale | Single file or nested | Full directory hierarchy |
 
-The Memory Bank solves what the [[summaries/agents-md-critique]] identifies as AGENTS.md's core limitation: static files can't carry evolving project state across sessions.
+The Memory Bank solves the core AGENTS.md limitation identified in Wand's critique: static files can't carry evolving project state across sessions.
 
 ---
 
@@ -144,7 +144,7 @@ The Memory Bank solves what the [[summaries/agents-md-critique]] identifies as A
 ## Related Pages
 
 - [[concepts/rules-vs-hooks]] — where Memory Bank fits in the rules/hooks spectrum
-- [[summaries/agents-md-critique]] — the critique that motivates this pattern
+- [[entities/agents-md-format]] — the AGENTS.md format whose limitations motivate this pattern
 - [[concepts/agentic-memory-tool]] — Anthropic's native memory API approach
 - [[entities/mnemory]] — self-hosted vector memory alternative
 - [[concepts/context-compression]] — clear-over-compact; Memory Bank makes clearing safe

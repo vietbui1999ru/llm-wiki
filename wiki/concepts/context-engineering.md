@@ -6,8 +6,9 @@ sources:
   - "Effective context engineering for AI agents.md"
   - "Context windows.md"
   - "Agent Harness explained in 8min...md"
+  - "Memory & context management with Claude Sonnet 4.6.md"
 created: 2026-04-27
-updated: 2026-05-22
+updated: 2026-05-27
 ---
 
 # Context Engineering
@@ -72,6 +73,24 @@ For tasks spanning tens of minutes to hours:
 
 **Sub-agent architectures**: specialist subagents with isolated context windows perform deep work; return distilled summaries (~1-2K tokens) to the lead agent. Lead agent maintains high-level plan; subagents handle parallel exploration. See [[concepts/agent-subagents]].
 
+## Context Editing API (Beta)
+
+Anthropic's API-level primitives for automated in-session trimming. Requires `betas: ["context-management-2025-06-27"]`.
+
+**`clear_tool_uses_20250919`**: clears old tool call/result pairs when context exceeds a token threshold.
+```python
+{"type": "clear_tool_uses_20250919", "trigger": {"type": "input_tokens", "value": 35000}, "keep": {"type": "tool_uses", "value": 5}}
+```
+
+**`clear_thinking_20251015`**: removes accumulated extended thinking blocks. Must come first when combining strategies.
+```python
+{"type": "clear_thinking_20251015", "keep": {"type": "thinking_turns", "value": 1}}
+```
+
+Memory files (filesystem) survive context editing — this separation is the key architectural principle: short-term context is disposable, long-term memory persists.
+
+See [[concepts/agentic-memory-tool]] for full API details and the memory tool (`memory_20250818`).
+
 ## Historical Origin
 
 Context engineering emerged from constraint pressure. Early models operated in ~4K token windows — small enough that any useful agent had to actively *recycle* that space. Engineers could no longer simply prompt; they had to curate what lived in the window at all times. Tool calling, MCP, and RAG were the response: load only what the task requires, discard the rest.
@@ -107,5 +126,3 @@ See [[concepts/agent-harness]] for the harness layer. Context engineering is the
 - [[concepts/agentic-memory-tool]] — API primitives that implement compaction and note-taking
 - [[concepts/agent-harness]] — the broader harness that orchestrates context management
 - [[concepts/tool-design-for-agents]] — token-efficient tool design as context engineering
-- [[summaries/context-window-cluster]] — consolidated source summary for this cluster
-- [[summaries/context-engineering-anthropic]] — Anthropic's JIT retrieval, compaction, note-taking, sub-agents, and context editing API

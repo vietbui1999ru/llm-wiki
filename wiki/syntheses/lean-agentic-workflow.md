@@ -4,7 +4,7 @@ type: synthesis
 tags: [agent-engineering, workflow, orchestration, council, dangeresque, lean-session]
 sources: ["Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md", "Full Walkthrough Workflow for AI Coding — Matt Pocock.md", "karpathyllm-council LLM Council works together to answer your hardest questions.md", "Plugins for Opencode.md"]
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-05-27
 ---
 
 # Lean Agentic Coding Workflow
@@ -36,7 +36,7 @@ grill → PRD → vertical slices → AFK loop → verify → ship
 
 The most common failure mode in AI coding is starting implementation on misaligned requirements. Grill-me forces alignment before token spend. The session summary lives in PRD, not in the conversation.
 
-See: [[summaries/mattpocockskills]], [[summaries/mattpocockworkflow]]
+See: [[concepts/agent-skills]] (grill/prd/issues), [[entities/dangeresque]] (AFK loop)
 
 ### Vertical slices (tracer bullets)
 
@@ -44,7 +44,7 @@ PRD → kanban DAG with HITL/AFK flags per task. Each task is a thin vertical sl
 
 Fails when: slices are too large to complete in a single AFK session, or the codebase has no clean vertical boundaries.
 
-See: [[summaries/mattpocockworkflow]] — "for whom / fails when" section
+See: [[comparisons/spec-driven-frameworks-vs-native]] — vertical slices context; "for whom / fails when" analysis
 
 ### Dangeresque (AFK loop)
 
@@ -146,7 +146,6 @@ See: [[comparisons/spec-driven-frameworks-vs-native]], [[concepts/memory-bank-pa
 
 ## Related Pages
 
-- [[summaries/mattpocockworkflow]] — origin of grill→PRD→AFK; smart zone; push/pull standards
 - [[entities/dangeresque]] — AFK loop implementation
 - [[entities/opencode]] — primary harness; plugin event surface
 - [[concepts/council-pattern]] — 3-stage deliberation

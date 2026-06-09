@@ -5,7 +5,7 @@ tags: [ci-cd, testing, pipeline, devops, shift-left, testing-pyramid]
 sources:
   - "CICD Testing Explained Strategies, Best Practices & Tools.md"
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-27
 ---
 
 # CI/CD Testing
@@ -85,4 +85,3 @@ No universal answer — balance speed of feedback against confidence needed at e
 - [[concepts/unit-testing]] — foundation of the testing pyramid; runs at every CI stage
 - [[concepts/verification-pipeline]] — AI-specific quality gate; subset of the broader CI/CD testing strategy
 - [[concepts/ai-code-review]] — automated + human review layer that pairs with CI/CD testing
-- [[summaries/cicd-testing]] — consolidated source summary

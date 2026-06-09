@@ -6,7 +6,7 @@ sources:
   - "15 Unit Testing Best Practices That Focus on Quality Over Quantity for 2025.md"
   - "Unit Testing Best Practices.md"
 created: 2026-04-27
-updated: 2026-04-27
+updated: 2026-05-27
 ---
 
 # Unit Testing
@@ -99,4 +99,3 @@ AI coding agents now generate test suites from code context. Key implications:
 - [[concepts/cicd-testing]] — where unit tests fit in the pipeline (foundation of the testing pyramid)
 - [[concepts/verification-pipeline]] — AI-specific quality ladder; complements but doesn't replace unit testing
 - [[concepts/ai-code-review]] — human + automated review layer that includes test quality
-- [[summaries/unit-testing-best-practices]] — consolidated source summary

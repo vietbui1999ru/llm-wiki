@@ -1,117 +1,31 @@
-# Applied AI domains — references and exercises over explanation
+# Applied AI domains
 
-Applies to: ML/AI, AI Engineering, Agent Orchestration,
-            Data Analyst, Data Engineer
+Applies to: ML/AI, AI Engineering, Agent Orchestration, Data Analyst, Data Engineer
 
-## Rules
-- Provide online references for concepts, exercises, and applications.
-  Link papers, courses, or docs — don't just summarize them.
-- Prefer pointing to canonical sources over explaining from scratch.
-- For ML concepts: cite the original paper or authoritative resource.
-- For AI engineering/orchestration: show minimal working patterns,
-  not full framework abstractions.
-- Small code examples only. No large training loops or pipelines unless asked.
-- For data work: show the transform or query, not the full pipeline scaffold.
-- When discussing model behavior: distinguish empirical claims from theoretical ones.
-- Flag when a technique is state-of-the-art vs. established vs. deprecated.
+- Link papers/courses/docs — don't summarize from scratch
+- Cite original paper for ML concepts; canonical source for AI engineering
+- Small code examples only; show transform/query, not full pipeline scaffold
+- Distinguish empirical vs theoretical claims; flag SotA vs established vs deprecated
 
-## Agent Engineering — actionable heuristics
+## Agent Engineering — heuristics
 
-### Context degradation (diagnose before fixing)
-Five named failure modes: lost-in-middle (U-curve attention), context poisoning (errors compounding),
-context distraction (irrelevant content drowning relevant), context confusion (ambiguous scope),
-context clash (contradictions accumulating). Each has a different fix. Diagnose first.
-See wiki: [[concepts/context-degradation]]
+**Context degradation**: five failure modes — lost-in-middle, poisoning, distraction, confusion, clash. Each has a different fix. Diagnose before fixing. [[concepts/context-degradation]]
 
-### Context compression (default: anchored iterative summarization)
-Optimize for tokens-per-task, not tokens-per-request. Three strategies:
-- Anchored iterative summarization — structured persistent summary, merge not regenerate (default)
-- Opaque compression — highest ratio, no human readability (pipelines only)
-- Regenerative full summary — simplest, acceptable for single-compression sessions only
-Thresholds: plan at 70%, trigger at 80%, aggressive at 90% of context window.
-See wiki: [[concepts/context-compression]]
+**Context compression**: optimize tokens-per-task, not tokens-per-request. Default: anchored iterative summarization (merge, don't regenerate). Thresholds: plan 70%, trigger 80%, aggressive 90%. [[concepts/context-compression]]
 
-### KV-cache
-System prompt and tool definitions must be byte-identical across requests. No timestamps or
-session IDs in the system prompt. Place stable content first, dynamic content last.
+**KV-cache**: system prompt + tool defs must be byte-identical across requests. No timestamps/session IDs in system prompt. Stable content first, dynamic content last.
 
-### Tool design for agents (not developers)
-Error messages are agent recovery instructions — write them that way. Include: what went wrong,
-correct format, concrete example, whether retryable. Parameter names should match natural language
-query terms. One unambiguous trigger per tool.
-See wiki: [[concepts/tool-design-for-agents]]
+**Tool design**: error messages are agent recovery instructions — include what went wrong, correct format, example, retryable. One unambiguous trigger per tool. [[concepts/tool-design-for-agents]]
 
-### Multi-agent coordination
-Supervisor pattern: one coordinator routes to specialized workers. State lives in shared filesystem,
-not in agent memory. Workers receive isolated context per task. Completion signal required or loop
-never exits. See wiki: [[concepts/agent-harness]], [[concepts/ralph-loop]]
+**Multi-agent**: supervisor routes to workers; state in shared filesystem, not agent memory; workers get isolated context; completion signal required. Subagents need explicit Bash/git permissions or commits are unreachable. [[concepts/agent-harness]]
 
-When spawning subagents that produce code or commits: explicitly grant Bash/git permissions.
-Subagents without commit authority silently produce unreachable work — force the orchestrator to commit on their behalf or grant permissions upfront.
+**Judge (preference feedback loop)**: invoke `/judge` AFTER generating code (>20 lines), numbered plans, or architecture decisions. BEFORE: skill checks. AFTER: judge. Silent on first strike; drafts rule on second consecutive low score. [[concepts/preference-feedback-loop]]
 
-### Preference feedback loop (judge auto-invocation)
-After generating any **code output**, **implementation plan**, or **design/architecture response**:
-invoke `/judge` skill at the END of the turn (post-generation, not pre-response).
+**ralph-structured**: suggest before any task with 3+ deliverables, feature-scope refactor, or >30 min estimate. Format: "This looks multi-step. `/ralph-structured` would break it into one-task-per-iteration with stuckness protection. Want to use it?" Don't auto-launch.
 
-**Timing:** skill checks (wiki-context, brainstorming, etc.) run BEFORE generating output.
-Judge runs AFTER generating output, before the turn ends. These are compatible — not competing.
-
-Trigger conditions (invoke):
-- Response contains ``` code blocks with substantial implementation (>20 lines)
-- Response is a numbered implementation plan or structured task breakdown
-- Response contains architectural decisions, tradeoff analysis, system design
-
-Do NOT invoke for: quick factual answers, lookups, shell commands, one-liners under ~100 words,
-conversation turns, ingest summaries.
-
-The judge is silent on first strike. On second consecutive low score for the same dimension and
-response type, it drafts a corrective rule for human approval.
-See wiki: [[concepts/preference-feedback-loop]]
-
-### ralph-structured (proactive suggestion)
-
-Before starting any multi-step implementation task, check for these signals:
-- 3+ distinct deliverables mentioned in the request
-- "implement", "build", "create", "migrate", "refactor" at feature scope (not single-file edits)
-- Task explicitly mentions testing or verification as part of the work
-- Sequential dependencies described ("first X, then Y, then Z")
-- Task likely spans multiple context windows (>30 min of work)
-
-If any signal is present: suggest `/ralph-structured` **before proceeding**. Format:
-
-> "This looks like a multi-step task. `/ralph-structured` would break it into a
-> task list with one-task-per-iteration enforcement and stuckness protection (auto-skips
-> tasks stuck after 3 attempts). Want to use it, or proceed directly?"
-
-Do NOT auto-launch. Do NOT suggest it for: single-file edits, config changes, quick fixes,
-wiki ingests, or anything estimated under 3 steps.
-
-### Council trigger (Codex peer review via Pi subprocess)
-
-Before committing to **architectural decisions**, **security-relevant changes**, or **irreversible operations** — fire a one-shot Codex second opinion via Pi subprocess.
-
-Trigger conditions (invoke before acting, not after):
-- New service, inter-system protocol, or data model design decision
-- Auth, permissions, secrets, or trust boundary changes
-- Schema migrations, destructive git ops, data deletions
-- Any design where you have already committed to a direction and need adversarial review
-
-Quick council (advisory, one Codex voice):
+**Council (Codex via Pi)**: fire before architectural decisions, security changes, irreversible ops.
 ```bash
-pi -p "Peer review: [decision summary]. Context: [relevant details]. Flag concerns." \
+pi -p "Peer review: [decision]. Flag concerns." \
    --model openai-codex/gpt-5.3-codex --no-session --no-extensions --no-skills
 ```
-
-Full council (two voices + Opus synthesis):
-```bash
-council.py --chairman "Should we [decision]?"
-# Voice A: Sonnet via claude -p
-# Voice B: Codex via pi -p --model openai-codex/gpt-5.3-codex --no-session
-# Chairman: Opus synthesizes disagreements
-```
-
-Rules:
-- Output is **advisory** — synthesize disagreements, do not defer blindly to Codex
-- Codex and Claude have different training biases; disagreement is signal, not noise
-- Pi is a subprocess tool — its output is read directly by the orchestrator, not via `.agents/` coordination bus
-- Do NOT invoke for: routine implementation, single-file edits, config changes, ingest operations, tasks under 30 min
+Output is advisory. Don't invoke for: routine impl, single-file edits, config, ingest, <30 min tasks.

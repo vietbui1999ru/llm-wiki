@@ -110,6 +110,7 @@ Mark server-computed fields clearly in docs (AIP-203): `create_time`, `uid`, `et
 **Intent**: errors must be machine-parseable and human-readable without leaking internals.
 
 **HTTP status code selection:**
+
 | Code | When |
 |------|------|
 | 400 | Bad request — invalid input, missing required field |

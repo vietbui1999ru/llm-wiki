@@ -1,10 +1,14 @@
 ---
 title: "Pi Agent (pi-mono)"
 type: entity
-tags: [agent-harness, multi-provider, typescript, coding-agent, council]
-sources: ["pi-monopackagescoding-agent at main.md", "Simple Pi Subagents.md"]
+tags: [agent-harness, multi-provider, typescript, coding-agent, council, minimal-harness, self-modifying]
+sources:
+  - "pi-monopackagescoding-agent at main.md"
+  - "Simple Pi Subagents.md"
+  - "Why You Should Try OpenCode Go and pi-coding-agent.md"
+  - "Building pi in a World of Slop — Mario Zechner.md"
 created: 2026-05-04
-updated: 2026-05-04
+updated: 2026-06-04
 ---
 
 # Pi Agent (pi-mono)
@@ -29,7 +33,7 @@ GitHub: https://github.com/badlogic/pi-mono
 
 ## Role in the Lean Workflow
 
-Pi Agent is used as the **council/multi-provider API layer**, not as a primary coding agent. The `@mariozechner/pi-ai` package provides the abstraction for routing council requests to different providers without hardcoding vendor-specific clients.
+Pi Agent is used in two distinct modes — as a **primary coding agent CLI** (replacement for Claude Code when using open models) and as a **council/multi-provider API layer**. The `@mariozechner/pi-ai` package provides the abstraction for routing council requests to different providers without hardcoding vendor-specific clients.
 
 ```typescript
 import { createAI } from "@mariozechner/pi-ai"
@@ -77,7 +81,35 @@ Rate limits on GitHub Models: ~150 req/day free tier; higher for GitHub Team/Ent
 
 ## AGENTS.md Support
 
-**Unverified**: Pi Agent may read `AGENTS.md`, but this has not been confirmed from source documentation. The raw source (`pi-monopackagescoding-agent at main.md`) does not explicitly state AGENTS.md loading behavior. Treat Pi Agent as requiring CLAUDE.md until verified.
+Pi reads `AGENTS.md` from `~/.pi/agent/AGENTS.md` (user-scoped) and repo-local `AGENTS.md`. Confirmed by source showing a complete user-scoped AGENTS.md with agent delegation rules, model tiers, and tool patterns.
+
+## Primary Harness: Difficulty-Tiered Model Routing
+
+From a real-world AGENTS.md using OpenCode Go + Codex:
+
+| Difficulty | Primary → Fallback chain |
+|---|---|
+| high | `openai-codex/gpt-5.5:high` → `opencode-go/kimi-k2.6:high` |
+| medium | `opencode-go/deepseek-v4-pro:high` → `gpt-5.4:low` → `gpt-5.3-codex-spark:low` |
+| low | `opencode-go/deepseek-v4-flash:off` → `gpt-5.4-mini:off` |
+
+Parallel delegation via `pueue` (background task queue):
+```bash
+pueue add -i --print-task-id -- "pi --model opencode-go/deepseek-v4-pro:high -p '<task>' < /dev/null"
+pueue wait <task-id> && pueue log <task-id>
+```
+
+**Why pi over Claude Code for open models (claimed):** CC has API compatibility issues with non-Anthropic providers; its instructions are tuned to Anthropic's long-context and instruction-following strengths, degrading on other models. Pi's minimal system prompt performs more predictably across providers.
+
+## Sandboxing with srt
+
+`srt` (Anthropic Sandbox Runtime) is Claude Code's sandboxing layer extracted as a standalone tool. Since pi has no built-in permission system, `srt` fills the gap:
+
+```bash
+srt -c pi   # run pi inside sandbox
+```
+
+Config `~/.srt-settings.json` controls allowed network domains, filesystem read/write paths, and violation exceptions. Abstracts `bubblewrap` (Linux) and `sandbox-exec` (macOS).
 
 ---
 
@@ -95,7 +127,26 @@ Three shipped agent types: Scout (Haiku, read-only filesystem), Researcher (Sonn
 
 Each agent is a markdown file: frontmatter declares tools, model, allowed sub-agents; body is the system prompt. Depth limiting via `agents` allowlist field — prevents recursive runaway. Default max depth: 3 layers.
 
-See [[summaries/pi-subagents-extension]] for full details.
+Three shipped agent types: Scout (Haiku, read-only filesystem), Researcher (Sonnet, web search/fetch), Worker (Sonnet/Opus, full tools + can spawn its own scouts and researchers). Depth limiting via `agents` allowlist field prevents recursive runaway. Default max depth: 3 layers.
+
+---
+
+## Design Philosophy (from "Building pi in a World of Slop")
+
+Pi's design is a direct reaction to context management failures in Claude Code and OpenCode:
+- CC system prompt changes every release; reminders injected mid-context with "may or may not be relevant" phrasing
+- OpenCode prunes tool outputs after a token threshold; injects LSP errors on every edit call
+- Neither gives full observability into what's happening to context
+
+**Minimal system prompt thesis**: models are post-trained as coding agents — they don't need 10,000 tokens explaining what one is. Pi's system prompt is a few lines. Skills (markdown files) are added begrudgingly.
+
+**Terminal Bench**: Pi scored 6th globally *before* compaction. Terminal Bench's own winner is a tmux-only harness with no file tools, no subagents — scores higher than native model harnesses. Validates: minimal harness > feature-heavy harness for coding tasks.
+
+**Self-modifying**: Pi ships documentation + extension code examples. The agent writes its own extensions on demand. Hot reload during session — game-dev iteration speed.
+
+**YOLO by default**: no permission dialogs. Security handled by extensions the user builds (or asks Pi to build). `srt` fills the gap for host-level sandboxing.
+
+**Pi as OpenCode's built-in agent core**: Peter embedded Pi inside OpenCode. Pi went from personal project → hit by every OpenCode instance's bot traffic.
 
 ---
 
@@ -103,5 +154,7 @@ See [[summaries/pi-subagents-extension]] for full details.
 
 - [[concepts/multi-vendor-adversarial-review]] — the council pattern Pi AI enables
 - [[comparisons/claude-code-vs-opencode-plugins]] — OpenCode as primary harness
-- [[entities/opencode]] — primary coding harness; Pi AI as its council layer
+- [[entities/opencode]] — alternative primary harness; Pi AI as its council layer
+- [[entities/opencode-go]] — OpenCode Go subscription; primary open-model provider in source AGENTS.md
+- [[concepts/multi-vendor-adversarial-review]] — adversarial review pattern Pi AI enables
 - [[concepts/agent-self-correction]] — wiki-as-oracle; Pi AI for cross-vendor review

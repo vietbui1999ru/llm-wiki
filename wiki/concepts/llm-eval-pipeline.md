@@ -5,8 +5,9 @@ tags: [llm-evaluation, evals, error-analysis, golden-dataset, ci-cd, production-
 sources:
   - "A pragmatic guide to LLM evals for devs.md"
   - "LLM Evals Everything You Need to Know.md"
+  - "Selecting The Right AI Evals Tool.md"
 created: 2026-05-13
-updated: 2026-05-13
+updated: 2026-05-27
 ---
 
 # LLM Eval Pipeline
@@ -87,6 +88,12 @@ Two types; choose based on failure type:
 
 For [[concepts/rag-evaluation]] specifically, split retrieval (IR metrics) and generation (LLM-judge) into separate evaluators.
 
+**RAG eval structure (Jason Liu's 6 RAG Evals)**:
+- Tier 1: IR metrics for retrieval (Recall@k, Precision@k, MRR)
+- Tier 2/3: (C|Q) context relevance, (A|C) faithfulness, (A|Q) answer relevance
+
+Retrieval eval datasets can be built synthetically: take docs from corpus, extract key facts, generate questions those facts would answer — gives query-document pairs without manual annotation. Validate off-the-shelf RAG judge prompts against your human labels before trusting them; once TPR/TNR is known, correct estimates to get actual failure rates.
+
 ---
 
 ## Stage 4: CI/CD Integration
@@ -135,6 +142,20 @@ False positives in guardrails are production bugs (block valid responses). Keep 
 
 ---
 
+## Agentic Workflow Evaluation
+
+Two phases:
+
+1. **End-to-end task success** — treat agent as black box; "did we meet user's goal?" Define precise success rule per task type; measure with human or calibrated LLM judge.
+
+2. **Step-level diagnostics** (after error analysis identifies which workflows fail most) — score tool choice, parameter extraction, error handling, context retention, efficiency.
+
+**Transition failure matrices**: rows = last successful state; columns = first failure location. Transforms trace complexity into a quantitative hotspot map for debugging. For multi-turn traces, focus on the first upstream failure — downstream failures cascade from it.
+
+**Abstention ability**: for applications requiring refusal of unanswerable questions, construct a balanced eval set of answerable and unanswerable questions. Binary PASS/FAIL: model must answer answerable AND refuse unanswerable. False positives (hallucinated answer to unanswerable) signal poor calibration. Literature search term: "Abstention Ability."
+
+---
+
 ## Safety and Red-Teaming
 
 Maintain a dedicated safety eval pipeline separate from core quality:
@@ -153,7 +174,19 @@ Maintain a dedicated safety eval pipeline separate from core quality:
 | Observability | LangSmith, Arize, Braintrust |
 | Traditional tests | pytest (backend), Playwright (UI), Great Expectations (data) |
 
-For tool selection criteria: [[summaries/selecting-ai-evals-tool]].
+**Tool selection criteria** (Hamel Husain, panel evaluation mid-2025; features change quickly):
+
+Four criteria: (1) workflow friction between failure observation and iteration, (2) human-in-loop annotation support (key missing feature across tools: axial coding), (3) transparency vs. magic (be skeptical of auto-generated rubrics that immediately score outputs), (4) ecosystem integration (bulk export + write-back annotation APIs required).
+
+Hamel's own preference: use platforms as backend data stores; run annotation from Jupyter notebooks with custom annotation interfaces.
+
+| Tool | Strengths | Weaknesses |
+|---|---|---|
+| LangSmith | Intuitive UI, smooth trace-to-playground, annotation queues, Prompt Canvas | Limited side-by-side prompt comparison, AI synthetic examples risk homogeneous datasets |
+| Braintrust | Clean UI, "money table" for frequency-sorting failures, human-in-loop interfaces | "Loop" AI scorer (rubric + immediate score) creates false confidence; proprietary BTQL query language |
+| Arize Phoenix | Notebook-centric (export to DataFrame), open-source/local-first, "hackable" | Text density UI issues; only point statistics per run, no histogram/distribution views |
+
+No single tool is superior in every dimension. Over-focusing on tools instead of process is a common mistake.
 
 ---
 
@@ -165,5 +198,3 @@ For tool selection criteria: [[summaries/selecting-ai-evals-tool]].
 - [[concepts/verification-pipeline]] — four-tier quality ladder for coding agents
 - [[concepts/indirect-prompt-injection]] — primary attack vector for safety evaluation
 - [[concepts/owasp-security-checklist]] — security eval checklist
-- [[summaries/pragmatic-engineer-llm-evals]] — NurtureBoss case study; three gulfs; flywheel
-- [[summaries/hamel-evals-faq]] — extended FAQ: guardrails, RAG eval, agentic eval, tooling

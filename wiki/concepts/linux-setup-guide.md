@@ -36,28 +36,25 @@ git clone git@github.com:vietbui1999ru/dotfiles.git ~/dotfiles
 # 5. Stow all dotfiles modules
 cd ~/dotfiles && stow claude opencode gemini codex
 
-# 6. Fix hardcoded macOS username in opencode config (all paths except qmd — not installed yet)
-sed -i "s|/Users/vietquocbui|$HOME|g" ~/.config/opencode/opencode.json
-
-# 7. Install Claude Code
+# 6. Install Claude Code
 npm install -g @anthropic-ai/claude-code
 
-# 8. Install pi (council voice B / AFK loop worker)
+# 7. Install pi (council voice B / AFK loop worker)
 npm install -g @earendil-works/pi-coding-agent
 
-# 9. Install opencode (curl script — no brew needed on Linux)
+# 8. Install opencode (curl script — no brew needed on Linux)
 curl -fsSL https://opencode.ai/install | bash
 
-# 10. Install Gemini CLI
+# 9. Install Gemini CLI
 npm install -g @google/gemini-cli
 
-# 11. Install wiki toolchain (uv + wiki-chat/index/mcp + git hook + ollama models)
+# 10. Install wiki toolchain (uv + wiki-chat/index/mcp + git hook + ollama models)
 cd ~/repos/llm-wiki && bash claude-setup/scripts/install.sh
 
-# 12. Install headroom (context compression) — requires uv from step 11
+# 11. Install headroom (context compression) — requires uv from step 10
 uv tool install headroom-ai
 
-# 13. Set environment variables (edit values, then reload)
+# 12. Set environment variables (edit values, then reload)
 cat >> ~/.zshrc << 'EOF'
 export ANTHROPIC_API_KEY="sk-ant-..."
 export GITHUB_TOKEN="ghp_..."         # optional: council Voice B (GitHub Models)
@@ -66,14 +63,10 @@ source ~/repos/llm-wiki/templates/env-model-routing.sh  # opencode model routing
 EOF
 source ~/.zshrc
 
-# 14. First claude run — downloads all plugins; qmd CLI becomes available after this
+# 13. First claude run — downloads all plugins; qmd CLI becomes available after this
 claude --version
 
-# 15. Fix qmd path in opencode.json (qmd binary now exists from plugin install)
-sed -i "s|/Users/vietquocbui/.nvm/versions/node/v[0-9.]*/bin/qmd|$(which qmd)|g" \
-  ~/.config/opencode/opencode.json
-
-# 16. Build wiki LightRAG index (one-time; ~30-60 min; costs ~$0.50 via Claude Haiku)
+# 14. Build wiki LightRAG index (one-time; ~30-60 min; costs ~$0.50 via Claude Haiku)
 wiki-index --full
 ```
 
@@ -161,19 +154,7 @@ cat ~/.config/opencode/opencode.json | head -5   # should show $schema line
 
 ---
 
-## Step 3: Fix hardcoded paths in opencode config
-
-The opencode config was created on macOS and has `/Users/vietquocbui` hardcoded. Fix before first use:
-
-```bash
-sed -i "s|/Users/vietquocbui|$HOME|g" ~/.config/opencode/opencode.json
-```
-
-This fixes: skills paths, instruction paths, wiki-mcp command. The `qmd` path fix comes after Step 7 (qmd CLI is installed by the Claude Code plugin, not yet available).
-
----
-
-## Step 4: Set environment variables
+## Step 3: Set environment variables
 
 Add to `~/.zshrc`:
 
@@ -196,7 +177,7 @@ Key uses by tool:
 
 ---
 
-## Step 5: Install AI tools
+## Step 4: Install AI tools
 
 ### Claude Code
 
@@ -276,7 +257,7 @@ See [[entities/headroom]] for deployment modes and CCR details.
 
 ---
 
-## Step 6: First Claude Code run — plugin installation
+## Step 5: First Claude Code run — plugin installation
 
 ```bash
 claude --version
@@ -300,24 +281,7 @@ Plugin cache: `~/.claude/plugins/cache/` — downloaded fresh, not in dotfiles.
 
 ---
 
-## Step 7: Fix qmd path in opencode config
-
-Now that qmd is installed (via Claude Code plugin), update opencode.json:
-
-```bash
-sed -i "s|/Users/vietquocbui/.nvm/versions/node/v[0-9.]*/bin/qmd|$(which qmd)|g" \
-  ~/.config/opencode/opencode.json
-```
-
-Verify:
-```bash
-grep '"qmd"' ~/.config/opencode/opencode.json -A 5
-# "command" should show the correct qmd path on this machine
-```
-
----
-
-## Step 8: Build wiki LightRAG index (one-time)
+## Step 6: Build wiki LightRAG index (one-time)
 
 ```bash
 wiki-index --full
@@ -340,7 +304,7 @@ After this, the post-commit hook handles incremental updates automatically.
 
 ---
 
-## Step 9: Verify
+## Step 7: Verify
 
 ```bash
 # Claude Code + plugins
@@ -380,8 +344,6 @@ ls ~/.claude/hooks/
 | Clone llm-wiki before `stow` | dotfiles rule symlinks use absolute path `~/repos/llm-wiki/...` |
 | `ollama serve` before `install.sh` | install.sh pulls models — needs daemon running |
 | `claude --version` before `qmd` CLI | qmd binary comes from Claude Code plugin, not npm |
-| First sed (Step 6) before `claude --version` | fixes all paths except qmd (not yet installed) |
-| Second sed (Step 15) after `claude --version` | qmd binary now exists; `$(which qmd)` resolves |
 | `uv` (install.sh) before `headroom-ai` | `uv tool install` requires uv |
 | `ANTHROPIC_API_KEY` before `wiki-index --full` | falls back to local model without it |
 | `$HOME/.local/bin` in PATH before `wiki-*` | install.sh copies binaries there |

@@ -120,6 +120,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/actor-model]] — actors as unit of concurrency; 3 primitives (send/spawn/become); mailbox semantics; no shared state; supervision trees + let-it-crash; virtual actor model (Orleans grains/silos); Erlang/Akka/Orleans/ProtoActor implementations
 - [[concepts/llm-observability]] — Observability patterns for LLM and agent systems: OpenTelemetry GenAI semantic conventions (incubating), span types, metrics, sampling, multi-agent trace correlation, production monitoring tools
 - [[concepts/slash-commands]] — Decision guide for Claude Code session commands: when to use /goal, /loop, /ralph-structured, /clear, /compact, /save-session, /handoff, and how they differ
+- [[concepts/linux-setup-guide]] — Authoritative step-by-step guide for bootstrapping the full AI workflow on a fresh Linux machine; AI-executable; covers dotfiles, Claude Code, plugins, wiki toolchain, LightRAG index
 
 ## Patterns
 - [[patterns/principles]] — SOLID (SRP/OCP/LSP/ISP/DIP), DRY, YAGNI, KISS, Law of Demeter, SoC, composition over inheritance; per-principle violation patterns and decision table

@@ -2,6 +2,11 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-06-09] create | Linux Machine Setup Guide
+
+New page:
+- wiki/concepts/linux-setup-guide.md — AI-executable bootstrap guide: system deps, dotfiles stow, Claude Code, plugin install, wiki toolchain, LightRAG index, ordering constraints, file ownership map
+
 ## [2026-06-08] ingest | What is an Agent Harness? — Parallel AI
 
 New pages:

@@ -25,43 +25,39 @@ sudo apt-get update && sudo apt-get install -y git curl zsh jq stow build-essent
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
 source ~/.nvm/nvm.sh && nvm install --lts && nvm use --lts
 
-# 3. Homebrew (needed for opencode + gemini-cli on Linux)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"  # or /usr/local for x86
-
-# 4. ollama (local models)
+# 3. ollama (local models)
 curl -fsSL https://ollama.com/install.sh | sh
 
-# 5. Clone repos — llm-wiki FIRST (dotfiles symlinks point here)
+# 4. Clone repos — llm-wiki FIRST (dotfiles symlinks point here)
 mkdir -p ~/repos
 git clone git@github.com:vietbui1999ru/llm-wiki.git ~/repos/llm-wiki
 git clone git@github.com:vietbui1999ru/dotfiles.git ~/dotfiles
 
-# 6. Stow all dotfiles modules
+# 5. Stow all dotfiles modules
 cd ~/dotfiles && stow claude opencode gemini codex
 
-# 7. Fix hardcoded macOS paths in opencode config
+# 6. Fix hardcoded macOS username in opencode config (all paths except qmd — not installed yet)
 sed -i "s|/Users/vietquocbui|$HOME|g" ~/.config/opencode/opencode.json
 
-# 8. Install Claude Code
+# 7. Install Claude Code
 npm install -g @anthropic-ai/claude-code
 
-# 9. Install pi (council voice B / AFK loop worker)
+# 8. Install pi (council voice B / AFK loop worker)
 npm install -g @earendil-works/pi-coding-agent
 
-# 10. Install opencode
-brew install opencode
+# 9. Install opencode (curl script — no brew needed on Linux)
+curl -fsSL https://opencode.ai/install | bash
 
-# 11. Install Gemini CLI
+# 10. Install Gemini CLI
 npm install -g @google/gemini-cli
 
-# 12. Install wiki toolchain (uv + wiki-chat/index/mcp + git hook + ollama models)
+# 11. Install wiki toolchain (uv + wiki-chat/index/mcp + git hook + ollama models)
 cd ~/repos/llm-wiki && bash claude-setup/scripts/install.sh
 
-# 13. Install headroom (context compression) — requires uv from step 12
+# 12. Install headroom (context compression) — requires uv from step 11
 uv tool install headroom-ai
 
-# 14. Set environment variables (edit and reload)
+# 13. Set environment variables (edit values, then reload)
 cat >> ~/.zshrc << 'EOF'
 export ANTHROPIC_API_KEY="sk-ant-..."
 export GITHUB_TOKEN="ghp_..."         # optional: council Voice B (GitHub Models)
@@ -70,18 +66,14 @@ source ~/repos/llm-wiki/templates/env-model-routing.sh  # opencode model routing
 EOF
 source ~/.zshrc
 
-# 15. Fix qmd path in opencode.json (qmd installed by Claude Code plugin, not yet available)
-#     Run this AFTER first `claude` invocation in step 16
-# sed -i "s|/Users/vietquocbui/.nvm/versions/node/v[0-9.]*/bin/qmd|$(which qmd)|g" ~/.config/opencode/opencode.json
-
-# 16. First claude run — downloads all plugins (qmd, superpowers, caveman, context7, etc.)
+# 14. First claude run — downloads all plugins; qmd CLI becomes available after this
 claude --version
 
-# 17. Fix qmd path now that the binary exists
+# 15. Fix qmd path in opencode.json (qmd binary now exists from plugin install)
 sed -i "s|/Users/vietquocbui/.nvm/versions/node/v[0-9.]*/bin/qmd|$(which qmd)|g" \
   ~/.config/opencode/opencode.json
 
-# 18. Build wiki LightRAG index (one-time; ~30-60 min; costs ~$0.50 via Claude Haiku)
+# 16. Build wiki LightRAG index (one-time; ~30-60 min; costs ~$0.50 via Claude Haiku)
 wiki-index --full
 ```
 
@@ -103,19 +95,6 @@ sudo apt-get update && sudo apt-get install -y \
 | `stow` | Dotfiles symlink management |
 | `zsh` | Shell (hooks use zsh shebang) |
 | `curl` | nvm, ollama, brew installers |
-
-### Homebrew (Linux)
-
-Required for `opencode` and `gemini-cli` (both distributed via brew formula):
-
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-# Add to shell after install:
-echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> ~/.zshrc
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-```
-
-On x86 Linux, path may be `/usr/local` instead of `/home/linuxbrew/.linuxbrew`.
 
 ### Node.js (via nvm)
 
@@ -243,7 +222,8 @@ pi -p "Peer review: [decision]. Flag concerns." \
 ### opencode
 
 ```bash
-brew install opencode
+curl -fsSL https://opencode.ai/install | bash
+# or: npm install -g opencode-ai
 opencode --version
 ```
 
@@ -399,12 +379,12 @@ ls ~/.claude/hooks/
 |-----------|-----|
 | Clone llm-wiki before `stow` | dotfiles rule symlinks use absolute path `~/repos/llm-wiki/...` |
 | `ollama serve` before `install.sh` | install.sh pulls models — needs daemon running |
-| `claude --version` before `qmd` | qmd binary comes from Claude Code plugin |
-| `claude --version` before qmd path fix in opencode.json | need `which qmd` to resolve |
+| `claude --version` before `qmd` CLI | qmd binary comes from Claude Code plugin, not npm |
+| First sed (Step 6) before `claude --version` | fixes all paths except qmd (not yet installed) |
+| Second sed (Step 15) after `claude --version` | qmd binary now exists; `$(which qmd)` resolves |
 | `uv` (install.sh) before `headroom-ai` | `uv tool install` requires uv |
 | `ANTHROPIC_API_KEY` before `wiki-index --full` | falls back to local model without it |
 | `$HOME/.local/bin` in PATH before `wiki-*` | install.sh copies binaries there |
-| Fix opencode.json paths before using opencode | config has hardcoded `/Users/vietquocbui` |
 
 ---
 

@@ -170,6 +170,7 @@ source ~/repos/llm-wiki/templates/env-model-routing.sh
 Reload: `source ~/.zshrc`
 
 Key uses by tool:
+
 | Key | Required by |
 |-----|------------|
 | `ANTHROPIC_API_KEY` | Claude Code, wiki-index (Haiku extraction), wiki-mcp synthesis |

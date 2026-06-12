@@ -1,6 +1,6 @@
 ---
 title: "Software Design Principles"
-type: concept
+type: pattern
 tags: [patterns, software-engineering, solid, dry, yagni, kiss]
 sources:
   - "The SOLID Principles of Object-Oriented Programming Explained in Plain English.md"
@@ -14,6 +14,11 @@ updated: 2026-05-06
 Reference for SOLID, DRY, YAGNI, KISS, Law of Demeter, separation of concerns, and composition over inheritance. Each principle is stated, justified, and illustrated with a canonical violation and its fix.
 
 Agent guidance: apply these when writing new classes/functions, and check against them during code review. Violation of multiple principles in one place is a refactor signal.
+
+## Agent Trigger
+
+**Apply when:** Making a design/structure decision or reviewing for design smells (SOLID, DRY, YAGNI, KISS, Law of Demeter).
+**Rule of thumb:** Apply the principle that names the smell you actually see; don't over-abstract ahead of need (YAGNI beats speculative DIP).
 
 ---
 

@@ -1,6 +1,6 @@
 # Global Prevention Rules
 
-Distilled from mistakes/. Max 30 lines. Updated by `synthesize-mistakes` skill.
+Distilled from mistakes/. Target ≤45 non-blank lines (gated by `claude-setup/scripts/check-gpr-cap.sh`). Updated by `synthesize-mistakes` skill — prune or promote a section to a pull page when the gate fires.
 Do NOT load raw-log.md or individual mistakes/*.md at startup — use qmd for lookup.
 
 ## CLI / Shell
@@ -28,17 +28,11 @@ Do NOT load raw-log.md or individual mistakes/*.md at startup — use qmd for lo
 ### documented-not-adopted patterns
 - Mark in index.md: `*(documented-not-adopted)*` — same convention as `*(stub)*` (2026-05-06)
 - Never use "more reliable" / "preferred" for documented-not-adopted patterns — use "theoretically stronger"
-- Inline status when cross-referencing: `[[concepts/instinct-clustering]] *(documented-not-adopted)*`
+- Inline status when cross-referencing: `[[concepts/PAGE]] *(documented-not-adopted)*` (use a still-unadopted page as the example — do not reuse a since-promoted one)
 
 ## Model Tier Auto-Selection
 
-Before any task, classify complexity and pick the tier:
-- **Haiku**: single-step mechanical work, lookups, boilerplate, bounded subagent tasks
-- **Sonnet** (default): multi-step implementation, review, debugging, standard orchestration
-- **Opus**: architecture decisions, security audits, irreversible ops, cross-source synthesis, hard bugs
-
-Agent spawning: always set `model` param explicitly on the `Agent` tool — never let it default silently.
-If a task warrants Opus but session runs on Sonnet: flag it to the user before proceeding.
+Classify complexity before every task and agent spawn. Always set the `model` param explicitly on the `Agent` tool — never default silently. If a task warrants Opus but the session runs Sonnet, flag it before proceeding. Full tier table + `subagent_type` mapping: [[concepts/model-tier-routing]] (pull via qmd).
 
 ## Epistemic Discipline
 
@@ -47,6 +41,8 @@ If a task warrants Opus but session runs on Sonnet: flag it to the user before p
 - When stating a claim without a wiki or context7 source: prefix it with `(training data — verify)`.
 - This applies to: code recommendations, API behavior, library versions, benchmarks, model names, tool flags, architectural claims.
 - Exception: trivial facts with zero ambiguity (e.g., "Python uses indentation"). Doubt scales with specificity and recency.
+- Before asserting a tool/service is "not used": check live env (env vars, listening ports, processes, gitignored machine-local config) — not just docs/manifests/memory. "Not in repo deps" ≠ "not active in this session" (2026-06-10)
 
 ## Skills / Tools
 - Before running any test command: check `package.json` scripts.test — do NOT assume `npx jest`; Vitest projects produce misleading Jest errors from worktree files (2026-05-18)
+- Never chain an evaluate step and its record step unconditionally — gate the record on the evaluate output's error branch (judge-eval → judge-state add, 2026-06-09)

@@ -1,6 +1,6 @@
 ---
 title: "Backend Patterns"
-type: concept
+type: pattern
 tags: [backend, patterns, middleware, authentication, service-layer, repository, dependency-injection, queue, api-gateway]
 sources: ["Design Patterns for Modern Backend Development – with Example Use Cases.md", "Design Patterns for Modern Backend Development.md"]
 created: 2026-05-06
@@ -10,6 +10,11 @@ updated: 2026-05-06
 # Backend Patterns
 
 Structural and behavioral patterns for server-side systems. Covers how HTTP requests flow through a server, how business logic is organized, and how external dependencies are managed. Focus is on decision criteria and anti-patterns — not just definitions.
+
+## Agent Trigger
+
+**Apply when:** Writing or reviewing server-side middleware, auth, service/repository layers, queues/workers, or API gateways.
+**Rule of thumb:** Enforce auth at the right layer, keep service logic out of controllers, design queues for at-least-once + DLQ.
 
 ---
 

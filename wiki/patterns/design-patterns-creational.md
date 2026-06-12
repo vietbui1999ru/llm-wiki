@@ -1,6 +1,6 @@
 ---
 title: "Creational Design Patterns"
-type: concept
+type: pattern
 tags: [patterns, software-engineering, oop, typescript, go]
 sources:
   - "Factory Method.md"
@@ -19,6 +19,11 @@ updated: 2026-05-06
 The five GoF creational patterns: when to reach for each, how they're structured, and what to avoid.
 
 All five answer the same question — "how do I create an object?" — but at different levels of complexity and constraint. See the [[patterns/principles]] page for OCP and DIP, which these patterns repeatedly apply.
+
+## Agent Trigger
+
+**Apply when:** Deciding how objects get constructed — Factory Method, Abstract Factory, Builder, Prototype, or Singleton.
+**Rule of thumb:** Introduce a creational pattern only when construction varies or must be controlled — avoid Singleton unless truly required.
 
 ---
 

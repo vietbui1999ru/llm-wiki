@@ -1,6 +1,6 @@
 ---
 title: "Concurrency and Parallelism Patterns"
-type: concept
+type: pattern
 tags: [patterns, concurrency, systems, software-engineering]
 sources:
   - "Mastering Concurrency A Guide for Software Engineers.md"
@@ -12,6 +12,11 @@ updated: 2026-05-06
 # Concurrency and Parallelism Patterns
 
 Reference and agent guide for thread safety, synchronization primitives, async patterns, parallel algorithms, and concurrency failure modes.
+
+## Agent Trigger
+
+**Apply when:** Writing or reviewing multithreaded/async code, shared state, locks, or parallel algorithms.
+**Rule of thumb:** Prefer immutability/message-passing over shared locks; guard every shared mutable access; watch for deadlock ordering and async pitfalls.
 
 ---
 

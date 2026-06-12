@@ -44,6 +44,7 @@ When Viet drops a source into raw/ and says "ingest [filename]":
 5. Update or create entity/concept pages touched by this source.
 6. Append to log.md: `## [YYYY-MM-DD] ingest | <title>`
 7. Note contradictions with existing pages explicitly.
+8. If the updated page is cited by a wikilink in `claude-setup/rules/applied-ai.md` (always-loaded Tier-0 rules), review that rule for staleness before closing the ingest — the summary must still match the page's current recommendation.
 
 ### Ingest (PDF source)
 When Viet drops a PDF into pdfs/ and says "ingest [filename.pdf]":
@@ -67,7 +68,8 @@ When Viet says "lint the wiki":
 2. Flag stale claims where newer sources contradict older pages.
 3. Identify concepts mentioned but lacking their own page.
 4. Suggest 3-5 sources to look for next based on gaps.
-5. Append to log.md: `## [YYYY-MM-DD] lint`
+5. Tier-0 distillation sync: for each wikilink cited in `claude-setup/rules/applied-ai.md` and `mistakes/global-prevention-rules.md` (the always-loaded files), open the linked page and verify its current recommendation still matches the Tier-0 claim. Flag any mismatch — these files are the highest-leverage drift surface because every session loads them.
+6. Append to log.md: `## [YYYY-MM-DD] lint`
 
 ## context7 lookup rule
 Before using any library, framework, CLI tool, or API — resolve current docs via context7 MCP:
@@ -121,6 +123,8 @@ wiki/entities/     # named things (tools, people, projects)
 wiki/concepts/     # ideas and patterns
 wiki/comparisons/  # side-by-side analyses
 wiki/syntheses/    # cross-source theses
+wiki/patterns/     # parallel software-engineering reference track (SOLID, GoF, refactoring, etc.) — NOT derived from concepts/; a peer human-learning track
+wiki/systems/      # system-level design and architecture pages (distributed systems, scalability, data modeling)
 
 ## Optional frontmatter fields
 

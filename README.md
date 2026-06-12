@@ -10,6 +10,8 @@ A personal knowledge base on AI and agent engineering, maintained collaborativel
 
 This is not a static documentation site. It is a **compounding knowledge system**: each source ingested enriches existing pages, surfaces contradictions, and creates new cross-links. Over time it becomes a queryable second brain on its domain.
 
+> **New here?** Read [`ONBOARDING.md`](ONBOARDING.md) — a step-by-step guide to adopting this repo as your own *agent-first* knowledge harness. To publish the wiki as a hosted docs site (with a per-page local knowledge graph), see [`docs/publishing-mintlify.md`](docs/publishing-mintlify.md).
+
 ---
 
 ## Purpose

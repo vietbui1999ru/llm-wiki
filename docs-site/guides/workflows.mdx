@@ -1,0 +1,299 @@
+---
+title: "Workflows"
+description: "START([Orchestrator session starts])"
+---
+# Workflows
+
+## Chart 1 — Claim Task Flow (Local Worktree Pool)
+
+```mermaid
+flowchart TD
+    START([Orchestrator session starts])
+
+    subgraph SETUP["Orchestrator: prep work"]
+        GRILL["grill-me skill<br>align requirements"]
+        PRD["to-prd skill<br>write PRD"]
+        ISSUES["to-issues skill<br>break into vertical slices"]
+        INBOX_WRITE["write TASK-*.md<br>to .agents/inbox/"]
+        WORKTREES["create git worktrees<br>.trees/TASK-001/ etc."]
+    end
+
+    subgraph AGENTS["Parallel agent sessions — each in own worktree"]
+        direction TB
+        CLAIM["claim.sh: mv inbox/TASK-N.md<br>→ claimed/TASK-N.md<br>(atomic — POSIX mv)"]
+        READ_TASK["read claimed task file<br>scope, acceptance criteria<br>do-not-touch list"]
+        IMPL["implement in worktree<br>isolated filesystem"]
+        COMMIT[git commit changes]
+        MOVE_DONE["mv claimed/TASK-N.md<br>→ done/TASK-N.md"]
+        STATUS["echo DONE ><br>claimed/TASK-N.status"]
+    end
+
+    subgraph RACE["Race condition: two agents, one task"]
+        AG1["Agent A: mv inbox/TASK-3.md claimed/"]
+        AG2["Agent B: mv inbox/TASK-3.md claimed/"]
+        WIN["One succeeds → works on TASK-3"]
+        LOSE["Other gets ENOENT → tries next task in inbox"]
+    end
+
+    subgraph KANBAN["/kanban-status at any time"]
+        BOARD["╔ INBOX ╦ CLAIMED ╦ DONE ╗<br>║TASK-3 ║TASK-1 @A║TASK-2✓║<br>║TASK-4 ║TASK-5 @B║       ║"]
+    end
+
+    subgraph MERGE["Orchestrator: integrate"]
+        REVIEW["code-reviewer agent<br>per completed task"]
+        COUNCIL_GATE{"design-risk?"}
+        COUNCIL_RUN["pi -p peer review<br>--model openai-codex/gpt-5.3-codex<br>--no-session"]
+        MERGE_WT["merge worktrees<br>into main branch"]
+        VERIFY["verify"]
+    end
+
+    START --> GRILL --> PRD --> ISSUES --> INBOX_WRITE --> WORKTREES
+    WORKTREES -->|spawn N agents| CLAIM
+
+    CLAIM --> READ_TASK --> IMPL --> COMMIT --> MOVE_DONE --> STATUS
+
+    AG1 & AG2 -->|race| WIN & LOSE
+    LOSE -->|try next| CLAIM
+
+    STATUS -->|poll or notify| MERGE
+    MOVE_DONE --> KANBAN
+
+    MERGE --> REVIEW --> COUNCIL_GATE
+    COUNCIL_GATE -->|yes| COUNCIL_RUN --> MERGE_WT
+    COUNCIL_GATE -->|no| MERGE_WT --> VERIFY
+```
+
+---
+
+## Chart 2 — Single Machine Day-to-Day Workflow
+
+```mermaid
+flowchart TD
+    VIET([Viet — single machine])
+
+    subgraph MORNING["Morning: knowledge intake"]
+        DROP_SRC["drop source into raw/ or pdfs/"]
+        PDF_HOOK["UserPromptSubmit hook<br>auto-runs docling on *.pdf"]
+        INGEST["Claude: ingest source<br>Pre-Ingest comprehension check"]
+        WIKI_WRITE["write wiki/ pages<br>update index.md + log.md"]
+        GIT_CMT[git commit]
+        QMD_HOOK["post-commit hook:<br>qmd update + embed<br>foreground"]
+        LR_HOOK["post-commit hook:<br>wiki-index in background"]
+    end
+
+    subgraph QUERY["Anytime: query + review"]
+        SKILL_Q["wiki-context skill<br>qmd BM25 + vector search"]
+        CHAT_Q["wiki-chat TUI<br>LightRAG hybrid graph"]
+        MCP_Q["wiki-mcp<br>Claude Code MCP tool"]
+    end
+
+    subgraph DESIGN["Design / decision"]
+        COUNCIL_Q{"scope?"}
+        QUICK["pi -p peer review<br>openai-codex/gpt-5.3-codex<br>--no-session<br>advisory output only"]
+        FULL["council.py --chairman<br>Voice A: Sonnet (claude -p)<br>Voice B: Codex (pi -p)<br>Chair: Opus synthesis"]
+        COUNCIL_OUT[".council/voice_*.md<br>+ synthesis.md<br>auto-committed"]
+    end
+
+    subgraph IMPL["Implementation work"]
+        PLAN["to-prd + to-issues<br>decompose into tasks"]
+        SHORT["in-process agents<br>≤5 tasks, <30 min each"]
+        RALPH_S["ralph-structured<br>goal → tasks.json → /ralph-loop<br>one-task-per-iteration<br>stuckness protection (3 attempts)"]
+        LONG["worktree pool<br>spawn-parallel-agents<br>claim-task protocol"]
+    end
+
+    subgraph EOD["End of session"]
+        SAVE["save-session skill<br>write .claude/session-state.md<br>status: active"]
+        NEXT["next session: startup hook<br>auto-injects session state<br>resume from where left off"]
+    end
+
+    subgraph MISTAKES["Continuous: error capture"]
+        ERR_HOOK["PostToolUse:Bash hook<br>capture-bash-error.sh<br>→ mistakes/raw-log.md"]
+        SYNTH["synthesize-mistakes<br>distill → global-prevention-rules.md"]
+    end
+
+    subgraph SAFETY["Always-on hooks"]
+        BASH_GATE["PreToolUse:Bash<br>enforce-bash-safety.sh<br>blocks: rm -rf / home,<br>force-push main/master,<br>git reset --hard origin/"]
+        JUDGE_REM["PostToolUse:Write/Edit<br>judge-reminder.sh<br>≥25 lines → JUDGE-REMINDER"]
+        AGENT_WL["PreToolUse:Agent<br>enforce-agent-whitelist.sh<br>blocks unknown subagent_type<br>requires explicit model: param"]
+    end
+
+    VIET --> DROP_SRC --> PDF_HOOK --> INGEST --> WIKI_WRITE --> GIT_CMT
+    GIT_CMT --> QMD_HOOK & LR_HOOK
+
+    VIET -->|"ask question"| SKILL_Q & CHAT_Q & MCP_Q
+
+    VIET -->|"architecture/security/irreversible"| COUNCIL_Q
+    COUNCIL_Q -->|"quick check"| QUICK
+    COUNCIL_Q -->|"full synthesis"| FULL --> COUNCIL_OUT
+
+    VIET -->|"build something"| PLAN --> SHORT & RALPH_S & LONG
+
+    VIET -->|"wrapping up"| SAVE --> NEXT
+
+    ERR_HOOK -.->|"~100 entries"| SYNTH
+
+    BASH_GATE -.-o IMPL
+    JUDGE_REM -.-o IMPL
+    AGENT_WL -.-o IMPL
+```
+
+**Council trigger conditions** (use DESIGN path, not IMPL):
+- New service, inter-system protocol, or data model design
+- Auth, permissions, secrets, trust boundary changes
+- Schema migrations or destructive git ops
+- Use quick `pi -p` for a single advisory check; full `council.py` when synthesis across voices is needed
+
+---
+
+## Chart 3 — Multi-Machine Future Architecture (Planned)
+
+```mermaid
+flowchart TD
+    subgraph M1["Machine A — primary (design + orchestration)"]
+        VIET_A[Viet / orchestrator session]
+        GRILL_A["grill-me + to-prd"]
+        ISSUE_CREATE["gh issue create<br>--label ready-for-agent<br>(handoff body format)"]
+        COUNCIL_A["council.py<br>design decisions"]
+        SESSION_A["save-session<br>→ .claude/session-state.md"]
+    end
+
+    subgraph GH["GitHub — shared coordination layer"]
+        ISSUES_DB["GitHub Issues<br>task queue + handoff artifacts"]
+        LABEL_GATE{"label?<br>ready-for-agent"}
+        ACTIONS["GH Actions<br>self-hosted runner dispatch"]
+        COMMENTS["issue comments<br>return-handoff per hop"]
+    end
+
+    subgraph M2["Machine B — worker (AFK implementation)"]
+        RUNNER["self-hosted runner<br>claude CLI + gh CLI"]
+        CLAIM_GH["gh issue list<br>--label ready-for-agent<br>claim by re-labeling"]
+        IMPL_B[implement in worktree]
+        PUSH_B["push branch<br>comment result on issue"]
+    end
+
+    subgraph M3["Machine C — worker (parallel)"]
+        RUNNER_C[self-hosted runner]
+        CLAIM_C[claim different issue]
+        IMPL_C[implement]
+        PUSH_C[push + comment]
+    end
+
+    subgraph MERGE_FLOW["Back on Machine A — integrate"]
+        PR_REVIEW["review PRs<br>code-reviewer agent"]
+        HUMAN_GATE{"human merge<br>approval"}
+        SHIP[merge to main]
+        WIKI_UPDATE["ingest learnings<br>back to wiki"]
+    end
+
+    VIET_A --> GRILL_A --> ISSUE_CREATE --> ISSUES_DB
+    VIET_A --> COUNCIL_A
+    VIET_A --> SESSION_A
+
+    ISSUES_DB --> LABEL_GATE
+    LABEL_GATE -->|auto-dispatch| ACTIONS --> RUNNER
+    LABEL_GATE -->|manual| RUNNER_C
+
+    RUNNER --> CLAIM_GH --> IMPL_B --> PUSH_B --> COMMENTS
+    RUNNER_C --> CLAIM_C --> IMPL_C --> PUSH_C --> COMMENTS
+
+    COMMENTS -->|notify| VIET_A
+    VIET_A --> PR_REVIEW --> HUMAN_GATE -->|approve| SHIP
+    SHIP --> WIKI_UPDATE --> ISSUES_DB
+
+    style GH fill:#1a1a2e,stroke:#4a4aff
+    style M2 fill:#1a2e1a,stroke:#4aff4a
+    style M3 fill:#1a2e1a,stroke:#4aff4a
+    style MERGE_FLOW fill:#2e1a1a,stroke:#ff4a4a
+```
+
+### Multi-machine gap analysis (what needs building)
+
+| Component                         | Status              | Blocker                                          |
+| --------------------------------- | ------------------- | ------------------------------------------------ |
+| GitHub issue as task queue        | concept/stub        | needs impl + label convention finalized          |
+| Self-hosted runner + CC CLI auth  | not built           | `ANTHROPIC_API_KEY` secret + runner setup        |
+| Atomic claim via label (not `mv`) | not designed        | GitHub label race condition less clean than `mv` |
+| Return-handoff via issue comment  | designed, not built | polling model undefined                          |
+| Wiki sync across machines         | git push/pull       | already works — wiki is a git repo               |
+| Session state sync                | not designed        | `.claude/session-state.md` is local-only         |
+
+
+<iframe srcDoc="<!doctype html><html><head><meta charset=&quot;utf-8&quot;><style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel input[type=range]{width:100%;margin:0}
+#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><div id=&quot;gear&quot;>⚙</div>
+<div id=&quot;panel&quot;>
+<label>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<div class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;><span>Directional arrows</span></div>
+</div>
+<div id=&quot;g&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;guides/workflows&quot;,&quot;label&quot;:&quot;Workflows&quot;,&quot;group&quot;:&quot;guides&quot;,&quot;val&quot;:1}],LINKS=[],CUR=&quot;guides/workflows&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return 'rgba(255,255,255,0.12)';})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return 'rgba(255,255,255,0.4)';})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle='#fff';ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+function fit(){G.zoomToFit(400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){try{G.pauseAnimation();}catch(e){}}function resume(){try{G.resumeAnimation();}catch(e){}}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(_){}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){try{hd.releasePointerCapture(e.pointerId);}catch(_){}hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(_){}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />

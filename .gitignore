@@ -24,3 +24,6 @@ raw/
 .obsidian
 .claude
 .claude/pre-digest/
+.playwright-mcp/
+docs-site/.mintlify/
+/tmp/mint-dev.log

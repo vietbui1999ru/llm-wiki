@@ -31,9 +31,9 @@ Documentation is the layer between code and the people who use or contribute to 
 
 Every doc should be written for exactly one audience:
 
-| Audience | Needs |
-|---|---|
-| **Users** | What problem it solves, how to install it, how to use it, how to get support |
+| Audience                    | Needs                                                                              |
+| --------------------------- | ---------------------------------------------------------------------------------- |
+| **Users**                   | What problem it solves, how to install it, how to use it, how to get support       |
 | **Contributors/Developers** | How the code is organized, design decisions, contribution standards, API contracts |
 
 Mixing audiences in one document creates noise for both. Separate user-facing docs from contributor docs.

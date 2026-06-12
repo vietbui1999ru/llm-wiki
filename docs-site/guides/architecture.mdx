@@ -1,0 +1,457 @@
+---
+title: "llm-wiki Architecture"
+description: "subgraph REPO['llm-wiki repo']"
+---
+# llm-wiki Architecture
+
+## Chart 1 — System Overview
+
+```mermaid
+graph TD
+    subgraph REPO["llm-wiki repo"]
+        RAW[raw/ — immutable sources]
+        WIKI[wiki/ — LLM-maintained pages]
+        IDX[index.md + log.md]
+        SKILLS[skills/ — local skill overrides]
+        SETUP[claude-setup/ — config source of truth]
+        TMPL[templates/ — executables]
+        MISTAKES[mistakes/ — error log]
+    end
+
+    subgraph INDEXES["Search Indexes"]
+        QMD[qmd — BM25 + vector]
+        LIGHTRAG[.lightrag/ — graph index]
+    end
+
+    subgraph QUERY["Query Layer"]
+        CHAT[wiki-chat — TUI]
+        MCP[wiki-mcp — MCP server]
+        SKILL_WC[wiki-context skill]
+    end
+
+    subgraph COUNCIL["Council / Review"]
+        COUNCIL_PY[council.py]
+        VOICE_A[Voice A — Sonnet<br>claude -p --model claude-sonnet-4-6]
+        VOICE_B[Voice B — Codex<br>pi -p --model openai-codex/gpt-5.3-codex<br>--no-session]
+        CHAIR[Chairman — Opus<br>claude -p --model claude-opus-4-7]
+    end
+
+    subgraph CONFIG["Config Distribution"]
+        DOTFILES[~/dotfiles/claude/.claude]
+        HOME_CLAUDE[~/.claude]
+    end
+
+    RAW -->|ingest| WIKI
+    WIKI --> IDX
+    WIKI -->|post-commit hook| QMD
+    WIKI -->|post-commit hook| LIGHTRAG
+
+    QMD --> SKILL_WC
+    LIGHTRAG --> CHAT
+    LIGHTRAG --> MCP
+
+    SETUP -->|symlinks| DOTFILES
+    DOTFILES -->|stow| HOME_CLAUDE
+
+    COUNCIL_PY --> VOICE_A & VOICE_B
+    VOICE_A & VOICE_B --> CHAIR
+```
+
+---
+
+## Chart 2 — Knowledge Ingestion Pipeline
+
+```mermaid
+flowchart LR
+    SRC_MD[raw/*.md\nweb-scraped sources]
+    SRC_PDF[pdfs/*.pdf\nresearch papers]
+
+    DOCLING[docling\nPDF → Markdown]
+    CLAUDE_INGEST[Claude\ningest operator]
+
+    subgraph WIKI_WRITE["Wiki Write"]
+        SUMMARY[wiki/summaries/]
+        CONCEPT[wiki/concepts/]
+        ENTITY[wiki/entities/]
+        COMPARE[wiki/comparisons/]
+        SYNTH[wiki/syntheses/]
+    end
+
+    IDX[index.md\ncatalog]
+    LOG[log.md\nappend-only log]
+
+    GIT_COMMIT[git commit]
+
+    subgraph HOOK["post-commit hook"]
+        QMD_UPDATE[qmd update + embed\nBM25 + vector]
+        WIKI_IDX[wiki-index\ngraph extraction\nbackground]
+    end
+
+    QMD_STORE[.qmd/ index]
+    LR_STORE[.lightrag/ graph]
+
+    SRC_MD --> CLAUDE_INGEST
+    SRC_PDF --> DOCLING --> CLAUDE_INGEST
+
+    CLAUDE_INGEST --> WIKI_WRITE
+    CLAUDE_INGEST --> IDX
+    CLAUDE_INGEST --> LOG
+
+    WIKI_WRITE --> GIT_COMMIT
+    IDX --> GIT_COMMIT
+    LOG --> GIT_COMMIT
+
+    GIT_COMMIT --> QMD_UPDATE --> QMD_STORE
+    GIT_COMMIT --> WIKI_IDX --> LR_STORE
+```
+
+---
+
+## Chart 3 — Retrieval Stack
+
+```mermaid
+graph TD
+    Q[User query]
+
+    subgraph QMD_LAYER["qmd — keyword + semantic"]
+        LEX[BM25 lexical search]
+        VEC[vector semantic search]
+        HYDE[HyDE hypothetical doc]
+        RERANK[score + rerank]
+    end
+
+    subgraph LIGHTRAG_LAYER["LightRAG — graph-aware"]
+        LOCAL[local mode\nentity-focused]
+        GLOBAL[global mode\ncommunity summaries]
+        HYBRID[hybrid mode\nentity + community]
+        NAIVE[naive mode\nflat vector]
+        OLLAMA_EMB[nomic-embed-text\nvia ollama]
+        LLM_SYNTH[synthesis LLM\nqwen2.5:3b or Haiku]
+    end
+
+    subgraph FRONTENDS["Access Points"]
+        SKILL_WC[wiki-context skill\nClaude Code]
+        CHAT_TUI[wiki-chat\nTUI REPL]
+        MCP_SRV[wiki-mcp\nMCP server]
+    end
+
+    Q --> SKILL_WC --> LEX & VEC & HYDE --> RERANK
+    Q --> CHAT_TUI --> HYBRID
+    Q --> MCP_SRV --> HYBRID
+
+    HYBRID --> LOCAL & GLOBAL
+    LOCAL & GLOBAL --> OLLAMA_EMB
+    OLLAMA_EMB --> LLM_SYNTH
+
+    RERANK --> WIKI_PAGES[wiki/*.md pages\nreturned as context]
+    LLM_SYNTH --> ANSWER[synthesized answer]
+```
+
+---
+
+## Chart 4 — Council System
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant council.py
+    participant VoiceA as Voice A (Sonnet / claude -p)
+    participant VoiceB as Voice B (Codex / pi -p)
+    participant Chair as Chairman (Opus / claude -p)
+    participant Files as .council/ files
+    participant Git
+
+    User->>council.py: question [--chairman] [--add MODEL]
+
+    par parallel dispatch
+        council.py->>VoiceA: claude -p --model claude-sonnet-4-6
+        council.py->>VoiceB: pi -p --model openai-codex/gpt-5.3-codex --no-session
+    end
+
+    VoiceA-->>Files: voice_a.md
+    VoiceB-->>Files: voice_b.md
+
+    alt --chairman flag set
+        council.py->>Chair: claude -p --model claude-opus-4-7\n(synthesis prompt — all voice files concatenated)
+        Chair-->>Files: synthesis.md
+    end
+
+    council.py->>Git: git add .council/ && git commit
+    council.py-->>User: stdout summary
+```
+
+**Voice B is a Pi subprocess** — `pi -p --no-session` produces clean stdout. `opencode run` also writes response to stdout but with a 3-line ANSI header; strip it with:
+```bash
+opencode run "question" -m github-copilot/gpt-5.2-codex 2>/dev/null \
+  | sed 's/\x1b\[[0-9;]*m//g' | grep -v "^>" | grep -v "^[[:space:]]*$"
+```
+
+**Quick council (no council.py):**
+```bash
+# Voice B — Pi (GPT-5.3-codex, clean stdout)
+pi -p "peer review: [question]" --model openai-codex/gpt-5.3-codex --no-session --no-extensions --no-skills
+
+# Voice C — OpenCode run (GPT-5.2-codex via Copilot, filterable stdout)
+opencode run "peer review: [question]" -m github-copilot/gpt-5.2-codex 2>/dev/null \
+  | sed 's/\x1b\[[0-9;]*m//g' | grep -v "^>" | grep -v "^[[:space:]]*$"
+```
+
+**Provider status (validated):**
+- `openai-codex/` via Pi → ✅ clean stdout (ChatGPT Team subscription)
+- `github-copilot/gpt-5.2-codex` via `opencode run` → ✅ filterable stdout (Copilot subscription)
+- `github-copilot/claude-sonnet-4.5` via `opencode run` → ❌ model_not_supported (Claude via Copilot unsupported in run mode)
+- `opencode/` via Pi → ⏳ add payment method at opencode.ai/workspace billing to unlock
+
+---
+
+## Chart 5 — Config Distribution (Source of Truth)
+
+```mermaid
+graph LR
+    subgraph LLMWIKI["llm-wiki/claude-setup/  ← source of truth"]
+        CS_CLAUDE[CLAUDE.md]
+        CS_RULES[rules/*.md]
+        CS_AGENTS[agents/*.md]
+        CS_SKILLS[skills/*/SKILL.md]
+        CS_PLUGINS[plugins/config.json]
+        CS_SETTINGS[settings.json]
+    end
+
+    subgraph DOTFILES["~/dotfiles/claude/.claude/  ← symlinks to llm-wiki"]
+        DF_CLAUDE[CLAUDE.md →]
+        DF_RULES[rules/*.md →]
+        DF_AGENTS[agents/*.md →]
+        DF_SKILLS[skills/ →]
+        DF_SETTINGS[settings.json →]
+    end
+
+    subgraph ACTIVE["~/.claude/  ← stow-managed symlinks"]
+        AC_CLAUDE[CLAUDE.md]
+        AC_RULES[rules/]
+        AC_AGENTS[agents/]
+        AC_SKILLS[skills/]
+        AC_SETTINGS[settings.json]
+    end
+
+    subgraph SHARED["~/dotfiles/shared/  ← generated"]
+        SH_AGENTS[AGENTS.md\nsync-agent-rules.sh]
+    end
+
+    subgraph OTHER["Other AI tools"]
+        GEMINI[~/.gemini/]
+        CODEX_DIR[~/.codex/]
+        OPENCODE[~/.config/opencode/]
+    end
+
+    CS_RULES -->|ln -s| DF_RULES
+    CS_AGENTS -->|ln -s| DF_AGENTS
+    CS_CLAUDE -->|ln -s| DF_CLAUDE
+    CS_SETTINGS -->|ln -s| DF_SETTINGS
+
+    DF_CLAUDE -->|stow| AC_CLAUDE
+    DF_RULES -->|stow| AC_RULES
+    DF_AGENTS -->|stow| AC_AGENTS
+    DF_SETTINGS -->|stow| AC_SETTINGS
+
+    CS_RULES -->|sync-agent-rules.sh| SH_AGENTS
+    SH_AGENTS -->|cp| GEMINI
+    SH_AGENTS -->|cp| CODEX_DIR
+    SH_AGENTS -->|cp| OPENCODE
+```
+
+---
+
+## Chart 6 — Hooks / Automation
+
+```mermaid
+flowchart TD
+    subgraph PRETOOL["PreToolUse hooks"]
+        PTU_BASH[PreToolUse:Bash]
+        PTU_WRITE[PreToolUse:Write/Edit]
+        PTU_AGENT[PreToolUse:Agent]
+    end
+
+    subgraph POSTTOOL["PostToolUse hooks"]
+        POST_BASH[PostToolUse:Bash]
+        POST_WRITE[PostToolUse:Write/Edit]
+    end
+
+    subgraph STOP_HOOK["Stop hook"]
+        STOP[Stop]
+    end
+
+    subgraph UPS_HOOK["UserPromptSubmit hook"]
+        UPS[UserPromptSubmit]
+    end
+
+    subgraph GIT_HOOKS["Git hooks"]
+        PC[post-commit hook]
+    end
+
+    PTU_BASH --> BASH_GATE["enforce-bash-safety.sh<br>blocks: rm -rf / or ~<br>git push --force to main/master<br>git reset --hard origin/"]
+
+    PTU_WRITE --> LINT_PROTECT["protect-lint-configs.sh<br>blocks edits to:<br>biome.json, .eslintrc*, .noslop,<br>.golangci.yml, .shellcheckrc"]
+
+    PTU_AGENT --> AGENT_WL["enforce-agent-whitelist.sh<br>blocks unknown subagent_type<br>requires explicit model: param<br>whitelist = ~/.claude/agents/*.md"]
+
+    POST_BASH --> ERR_CAP["capture-bash-error.sh<br>exit≠0 → mistakes/raw-log.md"]
+    POST_BASH --> PUB_KB["publish-ai-kb.sh<br>when log.md changes<br>→ ~/.claude/wiki/ai-kb/00-index.md"]
+
+    POST_WRITE --> JUDGE_REM["judge-reminder.sh<br>≥25 lines written to code file<br>→ JUDGE-REMINDER in context"]
+    POST_WRITE --> LINT_REPORT["lint-on-write.sh (read-only)<br>.sh → shellcheck<br>.json → jq validation<br>.ts → biome check"]
+
+    STOP --> LINT_FIX["lint-autofix.sh<br>biome check --write on .ts/.tsx<br>(if linting:enabled)<br>+ session_end event"]
+
+    UPS --> DOCLING_RUN["detect 'ingest *.pdf'<br>→ run docling<br>→ /tmp/docling-wiki-out/"]
+
+    PC -->|wiki/ or index.md changed| QMD_SYNC[qmd update + embed\nforeground, incremental]
+    PC -->|.lightrag/ exists| LIGHTRAG_BG[wiki-index\nbackground, incremental]
+
+    ERR_CAP -.->|accumulates| RAW_LOG[mistakes/raw-log.md]
+    RAW_LOG -.->|synthesize-mistakes skill| GLOBAL_RULES[global-prevention-rules.md]
+```
+
+**Hook enforcement layer** (deterministic — shell exit code, not model reasoning):
+- `exit 2` = block the tool call entirely (bash safety, agent whitelist, lint protection)
+- `exit 0` = allow, with optional stdout message to model context (judge reminder, lint report)
+- Stop hook fires at end of every turn regardless of tool calls
+
+---
+
+## Chart 7 — Agent Fleet
+
+```mermaid
+graph TD
+    USER[User task]
+
+    DELEGATOR[agent-delegator\norchestrator]
+
+    subgraph IMPL["Implementation"]
+        CW[code-writer\nSonnet]
+        CWF[code-writer-fast\nHaiku — boilerplate]
+    end
+
+    subgraph REVIEW["Review / QA"]
+        CR[code-reviewer\nSonnet]
+        AR[architecture-reviewer\nOpus]
+        DC[design-critic\nSonnet]
+        SA[security-auditor\nOpus]
+    end
+
+    subgraph DEBUG["Debug / Test"]
+        BDT[backend-debug-tester]
+        FDT[frontend-debug-tester]
+        VV[visual-verifier\nPlaywright]
+    end
+
+    subgraph EXPLORE["Explore / Plan"]
+        DE[design-explorer\nOpus]
+        PLAN[Plan agent\nOpus]
+        EX[Explore agent\nHaiku — read-only]
+    end
+
+    subgraph OPS["Ops / Docs"]
+        PPD[production-platform-devops]
+        DW[docs-writer]
+        PHM[project-health-monitor]
+        SSR[session-report-generator]
+    end
+
+    subgraph COUNCIL["Council (subprocess — not fleet)"]
+        PI_SUB["pi -p --model openai-codex/gpt-5.3-codex<br>--no-session<br>Codex peer review — advisory only<br>reads stdout, not .agents/ bus"]
+    end
+
+    USER --> DELEGATOR
+    DELEGATOR --> IMPL & REVIEW & DEBUG & EXPLORE & OPS
+
+    CW -.->|triggers| CR
+    CW -.->|triggers| PHM
+    PHM -.->|reports bugs to| BDT & FDT
+    DE -.->|feeds requirements to| CW
+    AR -.->|validates before| CW
+
+    DELEGATOR -.->|arch/security/irreversible| PI_SUB
+```
+
+**Pi is not in the agent fleet.** It is a thin subprocess called via Bash when a Codex second opinion is needed. It does not share the Claude Code hooks system, `.agents/` coordination bus, or skill invocation contract.
+
+
+<iframe srcDoc="<!doctype html><html><head><meta charset=&quot;utf-8&quot;><style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel input[type=range]{width:100%;margin:0}
+#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><div id=&quot;gear&quot;>⚙</div>
+<div id=&quot;panel&quot;>
+<label>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<div class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;><span>Directional arrows</span></div>
+</div>
+<div id=&quot;g&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;guides/architecture&quot;,&quot;label&quot;:&quot;llm-wiki Architecture&quot;,&quot;group&quot;:&quot;guides&quot;,&quot;val&quot;:1}],LINKS=[],CUR=&quot;guides/architecture&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return 'rgba(255,255,255,0.12)';})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return 'rgba(255,255,255,0.4)';})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle='#fff';ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+function fit(){G.zoomToFit(400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){try{G.pauseAnimation();}catch(e){}}function resume(){try{G.resumeAnimation();}catch(e){}}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(_){}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){try{hd.releasePointerCapture(e.pointerId);}catch(_){}hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(_){}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />

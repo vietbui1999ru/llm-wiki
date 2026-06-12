@@ -51,11 +51,11 @@ Gaps cluster into two areas:
 
 | Need | Tool | Rationale |
 |---|---|---|
-| Code review | CodeRabbit | 2M+ repos, PR comments out of box, not worth building |
+| Code review | CodeRabbit | 2M+ repos _(claimed, unverified)_, PR comments out of box, not worth building |
 | Eval framework | PromptFoo or Braintrust | CLI-first gates (PromptFoo) vs production dashboards (Braintrust) |
 | Observability | Langfuse | Open source, self-hostable, LLM-aware trace model |
 | Kanban UI | GitHub Projects | Free, already integrated with repo, no infra |
-| Workflow orchestration | LangGraph (if needed) | Production v1.0, battle-tested; only needed at Phase 2+ |
+| Workflow orchestration | LangGraph (if needed) | Production v1.0, battle-tested _(claimed, unverified)_; only needed at Phase 2+ |
 
 ### Build
 

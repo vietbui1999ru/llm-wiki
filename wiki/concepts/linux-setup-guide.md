@@ -287,7 +287,7 @@ Plugin cache: `~/.claude/plugins/cache/` — downloaded fresh, not in dotfiles.
 wiki-index --full
 ```
 
-**Cost warning:** Uses Claude Haiku by default when `ANTHROPIC_API_KEY` is set. ~200 wiki pages costs ~$0.30–$0.80. To use local ollama instead (free, slower):
+**Cost warning:** Uses Claude Haiku by default when `ANTHROPIC_API_KEY` is set. ~200 wiki pages costs ~$0.30–$0.80 *(claimed, unverified)*. To use local ollama instead (free, slower):
 
 ```bash
 unset ANTHROPIC_API_KEY && wiki-index --full && export ANTHROPIC_API_KEY="sk-ant-..."

@@ -165,3 +165,4 @@ See [[summaries/autoresearch-karpathy]] for details.
 - [[concepts/agentic-sandbox-controls]] — OS-level security for sandbox execution
 - [[summaries/autoresearch-karpathy]] — minimal harness instantiation for autonomous ML research
 - [[concepts/tool-design-for-agents]] — dual audience principle; error messages as agent recovery instructions
+- [[syntheses/agent-diff-viewer]] — localhost real-time diff viewer over the harness PostToolUse hook stream

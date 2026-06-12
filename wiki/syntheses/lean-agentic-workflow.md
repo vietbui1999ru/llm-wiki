@@ -153,3 +153,4 @@ See: [[comparisons/spec-driven-frameworks-vs-native]], [[concepts/memory-bank-pa
 - [[concepts/context-compression]] — clear-over-compact; why lean-session matters
 - [[concepts/agent-self-correction]] — deviation detection and wiki oracle
 - [[syntheses/agent-primitive-selection]] — decision tree for skill vs subagent vs team
+- [[syntheses/control-plane-expansion-plan]] — scaling this workflow into an Agentic Engineering Control Plane

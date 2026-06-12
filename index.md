@@ -84,7 +84,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/agent-harness]] — Model + harness = agent; core components: filesystem, bash, sandbox, context management, long-horizon loops; orchestrator/harness/framework distinction; model-agnostic property
 - [[concepts/ralph-loop]] — Harness pattern: intercept exit, reinjecting original prompt with clean context + durable filesystem state
 - [[concepts/context-degradation]] — Five named failure modes: lost-in-middle, poisoning, distraction, confusion, clash; thresholds and mitigations
-- [[concepts/context-compression]] — Four strategies + serialization format axis (ONTO/TOON 40–60% reduction); clear-over-compact consensus; KV-cache cost trap; SAC as learned soft compression alternative
+- [[concepts/context-compression]] — Five strategies + serialization format axis (ONTO/TOON 40–60% reduction); clear-over-compact consensus; KV-cache cost trap; SAC as learned soft compression alternative
 - [[concepts/tool-design-for-agents]] — Dual audience principle; error messages as agent recovery instructions; naming conventions
 - [[concepts/agent-skills]] — Skill meta-tool: SKILL.md schema, three-tier loading, isMeta dual-message execution, supply chain risk, composition patterns, grill-* antipatterns, when NOT to use skills
 - [[concepts/agent-subagents]] — Subagents: own context window, YAML frontmatter format, all fields, scopes, invocation patterns, fork mode

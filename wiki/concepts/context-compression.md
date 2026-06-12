@@ -14,7 +14,7 @@ updated: 2026-05-27
 
 When agent sessions grow long, compression is mandatory. The wrong optimization target is *tokens per request* (minimize context size). The correct target is **tokens per task** — total tokens to complete a task, including re-fetch costs when compression loses critical information.
 
-## Four Strategies
+## Five Strategies
 
 ### 1. Anchored Iterative Summarization (recommended)
 Maintain a structured persistent summary with named sections: session intent, files modified, decisions made, next steps. When compaction triggers, summarize only the newly-truncated span and **merge** it into the existing summary — don't regenerate.
@@ -52,7 +52,7 @@ Generate a fresh detailed summary from scratch on each compression trigger.
 
 **When acceptable**: Short sessions with a single compression event; when simplicity matters more than accuracy.
 
-### 5. CCR — Reversible Compression with Retrieval
+### 4. CCR — Reversible Compression with Retrieval
 
 Compress aggressively into the context window; store originals locally; expose a retrieval tool so the LLM fetches full content on demand. The model decides what to retrieve at inference time rather than the compressor predicting relevance upfront.
 
@@ -64,7 +64,7 @@ Compress aggressively into the context window; store originals locally; expose a
 
 ---
 
-### 4. Adaptive Guideline-Optimized Compression (research: Acon)
+### 5. Adaptive Guideline-Optimized Compression (research: Acon)
 Use an LLM to compress context guided by a **learned prompt** — the compression guideline is optimized from task failure signals, not handcrafted. Applies separately to interaction history (when length > threshold) and raw observations (when observation > threshold).
 
 **How it works**: Run agent with and without compression; find tasks where compression causes failure; feed contrastive pairs to an optimizer LLM to refine the guideline. Two alternating phases: utility maximization (fix failures) and compression maximization (shorten successes). Gradient-free — works with any API model.

@@ -11,7 +11,7 @@ Applies to: ML/AI, AI Engineering, Agent Orchestration, Data Analyst, Data Engin
 
 **Context degradation**: five failure modes — lost-in-middle, poisoning, distraction, confusion, clash. Each has a different fix. Diagnose before fixing. [[concepts/context-degradation]]
 
-**Context compression**: optimize tokens-per-task, not tokens-per-request. Default: anchored iterative summarization (merge, don't regenerate). Thresholds: plan 70%, trigger 80%, aggressive 90%. [[concepts/context-compression]]
+**Context compression**: optimize tokens-per-task, not tokens-per-request. Default: anchored iterative summarization (merge, don't regenerate). For harness/AFK workflows clear-over-compact is community consensus. See [[concepts/context-degradation]] for the canonical compaction thresholds and [[concepts/context-compression]] for strategies (incl. clear-over-compact).
 
 **KV-cache**: system prompt + tool defs must be byte-identical across requests. No timestamps/session IDs in system prompt. Stable content first, dynamic content last.
 

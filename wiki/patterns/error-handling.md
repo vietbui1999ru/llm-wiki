@@ -1,6 +1,6 @@
 ---
 title: "Error Handling Patterns"
-type: concept
+type: pattern
 tags: [patterns, software-engineering, error-handling, reliability]
 sources:
   - "Best practices for exceptions.md"
@@ -13,6 +13,11 @@ updated: 2026-05-06
 # Error Handling Patterns
 
 Reference for both developers writing code and agents implementing features. Covers the full lifecycle: classification → representation → propagation → retry → observability.
+
+## Agent Trigger
+
+**Apply when:** Writing try/catch blocks, defining error types, retry logic, or reviewing error paths.
+**Rule of thumb:** Fail fast, type your errors, never silently swallow; use Result types or exceptions consistently; backoff with jitter on retries.
 
 ---
 

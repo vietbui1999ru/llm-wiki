@@ -30,7 +30,7 @@ This pattern is a **pull** system: the agent must recognize it is drifting befor
 | High tool-call count | `session.idle` auto-compaction via `OC_COMPACT_THRESHOLD` |
 | Session resume | Lean-session plugin injects `.agents/checkpoint.md` on compaction |
 
-Until hook-enforced gates exist in a project's harness, treat self-correction as a **best-effort** layer, not a reliable gate. [[concepts/instinct-clustering]] *(documented-not-adopted)* (push — injects patterns at session start) is theoretically stronger for agents that are already drifting, but has not been adopted or validated in practice.
+Until hook-enforced gates exist in a project's harness, treat self-correction as a **best-effort** layer, not a reliable gate. [[concepts/instinct-clustering]] (push — injects patterns at session start) is theoretically stronger for agents that are already drifting; ECC v2 is a reference implementation of it, though hook enforcement remains the validated gate in this harness.
 
 ## Deviation Triggers → Wiki Queries
 
@@ -73,7 +73,7 @@ Agents do NOT need to load this entire page at startup. They load it only when t
 | Verification (UI/visual) | [[concepts/verification-pipeline]] — screenshot gate, DOM counts, Playwright |
 | Verification (backend/logic) | [[concepts/unit-testing]] + [[concepts/cicd-testing]] — test pyramid, AAA, coverage |
 | Debugging | [[concepts/agent-harness]] + systematic-debugging skill |
-| Model tier | [[syntheses/agent-primitive-selection]] |
+| Model tier | [[concepts/model-tier-routing]] (table); [[syntheses/agent-primitive-selection]] (broader decision tree) |
 | Editing policy | Applied from CLAUDE.md rules |
 | Context saturation | [[concepts/context-compression]] |
 | Pre-implementation | [[syntheses/lean-agentic-workflow]] (grill phase) |
@@ -93,9 +93,9 @@ This is the [[concepts/context-engineering]] principle applied to meta-cognition
 
 ## Relation to homunculus instinct system
 
-[[concepts/instinct-clustering]] *(documented-not-adopted)* mines behavioral patterns from tool-call telemetry and injects high-confidence "instincts" at session start. That is automatic and implicit. Agent self-correction is explicit and query-driven.
+[[concepts/instinct-clustering]] mines behavioral patterns from tool-call telemetry and injects high-confidence "instincts" at session start. That is automatic and implicit. Agent self-correction is explicit and query-driven.
 
-They are complementary — but not symmetric. Instinct clustering is a **push** pattern (high-confidence instincts injected at session start, no agent action required). Self-correction is a **pull** pattern (agent must recognize deviation and query). Push would be more reliable for agents that are already drifting; pull is cheaper for agents that are not. Until instinct clustering is adopted and validated, prefer hook enforcement over relying on pull for critical gates (commit, merge, claiming completion).
+They are complementary — but not symmetric. Instinct clustering is a **push** pattern (high-confidence instincts injected at session start, no agent action required). Self-correction is a **pull** pattern (agent must recognize deviation and query). Push would be more reliable for agents that are already drifting; pull is cheaper for agents that are not. Where instinct clustering isn't wired into a harness, prefer hook enforcement over relying on pull for critical gates (commit, merge, claiming completion).
 
 ## Relation to Self-Refine
 

@@ -103,7 +103,7 @@ Context is scarce. The harness must manage it actively:
 | Old message history | Yes — primary compression target |
 | Retrieved documents (served purpose) | Yes — mask or summarize |
 
-**Compaction thresholds**: trigger at 80% of effective context limit. Plan at 70%. Aggressive compaction at 90%.
+**Compaction thresholds**: see [[concepts/context-degradation]] for the canonical 70/80/90 ladder (plan / trigger / aggressive). Kept authoritative there to avoid drift.
 
 **KV-cache rule**: system prompt and tool definitions must be byte-identical across requests to get cache hits. Never put timestamps or session IDs in the system prompt.
 
@@ -165,3 +165,4 @@ See [[summaries/autoresearch-karpathy]] for details.
 - [[concepts/agentic-sandbox-controls]] — OS-level security for sandbox execution
 - [[summaries/autoresearch-karpathy]] — minimal harness instantiation for autonomous ML research
 - [[concepts/tool-design-for-agents]] — dual audience principle; error messages as agent recovery instructions
+- [[syntheses/agent-diff-viewer]] — localhost real-time diff viewer over the harness PostToolUse hook stream

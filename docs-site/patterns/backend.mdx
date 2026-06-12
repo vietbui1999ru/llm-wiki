@@ -1,0 +1,359 @@
+---
+title: "Backend Patterns"
+description: "Structural and behavioral patterns for server-side systems. Covers how HTTP requests flow through a server, how business logic is organized, and how external…"
+---
+
+# Backend Patterns
+
+Structural and behavioral patterns for server-side systems. Covers how HTTP requests flow through a server, how business logic is organized, and how external dependencies are managed. Focus is on decision criteria and anti-patterns — not just definitions.
+
+## Agent Trigger
+
+**Apply when:** Writing or reviewing server-side middleware, auth, service/repository layers, queues/workers, or API gateways.
+**Rule of thumb:** Enforce auth at the right layer, keep service logic out of controllers, design queues for at-least-once + DLQ.
+
+---
+
+## Middleware Chains
+
+Middleware is a function that sits in the request/response pipeline and either handles a concern or passes control to the next middleware.
+
+```
+Request → [Logger] → [Auth] → [RateLimit] → [Validator] → [Handler] → Response
+```
+
+**Composition order matters**:
+- **Logger first**: captures all requests before any early exit
+- **Auth before business logic**: reject unauthenticated requests early — saves computation
+- **Rate limiter before auth**: prevents auth endpoint abuse without touching the identity system
+- **Validator just before the handler**: auth is confirmed, now check the request shape
+- **Error middleware last** (Express/Node convention): catches errors bubbled from all prior middleware
+
+**Short-circuit pattern**: middleware should return early on failure — never call `next()` after sending a response. Calling `next()` after a response causes double-response bugs.
+
+**Error middleware signature** (Express): takes `(err, req, res, next)` — four arguments. The framework uses the arity to distinguish it from normal middleware. Place it after all routes.
+
+**Anti-patterns**:
+- Business logic inside middleware — middleware handles cross-cutting concerns only (auth, logging, rate-limiting, parsing)
+- Deeply nested middleware sharing mutable state via the request object — use typed context instead
+- Auth middleware that silently passes on failure instead of returning 401/403
+
+---
+
+## Authentication and Authorization
+
+Two distinct concerns often conflated:
+- **Authentication (authn)**: who are you? (verify identity)
+- **Authorization (authz)**: are you allowed? (verify permission)
+
+### JWT vs Session Tokens
+
+| | JWT | Session token |
+|---|---|---|
+| State | Stateless — claims embedded in token | Stateful — server holds session store |
+| Revocation | Hard — must wait for expiry or maintain a denylist | Easy — delete session from store |
+| Scalability | Better for horizontally scaled services | Requires shared session store (Redis) across instances |
+| Token size | Larger (base64 payload) | Small opaque string |
+| Best for | Service-to-service, mobile clients, multi-service auth | Traditional web sessions, high-security contexts needing instant revocation |
+
+**JWT placement**: `Authorization: Bearer <token>` header, not a cookie (avoids CSRF). Access tokens short-lived (15m–1h), refresh tokens long-lived (days–weeks) stored securely server-side or in `HttpOnly` cookie.
+
+### OAuth2 Flows
+
+- **Authorization Code + PKCE**: web apps and mobile apps authenticating on behalf of a user. Redirect-based; PKCE required for public clients.
+- **Client Credentials**: service-to-service (no user involved). Backend calls another backend with `client_id` + `client_secret`.
+- **Device Code**: TV/CLI flows where user opens a browser separately.
+- Never use the **Implicit flow** — deprecated; leaks tokens in URL fragments.
+
+### RBAC vs ABAC
+
+**RBAC (Role-Based Access Control)**:
+- User has roles; roles have permissions
+- Simple to implement, easy to audit
+- Fails when permissions need context: `user can edit their own posts but not others'`
+
+**ABAC (Attribute-Based Access Control)**:
+- Decision based on attributes: subject attrs + resource attrs + environment attrs
+- Expressive: `user.department == resource.department AND time < 18:00`
+- Complex to implement and audit
+- Use when RBAC requires an explosion of roles to represent contextual rules
+
+**Where to enforce**:
+- **Authentication**: middleware layer (verify token, attach identity to request context)
+- **Coarse-grained authorization** (role check): middleware or route-level guard
+- **Fine-grained authorization** (resource ownership, ABAC): service layer, not the handler. The handler doesn't know enough about the domain to make the call correctly.
+
+---
+
+## Service Layer Pattern
+
+Separates HTTP concerns (parsing, serialization, status codes) from business logic.
+
+```
+HTTP Handler → Service → Repository
+    ↑ thin           ↑ owns logic    ↑ owns data access
+```
+
+**Handler responsibility**: parse request, call service, map result to HTTP response. Nothing more.
+
+**Service responsibility**: orchestrate business operations, enforce invariants, call repositories, emit domain events. Does not know about HTTP.
+
+**Why thin controllers matter**:
+- Business logic in handlers cannot be tested without standing up an HTTP stack
+- Logic duplicated across multiple routes (REST + GraphQL + CLI) if it lives in handlers
+- Mixed concerns make it impossible to change HTTP framework without rewriting logic
+
+**Dependency injection into services**: services receive their dependencies (repositories, other services, event emitters) via constructor. Never construct dependencies inside the service.
+
+```typescript
+class OrderService {
+  constructor(
+    private readonly orders: OrderRepository,
+    private readonly inventory: InventoryService,
+    private readonly events: EventEmitter,
+  ) {}
+
+  async placeOrder(userId: string, items: LineItem[]): Promise<Order> {
+    await this.inventory.reserve(items);        // domain logic
+    const order = await this.orders.create(userId, items);
+    this.events.emit('order.placed', order);
+    return order;
+  }
+}
+```
+
+---
+
+## Repository Pattern
+
+Abstracts data access behind an interface. The rest of the application talks to the repository interface, not to the database driver.
+
+```typescript
+interface OrderRepository {
+  findById(id: string): Promise<Order | null>;
+  create(userId: string, items: LineItem[]): Promise<Order>;
+  update(id: string, patch: Partial<Order>): Promise<Order>;
+}
+
+// Concrete implementation injected at runtime
+class PostgresOrderRepository implements OrderRepository { ... }
+// Test double injected in tests
+class InMemoryOrderRepository implements OrderRepository { ... }
+```
+
+**Testability benefit**: swap the real database with an in-memory fake in unit tests — no test database required, tests run at millisecond speed.
+
+**When not to use it**:
+- Simple CRUD with no domain logic — the abstraction adds ceremony for no gain
+- When you need database-specific features (complex CTEs, COPY, full-text search) that don't map cleanly to a generic interface — wrap those queries in a specialized query object instead, or expose them explicitly
+
+**Anti-pattern**: repositories that return raw database rows instead of domain objects. The repository's job is to return domain types, not DB result sets.
+
+---
+
+## Queue / Worker Patterns
+
+Offload work that doesn't need to complete within the HTTP request cycle.
+
+```
+HTTP Handler → enqueue(job) → Queue → Worker → side effects
+      ↑ returns 202 Accepted immediately
+```
+
+### At-Least-Once Delivery
+
+Most queues (SQS, RabbitMQ, Kafka) guarantee at-least-once delivery — the same message may be delivered more than once (due to network errors, retries, or crashes before acknowledgment).
+
+**Idempotent consumers**: design workers so that processing the same message twice produces the same result as processing it once. Common techniques:
+- Deduplicate using a message ID stored in the database (insert-if-not-exists before processing)
+- Use idempotency keys for external API calls
+- Make operations naturally idempotent: `SET status = 'shipped'` rather than `increment shipment_count`
+
+### Dead-Letter Queues (DLQ)
+
+Messages that fail repeatedly (after N retries) move to a DLQ instead of being dropped. A DLQ is the operational safety net — inspect failed messages, fix the bug, then replay.
+
+Always configure a DLQ. Without one, poison messages (malformed or unprocessable) block the queue or silently disappear.
+
+### Task Queue vs Event Stream
+
+| | Task queue (SQS, Celery, BullMQ) | Event stream (Kafka, Kinesis) |
+|---|---|---|
+| Delivery | One consumer per message | Multiple consumer groups, each gets all messages |
+| Ordering | Best-effort | Ordered within partition |
+| Replay | DLQ only | Replay from offset |
+| Use for | Job execution, background work | Event sourcing, fan-out, audit trails |
+
+---
+
+## Dependency Injection
+
+Pass dependencies in rather than constructing them inside a component. Decouples components from their concrete implementations.
+
+**Three forms**:
+- **Constructor injection** (preferred): dependencies declared in constructor signature. Mandatory, visible, testable.
+- **Property injection**: set via public property after construction. Allows partial construction — harder to reason about.
+- **Method injection**: pass dependency at call time. Use only when the dependency varies per-call.
+
+**Container-based DI**: frameworks (NestJS, Spring, .NET DI) manage object graphs automatically. Useful at scale. For smaller services, manual constructor injection is often clearer.
+
+**Service Locator anti-pattern**: a global registry from which any code can pull dependencies. Hides dependencies, makes call graphs opaque, and makes testing harder because you must configure the global registry before each test.
+
+```typescript
+// Anti-pattern — service locator
+const db = ServiceLocator.get('database');
+
+// Preferred — constructor injection
+class UserService {
+  constructor(private readonly db: DatabaseConnection) {}
+}
+```
+
+---
+
+## API Gateway Pattern
+
+A single entry point in front of multiple backend services (common in microservices).
+
+**Functions at the gateway**:
+- **Request routing**: route `/orders/*` to order service, `/users/*` to user service
+- **Auth at the edge**: verify JWTs once at the gateway; forward verified identity (e.g., `X-User-Id` header) to services — services trust the gateway, not raw clients
+- **Rate limiting**: enforce per-client or per-IP limits globally without duplicating logic in every service
+- **Aggregation**: compose multiple service calls into a single response (BFF variant)
+- **Protocol translation**: REST → gRPC, WebSocket upgrade
+
+**When to push auth into services**: when services are called by other services directly (service-to-service) or when the gateway trust model is insufficient for the security requirement.
+
+**Single point of failure risk**: the gateway must be highly available. Deploy multiple instances behind a load balancer. Don't put business logic in the gateway — it should remain a routing/policy layer.
+
+See also: [Scalability and Reliability](/systems/scalability-reliability) for rate limiting algorithm selection (token bucket vs leaky bucket).
+
+---
+
+## Backend Anti-Patterns
+
+### Fat Controllers
+
+Controllers that contain business logic, data access, and HTTP handling all in one function. Symptoms: handlers over 50 lines, direct `db.query()` calls inside route handlers, duplicated logic across routes.
+
+Fix: extract a service layer; move DB access to a repository.
+
+### Direct DB Calls from Handlers
+
+```typescript
+// Anti-pattern
+app.get('/users/:id', async (req, res) => {
+  const row = await db.query('SELECT * FROM users WHERE id = $1', [req.params.id]);
+  res.json(row);
+});
+```
+
+Bypasses the service layer (no domain logic, no authorization check), directly couples the route to the DB schema, and cannot be tested without a real database.
+
+### Synchronous Chains That Should Be Async
+
+Sending an email, resizing an image, or calling a slow third-party API inside the HTTP request cycle. Each adds latency and holds a connection open.
+
+Rule of thumb: if the user doesn't need the result to continue, it belongs in a queue.
+
+### Missing Input Validation
+
+Never trust request data. Validate at the boundary — before it reaches the service layer. Unvalidated input causes type errors deep in domain code, is a primary injection vector, and produces confusing 500s instead of 400s.
+
+Use a schema library (Zod, Joi, class-validator) at the handler layer. The service layer should receive clean, typed data — not raw request bodies.
+
+### Anemic Service Layer
+
+Services that are just pass-throughs to repositories with no logic. Usually a symptom of putting logic back in handlers or fat repositories. Domain invariants (business rules) belong in the service, not scattered across callers.
+
+---
+
+## Cross-references
+
+- [API Design Patterns](/patterns/api-design) — RESTful resource design, error response shape, versioning, idempotency keys
+- [Software Design Principles](/patterns/principles) — SOLID underpins DI (Dependency Inversion), SRP (thin controllers), OCP (repository interface)
+- [Distributed Systems](/systems/distributed-systems) — idempotency, saga, circuit breaker — required when workers call external services
+- [Architectural Patterns](/systems/architectural-patterns) — hexagonal architecture is the generalization of the service layer / repository boundary
+- [Database Patterns](/patterns/database) — repository implementations: N+1, connection pooling, query optimization
+- [Error Handling Patterns](/patterns/error-handling) — error taxonomy, retry/backoff for queue workers
+
+
+<iframe srcDoc="<!doctype html><html><head><meta charset=&quot;utf-8&quot;><style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel input[type=range]{width:100%;margin:0}
+#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><div id=&quot;gear&quot;>⚙</div>
+<div id=&quot;panel&quot;>
+<label>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<div class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;><span>Directional arrows</span></div>
+</div>
+<div id=&quot;g&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;patterns/backend&quot;,&quot;label&quot;:&quot;Backend Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;patterns/principles&quot;,&quot;label&quot;:&quot;Software Design Principles&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:4.741657386773941},{&quot;id&quot;:&quot;systems/scalability-reliability&quot;,&quot;label&quot;:&quot;Scalability and Reliability&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;systems/distributed-systems&quot;,&quot;label&quot;:&quot;Distributed Systems&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4},{&quot;id&quot;:&quot;systems/architectural-patterns&quot;,&quot;label&quot;:&quot;Architectural Patterns&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;patterns/api-design&quot;,&quot;label&quot;:&quot;API Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/error-handling&quot;,&quot;label&quot;:&quot;Error Handling Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/database&quot;,&quot;label&quot;:&quot;Database Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;concepts/agentic-cicd&quot;,&quot;label&quot;:&quot;Agentic CI/CD&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;systems/ai-ml&quot;,&quot;label&quot;:&quot;AI and ML Engineering&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4.3166247903554},{&quot;id&quot;:&quot;concepts/self-healing-loop&quot;,&quot;label&quot;:&quot;Self-Healing Loop&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/error-budget&quot;,&quot;label&quot;:&quot;Error Budget (Agentic)&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;label&quot;:&quot;Behavioral Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;concepts/deep-modules&quot;,&quot;label&quot;:&quot;Deep Modules&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;patterns/code-quality&quot;,&quot;label&quot;:&quot;Code Quality Heuristics&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;label&quot;:&quot;Structural Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/concurrency&quot;,&quot;label&quot;:&quot;Concurrency and Parallelism Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;systems/data-modeling&quot;,&quot;label&quot;:&quot;Data Modeling&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;systems/system-design-process&quot;,&quot;label&quot;:&quot;System Design Process&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;patterns/frontend&quot;,&quot;label&quot;:&quot;Frontend Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;concepts/actor-model&quot;,&quot;label&quot;:&quot;Actor Model&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;label&quot;:&quot;Creational Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;patterns/refactoring&quot;,&quot;label&quot;:&quot;Refactoring Techniques&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;patterns/algorithmic&quot;,&quot;label&quot;:&quot;Algorithmic Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.414213562373095},{&quot;id&quot;:&quot;concepts/agent-harness&quot;,&quot;label&quot;:&quot;Agent Harness&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:6.744562646538029},{&quot;id&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;label&quot;:&quot;Lean Agentic Coding Workflow&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:5.58257569495584},{&quot;id&quot;:&quot;concepts/verification-pipeline&quot;,&quot;label&quot;:&quot;Verification Pipeline&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.242640687119285},{&quot;id&quot;:&quot;concepts/agent-skills&quot;,&quot;label&quot;:&quot;Agent Skills&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5},{&quot;id&quot;:&quot;concepts/ralph-loop&quot;,&quot;label&quot;:&quot;Ralph Loop&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.872983346207417},{&quot;id&quot;:&quot;concepts/agent-subagents&quot;,&quot;label&quot;:&quot;Agent Subagents&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.741657386773941},{&quot;id&quot;:&quot;concepts/context-degradation&quot;,&quot;label&quot;:&quot;Context Degradation Patterns&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/worktree-isolation&quot;,&quot;label&quot;:&quot;Worktree Isolation&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;label&quot;:&quot;Agent Context Instructions&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/context-engineering&quot;,&quot;label&quot;:&quot;Context Engineering&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;label&quot;:&quot;Agentic Sandbox Controls&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;concepts/contextual-retrieval&quot;,&quot;label&quot;:&quot;Contextual Retrieval&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/agent-teams&quot;,&quot;label&quot;:&quot;Agent Teams&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;label&quot;:&quot;OWASP Security Checklist&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4},{&quot;id&quot;:&quot;concepts/llm-as-judge&quot;,&quot;label&quot;:&quot;LLM-as-Judge&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;syntheses/control-plane-expansion-plan&quot;,&quot;label&quot;:&quot;Control Plane Expansion Plan — Gap Analysis and Phase 0.5 Roadmap&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;concepts/worker-coordination&quot;,&quot;label&quot;:&quot;Worker Coordination: Partial Result Passing Between Parallel Agents&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;label&quot;:&quot;LLM Eval Pipeline&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;concepts/unit-testing&quot;,&quot;label&quot;:&quot;Unit Testing&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;concepts/cicd-testing&quot;,&quot;label&quot;:&quot;CI/CD Testing&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.23606797749979}],LINKS=[{&quot;source&quot;:&quot;concepts/actor-model&quot;,&quot;target&quot;:&quot;patterns/concurrency&quot;},{&quot;source&quot;:&quot;concepts/actor-model&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;concepts/actor-model&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/cicd-testing&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/llm-eval-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;concepts/cicd-testing&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/cicd-testing&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/llm-as-judge&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/llm-as-judge&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;target&quot;:&quot;concepts/llm-as-judge&quot;},{&quot;source&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;concepts/ralph-loop&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/unit-testing&quot;,&quot;target&quot;:&quot;concepts/cicd-testing&quot;},{&quot;source&quot;:&quot;concepts/unit-testing&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/cicd-testing&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/llm-eval-pipeline&quot;},{&quot;source&quot;:&quot;concepts/worker-coordination&quot;,&quot;target&quot;:&quot;concepts/actor-model&quot;},{&quot;source&quot;:&quot;concepts/worker-coordination&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;concepts/worker-coordination&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/worker-coordination&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/worker-coordination&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;patterns/algorithmic&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/algorithmic&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;patterns/error-handling&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;systems/system-design-process&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/api-design&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/database&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/error-handling&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;patterns/refactoring&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/concurrency&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;patterns/concurrency&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;patterns/concurrency&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/database&quot;,&quot;target&quot;:&quot;systems/data-modeling&quot;},{&quot;source&quot;:&quot;patterns/database&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;patterns/database&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/design-patterns-creational&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/design-patterns-creational&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;patterns/api-design&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/refactoring&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/contextual-retrieval&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;systems/data-modeling&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;systems/system-design-process&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;systems/data-modeling&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;systems/data-modeling&quot;,&quot;target&quot;:&quot;patterns/database&quot;},{&quot;source&quot;:&quot;systems/data-modeling&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;patterns/concurrency&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;patterns/database&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;patterns/api-design&quot;},{&quot;source&quot;:&quot;syntheses/control-plane-expansion-plan&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;syntheses/control-plane-expansion-plan&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;syntheses/control-plane-expansion-plan&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;syntheses/control-plane-expansion-plan&quot;}],CUR=&quot;patterns/backend&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return 'rgba(255,255,255,0.12)';})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return 'rgba(255,255,255,0.4)';})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle='#fff';ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+function fit(){G.zoomToFit(400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){G.pauseAnimation();}function resume(){G.resumeAnimation();}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){if(hd.hasPointerCapture(e.pointerId))hd.releasePointerCapture(e.pointerId);hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e2){if(window.console)console.debug('graph: could not persist position',e2);}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />

@@ -15,7 +15,7 @@ Context degradation is not binary — it's a continuum of predictable failure mo
 
 A practitioner mental model from Dex Hyp (Human Layer) and popularized by Matt Pocock: LLM performance has a **smart zone** (low token count, attention relationships least strained) and a **dumb zone** (high token count, attention degraded).
 
-**Empirical threshold: ~100k tokens.** Pocock claims this holds regardless of advertised context window size (200k or 1M). The larger windows add more dumb zone, not more smart zone — the attention scaling is quadratic regardless of limit.
+**Empirical threshold: ~100k tokens.** Pocock claims this holds regardless of advertised context window size (200k or 1M) *(attributed; source not captured — verify)*. The larger windows add more dumb zone, not more smart zone — the attention scaling is quadratic regardless of limit.
 
 Implication for task sizing: keep tasks scoped so the agent completes them within ~100k tokens. This maps to the same principle as the degradation thresholds below, but gives a concrete absolute number practitioners can target.
 

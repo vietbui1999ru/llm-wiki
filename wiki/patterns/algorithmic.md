@@ -1,6 +1,6 @@
 ---
 title: "Algorithmic Patterns"
-type: concept
+type: pattern
 tags: [patterns, algorithms, data-structures, software-engineering]
 sources: ["Common Algorithm Patterns Cheat Sheet.md"]
 created: 2026-05-06
@@ -12,6 +12,11 @@ updated: 2026-05-06
 15 pattern families that cover ~90% of algorithm problems. For each: problem shape, recognition trigger, complexity, and template.
 
 See also: [[patterns/code-quality]], [[patterns/principles]]
+
+## Agent Trigger
+
+**Apply when:** Solving a coding/interview-style problem, choosing a traversal or search strategy, or optimizing a brute-force solution.
+**Rule of thumb:** Match the problem shape to a pattern family (sliding window, two pointers, BFS/DFS, DP, etc.) before writing code.
 
 ---
 

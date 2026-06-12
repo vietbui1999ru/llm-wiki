@@ -1,6 +1,6 @@
 ---
 title: "API Design Patterns"
-type: concept
+type: pattern
 tags: [patterns, software-engineering, api, rest, http]
 sources:
   - "API design guide    Cloud API Design Guide.md"
@@ -14,6 +14,11 @@ updated: 2026-05-06
 # API Design Patterns
 
 Reference for REST API design decisions. Covers resource naming, HTTP semantics, request/response conventions, errors, versioning, pagination, and long-running work. Drawn primarily from Google's API Design Guide (AIP series) and Google Cloud's RESTful best practices.
+
+## Agent Trigger
+
+**Apply when:** Designing or reviewing HTTP/REST endpoints, URL structure, error responses, versioning, or pagination.
+**Rule of thumb:** Resource-oriented URLs, correct HTTP semantics, structured error bodies, idempotency keys on writes.
 
 ---
 

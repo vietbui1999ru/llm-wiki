@@ -1,0 +1,541 @@
+---
+title: "Algorithmic Patterns"
+description: "15 pattern families that cover ~90% of algorithm problems. For each: problem shape, recognition trigger, complexity, and template."
+---
+
+# Algorithmic Patterns
+
+15 pattern families that cover ~90% of algorithm problems. For each: problem shape, recognition trigger, complexity, and template.
+
+See also: [Code Quality Heuristics](/patterns/code-quality), [Software Design Principles](/patterns/principles)
+
+## Agent Trigger
+
+**Apply when:** Solving a coding/interview-style problem, choosing a traversal or search strategy, or optimizing a brute-force solution.
+**Rule of thumb:** Match the problem shape to a pattern family (sliding window, two pointers, BFS/DFS, DP, etc.) before writing code.
+
+---
+
+## Pattern Recognition Table
+
+| Keyword / Problem Shape | Pattern |
+|---|---|
+| Contiguous subarray/substring | Sliding Window |
+| Find pairs/triplets, sorted array | Two Pointers |
+| Cycle detection, find middle of list | Fast & Slow Pointers |
+| Sorted data, halving search space | Binary Search |
+| Overlapping intervals, scheduling | Merge Intervals |
+| Shortest path, level-order traversal | BFS |
+| All paths, explore/backtrack, tree/graph | DFS |
+| Generate all combinations/permutations | Backtracking |
+| Optimal substructure + overlapping subproblems | Dynamic Programming |
+| Local optimum leads to global optimum | Greedy |
+| Dependencies, prerequisites, ordering | Topological Sort |
+| Connectivity, grouping, cycle in graph | Union-Find |
+| K largest/smallest/most frequent | Top K Elements (Heap) |
+| Next greater/smaller element | Monotonic Stack |
+
+---
+
+## 1. Sliding Window
+
+**Problem shape:** Max/min/count over a contiguous subarray or substring of variable or fixed size.
+
+**Recognize it when:** "longest/shortest subarray where...", "substring with at most K distinct..."
+
+**Complexity:** O(n) time, O(1) or O(k) space
+
+```
+left = 0
+for right in range(len(arr)):
+    add arr[right] to window state
+
+    while window_condition_violated:
+        remove arr[left] from window state
+        left += 1
+
+    result = max(result, right - left + 1)
+```
+
+**Key problems:** Longest Substring Without Repeating Characters, Minimum Window Substring, Max Sum Subarray of Size K.
+
+---
+
+## 2. Two Pointers
+
+**Problem shape:** Pair/triplet search in sorted array, palindrome check, in-place array manipulation.
+
+**Recognize it when:** Sorted input + "find two elements that sum to X", or "remove duplicates in-place".
+
+**Complexity:** O(n) time, O(1) space
+
+```
+left, right = 0, len(arr) - 1
+while left < right:
+    if condition_met:
+        record result; left += 1; right -= 1
+    elif need_larger:
+        left += 1
+    else:
+        right -= 1
+```
+
+**Key problems:** Two Sum (sorted), 3Sum, Container With Most Water, Valid Palindrome.
+
+---
+
+## 3. Fast & Slow Pointers (Floyd's)
+
+**Problem shape:** Linked list cycle, find middle, find k-th from end.
+
+**Recognize it when:** Linked list + "detect cycle" or "find middle without knowing length".
+
+**Complexity:** O(n) time, O(1) space
+
+```
+slow, fast = head, head
+while fast and fast.next:
+    slow = slow.next
+    fast = fast.next.next
+    if slow == fast:  # cycle detected
+        break
+# When loop ends normally: slow is at middle
+```
+
+**Key problems:** Linked List Cycle, Find Middle, Palindrome Linked List, Happy Number.
+
+---
+
+## 4. Binary Search
+
+**Problem shape:** Sorted data; find a value, boundary, or answer by eliminating half the search space.
+
+**Recognize it when:** "O(log n) search", sorted array, or "find minimum X such that condition holds" (binary search on answer).
+
+**Complexity:** O(log n) time, O(1) space
+
+```
+left, right = 0, len(arr) - 1
+while left <= right:
+    mid = (left + right) // 2
+    if arr[mid] == target:
+        return mid
+    elif arr[mid] < target:
+        left = mid + 1
+    else:
+        right = mid - 1
+```
+
+**Binary search on answer:** When the answer is a value in a range and "can we achieve X?" is checkable in O(n) — binary search on X.
+
+**Key problems:** First Bad Version, Search in Rotated Array, Find Peak Element, Koko Eating Bananas (search on answer).
+
+---
+
+## 5. Merge Intervals
+
+**Problem shape:** Overlapping ranges — merge, insert, or count non-overlapping.
+
+**Recognize it when:** Input is a list of `[start, end]` intervals; "merge all overlapping".
+
+**Complexity:** O(n log n) time (sort dominates), O(n) space
+
+```
+intervals.sort(key=lambda x: x[0])
+merged = [intervals[0]]
+for start, end in intervals[1:]:
+    if start <= merged[-1][1]:
+        merged[-1][1] = max(merged[-1][1], end)
+    else:
+        merged.append([start, end])
+```
+
+**Key problems:** Merge Intervals, Insert Interval, Meeting Rooms I & II.
+
+---
+
+## 6. BFS (Breadth-First Search)
+
+**Problem shape:** Shortest path in unweighted graph; level-order traversal; "minimum steps to reach".
+
+**Recognize it when:** "minimum number of moves/steps", level-by-level processing, unweighted shortest path.
+
+**Complexity:** O(V + E) time, O(V) space
+
+```python
+from collections import deque
+queue = deque([start])
+visited = {start}
+level = 0
+
+while queue:
+    for _ in range(len(queue)):   # process one level
+        node = queue.popleft()
+        if node == target:
+            return level
+        for neighbor in graph[node]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                queue.append(neighbor)
+    level += 1
+```
+
+**Key problems:** Binary Tree Level Order Traversal, Word Ladder, Rotting Oranges, Number of Islands.
+
+---
+
+## 7. DFS (Depth-First Search)
+
+**Problem shape:** Explore all paths, tree/graph traversal, detect cycles, find connected components.
+
+**Recognize it when:** "find all paths", "does a path exist", backtracking exploration.
+
+**Complexity:** O(V + E) time, O(V) space (call stack)
+
+```python
+# Recursive
+def dfs(node, visited):
+    visited.add(node)
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            dfs(neighbor, visited)
+
+# Iterative (explicit stack)
+stack = [start]
+visited = {start}
+while stack:
+    node = stack.pop()
+    for neighbor in graph[node]:
+        if neighbor not in visited:
+            visited.add(neighbor)
+            stack.append(neighbor)
+```
+
+**DFS vs BFS decision:** Use BFS for shortest path. Use DFS for exhaustive exploration, cycle detection, or when recursion maps naturally to the problem.
+
+**Key problems:** Number of Islands, Course Schedule (cycle detection), Path Sum, Word Search in Grid.
+
+---
+
+## 8. Backtracking
+
+**Problem shape:** Generate all valid combinations, permutations, or arrangements subject to constraints.
+
+**Recognize it when:** "find all...", "generate all...", constraint satisfaction (N-Queens, Sudoku).
+
+**Complexity:** O(2^n) or O(n!) — inherently exponential; pruning reduces constant factor.
+
+```python
+def backtrack(state, choices):
+    if is_solution(state):
+        results.append(state[:])   # copy current state
+        return
+
+    for choice in choices:
+        if is_valid(choice, state):
+            state.append(choice)
+            backtrack(state, remaining_choices(choices, choice))
+            state.pop()            # undo — the backtrack step
+```
+
+**Pruning:** Add `if not is_valid(choice): continue` before recursing. This is where all the performance lives.
+
+**Key problems:** Permutations, Subsets, N-Queens, Generate Parentheses, Palindrome Partitioning.
+
+---
+
+## 9. Dynamic Programming
+
+**Problem shape:** Optimal value (min/max count) where the problem breaks into overlapping subproblems.
+
+**Recognize it when:** "minimum cost to...", "number of ways to...", "longest subsequence/substring".
+
+**Complexity:** O(n²) typical; O(n) for 1D DP; O(n·m) for 2D; space often reducible.
+
+**Two approaches:**
+
+**Top-down (memoization)** — natural recursion + cache:
+```python
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def dp(i):
+    if base_case(i):
+        return base_value
+    return combine(dp(subproblem_1(i)), dp(subproblem_2(i)))
+```
+
+**Bottom-up (tabulation)** — iterative, fills table from base cases:
+```python
+dp = [0] * (n + 1)
+dp[0] = base_value
+for i in range(1, n + 1):
+    dp[i] = combine(dp[i-1], ...)
+```
+
+**Design steps:**
+1. Define `dp[i]` (or `dp[i][j]`) precisely in words.
+2. Write the recurrence relation.
+3. Identify base cases.
+4. Choose top-down or bottom-up.
+
+**Key problems:** Coin Change, Longest Common Subsequence, 0/1 Knapsack, Edit Distance, Longest Increasing Subsequence.
+
+---
+
+## 10. Greedy
+
+**Problem shape:** Optimization where the locally optimal choice at each step yields a globally optimal result.
+
+**Recognize it when:** Sorting by one dimension then greedily selecting; problems where you can prove no future choice can improve a current decision.
+
+**Complexity:** Varies; often O(n log n) due to sort.
+
+**Proof obligation:** Before applying greedy, verify the greedy choice property holds. Greedy fails when future choices can invalidate current ones — use DP in that case.
+
+**Key problems:** Jump Game, Gas Station, Meeting Rooms II, Fractional Knapsack, Interval Scheduling.
+
+---
+
+## 11. Topological Sort
+
+**Problem shape:** Linear ordering of nodes in a DAG respecting directed edges (dependencies before dependents).
+
+**Recognize it when:** "prerequisites", "task ordering", "can you complete all courses".
+
+**Complexity:** O(V + E) time and space
+
+**Kahn's Algorithm (BFS-based):**
+```python
+from collections import deque
+
+in_degree = {node: 0 for node in graph}
+for node in graph:
+    for neighbor in graph[node]:
+        in_degree[neighbor] += 1
+
+queue = deque([n for n in in_degree if in_degree[n] == 0])
+order = []
+
+while queue:
+    node = queue.popleft()
+    order.append(node)
+    for neighbor in graph[node]:
+        in_degree[neighbor] -= 1
+        if in_degree[neighbor] == 0:
+            queue.append(neighbor)
+
+# Cycle exists if len(order) != len(graph)
+```
+
+**Key problems:** Course Schedule I & II, Alien Dictionary, Minimum Height Trees.
+
+---
+
+## 12. Union-Find (Disjoint Set Union)
+
+**Problem shape:** Dynamic connectivity — group elements, check if two elements are connected, detect cycles in undirected graph.
+
+**Recognize it when:** "connected components", "are X and Y in the same group", "does adding this edge create a cycle".
+
+**Complexity:** O(α(n)) ≈ O(1) per operation with path compression + union by rank. O(n) space.
+
+```python
+parent = list(range(n))
+rank = [0] * n
+
+def find(x):
+    if parent[x] != x:
+        parent[x] = find(parent[x])  # path compression
+    return parent[x]
+
+def union(x, y):
+    px, py = find(x), find(y)
+    if px == py:
+        return False  # already connected, adding edge = cycle
+    if rank[px] < rank[py]:
+        px, py = py, px
+    parent[py] = px
+    if rank[px] == rank[py]:
+        rank[px] += 1
+    return True
+```
+
+**Key problems:** Number of Connected Components, Graph Valid Tree, Accounts Merge, Redundant Connection.
+
+---
+
+## 13. Top K Elements (Heap)
+
+**Problem shape:** Find the k largest, k smallest, or k most frequent elements without full sort.
+
+**Recognize it when:** "k largest/smallest", "k closest", "k most frequent".
+
+**Complexity:** O(n log k) time, O(k) space — better than O(n log n) sort when k &lt;&lt; n.
+
+**Strategy:**
+- K largest → min-heap of size k (evict smallest when heap exceeds k)
+- K smallest → max-heap of size k (evict largest when heap exceeds k)
+- K most frequent → count with hash map, then heap on counts
+
+```python
+import heapq
+
+# K largest using min-heap
+heap = []
+for num in nums:
+    heapq.heappush(heap, num)
+    if len(heap) > k:
+        heapq.heappop(heap)
+# heap now contains k largest elements
+```
+
+**Key problems:** Kth Largest Element, Top K Frequent Elements, K Closest Points to Origin, Merge K Sorted Lists.
+
+---
+
+## 14. Modified Binary Search
+
+**Problem shape:** Search in a sorted-but-modified array (rotated, with duplicates, or searching for a boundary condition).
+
+**Recognize it when:** Sorted array with a twist — rotation, finding first/last occurrence, finding peak.
+
+**Complexity:** O(log n) time, O(1) space
+
+```python
+# Rotated sorted array
+left, right = 0, len(nums) - 1
+while left <= right:
+    mid = (left + right) // 2
+    if nums[mid] == target:
+        return mid
+    if nums[left] <= nums[mid]:          # left half is sorted
+        if nums[left] <= target < nums[mid]:
+            right = mid - 1
+        else:
+            left = mid + 1
+    else:                                 # right half is sorted
+        if nums[mid] < target <= nums[right]:
+            left = mid + 1
+        else:
+            right = mid - 1
+```
+
+**Key problems:** Search in Rotated Sorted Array, Find Minimum in Rotated Array, Find First and Last Position.
+
+---
+
+## 15. Monotonic Stack / Queue
+
+**Problem shape:** "Next greater/smaller element", "span of prices", "sliding window max/min".
+
+**Recognize it when:** For each element, you need to find the nearest element that is greater or smaller; or sliding window extremes.
+
+**Complexity:** O(n) time — each element pushed and popped at most once. O(n) space.
+
+```python
+# Next Greater Element — monotonic decreasing stack
+stack = []   # stores indices
+result = [-1] * len(nums)
+
+for i in range(len(nums)):
+    while stack and nums[i] > nums[stack[-1]]:
+        idx = stack.pop()
+        result[idx] = nums[i]    # nums[i] is next greater for idx
+    stack.append(i)
+
+# Sliding Window Maximum — monotonic deque (indices)
+from collections import deque
+dq = deque()   # stores indices, decreasing by value
+for i in range(len(nums)):
+    while dq and dq[0] < i - k + 1:
+        dq.popleft()             # evict out-of-window
+    while dq and nums[i] >= nums[dq[-1]]:
+        dq.pop()                 # evict smaller elements
+    dq.append(i)
+    if i >= k - 1:
+        result.append(nums[dq[0]])
+```
+
+**Key problems:** Next Greater Element, Daily Temperatures, Sliding Window Maximum, Largest Rectangle in Histogram, Trapping Rain Water.
+
+
+<iframe srcDoc="<!doctype html><html><head><meta charset=&quot;utf-8&quot;><style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel input[type=range]{width:100%;margin:0}
+#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><div id=&quot;gear&quot;>⚙</div>
+<div id=&quot;panel&quot;>
+<label>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<div class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;><span>Directional arrows</span></div>
+</div>
+<div id=&quot;g&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;patterns/algorithmic&quot;,&quot;label&quot;:&quot;Algorithmic Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.414213562373095},{&quot;id&quot;:&quot;patterns/code-quality&quot;,&quot;label&quot;:&quot;Code Quality Heuristics&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/principles&quot;,&quot;label&quot;:&quot;Software Design Principles&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:4.741657386773941},{&quot;id&quot;:&quot;patterns/refactoring&quot;,&quot;label&quot;:&quot;Refactoring Techniques&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;concepts/unit-testing&quot;,&quot;label&quot;:&quot;Unit Testing&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;concepts/deep-modules&quot;,&quot;label&quot;:&quot;Deep Modules&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;patterns/api-design&quot;,&quot;label&quot;:&quot;API Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/backend&quot;,&quot;label&quot;:&quot;Backend Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;patterns/concurrency&quot;,&quot;label&quot;:&quot;Concurrency and Parallelism Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;patterns/database&quot;,&quot;label&quot;:&quot;Database Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;label&quot;:&quot;Behavioral Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;label&quot;:&quot;Creational Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;label&quot;:&quot;Structural Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/error-handling&quot;,&quot;label&quot;:&quot;Error Handling Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/frontend&quot;,&quot;label&quot;:&quot;Frontend Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;systems/architectural-patterns&quot;,&quot;label&quot;:&quot;Architectural Patterns&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;concepts/agent-self-correction&quot;,&quot;label&quot;:&quot;Agent Self-Correction&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.123105625617661},{&quot;id&quot;:&quot;concepts/cicd-testing&quot;,&quot;label&quot;:&quot;CI/CD Testing&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;concepts/ai-code-review&quot;,&quot;label&quot;:&quot;AI Code Review&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;concepts/verification-pipeline&quot;,&quot;label&quot;:&quot;Verification Pipeline&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.242640687119285},{&quot;id&quot;:&quot;concepts/agent-harness&quot;,&quot;label&quot;:&quot;Agent Harness&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:6.744562646538029},{&quot;id&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;label&quot;:&quot;Agent Context Instructions&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;systems/distributed-systems&quot;,&quot;label&quot;:&quot;Distributed Systems&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4},{&quot;id&quot;:&quot;systems/system-design-process&quot;,&quot;label&quot;:&quot;System Design Process&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;systems/scalability-reliability&quot;,&quot;label&quot;:&quot;Scalability and Reliability&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/actor-model&quot;,&quot;label&quot;:&quot;Actor Model&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;systems/data-modeling&quot;,&quot;label&quot;:&quot;Data Modeling&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;concepts/agent-skills&quot;,&quot;label&quot;:&quot;Agent Skills&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5},{&quot;id&quot;:&quot;concepts/error-budget&quot;,&quot;label&quot;:&quot;Error Budget (Agentic)&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;concepts/self-healing-loop&quot;,&quot;label&quot;:&quot;Self-Healing Loop&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/mobile-design-patterns&quot;,&quot;label&quot;:&quot;Mobile Design Patterns&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;concepts/agentic-cicd&quot;,&quot;label&quot;:&quot;Agentic CI/CD&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399}],LINKS=[{&quot;source&quot;:&quot;concepts/actor-model&quot;,&quot;target&quot;:&quot;patterns/concurrency&quot;},{&quot;source&quot;:&quot;concepts/actor-model&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;concepts/actor-model&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;target&quot;:&quot;concepts/ai-code-review&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/cicd-testing&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/cicd-testing&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/ai-code-review&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/cicd-testing&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/cicd-testing&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;concepts/cicd-testing&quot;,&quot;target&quot;:&quot;concepts/ai-code-review&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/mobile-design-patterns&quot;,&quot;target&quot;:&quot;patterns/frontend&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/unit-testing&quot;,&quot;target&quot;:&quot;concepts/ai-code-review&quot;},{&quot;source&quot;:&quot;concepts/unit-testing&quot;,&quot;target&quot;:&quot;concepts/cicd-testing&quot;},{&quot;source&quot;:&quot;concepts/unit-testing&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/cicd-testing&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;patterns/algorithmic&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/algorithmic&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;patterns/error-handling&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;systems/system-design-process&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/api-design&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/database&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/error-handling&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;patterns/refactoring&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/concurrency&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;patterns/concurrency&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;patterns/concurrency&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/database&quot;,&quot;target&quot;:&quot;systems/data-modeling&quot;},{&quot;source&quot;:&quot;patterns/database&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;patterns/database&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/design-patterns-creational&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/design-patterns-creational&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;patterns/api-design&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/refactoring&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;systems/system-design-process&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;systems/data-modeling&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;systems/data-modeling&quot;,&quot;target&quot;:&quot;patterns/database&quot;},{&quot;source&quot;:&quot;systems/data-modeling&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;patterns/concurrency&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;patterns/database&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;patterns/api-design&quot;}],CUR=&quot;patterns/algorithmic&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return 'rgba(255,255,255,0.12)';})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return 'rgba(255,255,255,0.4)';})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle='#fff';ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+function fit(){G.zoomToFit(400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){G.pauseAnimation();}function resume(){G.resumeAnimation();}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){if(hd.hasPointerCapture(e.pointerId))hd.releasePointerCapture(e.pointerId);hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e2){if(window.console)console.debug('graph: could not persist position',e2);}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />

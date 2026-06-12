@@ -1,6 +1,6 @@
 ---
 title: "Structural Design Patterns"
-type: concept
+type: pattern
 tags: [patterns, software-engineering, gof, structural, typescript]
 sources:
   - "Adapter.md"
@@ -20,6 +20,11 @@ updated: 2026-05-06
 The seven GoF structural patterns describe how to compose classes and objects into larger structures. Each controls what the caller sees (the interface) and what actually executes behind it. They enforce [[patterns/principles]] — SRP, OCP — through composition rather than inheritance.
 
 See also: [[patterns/design-patterns-creational]], [[patterns/design-patterns-behavioral]], [[concepts/deep-modules]]
+
+## Agent Trigger
+
+**Apply when:** Composing or adapting objects/interfaces — Adapter, Decorator, Facade, Proxy, Composite, Bridge, or Flyweight.
+**Rule of thumb:** Pick by intent — Adapter converts, Facade simplifies, Proxy controls access, Decorator adds behavior.
 
 ---
 

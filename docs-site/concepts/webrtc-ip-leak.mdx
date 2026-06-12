@@ -1,0 +1,164 @@
+---
+title: "WebRTC IP Leak"
+description: "WebRTC IP leak is the exposure of a browser's real public IP address through the WebRTC API, even when an HTTP or SOCKS4 proxy is correctly configured. It is…"
+---
+
+# WebRTC IP Leak
+
+WebRTC IP leak is the exposure of a browser's real public IP address through the WebRTC API, even when an HTTP or SOCKS4 proxy is correctly configured. It is the most common cause of IP leakage in proxied browser automation.
+
+## Why It Happens
+
+WebRTC (Web Real-Time Communication) is designed for peer-to-peer audio/video between browsers. To establish a direct P2P connection, it must discover the client's real public IP address using STUN servers over UDP.
+
+The problem: **WebRTC uses UDP, and most proxies only handle TCP.** The STUN query goes directly to the network interface, bypassing the browser's proxy configuration. The OS routing table determines the path, not the browser.
+
+```
+HTTP traffic → proxy → destination ✓
+WebRTC/STUN → bypasses proxy → real IP exposed ✗
+```
+
+## The ICE Process
+
+WebRTC uses ICE (Interactive Connectivity Establishment, RFC 8445) to gather connection candidates:
+
+1. **Host candidates**: local LAN IPs (e.g., `192.168.1.100`) — reveals network topology; Chrome 75+ mitigates with mDNS names when no media permissions granted
+2. **Server reflexive candidates**: your real public IP as seen by a STUN server — the primary leak
+3. **Relay candidates**: TURN server addresses — may still contain real IP in `raddr` field
+
+JavaScript can read these via `RTCPeerConnection.onicecandidate` and send your real IP to a tracking server.
+
+## Minimal Exploit (10 lines of JS)
+
+```javascript
+const pc = new RTCPeerConnection({ iceServers: [{urls: 'stun:stun.l.google.com:19302'}] });
+pc.createDataChannel('');
+pc.createOffer().then(offer => pc.setLocalDescription(offer));
+pc.onicecandidate = (event) => {
+    if (event.candidate) {
+        const ip = event.candidate.candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/)?.[1];
+        if (ip) fetch(`/track?real_ip=${ip}`);
+    }
+};
+```
+
+Any page can run this silently without user interaction.
+
+## Why HTTP and SOCKS4 Cannot Stop This
+
+- They only proxy TCP connections
+- WebRTC STUN operates on UDP
+- WebRTC accesses the OS network stack directly, below the browser's proxy settings
+
+Only SOCKS5 (with UDP ASSOCIATE) or a VPN (which tunnels all IP traffic) can intercept WebRTC's UDP traffic.
+
+## Mitigations
+
+| Method | How | Trade-off |
+|---|---|---|
+| Force proxied routes (recommended) | `--force-webrtc-ip-handling-policy=disable_non_proxied_udp` | Breaks direct P2P; uses TURN relay (higher latency) |
+| Disable WebRTC entirely | `--disable-features=WebRTC` | Breaks all WebRTC-dependent sites |
+| SOCKS5 with UDP support | `--proxy-server=socks5://...` + require UDP ASSOCIATE | Proxy must actually support UDP relay |
+| VPN | OS-level routing | All traffic tunneled; coarsest control |
+
+In Pydoll: `options.webrtc_leak_protection = True` applies the recommended mitigation.
+
+## Related Bypass Vectors
+
+- **QUIC (HTTP/3)**: also runs over UDP; Chrome uses it by default. Disable with `--disable-quic` flag to force HTTP/2 over TCP and ensure all web traffic stays in the proxy.
+- **DNS over UDP**: plain DNS queries bypass TCP-only proxies. SOCKS5 with UDP support proxies DNS; alternatively configure DNS-over-HTTPS.
+
+## Testing
+
+Manual: visit `browserleaks.com/webrtc` — if your real IP appears under "Public IP Address", you're leaking.
+
+Automated: check whether detected IPs include anything other than the proxy IP.
+
+**Always test after configuring WebRTC mitigation.** A single leak instantly compromises the entire proxy setup, revealing real location, ISP, and internal network topology.
+
+## Related Pages
+
+- [Proxy Rotation](/concepts/proxy-rotation) — proxy types and UDP support matrix
+- [Web Fingerprinting](/concepts/web-fingerprinting) — WebRTC leak as one vector in the multi-layer detection system
+- [Pydoll](/entities/pydoll) — `webrtc_leak_protection` property and CDP-based mitigations
+
+
+<iframe srcDoc="<!doctype html><html><head><meta charset=&quot;utf-8&quot;><style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel input[type=range]{width:100%;margin:0}
+#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><div id=&quot;gear&quot;>⚙</div>
+<div id=&quot;panel&quot;>
+<label>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<div class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;><span>Directional arrows</span></div>
+</div>
+<div id=&quot;g&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;concepts/webrtc-ip-leak&quot;,&quot;label&quot;:&quot;WebRTC IP Leak&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;concepts/proxy-rotation&quot;,&quot;label&quot;:&quot;Proxy Rotation&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;concepts/web-fingerprinting&quot;,&quot;label&quot;:&quot;Web Fingerprinting&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;entities/pydoll&quot;,&quot;label&quot;:&quot;Pydoll&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;entities/firecrawl&quot;,&quot;label&quot;:&quot;Firecrawl&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:2.414213562373095},{&quot;id&quot;:&quot;entities/docling&quot;,&quot;label&quot;:&quot;Docling&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:2.414213562373095}],LINKS=[{&quot;source&quot;:&quot;concepts/proxy-rotation&quot;,&quot;target&quot;:&quot;entities/pydoll&quot;},{&quot;source&quot;:&quot;concepts/proxy-rotation&quot;,&quot;target&quot;:&quot;concepts/webrtc-ip-leak&quot;},{&quot;source&quot;:&quot;concepts/proxy-rotation&quot;,&quot;target&quot;:&quot;concepts/web-fingerprinting&quot;},{&quot;source&quot;:&quot;concepts/web-fingerprinting&quot;,&quot;target&quot;:&quot;concepts/proxy-rotation&quot;},{&quot;source&quot;:&quot;concepts/web-fingerprinting&quot;,&quot;target&quot;:&quot;concepts/webrtc-ip-leak&quot;},{&quot;source&quot;:&quot;concepts/web-fingerprinting&quot;,&quot;target&quot;:&quot;entities/pydoll&quot;},{&quot;source&quot;:&quot;concepts/webrtc-ip-leak&quot;,&quot;target&quot;:&quot;concepts/proxy-rotation&quot;},{&quot;source&quot;:&quot;concepts/webrtc-ip-leak&quot;,&quot;target&quot;:&quot;concepts/web-fingerprinting&quot;},{&quot;source&quot;:&quot;concepts/webrtc-ip-leak&quot;,&quot;target&quot;:&quot;entities/pydoll&quot;},{&quot;source&quot;:&quot;entities/docling&quot;,&quot;target&quot;:&quot;entities/firecrawl&quot;},{&quot;source&quot;:&quot;entities/firecrawl&quot;,&quot;target&quot;:&quot;entities/pydoll&quot;},{&quot;source&quot;:&quot;entities/pydoll&quot;,&quot;target&quot;:&quot;concepts/web-fingerprinting&quot;},{&quot;source&quot;:&quot;entities/pydoll&quot;,&quot;target&quot;:&quot;concepts/webrtc-ip-leak&quot;},{&quot;source&quot;:&quot;entities/pydoll&quot;,&quot;target&quot;:&quot;concepts/proxy-rotation&quot;}],CUR=&quot;concepts/webrtc-ip-leak&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return 'rgba(255,255,255,0.12)';})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return 'rgba(255,255,255,0.4)';})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle='#fff';ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+function fit(){G.zoomToFit(400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){G.pauseAnimation();}function resume(){G.resumeAnimation();}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){if(hd.hasPointerCapture(e.pointerId))hd.releasePointerCapture(e.pointerId);hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e2){if(window.console)console.debug('graph: could not persist position',e2);}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />

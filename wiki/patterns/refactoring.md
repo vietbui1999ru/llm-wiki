@@ -1,6 +1,6 @@
 ---
 title: "Refactoring Techniques"
-type: concept
+type: pattern
 tags: [patterns, software-engineering, refactoring, code-quality]
 sources: ["Refactoring and Design Patterns.md"]
 created: 2026-05-06
@@ -12,6 +12,11 @@ updated: 2026-05-06
 Systematic code improvement without changing behavior. Each technique has a specific trigger — apply when the smell appears, not speculatively. Source: Fowler's refactoring catalog (refactoring.guru).
 
 See also: [[patterns/principles]], [[patterns/code-quality]], [[patterns/design-patterns-behavioral]]
+
+## Agent Trigger
+
+**Apply when:** Improving existing code structure without changing behavior, or reviewing a large/complex function.
+**Rule of thumb:** Pick the named technique (Extract Method, Replace Conditional with Polymorphism, etc.) that targets the specific smell; refactor in small behavior-preserving steps.
 
 ---
 

@@ -1,0 +1,235 @@
+---
+title: "Dynamic Context Pruning (DCP)"
+description: "Mid-session reduction of the context payload sent to the LLM, performed without modifying the underlying session history. Where compaction summarizes everyth…"
+---
+
+# Dynamic Context Pruning (DCP)
+
+Mid-session reduction of the context payload sent to the LLM, performed without modifying the underlying session history. Where compaction summarizes everything at a hard threshold, DCP runs as a combination of model-driven compression and automatic cleanup strategies that fire on each LLM fetch — pruned spans are replaced with placeholders before the request is dispatched.
+
+Reference implementation: [opencode-dcp](/entities/opencode-dcp) — the `@tarquinen/opencode-dcp` plugin for [OpenCode](/entities/opencode). Install:
+
+```bash
+opencode plugin @tarquinen/opencode-dcp@latest --global
+```
+
+---
+
+## The Problem It Solves
+
+Long coding sessions accumulate three classes of dead weight in the active context:
+
+- Repeated tool calls (same tool, same args invoked across turns)
+- Errored tool inputs whose large input payload is no longer relevant once the error has been read
+- Closed/finished spans of conversation that the model no longer needs verbatim
+
+These dilute attention and inflate per-request cost without contributing signal. DCP attacks each class with a different mechanism rather than waiting for full compaction.
+
+---
+
+## Three Mechanisms
+
+DCP composes three independent prune paths. Pruned content never leaves the session log on disk — it is only replaced with a placeholder in the outgoing request.
+
+### 1. Compress (model-driven)
+
+A `compress` tool exposed to the model. The model decides when to call it based on task completion, picking which spans no longer need verbatim representation. This is **not** automatic per turn — the model triggers it.
+
+Two modes:
+
+- `range` (default) — compresses contiguous spans of conversation into block summaries. When a new compression overlaps an earlier one, the earlier summary is **nested** inside the new one to preserve information across compression layers rather than dilute it.
+- `message` (experimental) — compresses individual raw messages independently. Allows much more surgical context management.
+
+In both modes, protected tool outputs (subagents, skills, todos) and protected file patterns are appended to compression summaries, ensuring critical state is never lost. `protectUserMessages` keeps user messages verbatim during compression — but this means large pasted prompts (e.g. log files) will never be compressed away.
+
+DCP injects nudges to encourage compression based on context size:
+
+- Below `minContextLimit` (default 50K tokens): no reminders
+- Between min and max: reminders active, but soft
+- Above `maxContextLimit` (default 100K tokens): strong nudges, fires every `nudgeFrequency` fetches
+
+Both limits accept an absolute number or a `"X%"` of the model's context window. Per-model overrides via `modelMinLimits` / `modelMaxLimits`.
+
+### 2. Deduplication (automatic)
+
+Identifies repeated tool calls (same tool name, same arguments) and keeps only the most recent output. Recalculated **on LLM fetch** — i.e. when the request is being assembled, not on every tool-call event. Prompt cache impact is therefore aligned with compression events, not interspersed mid-turn.
+
+### 3. Purge Errors (automatic)
+
+Prunes the **input** payload of errored tool calls after a configurable number of turns (default: 4). Error messages themselves are preserved — only the potentially large input content is removed. Recalculated alongside compress.
+
+---
+
+## How It Differs From Compaction
+
+| Dimension | DCP | Compaction |
+|---|---|---|
+| Trigger | Model-driven (compress) + automatic on LLM fetch (dedup, purge) | Threshold (token count or session-end signal) |
+| Scope | Surgical — specific messages or spans | Whole conversation |
+| What it removes | Stale tool inputs, duplicates, closed spans | Replaces full history with summary |
+| What it preserves | Recent state, protected tools/files, optionally user messages | Structured summary of decisions |
+| Reversibility | `decompress`/`recompress` commands restore by ID | Originals replaced; not reversible from session |
+| Implementation | Plugin (`@tarquinen/opencode-dcp`) | OpenCode `experimental.session.compacting` hook |
+
+The two are **complementary**: DCP keeps the active payload lean continuously; compaction handles wholesale summarization at end of session or near hard limits.
+
+---
+
+## Commands
+
+DCP exposes a `/dcp` slash command:
+
+| Command | Purpose |
+|---|---|
+| `/dcp` | Show available DCP commands |
+| `/dcp context` | Token-usage breakdown of current session by category, plus tokens saved |
+| `/dcp stats` | Cumulative pruning stats across all sessions |
+| `/dcp sweep [n]` | Prune all tools since last user message (or last n). Respects `commands.protectedTools` |
+| `/dcp manual [on\|off]` | Toggle manual mode — disables autonomous context tools |
+| `/dcp compress [focus]` | Trigger one compress execution. Optional focus text directs what to compress |
+| `/dcp decompress <n>` | Restore a compression by ID (no arg lists available IDs and topics) |
+| `/dcp recompress <n>` | Re-apply a user-decompressed compression by ID |
+
+---
+
+## Protected Tools
+
+By default these tools are never pruned:
+
+```
+task, skill, todowrite, todoread, compress, batch, plan_enter, plan_exit, write, edit
+```
+
+The `commands.protectedTools` and `strategies.deduplication.protectedTools` / `strategies.purgeErrors.protectedTools` arrays **add** to this default list. The `compress.protectedTools` array works differently — those tool outputs get appended to compression summaries rather than excluded.
+
+---
+
+## Prompt Cache Trade-Off
+
+LLM providers cache prompts based on exact prefix matching. Because DCP rewrites the outgoing request — replacing pruned content with placeholders — it invalidates cached prefixes from the prune point forward.
+
+Reported numbers from the plugin's testing:
+
+- ~85% cache hit rate **with** DCP
+- ~90% cache hit rate **without** DCP
+
+Lost cache reads are traded for token savings on reduced context size and fewer hallucinations from stale content. In long sessions, savings outweigh cache miss cost.
+
+**No impact** for:
+
+- Request-based billing (e.g. GitHub Copilot — charges per request, not tokens)
+- Uniform token pricing (e.g. Cerebras — same rate for cached and uncached)
+
+---
+
+## Relation to Clear-Over-Compact
+
+[Context Compression Strategies](/concepts/context-compression) documents that clear-over-compact has become community consensus for harness-based AFK workflows. DCP fits the **interactive** path:
+
+- Sessions with safe clear points → clear (Pocock workflow)
+- Long interactive sessions where clearing loses unrecoverable state → DCP + compaction
+- Fully automated AFK loops → worktree isolation gives each task fresh context (no DCP needed)
+
+DCP is most valuable for interactive sessions with no natural clear point, especially with smaller-context models (GitHub Copilot, local) where the `minContextLimit` / `maxContextLimit` values should be lowered to match.
+
+---
+
+## Relation to Lean-Session
+
+The `lean-session` plugin (custom, in `templates/`) and DCP solve overlapping problems via different hook surfaces:
+
+- **lean-session** uses OpenCode's `experimental.session.compacting` hook — intervenes in the compaction process itself.
+- **DCP** introduces a `compress` tool plus automatic `tool.execute`-time strategies — works mostly outside compaction.
+
+They are **complementary, not competing**: lean-session shapes the compaction summary when compaction does fire; DCP keeps the active context lean so compaction fires later, less often, and on cleaner input.
+
+---
+
+## Related Pages
+
+- [opencode-dcp](/entities/opencode-dcp) — the plugin itself (config reference, commands, prompt cache trade-off)
+- [Context Compression Strategies](/concepts/context-compression) — compression strategy taxonomy
+- [OpenCode](/entities/opencode) — host harness
+- [Context Degradation Patterns](/concepts/context-degradation) — failure modes DCP prevents (distraction, confusion)
+- [Claude Code vs OpenCode Plugin Systems](/comparisons/claude-code-vs-opencode-plugins) — why this plugin exists in OpenCode and not Claude Code
+
+
+<iframe srcDoc="<!doctype html><html><head><meta charset=&quot;utf-8&quot;><style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel input[type=range]{width:100%;margin:0}
+#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><div id=&quot;gear&quot;>⚙</div>
+<div id=&quot;panel&quot;>
+<label>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<div class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;><span>Directional arrows</span></div>
+</div>
+<div id=&quot;g&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;concepts/dynamic-context-pruning&quot;,&quot;label&quot;:&quot;Dynamic Context Pruning (DCP)&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;concepts/context-compression&quot;,&quot;label&quot;:&quot;Context Compression Strategies&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.795831523312719},{&quot;id&quot;:&quot;entities/opencode&quot;,&quot;label&quot;:&quot;OpenCode&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:5.242640687119285},{&quot;id&quot;:&quot;concepts/context-degradation&quot;,&quot;label&quot;:&quot;Context Degradation Patterns&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;,&quot;label&quot;:&quot;Claude Code vs OpenCode Plugin Systems&quot;,&quot;group&quot;:&quot;comparisons&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;entities/opencode-dcp&quot;,&quot;label&quot;:&quot;opencode-dcp&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;concepts/agent-harness&quot;,&quot;label&quot;:&quot;Agent Harness&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:6.744562646538029},{&quot;id&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;label&quot;:&quot;Lean Agentic Coding Workflow&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:5.58257569495584},{&quot;id&quot;:&quot;concepts/agent-self-correction&quot;,&quot;label&quot;:&quot;Agent Self-Correction&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.123105625617661},{&quot;id&quot;:&quot;concepts/ralph-loop&quot;,&quot;label&quot;:&quot;Ralph Loop&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.872983346207417},{&quot;id&quot;:&quot;concepts/agent-subagents&quot;,&quot;label&quot;:&quot;Agent Subagents&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.741657386773941},{&quot;id&quot;:&quot;concepts/worktree-isolation&quot;,&quot;label&quot;:&quot;Worktree Isolation&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/context-engineering&quot;,&quot;label&quot;:&quot;Context Engineering&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;label&quot;:&quot;Spec-Driven Frameworks vs Native Claude Code&quot;,&quot;group&quot;:&quot;comparisons&quot;,&quot;val&quot;:4.3166247903554},{&quot;id&quot;:&quot;systems/ai-ml&quot;,&quot;label&quot;:&quot;AI and ML Engineering&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4.3166247903554},{&quot;id&quot;:&quot;entities/pi-agent&quot;,&quot;label&quot;:&quot;Pi Agent (pi-mono)&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/agent-teams&quot;,&quot;label&quot;:&quot;Agent Teams&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/rules-vs-hooks&quot;,&quot;label&quot;:&quot;Rules vs. Hooks&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4},{&quot;id&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;label&quot;:&quot;Claude Code → Cross-Platform Migration Matrix&quot;,&quot;group&quot;:&quot;comparisons&quot;,&quot;val&quot;:4},{&quot;id&quot;:&quot;concepts/memory-bank-pattern&quot;,&quot;label&quot;:&quot;Memory Bank Pattern&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;concepts/agentic-memory-tool&quot;,&quot;label&quot;:&quot;Agentic Memory Tool&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;entities/ai-coding-agents&quot;,&quot;label&quot;:&quot;AI Coding Agents&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;entities/everything-claude-code&quot;,&quot;label&quot;:&quot;Everything Claude Code (ECC)&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;concepts/instinct-clustering&quot;,&quot;label&quot;:&quot;Instinct Clustering (Homunculus Pattern)&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;entities/mnemory&quot;,&quot;label&quot;:&quot;Mnemory&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;syntheses/pi-orchestration-architecture&quot;,&quot;label&quot;:&quot;Pi Orchestration Architecture&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;entities/headroom&quot;,&quot;label&quot;:&quot;Headroom&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;concepts/context-window&quot;,&quot;label&quot;:&quot;Context Window&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;entities/lean-session&quot;,&quot;label&quot;:&quot;lean-session plugin&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;concepts/linux-setup-guide&quot;,&quot;label&quot;:&quot;Linux Machine Setup Guide&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;entities/codegraphcontext&quot;,&quot;label&quot;:&quot;CodeGraphContext&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;concepts/domain-glossary&quot;,&quot;label&quot;:&quot;Domain Glossary (CONTEXT.md)&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;entities/opencode-go&quot;,&quot;label&quot;:&quot;OpenCode Go&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;concepts/claude-code-plugins&quot;,&quot;label&quot;:&quot;Claude Code Plugins&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;entities/spotme&quot;,&quot;label&quot;:&quot;SpotMe&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;concepts/llm-observability&quot;,&quot;label&quot;:&quot;LLM Observability&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;concepts/slash-commands&quot;,&quot;label&quot;:&quot;Claude Code Slash Commands&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;entities/opentelemetry&quot;,&quot;label&quot;:&quot;OpenTelemetry&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;entities/pentagi&quot;,&quot;label&quot;:&quot;PentAGI&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;concepts/llm-serialization-formats&quot;,&quot;label&quot;:&quot;LLM Serialization Formats&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:2},{&quot;id&quot;:&quot;concepts/verification-pipeline&quot;,&quot;label&quot;:&quot;Verification Pipeline&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.242640687119285},{&quot;id&quot;:&quot;concepts/agent-skills&quot;,&quot;label&quot;:&quot;Agent Skills&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5},{&quot;id&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;label&quot;:&quot;Agent Context Instructions&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;label&quot;:&quot;Multi-Vendor Adversarial Review&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399}],LINKS=[{&quot;source&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;target&quot;:&quot;concepts/rules-vs-hooks&quot;},{&quot;source&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;target&quot;:&quot;entities/ai-coding-agents&quot;},{&quot;source&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;target&quot;:&quot;concepts/memory-bank-pattern&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/instinct-clustering&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/rules-vs-hooks&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/claude-code-plugins&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/agentic-memory-tool&quot;,&quot;target&quot;:&quot;entities/mnemory&quot;},{&quot;source&quot;:&quot;concepts/agentic-memory-tool&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;concepts/agentic-memory-tool&quot;,&quot;target&quot;:&quot;concepts/context-window&quot;},{&quot;source&quot;:&quot;concepts/agentic-memory-tool&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/claude-code-plugins&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;concepts/claude-code-plugins&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;entities/headroom&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;entities/everything-claude-code&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/llm-serialization-formats&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/dynamic-context-pruning&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/agentic-memory-tool&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/context-window&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/context-window&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;concepts/context-window&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/context-window&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/context-window&quot;,&quot;target&quot;:&quot;concepts/agentic-memory-tool&quot;},{&quot;source&quot;:&quot;concepts/context-window&quot;,&quot;target&quot;:&quot;entities/everything-claude-code&quot;},{&quot;source&quot;:&quot;concepts/domain-glossary&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/domain-glossary&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/dynamic-context-pruning&quot;,&quot;target&quot;:&quot;entities/opencode-dcp&quot;},{&quot;source&quot;:&quot;concepts/dynamic-context-pruning&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;concepts/dynamic-context-pruning&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/dynamic-context-pruning&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/dynamic-context-pruning&quot;,&quot;target&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;},{&quot;source&quot;:&quot;concepts/instinct-clustering&quot;,&quot;target&quot;:&quot;concepts/agentic-memory-tool&quot;},{&quot;source&quot;:&quot;concepts/instinct-clustering&quot;,&quot;target&quot;:&quot;concepts/agent-self-correction&quot;},{&quot;source&quot;:&quot;concepts/instinct-clustering&quot;,&quot;target&quot;:&quot;entities/mnemory&quot;},{&quot;source&quot;:&quot;concepts/instinct-clustering&quot;,&quot;target&quot;:&quot;entities/everything-claude-code&quot;},{&quot;source&quot;:&quot;concepts/instinct-clustering&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;concepts/instinct-clustering&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/linux-setup-guide&quot;,&quot;target&quot;:&quot;entities/headroom&quot;},{&quot;source&quot;:&quot;concepts/linux-setup-guide&quot;,&quot;target&quot;:&quot;entities/pi-agent&quot;},{&quot;source&quot;:&quot;concepts/linux-setup-guide&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;concepts/linux-setup-guide&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;concepts/llm-observability&quot;,&quot;target&quot;:&quot;entities/opentelemetry&quot;},{&quot;source&quot;:&quot;concepts/llm-observability&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/llm-observability&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/llm-serialization-formats&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/memory-bank-pattern&quot;,&quot;target&quot;:&quot;concepts/agentic-memory-tool&quot;},{&quot;source&quot;:&quot;concepts/memory-bank-pattern&quot;,&quot;target&quot;:&quot;entities/mnemory&quot;},{&quot;source&quot;:&quot;concepts/memory-bank-pattern&quot;,&quot;target&quot;:&quot;concepts/rules-vs-hooks&quot;},{&quot;source&quot;:&quot;concepts/memory-bank-pattern&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/memory-bank-pattern&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;target&quot;:&quot;entities/pi-agent&quot;},{&quot;source&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/ralph-loop&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/rules-vs-hooks&quot;,&quot;target&quot;:&quot;concepts/memory-bank-pattern&quot;},{&quot;source&quot;:&quot;concepts/rules-vs-hooks&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/rules-vs-hooks&quot;,&quot;target&quot;:&quot;concepts/agent-self-correction&quot;},{&quot;source&quot;:&quot;concepts/rules-vs-hooks&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;concepts/rules-vs-hooks&quot;,&quot;target&quot;:&quot;concepts/slash-commands&quot;},{&quot;source&quot;:&quot;concepts/slash-commands&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/slash-commands&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;entities/lean-session&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/agent-self-correction&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/rules-vs-hooks&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/memory-bank-pattern&quot;},{&quot;source&quot;:&quot;syntheses/pi-orchestration-architecture&quot;,&quot;target&quot;:&quot;entities/pi-agent&quot;},{&quot;source&quot;:&quot;syntheses/pi-orchestration-architecture&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;syntheses/pi-orchestration-architecture&quot;,&quot;target&quot;:&quot;entities/opencode-go&quot;},{&quot;source&quot;:&quot;syntheses/pi-orchestration-architecture&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;target&quot;:&quot;entities/everything-claude-code&quot;},{&quot;source&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;,&quot;target&quot;:&quot;concepts/claude-code-plugins&quot;},{&quot;source&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/memory-bank-pattern&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/rules-vs-hooks&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;entities/ai-coding-agents&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;entities/codegraphcontext&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/codegraphcontext&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;entities/everything-claude-code&quot;,&quot;target&quot;:&quot;concepts/instinct-clustering&quot;},{&quot;source&quot;:&quot;entities/everything-claude-code&quot;,&quot;target&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;},{&quot;source&quot;:&quot;entities/everything-claude-code&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/everything-claude-code&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/headroom&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/headroom&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/headroom&quot;,&quot;target&quot;:&quot;entities/opencode-dcp&quot;},{&quot;source&quot;:&quot;entities/lean-session&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/lean-session&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;entities/lean-session&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;entities/lean-session&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;entities/mnemory&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/mnemory&quot;,&quot;target&quot;:&quot;concepts/agentic-memory-tool&quot;},{&quot;source&quot;:&quot;entities/mnemory&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;entities/opencode-dcp&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;entities/opencode-dcp&quot;,&quot;target&quot;:&quot;concepts/dynamic-context-pruning&quot;},{&quot;source&quot;:&quot;entities/opencode-go&quot;,&quot;target&quot;:&quot;entities/pi-agent&quot;},{&quot;source&quot;:&quot;entities/opencode-go&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;entities/opencode-go&quot;,&quot;target&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/instinct-clustering&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;entities/ai-coding-agents&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/claude-code-plugins&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/linux-setup-guide&quot;},{&quot;source&quot;:&quot;entities/opentelemetry&quot;,&quot;target&quot;:&quot;concepts/llm-observability&quot;},{&quot;source&quot;:&quot;entities/opentelemetry&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/opentelemetry&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;entities/pentagi&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/pentagi&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/pi-agent&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;entities/pi-agent&quot;,&quot;target&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;},{&quot;source&quot;:&quot;entities/pi-agent&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;entities/pi-agent&quot;,&quot;target&quot;:&quot;entities/opencode-go&quot;},{&quot;source&quot;:&quot;entities/pi-agent&quot;,&quot;target&quot;:&quot;concepts/agent-self-correction&quot;},{&quot;source&quot;:&quot;entities/spotme&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;entities/spotme&quot;,&quot;target&quot;:&quot;entities/opencode&quot;}],CUR=&quot;concepts/dynamic-context-pruning&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return 'rgba(255,255,255,0.12)';})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return 'rgba(255,255,255,0.4)';})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle='#fff';ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+function fit(){G.zoomToFit(400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){G.pauseAnimation();}function resume(){G.resumeAnimation();}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){if(hd.hasPointerCapture(e.pointerId))hd.releasePointerCapture(e.pointerId);hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e2){if(window.console)console.debug('graph: could not persist position',e2);}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />

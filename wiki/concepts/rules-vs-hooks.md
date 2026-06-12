@@ -108,3 +108,4 @@ From the AGENTS.md critique (Wand, 2026-05-06):
 - [[concepts/memory-bank-pattern]] — hybrid approach that escapes single-file limits
 - [[concepts/agent-self-correction]] — hooks as enforcement mechanism
 - [[entities/opencode]] — compaction hook and plugin event surface
+- [[concepts/slash-commands]] — session-command decision guide; the third config surface alongside rules and hooks

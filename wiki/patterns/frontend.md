@@ -1,6 +1,6 @@
 ---
 title: "Frontend Patterns"
-type: concept
+type: pattern
 tags: [patterns, frontend, react, software-engineering]
 sources:
   - "Design Patterns for React Interviews.md"
@@ -12,6 +12,11 @@ updated: 2026-05-06
 # Frontend Patterns
 
 Reference and agent guide for React component patterns, state strategy, rendering modes, performance techniques, and CSS architecture.
+
+## Agent Trigger
+
+**Apply when:** Building or reviewing React components, client state, rendering strategy, or CSS architecture.
+**Rule of thumb:** Choose the narrowest state scope that works; pick CSR/SSR/SSG/ISR by data freshness needs; memoize only measured hot paths.
 
 ---
 

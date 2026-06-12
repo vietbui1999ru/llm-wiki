@@ -170,5 +170,5 @@ fi
 - [[entities/opencode-go]] — OpenCode Go subscription; model pool for pi workers
 - [[summaries/pi-building-in-world-of-slop]] — Pi design philosophy; minimal harness, self-modifying extensions
 - [[concepts/agent-harness]] — harness primitives; filesystem as coordination layer
-- [[concepts/agent-primitive-selection]] — decision tree for orchestration patterns
+- [[syntheses/agent-primitive-selection]] — decision tree for orchestration patterns
 - [[concepts/shared-task-queue]] — when to use worktrees instead of task scoping

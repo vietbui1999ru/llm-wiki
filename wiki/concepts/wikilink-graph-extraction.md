@@ -23,7 +23,7 @@ LightRAG runs three extraction phases per page during indexing:
 2. **Relation extraction** — LLM finds connections between entities
 3. **Community summarization** — LLM summarizes entity clusters
 
-Each phase involves multiple LLM calls per chunk. For a wiki where pages already declare their connections via `[[wikilinks]]`, phases 1–2 largely re-discover what's already known. At ~150 pages with Haiku, this costs $10–30.
+Each phase involves multiple LLM calls per chunk. For a wiki where pages already declare their connections via `[[wikilinks]]`, phases 1–2 largely re-discover what's already known. At ~150 pages with Haiku, this costs $10–30 *(claimed, unverified)*.
 
 **Example — what the LLM re-discovers unnecessarily:**
 ```

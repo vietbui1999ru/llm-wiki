@@ -1,6 +1,6 @@
 ---
 title: "Database Patterns"
-type: concept
+type: pattern
 tags: [patterns, database, sql, software-engineering]
 sources:
   - "A detailed guide on Database Indexes.md"
@@ -11,6 +11,11 @@ updated: 2026-05-06
 # Database Patterns
 
 Reference and agent guide for indexing strategies, query optimization, transaction patterns, connection pooling, and read/write architecture.
+
+## Agent Trigger
+
+**Apply when:** Writing or reviewing schema, queries, indexes, transactions, or connection pooling.
+**Rule of thumb:** Read the query plan, index for access patterns, kill N+1s, pick the right isolation level.
 
 ---
 

@@ -320,3 +320,4 @@ See [[summaries/opencode-headless-api]] for full API reference and orchestration
 - [[concepts/agent-harness]] — OpenCode is a complete harness implementation; compare components
 - [[entities/ai-coding-agents]] — OpenCode is part of the AI coding agent ecosystem
 - [[concepts/claude-code-plugins]] — Claude Code's plugin system (what OpenCode extends)
+- [[concepts/linux-setup-guide]] — fresh-machine bootstrap that installs OpenCode + the rest of the AI toolchain

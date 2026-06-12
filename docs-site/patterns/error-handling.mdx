@@ -1,0 +1,407 @@
+---
+title: "Error Handling Patterns"
+description: "Reference for both developers writing code and agents implementing features. Covers the full lifecycle: classification → representation → propagation → retry…"
+---
+
+# Error Handling Patterns
+
+Reference for both developers writing code and agents implementing features. Covers the full lifecycle: classification → representation → propagation → retry → observability.
+
+## Agent Trigger
+
+**Apply when:** Writing try/catch blocks, defining error types, retry logic, or reviewing error paths.
+**Rule of thumb:** Fail fast, type your errors, never silently swallow; use Result types or exceptions consistently; backoff with jitter on retries.
+
+---
+
+## Error Taxonomy
+
+Understanding what kind of error you have determines how you handle it.
+
+### Expected vs. Unexpected
+
+| Type | Definition | Example |
+|---|---|---|
+| **Expected** | Normal failure modes the domain anticipates | User not found, validation failure, rate limit hit |
+| **Unexpected** | Bugs, invariant violations, infrastructure failures | NullPointerException, DB connection lost, OOM |
+
+Expected errors belong in the return type (Result/Either or checked value). Unexpected errors surface as exceptions or panics and propagate to a global handler.
+
+### Recoverable vs. Fatal
+
+- **Recoverable**: caller can retry, fallback, or inform the user and continue
+- **Fatal**: system cannot safely continue; crash or escalate immediately
+
+A crashed app is more diagnosable than an app with undefined behavior from a swallowed error.
+
+### Business Errors vs. Technical Errors
+
+- **Business errors**: domain rule violations — surface to users with actionable messages ("Insufficient balance")
+- **Technical errors**: infrastructure or code failures — log internally, surface generic message to users
+
+Never leak stack traces, internal paths, or system details to end users.
+
+---
+
+## Fail-Fast Principle
+
+Validate at the earliest possible point. Every validation deferred is a debugging cost multiplied.
+
+**Rules:**
+- Validate arguments before entering async or side-effecting logic
+- Raise errors immediately upon detection — not after partially completing work
+- In task-returning methods (async), throw argument exceptions synchronously before the async portion begins
+
+```typescript
+// Bad: validation buried inside async body
+async function processOrder(orderId: string) {
+  const result = await db.query(orderId); // orderId could be null
+  if (!orderId) throw new Error("...");   // too late, query already ran
+}
+
+// Good: validate synchronously first
+async function processOrder(orderId: string) {
+  if (!orderId) throw new ArgumentError("orderId is required");
+  return db.query(orderId);
+}
+```
+
+---
+
+## Exception Best Practices
+
+### When to Use Exceptions
+
+Use exceptions for **truly exceptional** conditions — events that are rare, unexpected, or represent violations of invariants. For conditions that occur routinely as part of normal flow, use conditional checks or Result types instead.
+
+```csharp
+// Prefer: check state before calling
+if (conn.State != ConnectionState.Closed) conn.Close();
+
+// Over: catch predictable failures
+try { conn.Close(); }
+catch (InvalidOperationException) { ... }
+```
+
+### Exception Hierarchy Design
+
+- Derive custom exceptions from the appropriate base class, not always from the root `Exception`
+- Name exception classes with the `Exception` suffix
+- Include three constructors: `()`, `(message)`, `(message, innerException)`
+- Add structured properties only when callers need them programmatically (not just for messages)
+- Prefer predefined exception types over custom ones where they fit precisely
+
+### What to Include in Exception Messages
+
+- Root cause, not a generic label ("Server error" is insufficient)
+- What went wrong, where, and ideally what the caller can do
+- Proper grammar and ending punctuation
+- No PII, no internal paths, no stack trace content in the message string itself
+
+```python
+# Bad
+raise Exception("Error")
+
+# Good
+raise ValueError(f"User ID '{user_id}' not found in database 'users'.")
+```
+
+### Never Swallow Silently
+
+```python
+# Anti-pattern: silence all errors
+try:
+    process()
+except Exception:
+    pass  # no log, no rethrow — problem disappears
+
+# Correct: at minimum log, then decide
+try:
+    process()
+except Exception as e:
+    logger.error("process() failed", exc_info=e)
+    raise  # or handle intentionally
+```
+
+---
+
+## Railway-Oriented Programming / Result Types
+
+The `Result<Ok, Err>` pattern (Rust, Haskell Either, Kotlin Arrow, TypeScript fp-ts) makes error handling explicit and type-safe. The compiler enforces handling — unlike exceptions, which are invisible in signatures.
+
+```rust
+fn parse_user_id(s: &str) -> Result<UserId, ParseError> {
+    s.parse::<u64>()
+        .map(UserId)
+        .map_err(|e| ParseError::InvalidFormat(e.to_string()))
+}
+
+// Propagate with ?
+fn load_user(s: &str) -> Result<User, AppError> {
+    let id = parse_user_id(s)?;   // returns Err early if parse fails
+    let user = db.find(id)?;
+    Ok(user)
+}
+```
+
+**Chaining / composition:**
+```typescript
+// TypeScript with fp-ts or similar
+const result = pipe(
+  parseUserId(raw),
+  flatMap(id => findUser(id)),
+  map(user => user.profile),
+);
+```
+
+### When to Use Result vs. Exceptions
+
+| Situation | Use |
+|---|---|
+| Expected failure in a domain operation | Result / Either |
+| Programming error / invariant violation | Exception / panic |
+| Language forces exceptions (Java, Python) | Exceptions + careful hierarchy |
+| Cross-boundary serialization needed | Result (serialize to structured error) |
+| Hot path, allocation-sensitive | Result (no stack unwind overhead) |
+
+---
+
+## Error Propagation
+
+### Let It Propagate
+
+Default stance: if you cannot handle the error meaningfully at the current layer, let it propagate. Do not catch just to re-throw the same exception without adding context.
+
+### Catch-and-Rethrow: Add Context
+
+When catching, wrap with additional context about what operation failed. Preserve the original as `cause` / `innerException`.
+
+```python
+# Bad: swallows original cause
+except Exception:
+    raise RuntimeError("Something failed")
+
+# Good: wraps with context, chains original
+except Exception as e:
+    raise ServiceError(f"Failed to load user {user_id}") from e
+```
+
+### Preserve Stack Traces
+
+In C#, use bare `throw` (not `throw e`) inside a catch block to preserve the original stack trace. When rethrowing outside the catch block, use `ExceptionDispatchInfo.Capture` / `.Throw()`.
+
+### Rollback on Partial Mutation
+
+If a method performs multiple side effects and one fails, undo completed steps. Callers must be able to assume no side effects when an exception escapes.
+
+```csharp
+var txId = account.Withdraw(amount);
+try {
+    destination.Deposit(amount);
+} catch {
+    account.RollbackTransaction(txId);
+    throw;  // preserve stack trace
+}
+```
+
+---
+
+## Retry and Backoff
+
+### What Errors Warrant Retry
+
+Retry only **transient** errors: network timeouts, rate limits, temporary unavailability. Do not retry:
+- Validation errors (will always fail)
+- Authentication failures (credentials wrong, not transient)
+- Business rule violations
+
+### Exponential Backoff with Jitter
+
+```python
+import random, time
+
+def retry_with_backoff(fn, max_attempts=5, base_delay=0.5):
+    for attempt in range(max_attempts):
+        try:
+            return fn()
+        except TransientError as e:
+            if attempt == max_attempts - 1:
+                raise
+            delay = base_delay * (2 ** attempt) + random.uniform(0, 0.1)
+            time.sleep(delay)
+```
+
+**Jitter** prevents thundering herd when many callers retry simultaneously.
+
+### Retry Budget
+
+Cap total attempts and total elapsed time. See [Error Budget (Agentic)](/concepts/error-budget) for the agentic adaptation of this pattern (retry/token/runtime/session budgets).
+
+For self-healing loops: [Self-Healing Loop](/concepts/self-healing-loop) covers the failure→retry→rollback→escalation sequence.
+
+---
+
+## Error Response Design (APIs)
+
+See [API Design Patterns](/patterns/api-design) for full REST conventions. Summary for error responses:
+
+### Structured Error Body
+
+```json
+{
+  "error": {
+    "code": "USER_NOT_FOUND",
+    "message": "No user with ID 'abc123' exists.",
+    "details": { "userId": "abc123" },
+    "requestId": "req_xyz"
+  }
+}
+```
+
+### HTTP Status + Error Code
+
+HTTP status gives coarse classification. A machine-readable `code` string provides specific identity.
+
+| Category | HTTP Status Range |
+|---|---|
+| Client input errors | 4xx |
+| Server / infra errors | 5xx |
+| Auth failures | 401 / 403 |
+| Not found | 404 |
+| Rate limit | 429 |
+
+Never return 200 with an error body — clients cannot distinguish success from failure without reading the body.
+
+### User-Facing vs. Developer Messages
+
+- `message`: safe to display to end users — no internals, no paths
+- `details` / `debug`: developer context, strip in production or gate behind auth
+- Never expose stack traces, SQL, or internal service names in API responses
+
+---
+
+## Logging Discipline
+
+### What to Log
+
+- Log at **ERROR**: unhandled exceptions, data loss scenarios, external service failures
+- Log at **WARN**: degraded operation, retries, approaching limits, unexpected-but-handled states
+- Log at **INFO**: significant lifecycle events (server start, job complete, user auth)
+- Log at **DEBUG**: request details, intermediate state — only in development
+
+### Avoid Logging PII
+
+Never log passwords, tokens, email addresses, SSNs, payment data. Mask or omit before logging.
+
+### Log Error Codes
+
+Assign numeric or string codes to known error categories. Document them. Codes allow support teams to grep logs and correlate errors without reading prose.
+
+### Log Once at the Boundary
+
+Log at the point where the error is handled or escalated — not at every layer it passes through. Multiple log entries for the same error create noise and inflate storage.
+
+---
+
+## Anti-Patterns
+
+| Anti-pattern | Problem | Fix |
+|---|---|---|
+| **Swallowing exceptions** | Error disappears, undefined behavior persists | Log + rethrow, or handle explicitly |
+| **Returning null on error** | Callers must check everywhere; NPE far from origin | Return Result/Option or throw with context |
+| **Magic error numbers** | `if (code == -7)` is unreadable and unmaintainable | Named constants or typed error codes |
+| **Logging and rethrowing** | Creates duplicate log entries for one error | Log once, at the boundary where you handle |
+| **Generic messages** | "Server error" — useless for diagnosis | Name the operation, the input, the constraint violated |
+| **Raising in `finally`** | Replaces original exception, destroys root cause | Never throw from `finally`; only cleanup |
+| **Throw from unexpected places** | Equals, GetHashCode, static constructors | Reserve exceptions for fallible operations |
+| **Catching base Exception broadly** | Masks bugs, catches cancellation, prevents escalation | Catch specific types; let unexpected bubble |
+
+---
+
+## Cross-References
+
+- [API Design Patterns](/patterns/api-design) — error response shape, HTTP status conventions
+- [Software Design Principles](/patterns/principles) — fail-fast and single-responsibility apply to error handling design
+- [Self-Healing Loop](/concepts/self-healing-loop) — failure→retry→rollback→escalation harness pattern
+- [Error Budget (Agentic)](/concepts/error-budget) — retry/token/runtime/session budgets for agentic loops
+
+
+<iframe srcDoc="<!doctype html><html><head><meta charset=&quot;utf-8&quot;><style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel input[type=range]{width:100%;margin:0}
+#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><div id=&quot;gear&quot;>⚙</div>
+<div id=&quot;panel&quot;>
+<label>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<div class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;><span>Directional arrows</span></div>
+</div>
+<div id=&quot;g&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;patterns/error-handling&quot;,&quot;label&quot;:&quot;Error Handling Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/principles&quot;,&quot;label&quot;:&quot;Software Design Principles&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:4.741657386773941},{&quot;id&quot;:&quot;concepts/self-healing-loop&quot;,&quot;label&quot;:&quot;Self-Healing Loop&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/error-budget&quot;,&quot;label&quot;:&quot;Error Budget (Agentic)&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;patterns/backend&quot;,&quot;label&quot;:&quot;Backend Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;patterns/api-design&quot;,&quot;label&quot;:&quot;API Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;concepts/agent-harness&quot;,&quot;label&quot;:&quot;Agent Harness&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:6.744562646538029},{&quot;id&quot;:&quot;concepts/verification-pipeline&quot;,&quot;label&quot;:&quot;Verification Pipeline&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.242640687119285},{&quot;id&quot;:&quot;concepts/ralph-loop&quot;,&quot;label&quot;:&quot;Ralph Loop&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.872983346207417},{&quot;id&quot;:&quot;concepts/agentic-cicd&quot;,&quot;label&quot;:&quot;Agentic CI/CD&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/worktree-isolation&quot;,&quot;label&quot;:&quot;Worktree Isolation&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;label&quot;:&quot;Agentic Sandbox Controls&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;systems/scalability-reliability&quot;,&quot;label&quot;:&quot;Scalability and Reliability&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;systems/distributed-systems&quot;,&quot;label&quot;:&quot;Distributed Systems&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4},{&quot;id&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;label&quot;:&quot;OWASP Security Checklist&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4},{&quot;id&quot;:&quot;systems/architectural-patterns&quot;,&quot;label&quot;:&quot;Architectural Patterns&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;label&quot;:&quot;Behavioral Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;concepts/deep-modules&quot;,&quot;label&quot;:&quot;Deep Modules&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;patterns/code-quality&quot;,&quot;label&quot;:&quot;Code Quality Heuristics&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;label&quot;:&quot;Structural Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;systems/system-design-process&quot;,&quot;label&quot;:&quot;System Design Process&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;patterns/database&quot;,&quot;label&quot;:&quot;Database Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;patterns/concurrency&quot;,&quot;label&quot;:&quot;Concurrency and Parallelism Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;patterns/frontend&quot;,&quot;label&quot;:&quot;Frontend Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;label&quot;:&quot;Creational Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;patterns/refactoring&quot;,&quot;label&quot;:&quot;Refactoring Techniques&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;patterns/algorithmic&quot;,&quot;label&quot;:&quot;Algorithmic Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.414213562373095},{&quot;id&quot;:&quot;concepts/context-compression&quot;,&quot;label&quot;:&quot;Context Compression Strategies&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.795831523312719},{&quot;id&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;label&quot;:&quot;Lean Agentic Coding Workflow&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:5.58257569495584},{&quot;id&quot;:&quot;entities/opencode&quot;,&quot;label&quot;:&quot;OpenCode&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:5.242640687119285},{&quot;id&quot;:&quot;concepts/agent-self-correction&quot;,&quot;label&quot;:&quot;Agent Self-Correction&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.123105625617661},{&quot;id&quot;:&quot;concepts/agent-skills&quot;,&quot;label&quot;:&quot;Agent Skills&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5},{&quot;id&quot;:&quot;concepts/agent-subagents&quot;,&quot;label&quot;:&quot;Agent Subagents&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.741657386773941},{&quot;id&quot;:&quot;concepts/context-degradation&quot;,&quot;label&quot;:&quot;Context Degradation Patterns&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;label&quot;:&quot;Multi-Vendor Adversarial Review&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;label&quot;:&quot;Agent Context Instructions&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;label&quot;:&quot;Agent Primitive Selection&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;concepts/context-engineering&quot;,&quot;label&quot;:&quot;Context Engineering&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;systems/ai-ml&quot;,&quot;label&quot;:&quot;AI and ML Engineering&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4.3166247903554},{&quot;id&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;label&quot;:&quot;Spec-Driven Frameworks vs Native Claude Code&quot;,&quot;group&quot;:&quot;comparisons&quot;,&quot;val&quot;:4.3166247903554},{&quot;id&quot;:&quot;entities/dangeresque&quot;,&quot;label&quot;:&quot;Dangeresque&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;entities/sandcastle&quot;,&quot;label&quot;:&quot;SandCastle&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;label&quot;:&quot;Indirect Prompt Injection&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/agent-teams&quot;,&quot;label&quot;:&quot;Agent Teams&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838}],LINKS=[{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;concepts/ralph-loop&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;patterns/algorithmic&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/algorithmic&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;patterns/error-handling&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;systems/system-design-process&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/api-design&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/database&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/error-handling&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;patterns/refactoring&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/concurrency&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;patterns/concurrency&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;patterns/concurrency&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/database&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;patterns/database&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/design-patterns-creational&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/design-patterns-creational&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;patterns/api-design&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/refactoring&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;systems/system-design-process&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;patterns/concurrency&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;patterns/database&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;systems/system-design-process&quot;,&quot;target&quot;:&quot;patterns/api-design&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/agent-self-correction&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;}],CUR=&quot;patterns/error-handling&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return 'rgba(255,255,255,0.12)';})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return 'rgba(255,255,255,0.4)';})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle='#fff';ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+function fit(){G.zoomToFit(400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){G.pauseAnimation();}function resume(){G.resumeAnimation();}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){if(hd.hasPointerCapture(e.pointerId))hd.releasePointerCapture(e.pointerId);hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e2){if(window.console)console.debug('graph: could not persist position',e2);}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />

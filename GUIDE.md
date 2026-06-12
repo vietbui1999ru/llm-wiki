@@ -67,6 +67,8 @@ wiki/
   concepts/   ← ideas and patterns
   comparisons/← side-by-side analyses
   syntheses/  ← cross-source conclusions
+  patterns/   ← parallel software-engineering reference track (SOLID, GoF, refactoring) — peer human-learning track, not derived from concepts/
+  systems/    ← system-level design and architecture pages
 index.md      ← catalog of all pages (auto-updated on every ingest)
 log.md        ← append-only operation history
 ```

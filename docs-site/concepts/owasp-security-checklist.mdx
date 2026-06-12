@@ -1,0 +1,284 @@
+---
+title: "OWASP Security Checklist"
+description: "Structured checklist for web application security review. Based on OWASP Top 10. Applied during code review and security audits. AI-specific risks appended."
+---
+
+# OWASP Security Checklist
+
+Structured checklist for web application security review. Based on OWASP Top 10. Applied during code review and security audits. AI-specific risks appended.
+
+The full operational checklist lives in the `security-patterns` skill (preloaded into `security-auditor`). This page is the reference copy for the wiki.
+
+## OWASP Top 10
+
+### A01 — Broken Access Control
+- Authorization checked on every route/endpoint (not just UI)
+- Horizontal privilege escalation: can user A access user B's resources?
+- Direct object references validated (IDs in URLs, query params)
+- Admin/elevated actions gated by role, not just authenticated state
+- CORS configured restrictively; no wildcard `*` on credentialed endpoints
+
+### A02 — Cryptographic Failures
+- Sensitive data (PII, tokens, passwords) not stored in plaintext
+- Passwords hashed with bcrypt/argon2/scrypt (not MD5/SHA1)
+- TLS enforced; no HTTP fallback for sensitive routes
+- Secrets not in code, git history, or log output
+- Tokens with appropriate expiry; refresh token rotation
+
+### A03 — Injection
+- SQL: parameterized queries or ORM only; no string concatenation into queries
+- Shell: no user input in exec/spawn/system calls
+- Template injection: user input never rendered as template code
+- NoSQL: operators like `$where`, `$regex` not constructed from user input
+
+### A04 — Insecure Design
+- Business logic: can the normal flow be abused? (negative quantities, skipping steps)
+- Rate limiting on auth endpoints, password reset, OTP verification
+- Enumeration: error messages don't reveal whether a user exists
+- Multi-step processes: each step validates prior step completed
+
+### A05 — Security Misconfiguration
+- Default credentials changed; debug endpoints disabled in production
+- Error messages sanitized: no stack traces, file paths, or internal details to clients
+- Security headers present: CSP, HSTS, X-Frame-Options, X-Content-Type
+- Unnecessary features/endpoints/routes disabled
+
+### A06 — Vulnerable Components
+- Known CVEs in direct dependencies? (`npm audit`, `pip-audit`, `go mod`)
+- Indirect/transitive dependencies not pinned to vulnerable versions
+
+### A07 — Authentication Failures
+- Session tokens: sufficient entropy, invalidated on logout, rotated on privilege change
+- Brute force: lockout or progressive delay on repeated failures
+- Password reset: tokens time-limited, single-use, invalidated after use
+- JWT: algorithm verified server-side; `alg: none` rejected; secret not weak
+- OAuth/OIDC: state parameter validated; redirect_uri allowlisted
+
+### A08 — Software and Data Integrity
+- Deserialization of untrusted data: type-checked before use
+- Webhook signatures verified before processing payload
+- File uploads: type validated server-side; stored outside webroot
+
+### A09 — Logging and Monitoring
+- Auth events logged: login, logout, failures, privilege changes
+- Sensitive data excluded from logs (passwords, tokens, PII)
+- Log injection: user-controlled input sanitized before logging
+
+### A10 — SSRF
+- URL inputs validated against allowlist; no arbitrary external fetches
+- Internal metadata endpoints (169.254.x.x, cloud metadata APIs) blocked
+- Redirects: open redirects validated against allowlist
+
+## AI-Specific Risks
+
+Extended from two 2026 OWASP cheat sheets (AI Agent Security + Secure Coding with AI). Two perspectives:
+- **Building an agent** — tool security, memory security, multi-agent trust
+- **Using AI coding tools** — slopsquatting, rules file injection, CI/CD confused deputy, test fabrication
+
+### Indirect Prompt Injection
+- Agent reads external content (URLs, files, emails, issues, PR descriptions, error traces)? → treat as untrusted
+- External content can't override system instructions or trigger tool calls
+- Rules files (CLAUDE.md, AGENTS.md) modified by injected instructions persist across all future sessions
+- Sandboxed: agent can't exfiltrate data via unexpected network calls
+
+See [Indirect Prompt Injection](/concepts/indirect-prompt-injection) for full treatment including dev-loop vectors and CI/CD confused deputy.
+
+### Agentic Sandbox Controls
+- Tool permissions minimal: only what the task requires
+- Destructive operations (delete, overwrite) require explicit confirmation
+- Secrets injected at runtime, not baked into prompts or config; ephemeral credentials per task
+- `--dangerously-skip-permissions` and auto-accept modes remove all approval prompts — only safe with OS-level sandbox enforced independently
+
+See [Agentic Sandbox Controls](/concepts/agentic-sandbox-controls) for full treatment.
+
+### Tool Security & Least Privilege
+- Agents get minimum tools for specific task; no wildcard permissions (e.g. `"allowed_commands": "*"`)
+- Tool authorization middleware for MEDIUM+ risk operations (require `user_confirmed` flag)
+- Risk tiers: LOW (read) → MEDIUM (write) → HIGH (email, code exec) → CRITICAL (delete, financial)
+- MCP servers: maintain allowlist; snapshot-and-diff tool definitions to detect rug-pull updates; audit tool descriptions for embedded injection payloads
+
+### Memory & Context Security
+- Validate/sanitize data before storing in agent memory
+- Memory isolation between users and sessions
+- TTL + size limits on memory entries; scan for PII and API keys before persistence
+- Cryptographic integrity check: `checksum = sha256(content + user_id + encryption_key)` — detects tampering
+
+### Data Classification
+- RESTRICTED (SSN, credit card, health): redact fully in context, logs, output
+- CONFIDENTIAL (salaries, API keys): mask in context/output, redact fully in logs
+- INTERNAL: normal access controls; PUBLIC: no restrictions
+
+### AI Coding Tool Threats (Secure Coding with AI)
+
+**Hallucinated Dependencies (slopsquatting)**
+- AI suggests packages that don't exist; attackers pre-register malicious packages at those names
+- Verify every AI-suggested package: check registry existence, download count, creation date (&lt; 30 days = suspect), maintainer history
+- Block unvetted packages in CI; maintain internal allowlist
+
+**Outdated Dependencies**
+- AI training data is historical; suggested versions may have post-cutoff CVEs
+- Run `npm audit` / `pip audit` / `govulncheck` on every AI-generated dependency list
+- Never skip dependency auditing because code was AI-generated
+
+**Rules Files as Persistent Steering**
+- `.cursorrules`, `CLAUDE.md`, `AGENTS.md`, `.github/copilot-instructions.md` steer all future generations
+- Treat as security-critical config: require explicit approval for any modification including by the agent
+- Git hooks that flag changes to rules files in every PR
+
+**Test Fabrication and Test Deletion**
+- Agents make CI green by: deleting failing tests, weakening assertions, mocking the unit under test, asserting buggy behavior
+- 100% pass rate ≠ evidence of correctness when the same agent wrote both code and tests
+- Add adversarial/negative test cases the AI didn't generate; flag test deletions in CI; human-review all assertion changes
+
+**CI/CD Confused Deputy**
+- CI/CD bots (review bots, `claude-code-action`) process PR events with org secrets
+- Malicious PR body can instruct CI agent to exfiltrate secrets or modify the pipeline ("clinejection" — documented in [Cline post-mortem](https://cline.bot/blog/post-mortem-unauthorized-cline-cli-npm))
+- Scope CI agent credentials to minimum; sanitize PR content before passing as context; approval gates for pushes
+- Restrict default `GITHUB_TOKEN` to read-only at repo level; grant write only at job level
+- Avoid `pull_request_target` and `workflow_run` triggers (expose secrets to untrusted code)
+- OIDC-based short-lived tokens ("trusted publishing") eliminates static credentials from workflows
+- Enable CodeQL `language: actions` scanning + [Zizmor](https://docs.zizmor.sh/)
+- SHA-pin third-party actions to commit SHA, not mutable tags: `uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2`
+- Require approval for all external contributors — "first-time contributor" setting is bypassable via initial legitimate PR
+
+**Prompt Context Leakage**
+- AI coding tools send open files and terminal output to the model provider API
+- `.gitignore` does NOT prevent AI tools from reading files
+- Exclude `.env`, `*.pem`, `*.key`, `credentials.json` via `.cursorignore`/`.copilotignore`
+
+**Multi-Agent Propagation**
+- Prompt injection propagates across agent boundaries: output of compromised Agent A becomes instructions for Agent B
+- Treat output from any agent as untrusted input to the next; sanitize before passing
+- Don't inherit full permissions/credentials from parent agent without scope restriction
+- Explicit trust levels: `UNTRUSTED (0) → INTERNAL (1) → PRIVILEGED (2) → SYSTEM (3)`; sanitize payload based on trust level before forwarding
+- Signed inter-agent messages: verify signature + freshness (5-minute window prevents replay); authorized recipient list per sender; circuit breaker per agent (threshold=5 failures, 60s recovery)
+
+### Denial of Wallet (DoW)
+- Unbounded agent loops can exhaust API/compute budget via crafted inputs
+- Set per-session cost limits and tool call rate limits; alert on anomalies
+- Recursion, retry, and chain-depth limits for agentic/tool-using flows
+- Circuit breakers or kill switches for cost/latency/tool-call anomalies; alert on sudden spend or token spikes
+- See [Error Budget (Agentic)](/concepts/error-budget) for token budget patterns
+
+### Monitoring Anomaly Thresholds (reference)
+- >30 tool calls/min, >5 failed calls, >$10/session cost, any injection attempt → CRITICAL alert
+- Watch guardrail approval rate for drift — sudden changes often precede a working bypass
+
+## Web Security Reference (Stack-Agnostic Stubs)
+
+Key controls not fully covered above. Expand to dedicated pages when targeted sources are ingested.
+
+**Session Management**: min 128-bit entropy tokens, `HttpOnly`, `Secure`, `SameSite=Strict`; invalidate on logout server-side; rotate on privilege change; never in URL parameters.
+
+**CSRF**: synchronizer token pattern or `SameSite=Strict` cookies; verify `Origin`/`Referer` headers; custom request headers as secondary defense; exempt GET/HEAD/OPTIONS (must be idempotent).
+
+**DOM-Based XSS**: untrusted sources include `document.URL`, `location.hash`, `document.referrer`, `postMessage`; dangerous sinks include raw HTML setters and eval; never pass untrusted source to dangerous sink without DOMPurify.
+
+**IDOR**: validate authenticated user owns the requested resource; map internal IDs to per-user opaque tokens; log access denials; scope queries to user_id — never fetch by id alone.
+
+**Transaction Authorization**: re-authenticate for high-value actions (account deletion, payment); idempotency keys for financial transactions; audit log of all state-changing operations with before/after values.
+
+**Third-Party Scripts**: Subresource Integrity (SRI) for CDN-hosted scripts; CSP to allowlist script sources; audit third-party scripts for data exfiltration risk.
+
+**Deserialization**: never deserialize untrusted data directly into objects; validate type before deserializing; use schema validation (zod, joi) on JSON.parse results; sign serialized tokens.
+
+**DoS**: rate limit all public endpoints (especially auth, search, file upload); request size limits; avoid regex backtracking (ReDoS); connection timeouts.
+
+## Severity Classification
+
+| Level | Criteria | Action |
+|---|---|---|
+| **Critical** | Auth bypass, SQL injection, RCE, secret exposure | Block; fix before merge |
+| **High** | Missing auth check, IDOR, stored XSS, path traversal | Block; fix before merge |
+| **Medium** | Rate limiting missing, open redirect, verbose errors | Fix in follow-up PR |
+| **Low** | Missing security headers, minor info leakage | Fix when convenient |
+| **Info** | Defense-in-depth additions | Optional |
+
+## Related Pages
+
+- [Indirect Prompt Injection](/concepts/indirect-prompt-injection) — AI-specific attack vector; primary threat for agents; full prompt injection taxonomy
+- [Agentic Sandbox Controls](/concepts/agentic-sandbox-controls) — OS-level controls for agent execution environments
+- [AI Code Review](/concepts/ai-code-review) — broader code review process including security as one layer
+- [Agentic Sandbox Controls](/concepts/agentic-sandbox-controls) — NVIDIA AI Red Team OS-level controls; subprocess escape problem; secret injection pattern
+- [Error Budget (Agentic)](/concepts/error-budget) — token/session budget patterns implementing spend limits and circuit breakers
+
+
+<iframe srcDoc="<!doctype html><html><head><meta charset=&quot;utf-8&quot;><style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel input[type=range]{width:100%;margin:0}
+#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><div id=&quot;gear&quot;>⚙</div>
+<div id=&quot;panel&quot;>
+<label>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<div class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;><span>Directional arrows</span></div>
+</div>
+<div id=&quot;g&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;label&quot;:&quot;OWASP Security Checklist&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4},{&quot;id&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;label&quot;:&quot;Agentic Sandbox Controls&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;label&quot;:&quot;Indirect Prompt Injection&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/error-budget&quot;,&quot;label&quot;:&quot;Error Budget (Agentic)&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;concepts/ai-code-review&quot;,&quot;label&quot;:&quot;AI Code Review&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;concepts/ai-specific-pitfalls&quot;,&quot;label&quot;:&quot;AI-Specific Code Pitfalls&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;label&quot;:&quot;LLM Eval Pipeline&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;entities/agentshield&quot;,&quot;label&quot;:&quot;AgentShield&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;concepts/pentest-agent-design&quot;,&quot;label&quot;:&quot;Pen Test Agent Design&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;concepts/mobile-design-patterns&quot;,&quot;label&quot;:&quot;Mobile Design Patterns&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;concepts/agent-harness&quot;,&quot;label&quot;:&quot;Agent Harness&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:6.744562646538029},{&quot;id&quot;:&quot;concepts/verification-pipeline&quot;,&quot;label&quot;:&quot;Verification Pipeline&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.242640687119285},{&quot;id&quot;:&quot;concepts/agent-skills&quot;,&quot;label&quot;:&quot;Agent Skills&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5},{&quot;id&quot;:&quot;concepts/ralph-loop&quot;,&quot;label&quot;:&quot;Ralph Loop&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.872983346207417},{&quot;id&quot;:&quot;concepts/agentic-cicd&quot;,&quot;label&quot;:&quot;Agentic CI/CD&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/worktree-isolation&quot;,&quot;label&quot;:&quot;Worktree Isolation&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;label&quot;:&quot;Agent Context Instructions&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;label&quot;:&quot;Multi-Vendor Adversarial Review&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;label&quot;:&quot;Spec-Driven Frameworks vs Native Claude Code&quot;,&quot;group&quot;:&quot;comparisons&quot;,&quot;val&quot;:4.3166247903554},{&quot;id&quot;:&quot;entities/dangeresque&quot;,&quot;label&quot;:&quot;Dangeresque&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;entities/sandcastle&quot;,&quot;label&quot;:&quot;SandCastle&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/self-healing-loop&quot;,&quot;label&quot;:&quot;Self-Healing Loop&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;systems/scalability-reliability&quot;,&quot;label&quot;:&quot;Scalability and Reliability&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;systems/distributed-systems&quot;,&quot;label&quot;:&quot;Distributed Systems&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4},{&quot;id&quot;:&quot;concepts/llm-as-judge&quot;,&quot;label&quot;:&quot;LLM-as-Judge&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;entities/ai-coding-agents&quot;,&quot;label&quot;:&quot;AI Coding Agents&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;concepts/agentic-memory-tool&quot;,&quot;label&quot;:&quot;Agentic Memory Tool&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;concepts/unit-testing&quot;,&quot;label&quot;:&quot;Unit Testing&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;entities/mnemory&quot;,&quot;label&quot;:&quot;Mnemory&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;entities/everything-claude-code&quot;,&quot;label&quot;:&quot;Everything Claude Code (ECC)&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;entities/codegraphcontext&quot;,&quot;label&quot;:&quot;CodeGraphContext&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;concepts/cicd-testing&quot;,&quot;label&quot;:&quot;CI/CD Testing&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/error-handling&quot;,&quot;label&quot;:&quot;Error Handling Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;concepts/tool-design-for-agents&quot;,&quot;label&quot;:&quot;Tool Design for Agents&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;entities/spotme&quot;,&quot;label&quot;:&quot;SpotMe&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;patterns/frontend&quot;,&quot;label&quot;:&quot;Frontend Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;concepts/rag-evaluation&quot;,&quot;label&quot;:&quot;RAG Evaluation&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;entities/pentagi&quot;,&quot;label&quot;:&quot;PentAGI&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;concepts/context-compression&quot;,&quot;label&quot;:&quot;Context Compression Strategies&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.795831523312719},{&quot;id&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;label&quot;:&quot;Lean Agentic Coding Workflow&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:5.58257569495584},{&quot;id&quot;:&quot;entities/opencode&quot;,&quot;label&quot;:&quot;OpenCode&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:5.242640687119285},{&quot;id&quot;:&quot;concepts/agent-self-correction&quot;,&quot;label&quot;:&quot;Agent Self-Correction&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.123105625617661},{&quot;id&quot;:&quot;concepts/agent-subagents&quot;,&quot;label&quot;:&quot;Agent Subagents&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.741657386773941},{&quot;id&quot;:&quot;patterns/principles&quot;,&quot;label&quot;:&quot;Software Design Principles&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:4.741657386773941}],LINKS=[{&quot;source&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;target&quot;:&quot;entities/ai-coding-agents&quot;},{&quot;source&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;target&quot;:&quot;concepts/ai-code-review&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/tool-design-for-agents&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/cicd-testing&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/llm-as-judge&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/cicd-testing&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/llm-eval-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agentic-memory-tool&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;concepts/agentic-memory-tool&quot;,&quot;target&quot;:&quot;entities/mnemory&quot;},{&quot;source&quot;:&quot;concepts/agentic-memory-tool&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;entities/ai-coding-agents&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;concepts/ai-code-review&quot;,&quot;target&quot;:&quot;concepts/ai-specific-pitfalls&quot;},{&quot;source&quot;:&quot;concepts/ai-code-review&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/ai-code-review&quot;,&quot;target&quot;:&quot;entities/ai-coding-agents&quot;},{&quot;source&quot;:&quot;concepts/ai-code-review&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;concepts/ai-code-review&quot;,&quot;target&quot;:&quot;entities/codegraphcontext&quot;},{&quot;source&quot;:&quot;concepts/ai-specific-pitfalls&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/ai-specific-pitfalls&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;concepts/ai-specific-pitfalls&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;concepts/ai-specific-pitfalls&quot;,&quot;target&quot;:&quot;concepts/ai-code-review&quot;},{&quot;source&quot;:&quot;concepts/ai-specific-pitfalls&quot;,&quot;target&quot;:&quot;entities/ai-coding-agents&quot;},{&quot;source&quot;:&quot;concepts/ai-specific-pitfalls&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/cicd-testing&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/cicd-testing&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;concepts/cicd-testing&quot;,&quot;target&quot;:&quot;concepts/ai-code-review&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;entities/everything-claude-code&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/error-budget&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;target&quot;:&quot;entities/ai-coding-agents&quot;},{&quot;source&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/llm-as-judge&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/llm-as-judge&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;concepts/llm-as-judge&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;target&quot;:&quot;concepts/llm-as-judge&quot;},{&quot;source&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;target&quot;:&quot;concepts/rag-evaluation&quot;},{&quot;source&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/llm-eval-pipeline&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/mobile-design-patterns&quot;,&quot;target&quot;:&quot;patterns/frontend&quot;},{&quot;source&quot;:&quot;concepts/mobile-design-patterns&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;concepts/mobile-design-patterns&quot;,&quot;target&quot;:&quot;entities/spotme&quot;},{&quot;source&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;target&quot;:&quot;concepts/llm-as-judge&quot;},{&quot;source&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;concepts/owasp-security-checklist&quot;,&quot;target&quot;:&quot;concepts/ai-code-review&quot;},{&quot;source&quot;:&quot;concepts/pentest-agent-design&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/pentest-agent-design&quot;,&quot;target&quot;:&quot;concepts/tool-design-for-agents&quot;},{&quot;source&quot;:&quot;concepts/pentest-agent-design&quot;,&quot;target&quot;:&quot;entities/pentagi&quot;},{&quot;source&quot;:&quot;concepts/pentest-agent-design&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;concepts/rag-evaluation&quot;,&quot;target&quot;:&quot;concepts/llm-as-judge&quot;},{&quot;source&quot;:&quot;concepts/rag-evaluation&quot;,&quot;target&quot;:&quot;concepts/llm-eval-pipeline&quot;},{&quot;source&quot;:&quot;concepts/ralph-loop&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/tool-design-for-agents&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/unit-testing&quot;,&quot;target&quot;:&quot;concepts/ai-code-review&quot;},{&quot;source&quot;:&quot;concepts/unit-testing&quot;,&quot;target&quot;:&quot;concepts/cicd-testing&quot;},{&quot;source&quot;:&quot;concepts/unit-testing&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/cicd-testing&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/unit-testing&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/llm-eval-pipeline&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;systems/scalability-reliability&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;systems/distributed-systems&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/error-budget&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;systems/distributed-systems&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;systems/scalability-reliability&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/agent-self-correction&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;entities/agentshield&quot;,&quot;target&quot;:&quot;entities/everything-claude-code&quot;},{&quot;source&quot;:&quot;entities/agentshield&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;entities/agentshield&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;entities/agentshield&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;entities/agentshield&quot;,&quot;target&quot;:&quot;concepts/owasp-security-checklist&quot;},{&quot;source&quot;:&quot;entities/ai-coding-agents&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;entities/ai-coding-agents&quot;,&quot;target&quot;:&quot;concepts/ai-specific-pitfalls&quot;},{&quot;source&quot;:&quot;entities/ai-coding-agents&quot;,&quot;target&quot;:&quot;concepts/ai-code-review&quot;},{&quot;source&quot;:&quot;entities/codegraphcontext&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/codegraphcontext&quot;,&quot;target&quot;:&quot;concepts/tool-design-for-agents&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;entities/everything-claude-code&quot;,&quot;target&quot;:&quot;entities/agentshield&quot;},{&quot;source&quot;:&quot;entities/everything-claude-code&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/everything-claude-code&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/mnemory&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/mnemory&quot;,&quot;target&quot;:&quot;concepts/agentic-memory-tool&quot;},{&quot;source&quot;:&quot;entities/mnemory&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;entities/ai-coding-agents&quot;},{&quot;source&quot;:&quot;entities/pentagi&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/pentagi&quot;,&quot;target&quot;:&quot;concepts/pentest-agent-design&quot;},{&quot;source&quot;:&quot;entities/pentagi&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;entities/spotme&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;entities/spotme&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;entities/spotme&quot;,&quot;target&quot;:&quot;concepts/ai-specific-pitfalls&quot;}],CUR=&quot;concepts/owasp-security-checklist&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return 'rgba(255,255,255,0.12)';})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return 'rgba(255,255,255,0.4)';})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle='#fff';ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+function fit(){G.zoomToFit(400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){G.pauseAnimation();}function resume(){G.resumeAnimation();}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){if(hd.hasPointerCapture(e.pointerId))hd.releasePointerCapture(e.pointerId);hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e2){if(window.console)console.debug('graph: could not persist position',e2);}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />

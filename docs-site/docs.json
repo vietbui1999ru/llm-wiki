@@ -1,0 +1,176 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "LLM Wiki",
+  "description": "A compounding, agent-maintained knowledge base on AI agent engineering.",
+  "colors": {
+    "primary": "#6E56CF",
+    "light": "#9E8CFC",
+    "dark": "#4C3AAE"
+  },
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "index",
+          "guides/onboarding",
+          "guides/reference"
+        ]
+      },
+      {
+        "group": "Architecture",
+        "pages": [
+          "guides/architecture",
+          "guides/workflows"
+        ]
+      },
+      {
+        "group": "Concepts",
+        "pages": [
+          "concepts/actor-model",
+          "concepts/agent-context-instructions",
+          "concepts/agent-harness",
+          "concepts/agent-self-correction",
+          "concepts/agent-skills",
+          "concepts/agent-subagents",
+          "concepts/agent-teams",
+          "concepts/agentic-cicd",
+          "concepts/agentic-memory-tool",
+          "concepts/agentic-sandbox-controls",
+          "concepts/ai-code-review",
+          "concepts/ai-specific-pitfalls",
+          "concepts/bm25",
+          "concepts/branch-strategy-for-agents",
+          "concepts/cicd-testing",
+          "concepts/claude-code-plugins",
+          "concepts/compounding-knowledge-base",
+          "concepts/context-compression",
+          "concepts/context-degradation",
+          "concepts/context-engineering",
+          "concepts/context-window",
+          "concepts/contextual-retrieval",
+          "concepts/council-pattern",
+          "concepts/deep-modules",
+          "concepts/domain-glossary",
+          "concepts/dynamic-context-pruning",
+          "concepts/error-budget",
+          "concepts/evolution-strategies",
+          "concepts/github-issue-handoff",
+          "concepts/indirect-prompt-injection",
+          "concepts/instinct-clustering",
+          "concepts/linux-setup-guide",
+          "concepts/llm-as-judge",
+          "concepts/llm-eval-pipeline",
+          "concepts/llm-observability",
+          "concepts/llm-serialization-formats",
+          "concepts/memory-bank-pattern",
+          "concepts/mobile-design-patterns",
+          "concepts/model-tier-routing",
+          "concepts/multi-vendor-adversarial-review",
+          "concepts/owasp-security-checklist",
+          "concepts/pentest-agent-design",
+          "concepts/preference-feedback-loop",
+          "concepts/proxy-rotation",
+          "concepts/rag-evaluation",
+          "concepts/ralph-loop",
+          "concepts/reranking",
+          "concepts/rules-vs-hooks",
+          "concepts/self-healing-loop",
+          "concepts/shared-task-queue",
+          "concepts/slash-commands",
+          "concepts/software-documentation",
+          "concepts/tool-design-for-agents",
+          "concepts/unit-testing",
+          "concepts/verification-pipeline",
+          "concepts/web-fingerprinting",
+          "concepts/webrtc-ip-leak",
+          "concepts/wikilink-graph-extraction",
+          "concepts/worker-coordination",
+          "concepts/worktree-isolation"
+        ]
+      },
+      {
+        "group": "Patterns",
+        "pages": [
+          "patterns/algorithmic",
+          "patterns/api-design",
+          "patterns/backend",
+          "patterns/code-quality",
+          "patterns/concurrency",
+          "patterns/database",
+          "patterns/design-patterns-behavioral",
+          "patterns/design-patterns-creational",
+          "patterns/design-patterns-structural",
+          "patterns/error-handling",
+          "patterns/frontend",
+          "patterns/principles",
+          "patterns/refactoring"
+        ]
+      },
+      {
+        "group": "Systems",
+        "pages": [
+          "systems/ai-ml",
+          "systems/architectural-patterns",
+          "systems/data-modeling",
+          "systems/distributed-systems",
+          "systems/otel-council",
+          "systems/scalability-reliability",
+          "systems/system-design-process"
+        ]
+      },
+      {
+        "group": "Syntheses",
+        "pages": [
+          "syntheses/agent-diff-viewer",
+          "syntheses/agent-primitive-selection",
+          "syntheses/control-plane-expansion-plan",
+          "syntheses/lean-agentic-workflow",
+          "syntheses/local-rag-wiki",
+          "syntheses/pi-orchestration-architecture"
+        ]
+      },
+      {
+        "group": "Comparisons",
+        "pages": [
+          "comparisons/cc-to-cross-platform-migration",
+          "comparisons/claude-code-vs-opencode-plugins",
+          "comparisons/spec-driven-frameworks-vs-native"
+        ]
+      },
+      {
+        "group": "Entities",
+        "pages": [
+          "entities/agentops",
+          "entities/agents-md-format",
+          "entities/agentshield",
+          "entities/ai-coding-agents",
+          "entities/codegraphcontext",
+          "entities/codex",
+          "entities/dangeresque",
+          "entities/docling",
+          "entities/dspy",
+          "entities/eggroll",
+          "entities/everything-claude-code",
+          "entities/firecrawl",
+          "entities/gemini-cli",
+          "entities/headroom",
+          "entities/karpathy-llm-council",
+          "entities/lean-session",
+          "entities/mnemory",
+          "entities/opencode",
+          "entities/opencode-dcp",
+          "entities/opencode-go",
+          "entities/opentelemetry",
+          "entities/pentagi",
+          "entities/pi-agent",
+          "entities/pydoll",
+          "entities/qmd",
+          "entities/sandcastle",
+          "entities/spotme"
+        ]
+      }
+    ]
+  }
+}

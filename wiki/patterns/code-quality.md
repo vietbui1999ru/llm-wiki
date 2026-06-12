@@ -1,6 +1,6 @@
 ---
 title: "Code Quality Heuristics"
-type: concept
+type: pattern
 tags: [patterns, software-engineering, clean-code, naming, refactoring]
 sources:
   - "What Is Clean Code? A Guide to Principles and Best Practices.md"
@@ -14,6 +14,11 @@ updated: 2026-05-06
 Tactical rules for writing readable, maintainable code: naming, function discipline, cognitive complexity, comment discipline, magic number elimination, and code smell identification.
 
 Agent guidance: apply these when generating or reviewing code. When a heuristic is violated, flag it in review and fix it before marking work complete. These rules apply to AI-generated code with equal force — LLMs are known to violate DRY, produce long functions, and generate inconsistent naming.
+
+## Agent Trigger
+
+**Apply when:** Generating or reviewing any code — naming, function size, complexity, comments, magic numbers.
+**Rule of thumb:** Small single-responsibility functions, intention-revealing names, no magic numbers; flag and fix on violation before marking work complete.
 
 ---
 

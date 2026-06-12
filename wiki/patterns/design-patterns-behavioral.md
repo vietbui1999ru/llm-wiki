@@ -1,6 +1,6 @@
 ---
 title: "Behavioral Design Patterns"
-type: concept
+type: pattern
 tags: [patterns, software-engineering, gof, design-patterns]
 sources:
   - "Chain of Responsibility.md"
@@ -24,6 +24,11 @@ updated: 2026-05-06
 Behavioral patterns define how objects communicate and distribute responsibility. They govern algorithms, control flow, and the assignment of duties between objects — without coupling concrete implementations together.
 
 Related: [[patterns/design-patterns-creational]], [[patterns/design-patterns-structural]], [[patterns/principles]]
+
+## Agent Trigger
+
+**Apply when:** Choosing how objects communicate or coordinate — Observer, Strategy, State, Command, Mediator, Chain of Responsibility, etc.
+**Rule of thumb:** Name the collaboration problem first; don't reach for a pattern unless the variation it absorbs is real.
 
 ---
 

@@ -1,0 +1,627 @@
+---
+title: "Behavioral Design Patterns"
+description: "Behavioral patterns define how objects communicate and distribute responsibility. They govern algorithms, control flow, and the assignment of duties between…"
+---
+
+# Behavioral Design Patterns
+
+Behavioral patterns define how objects communicate and distribute responsibility. They govern algorithms, control flow, and the assignment of duties between objects — without coupling concrete implementations together.
+
+Related: [Creational Design Patterns](/patterns/design-patterns-creational), [Structural Design Patterns](/patterns/design-patterns-structural), [Software Design Principles](/patterns/principles)
+
+## Agent Trigger
+
+**Apply when:** Choosing how objects communicate or coordinate — Observer, Strategy, State, Command, Mediator, Chain of Responsibility, etc.
+**Rule of thumb:** Name the collaboration problem first; don't reach for a pattern unless the variation it absorbs is real.
+
+---
+
+## Chain of Responsibility
+
+**Intent:** Pass a request along a chain of handlers; each handler decides to process it or forward it.
+
+**When to use:**
+- Multiple handlers may process a request and the set isn't known upfront (middleware pipelines, auth checks)
+- Handlers must be composable and orderable at runtime
+- You want to avoid coupling the sender to a specific receiver
+
+**When NOT to use:**
+- Every request must be guaranteed to be handled (CoR may silently drop unhandled requests)
+- Chain is static and rarely changes — a simple `if/else` or strategy is cleaner
+
+**Structure:**
+
+```typescript
+interface Handler {
+  setNext(handler: Handler): Handler;
+  handle(request: string): string | null;
+}
+
+abstract class BaseHandler implements Handler {
+  private nextHandler: Handler | null = null;
+
+  setNext(handler: Handler): Handler {
+    this.nextHandler = handler;
+    return handler;
+  }
+
+  handle(request: string): string | null {
+    return this.nextHandler ? this.nextHandler.handle(request) : null;
+  }
+}
+
+class AuthHandler extends BaseHandler {
+  handle(request: string): string | null {
+    if (request === 'authenticated') return super.handle(request);
+    return 'AuthHandler: rejected';
+  }
+}
+```
+
+**Anti-patterns:**
+- Building a chain so long that debugging which handler acted becomes hard — prefer logging at each node
+- Using CoR when all requests need a response; prefer Strategy or explicit dispatch instead
+
+---
+
+## Command
+
+**Intent:** Encapsulate a request as a standalone object, enabling queuing, undo/redo, and deferred execution.
+
+**When to use:**
+- You need undo/redo (text editors, drawing tools)
+- Operations must be queued, logged, or scheduled (job queues, audit trails)
+- Multiple UI elements (button, shortcut, menu) trigger the same action
+
+**When NOT to use:**
+- Simple one-shot operations with no need for history or deferral — adds unnecessary indirection
+- The operation has no meaningful inverse (undo is impossible anyway)
+
+**Structure:**
+
+```typescript
+interface Command {
+  execute(): void;
+  undo(): void;
+}
+
+class CutCommand implements Command {
+  private backup = '';
+  constructor(private editor: Editor) {}
+
+  execute(): void {
+    this.backup = this.editor.getSelection();
+    this.editor.deleteSelection();
+  }
+
+  undo(): void {
+    this.editor.insert(this.backup);
+  }
+}
+
+class CommandHistory {
+  private stack: Command[] = [];
+  push(cmd: Command) { cmd.execute(); this.stack.push(cmd); }
+  undo() { this.stack.pop()?.undo(); }
+}
+```
+
+**Anti-patterns:**
+- Putting business logic inside the Command itself — Command should delegate to a Receiver
+- Conflating Command with Strategy: Command is about *what happened* (history, undo); Strategy is about *how to do something now*
+
+---
+
+## Iterator
+
+**Intent:** Provide a uniform interface to traverse a collection without exposing its internal structure.
+
+**When to use:**
+- Collection has a complex internal structure (tree, graph) clients shouldn't care about
+- Multiple simultaneous traversals of the same collection are needed
+- You want to swap traversal algorithms without changing client code
+
+**When NOT to use:**
+- Simple arrays/lists where the language's built-in `for...of` suffices — unnecessary abstraction
+- Performance-critical traversal of specialized structures where direct access is faster
+
+**Structure:**
+
+```typescript
+interface Iterator<T> {
+  hasNext(): boolean;
+  next(): T;
+}
+
+class TreeIterator implements Iterator<Node> {
+  private stack: Node[];
+  constructor(root: Node) { this.stack = [root]; }
+
+  hasNext(): boolean { return this.stack.length > 0; }
+
+  next(): Node {
+    const node = this.stack.pop()!;
+    if (node.right) this.stack.push(node.right);
+    if (node.left)  this.stack.push(node.left);
+    return node;
+  }
+}
+```
+
+**Anti-patterns:**
+- Modifying the collection during iteration (undefined behavior in most implementations)
+- Making the iterator stateful in the collection class itself — kills parallel traversal
+
+---
+
+## Mediator
+
+**Intent:** Centralize communication between objects through a single mediator, eliminating direct dependencies between components.
+
+**When to use:**
+- Many components interact in complex ways (chat rooms, form validation, UI control coordination)
+- Reusing a component requires dragging in too many dependencies
+- You want to change how components collaborate without touching them
+
+**When NOT to use:**
+- Only two or three objects need to coordinate — a mediator is overkill, direct reference is fine
+- The "mediator" ends up being a God Object that knows everything and does everything
+
+**Structure:**
+
+```typescript
+interface Mediator {
+  notify(sender: Component, event: string): void;
+}
+
+class FormDialog implements Mediator {
+  constructor(private checkbox: Checkbox, private input: TextInput) {}
+
+  notify(sender: Component, event: string): void {
+    if (sender === this.checkbox && event === 'change') {
+      this.input.setVisible(this.checkbox.checked);
+    }
+  }
+}
+
+class Component {
+  constructor(protected mediator: Mediator) {}
+}
+```
+
+**Anti-patterns:**
+- Letting the mediator grow into a God Object — split mediators by bounded context
+- Using Mediator when Observer would do (see comparison table below)
+
+---
+
+## Memento
+
+**Intent:** Capture an object's internal state as an opaque snapshot, enabling rollback without breaking encapsulation.
+
+**When to use:**
+- Undo/redo requires full state restoration (editors, transactions)
+- Direct state access would violate encapsulation (private fields must be saved)
+- Rollback on error in multi-step operations
+
+**When NOT to use:**
+- State is large and snapshots are frequent — RAM consumption becomes prohibitive
+- The object's state is easily reconstructible from a command inverse (use Command undo instead)
+
+**Structure:**
+
+```typescript
+class Editor {
+  private text = '';
+
+  setText(text: string) { this.text = text; }
+  save(): Snapshot { return new Snapshot(this.text); }
+  restore(s: Snapshot) { this.text = s.getState(); }
+}
+
+class Snapshot {
+  constructor(private readonly state: string) {}
+  getState(): string { return this.state; }
+}
+
+class History {
+  private snapshots: Snapshot[] = [];
+  push(s: Snapshot) { this.snapshots.push(s); }
+  pop(): Snapshot | undefined { return this.snapshots.pop(); }
+}
+```
+
+**Anti-patterns:**
+- Exposing Snapshot fields publicly — caretakers should only see opaque snapshots (metadata only)
+- Saving snapshots too frequently without a cap strategy (LRU limit, max history depth)
+
+---
+
+## Observer
+
+**Intent:** Define a one-to-many dependency so that when one object changes state, all dependents are notified automatically.
+
+**When to use:**
+- State changes in one object need to trigger updates in unknown/dynamic sets of others
+- You want loose coupling between publisher and subscriber (different modules, plugins)
+- Subscribers should be addable/removable at runtime
+
+**When NOT to use:**
+- Notification order matters and must be guaranteed — Observer fires in registration order by default, which is fragile
+- Notification chains are deep (A notifies B which notifies C…) — debugging becomes hard, use Mediator instead
+
+**Structure:**
+
+```typescript
+interface Subscriber {
+  update(event: string, data: unknown): void;
+}
+
+class EventEmitter {
+  private listeners = new Map<string, Subscriber[]>();
+
+  subscribe(event: string, listener: Subscriber) {
+    const existing = this.listeners.get(event) ?? [];
+    this.listeners.set(event, [...existing, listener]);
+  }
+
+  notify(event: string, data: unknown) {
+    this.listeners.get(event)?.forEach(l => l.update(event, data));
+  }
+}
+```
+
+**Anti-patterns:**
+- Forgetting to unsubscribe — classic memory leak in long-lived UIs
+- Publishing too many fine-grained events — subscribers become overwhelmed; batch or coarsen events
+
+---
+
+## State
+
+**Intent:** Allow an object to change its behavior when its internal state changes, by delegating to a state object rather than branching on a state field.
+
+**When to use:**
+- Object behavior changes dramatically with state and the state-specific code grows complex
+- State transitions are frequent and involve multiple methods
+- You have a finite-state machine with many states and the `if/switch` sprawl is growing
+
+**When NOT to use:**
+- Only a few states with simple, rarely-changing transitions — a plain enum + switch is easier to follow
+- States don't actually change behavior, just data — State pattern adds class overhead for no gain
+
+**Structure:**
+
+```typescript
+interface PlayerState {
+  clickPlay(player: AudioPlayer): void;
+  clickStop(player: AudioPlayer): void;
+}
+
+class PlayingState implements PlayerState {
+  clickPlay(player: AudioPlayer) {
+    player.stopPlayback();
+    player.setState(new ReadyState());
+  }
+  clickStop(player: AudioPlayer) { player.stopPlayback(); }
+}
+
+class AudioPlayer {
+  private state: PlayerState = new ReadyState();
+  setState(s: PlayerState) { this.state = s; }
+  clickPlay() { this.state.clickPlay(this); }
+}
+```
+
+**Anti-patterns:**
+- Letting states depend on each other heavily — states should transition the context, not call sibling state methods directly
+- Using State when Strategy would do (see comparison table below)
+
+---
+
+## Strategy
+
+**Intent:** Define a family of interchangeable algorithms, encapsulate each one, and let clients select or swap them at runtime.
+
+**When to use:**
+- Multiple variants of an algorithm exist and the right one is chosen at runtime (sorting, routing, pricing)
+- You want to eliminate `if/switch` blocks that select algorithm variants
+- Algorithms should be testable in isolation without touching the context
+
+**When NOT to use:**
+- Only one or two variants exist and they're unlikely to grow — a simple function is cleaner
+- Clients can't know which strategy to choose — Strategy requires the caller to understand the differences
+
+**Structure:**
+
+```typescript
+interface SortStrategy {
+  sort(data: number[]): number[];
+}
+
+class QuickSort implements SortStrategy {
+  sort(data: number[]): number[] { /* ... */ return data; }
+}
+
+class MergeSort implements SortStrategy {
+  sort(data: number[]): number[] { /* ... */ return data; }
+}
+
+class Sorter {
+  constructor(private strategy: SortStrategy) {}
+  setStrategy(s: SortStrategy) { this.strategy = s; }
+  sort(data: number[]) { return this.strategy.sort(data); }
+}
+```
+
+**Agent note:** Strategy is the conceptual basis for [Agent Skills](/concepts/agent-skills). Each skill is a strategy: a named, swappable prompt-template that a context (agent harness) invokes by name. The harness doesn't know the skill's contents — it just calls `execute(skillName, context)`.
+
+**Anti-patterns:**
+- Making Strategy objects stateful — they should be pure transformers; state belongs in the context
+- Exposing too many strategy variants to clients — use a factory or registry to hide selection logic
+
+---
+
+## Template Method
+
+**Intent:** Define the skeleton of an algorithm in a base class, deferring specific steps to subclasses — without allowing subclasses to change the overall structure.
+
+**When to use:**
+- Multiple classes share the same algorithm structure but differ in specific steps (data parsers, report generators)
+- You want to enforce a fixed processing order while allowing customization of individual steps
+- Reducing duplication across nearly-identical subclasses
+
+**When NOT to use:**
+- Composition is preferred over inheritance — use Strategy instead (runtime swap, no subclassing required)
+- The algorithm has many steps and subclasses need to skip or reorder them — Template Method is inflexible here
+
+**Structure:**
+
+```typescript
+abstract class DataParser {
+  // Template method — do not override
+  parse(filePath: string): Report {
+    const raw = this.readFile(filePath);     // abstract step
+    const data = this.parseData(raw);        // abstract step
+    this.validate(data);                     // hook (optional override)
+    return this.buildReport(data);           // concrete step
+  }
+
+  abstract readFile(path: string): string;
+  abstract parseData(raw: string): unknown[];
+  protected validate(_data: unknown[]): void {} // hook
+  private buildReport(data: unknown[]): Report { return { rows: data }; }
+}
+
+class CsvParser extends DataParser {
+  readFile(path: string): string { return fs.readFileSync(path, 'utf8'); }
+  parseData(raw: string): unknown[] { return raw.split('\n').map(r => r.split(',')); }
+}
+```
+
+**Anti-patterns:**
+- Making the template method overridable — subclasses must extend steps, not the skeleton itself
+- Adding so many hooks that subclasses can override almost everything — at that point use Strategy
+
+---
+
+## Visitor
+
+**Intent:** Separate an operation from the object structure it operates on, enabling new operations without modifying element classes.
+
+**When to use:**
+- You need to add many distinct, unrelated operations to a stable class hierarchy (AST traversal, export formats)
+- The element hierarchy is closed for modification but open for new behaviors
+- Operations must accumulate state across multiple elements (e.g., collecting metrics while traversing a tree)
+
+**When NOT to use:**
+- The element hierarchy changes frequently — every new element type requires updating all visitors
+- Elements have complex private state that visitors can't access without breaking encapsulation
+
+**Structure:**
+
+```typescript
+interface Visitor {
+  visitDot(d: Dot): void;
+  visitCircle(c: Circle): void;
+}
+
+interface Shape {
+  accept(v: Visitor): void;
+}
+
+class Dot implements Shape {
+  accept(v: Visitor) { v.visitDot(this); }
+}
+
+class Circle implements Shape {
+  accept(v: Visitor) { v.visitCircle(this); }
+}
+
+class XmlExportVisitor implements Visitor {
+  visitDot(d: Dot)       { /* emit dot XML */ }
+  visitCircle(c: Circle) { /* emit circle XML */ }
+}
+```
+
+**Anti-patterns:**
+- Using Visitor when the element hierarchy is unstable — you'll be updating every visitor on every new class
+- Skipping the `accept` method and doing `instanceof` dispatch instead — loses double-dispatch correctness
+
+---
+
+## Domain Event
+
+**Intent:** Represent something meaningful that happened in the domain as an immutable, named, timestamped value object; distribute it to interested parties.
+
+**When to use:**
+- You need a full audit log of what triggered state changes
+- Multiple downstream systems or services must react to the same business fact
+- Building toward Event Sourcing (Domain Events are a prerequisite)
+- Cross-aggregate coordination in DDD without tight coupling
+
+**When NOT to use:**
+- Simple CRUD with no downstream consumers — event infrastructure adds overhead for no benefit
+- The "event" is purely technical (e.g., a cache miss) rather than a domain-meaningful fact
+
+**Structure:**
+
+```typescript
+// Immutable source data — never mutated after creation
+interface DomainEvent {
+  readonly eventType: string;
+  readonly occurredAt: Date;        // when it happened in the world
+  readonly recordedAt: Date;        // when the system noticed it
+}
+
+class OrderPlaced implements DomainEvent {
+  readonly eventType = 'OrderPlaced';
+  readonly occurredAt: Date;
+  readonly recordedAt: Date;
+
+  constructor(
+    readonly orderId: string,
+    readonly customerId: string,
+    occurredAt: Date
+  ) {
+    this.occurredAt = occurredAt;
+    this.recordedAt = new Date();
+  }
+}
+
+// Event bus (simple synchronous variant; replace with async for production)
+class DomainEventBus {
+  private handlers = new Map<string, ((e: DomainEvent) => void)[]>();
+
+  subscribe(eventType: string, handler: (e: DomainEvent) => void) {
+    const existing = this.handlers.get(eventType) ?? [];
+    this.handlers.set(eventType, [...existing, handler]);
+  }
+
+  publish(event: DomainEvent) {
+    this.handlers.get(event.eventType)?.forEach(h => h(event));
+  }
+}
+```
+
+**Anti-patterns:**
+- Mutable event objects — source data must be immutable (retroactive corrections are separate events)
+- Publishing events before the transaction commits — subscribers react to facts that may roll back
+- Unnamed, generic events (`DataChanged`) — events should name *what happened* in domain language
+
+---
+
+## Confusion Table
+
+Commonly confused pairs:
+
+| Question | Observer | Mediator |
+|---|---|---|
+| Who knows about whom? | Publisher doesn't know subscribers | All components know only the mediator |
+| Coupling direction | One publisher → many subscribers | Many components → one mediator |
+| Coordination logic lives in | Each subscriber (distributed) | The mediator (centralized) |
+| Use when | Decoupled event fan-out | Complex inter-component orchestration |
+
+| Question | Strategy | State |
+|---|---|---|
+| Who swaps the behavior? | Client passes in a strategy | Context or the state itself transitions |
+| Do behaviors know each other? | No — strategies are independent | Yes — states can trigger transitions to other states |
+| Primary intent | Interchangeable algorithm selection | Behavior change driven by internal FSM |
+| Use when | Caller chooses the algorithm | Object's own state drives behavior change |
+
+| Question | Command | Chain of Responsibility |
+|---|---|---|
+| How many handlers? | One pre-configured receiver | Chain tries multiple until one handles |
+| Supports undo? | Yes — Commands carry state for reversal | No — handlers are stateless filters |
+| Primary intent | Encapsulate & defer a specific operation | Route a request through an ordered filter chain |
+| Use when | Undo/redo, queuing, audit trail | Middleware, validation pipelines, event bubbling |
+
+---
+
+## Cross-references
+
+- [Software Design Principles](/patterns/principles) — Strategy, Observer, CoR all follow OCP; Iterator and Command follow SRP
+- [Creational Design Patterns](/patterns/design-patterns-creational) — Command + Prototype for cloneable command history; Iterator + Factory Method for typed iterators
+- [Structural Design Patterns](/patterns/design-patterns-structural) — CoR + Composite (bubble through parent tree); Visitor + Composite (traverse and operate)
+- [Agent Skills](/concepts/agent-skills) — Strategy pattern is the direct conceptual basis for the skill architecture in agent harnesses
+
+
+<iframe srcDoc="<!doctype html><html><head><meta charset=&quot;utf-8&quot;><style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel input[type=range]{width:100%;margin:0}
+#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><div id=&quot;gear&quot;>⚙</div>
+<div id=&quot;panel&quot;>
+<label>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<div class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;><span>Directional arrows</span></div>
+</div>
+<div id=&quot;g&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;label&quot;:&quot;Behavioral Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;concepts/agent-skills&quot;,&quot;label&quot;:&quot;Agent Skills&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5},{&quot;id&quot;:&quot;patterns/principles&quot;,&quot;label&quot;:&quot;Software Design Principles&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:4.741657386773941},{&quot;id&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;label&quot;:&quot;Structural Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/frontend&quot;,&quot;label&quot;:&quot;Frontend Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;label&quot;:&quot;Creational Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;patterns/refactoring&quot;,&quot;label&quot;:&quot;Refactoring Techniques&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;concepts/agent-harness&quot;,&quot;label&quot;:&quot;Agent Harness&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:6.744562646538029},{&quot;id&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;label&quot;:&quot;Lean Agentic Coding Workflow&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:5.58257569495584},{&quot;id&quot;:&quot;concepts/agent-subagents&quot;,&quot;label&quot;:&quot;Agent Subagents&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.741657386773941},{&quot;id&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;label&quot;:&quot;Agent Primitive Selection&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;systems/ai-ml&quot;,&quot;label&quot;:&quot;AI and ML Engineering&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4.3166247903554},{&quot;id&quot;:&quot;concepts/agent-teams&quot;,&quot;label&quot;:&quot;Agent Teams&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;label&quot;:&quot;Indirect Prompt Injection&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/shared-task-queue&quot;,&quot;label&quot;:&quot;Shared Task Queue (Cross-Worktree)&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4},{&quot;id&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;label&quot;:&quot;Claude Code → Cross-Platform Migration Matrix&quot;,&quot;group&quot;:&quot;comparisons&quot;,&quot;val&quot;:4},{&quot;id&quot;:&quot;patterns/backend&quot;,&quot;label&quot;:&quot;Backend Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;systems/architectural-patterns&quot;,&quot;label&quot;:&quot;Architectural Patterns&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;concepts/deep-modules&quot;,&quot;label&quot;:&quot;Deep Modules&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;patterns/api-design&quot;,&quot;label&quot;:&quot;API Design Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/code-quality&quot;,&quot;label&quot;:&quot;Code Quality Heuristics&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/error-handling&quot;,&quot;label&quot;:&quot;Error Handling Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;patterns/concurrency&quot;,&quot;label&quot;:&quot;Concurrency and Parallelism Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;patterns/database&quot;,&quot;label&quot;:&quot;Database Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;concepts/claude-code-plugins&quot;,&quot;label&quot;:&quot;Claude Code Plugins&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;entities/codex&quot;,&quot;label&quot;:&quot;OpenAI Codex&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;entities/spotme&quot;,&quot;label&quot;:&quot;SpotMe&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;guides/onboarding&quot;,&quot;label&quot;:&quot;Onboarding: Run llm-wiki as an Agent-First Harness&quot;,&quot;group&quot;:&quot;guides&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;syntheses/agent-diff-viewer&quot;,&quot;label&quot;:&quot;Agent Diff Viewer — Real-Time Code Review Tool&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;entities/gemini-cli&quot;,&quot;label&quot;:&quot;Gemini CLI&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;concepts/mobile-design-patterns&quot;,&quot;label&quot;:&quot;Mobile Design Patterns&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:2.732050807568877},{&quot;id&quot;:&quot;patterns/algorithmic&quot;,&quot;label&quot;:&quot;Algorithmic Patterns&quot;,&quot;group&quot;:&quot;patterns&quot;,&quot;val&quot;:2.414213562373095},{&quot;id&quot;:&quot;concepts/context-compression&quot;,&quot;label&quot;:&quot;Context Compression Strategies&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.795831523312719},{&quot;id&quot;:&quot;concepts/verification-pipeline&quot;,&quot;label&quot;:&quot;Verification Pipeline&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.242640687119285},{&quot;id&quot;:&quot;entities/opencode&quot;,&quot;label&quot;:&quot;OpenCode&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:5.242640687119285},{&quot;id&quot;:&quot;concepts/agent-self-correction&quot;,&quot;label&quot;:&quot;Agent Self-Correction&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.123105625617661},{&quot;id&quot;:&quot;concepts/ralph-loop&quot;,&quot;label&quot;:&quot;Ralph Loop&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.872983346207417},{&quot;id&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;label&quot;:&quot;Agent Context Instructions&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/agentic-cicd&quot;,&quot;label&quot;:&quot;Agentic CI/CD&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/context-degradation&quot;,&quot;label&quot;:&quot;Context Degradation Patterns&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/worktree-isolation&quot;,&quot;label&quot;:&quot;Worktree Isolation&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;label&quot;:&quot;Multi-Vendor Adversarial Review&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;label&quot;:&quot;Agentic Sandbox Controls&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;concepts/context-engineering&quot;,&quot;label&quot;:&quot;Context Engineering&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.464101615137754}],LINKS=[{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;syntheses/agent-diff-viewer&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/claude-code-plugins&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/shared-task-queue&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/agentic-cicd&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/indirect-prompt-injection&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;concepts/claude-code-plugins&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;concepts/claude-code-plugins&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/indirect-prompt-injection&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/mobile-design-patterns&quot;,&quot;target&quot;:&quot;patterns/frontend&quot;},{&quot;source&quot;:&quot;concepts/mobile-design-patterns&quot;,&quot;target&quot;:&quot;entities/spotme&quot;},{&quot;source&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;concepts/ralph-loop&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/shared-task-queue&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;concepts/shared-task-queue&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;concepts/shared-task-queue&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/worktree-isolation&quot;,&quot;target&quot;:&quot;concepts/shared-task-queue&quot;},{&quot;source&quot;:&quot;patterns/algorithmic&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/algorithmic&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;patterns/error-handling&quot;},{&quot;source&quot;:&quot;patterns/api-design&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/api-design&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;systems/architectural-patterns&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/database&quot;},{&quot;source&quot;:&quot;patterns/backend&quot;,&quot;target&quot;:&quot;patterns/error-handling&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;patterns/refactoring&quot;},{&quot;source&quot;:&quot;patterns/code-quality&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/concurrency&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/database&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/design-patterns-creational&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-behavioral&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-creational&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/design-patterns-creational&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/design-patterns-structural&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;patterns/api-design&quot;},{&quot;source&quot;:&quot;patterns/error-handling&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/frontend&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;concepts/deep-modules&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/design-patterns-structural&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/principles&quot;,&quot;target&quot;:&quot;patterns/refactoring&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/code-quality&quot;},{&quot;source&quot;:&quot;patterns/refactoring&quot;,&quot;target&quot;:&quot;patterns/design-patterns-behavioral&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;concepts/agentic-cicd&quot;},{&quot;source&quot;:&quot;systems/architectural-patterns&quot;,&quot;target&quot;:&quot;patterns/principles&quot;},{&quot;source&quot;:&quot;syntheses/agent-diff-viewer&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;syntheses/agent-diff-viewer&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/worktree-isolation&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/multi-vendor-adversarial-review&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/agent-self-correction&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;target&quot;:&quot;entities/gemini-cli&quot;},{&quot;source&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;target&quot;:&quot;entities/codex&quot;},{&quot;source&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;entities/codex&quot;,&quot;target&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;},{&quot;source&quot;:&quot;entities/codex&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;entities/codex&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;entities/gemini-cli&quot;,&quot;target&quot;:&quot;comparisons/cc-to-cross-platform-migration&quot;},{&quot;source&quot;:&quot;entities/gemini-cli&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/claude-code-plugins&quot;},{&quot;source&quot;:&quot;entities/spotme&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;entities/spotme&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;guides/onboarding&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;}],CUR=&quot;patterns/design-patterns-behavioral&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return 'rgba(255,255,255,0.12)';})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return 'rgba(255,255,255,0.4)';})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle='#fff';ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+function fit(){G.zoomToFit(400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){G.pauseAnimation();}function resume(){G.resumeAnimation();}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){if(hd.hasPointerCapture(e.pointerId))hd.releasePointerCapture(e.pointerId);hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e2){if(window.console)console.debug('graph: could not persist position',e2);}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />

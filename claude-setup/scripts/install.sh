@@ -25,10 +25,13 @@ chmod +x "$BIN_DIR/wiki-chat" "$BIN_DIR/wiki-index" "$BIN_DIR/wiki-mcp"
 # Scripts use PEP 723 inline metadata — uv resolves deps on first run.
 # No pip install needed. uv caches the venv; subsequent runs are instant.
 
-# ── git hook ────────────────────────────────────────────────────────────────
-echo "==> Installing git hook"
+# ── git hooks ───────────────────────────────────────────────────────────────
+echo "==> Installing git hooks"
 cp "$REPO_DIR/claude-setup/scripts/post-commit" "$REPO_DIR/.git/hooks/post-commit"
 chmod +x "$REPO_DIR/.git/hooks/post-commit"
+# pre-push: rebuild docs-site/ and block the push if it drifts from wiki sources
+cp "$REPO_DIR/claude-setup/scripts/pre-push" "$REPO_DIR/.git/hooks/pre-push"
+chmod +x "$REPO_DIR/.git/hooks/pre-push"
 
 # ── ollama ──────────────────────────────────────────────────────────────────
 if ! command -v ollama &>/dev/null; then

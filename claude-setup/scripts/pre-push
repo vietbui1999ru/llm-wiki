@@ -1,0 +1,27 @@
+#!/bin/zsh
+# pre-push: keep docs-site/ in sync with the wiki before pushing.
+# Mirrors the "docs-site in sync with wiki" CI gate so drift is caught locally
+# (fast feedback) instead of as a red check after the push.
+
+WIKI_ROOT="$(git rev-parse --show-toplevel)"
+cd "$WIKI_ROOT" || exit 0
+
+# Nothing to check if the generator or node is unavailable (partial checkout, etc.)
+[[ -f claude-setup/scripts/build-docs-site.mjs ]] || exit 0
+command -v node >/dev/null 2>&1 || { print "pre-push: node not found — skipping docs-site sync check"; exit 0; }
+
+if ! node claude-setup/scripts/build-docs-site.mjs >/dev/null; then
+  print "✗ pre-push blocked: docs-site build failed."
+  print "  Run it manually to see the error: node claude-setup/scripts/build-docs-site.mjs"
+  exit 1
+fi
+
+if ! git diff --quiet -- docs-site; then
+  print "✗ pre-push blocked: docs-site/ was stale — it has just been regenerated."
+  print "  Review and commit the update, then push again:"
+  print "    git add docs-site && git commit -m 'chore(docs-site): regenerate'"
+  git diff --stat -- docs-site
+  exit 1
+fi
+
+exit 0

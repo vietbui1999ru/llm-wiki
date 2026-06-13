@@ -4,7 +4,7 @@
 
 ![llm-wiki graph view](assets/graphviewllm.gif)
 
-### 📖 [**Read the docs → vietbui.mintlify.app**](https://vietbui.mintlify.app/)
+**📖 [Read the docs → vietbui.mintlify.app](https://vietbui.mintlify.app/)**
 
 [![Live Docs](https://img.shields.io/badge/docs-vietbui.mintlify.app-16A34A?logo=mintlify&logoColor=white)](https://vietbui.mintlify.app/)
 [![Quality Gate](https://github.com/vietbui1999ru/llm-wiki/actions/workflows/quality.yml/badge.svg)](https://github.com/vietbui1999ru/llm-wiki/actions/workflows/quality.yml)

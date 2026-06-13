@@ -4,6 +4,13 @@
 
 ![llm-wiki graph view](assets/graphviewllm.gif)
 
+### 📖 [**Read the docs → vietbui.mintlify.app**](https://vietbui.mintlify.app/)
+
+[![Live Docs](https://img.shields.io/badge/docs-vietbui.mintlify.app-16A34A?logo=mintlify&logoColor=white)](https://vietbui.mintlify.app/)
+[![Quality Gate](https://github.com/vietbui1999ru/llm-wiki/actions/workflows/quality.yml/badge.svg)](https://github.com/vietbui1999ru/llm-wiki/actions/workflows/quality.yml)
+[![Last commit](https://img.shields.io/github/last-commit/vietbui1999ru/llm-wiki?color=8B7CF6)](https://github.com/vietbui1999ru/llm-wiki/commits/main)
+[![Maintained with Claude Code](https://img.shields.io/badge/maintained%20with-Claude%20Code-D97757?logo=anthropic&logoColor=white)](https://claude.com/claude-code)
+
 </div>
 
 A personal knowledge base on AI and agent engineering, maintained collaboratively by a human and an LLM. The human curates sources. The LLM writes, links, and maintains wiki pages. Both sides query and build on the accumulated knowledge over time.

@@ -24,3 +24,21 @@ jobs:
       - uses: actions/checkout@v5
       - name: aislop Quality Gate
         uses: scanaislop/aislop@v0.10.2
+
+  docs-site-sync:
+    name: docs-site in sync with wiki
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Regenerate docs-site from wiki sources
+        run: node claude-setup/scripts/build-docs-site.mjs
+      - name: Fail if docs-site/ is stale
+        run: |
+          if ! git diff --quiet -- docs-site; then
+            echo "::error::docs-site/ is out of sync with wiki/. Run 'node claude-setup/scripts/build-docs-site.mjs' and commit docs-site/."
+            git diff --stat -- docs-site
+            exit 1
+          fi

@@ -91,7 +91,7 @@ const files = []; // { absPath, outPath, title }
 for (const [dir] of WIKI_DIRS) {
   const abs = join(ROOT, "wiki", dir);
   if (!existsSync(abs)) continue;
-  for (const f of readdirSync(abs)) {
+  for (const f of readdirSync(abs).sort()) { // sort → deterministic output across filesystems
     if (!f.endsWith(".md")) continue;
     const slug = f.replace(/\.md$/, "");
     const { fm } = parseFrontmatter(readFileSync(join(abs, f), "utf8"));
@@ -340,7 +340,7 @@ function widgetMarkup(id) {
 // emit
 
 function yamlEscape(s) {
-  return s.replace(/"/g, '\\"');
+  return s.replace(/\\/g, "\\\\").replace(/"/g, '\\"'); // backslash first, then quote
 }
 
 function writePage(outPath, title, description, body) {

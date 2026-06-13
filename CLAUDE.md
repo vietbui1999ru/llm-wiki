@@ -45,6 +45,7 @@ When Viet drops a source into raw/ and says "ingest [filename]":
 6. Append to log.md: `## [YYYY-MM-DD] ingest | <title>`
 7. Note contradictions with existing pages explicitly.
 8. If the updated page is cited by a wikilink in `claude-setup/rules/applied-ai.md` (always-loaded Tier-0 rules), review that rule for staleness before closing the ingest — the summary must still match the page's current recommendation.
+9. If any published page changed (concepts/patterns/systems/syntheses/comparisons/entities or a guide), regenerate the docs site and commit it: `node claude-setup/scripts/build-docs-site.mjs` then stage `docs-site/`. CI (`docs-site in sync with wiki`) fails the push otherwise.
 
 ### Ingest (PDF source)
 When Viet drops a PDF into pdfs/ and says "ingest [filename.pdf]":

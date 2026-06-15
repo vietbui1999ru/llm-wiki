@@ -80,14 +80,30 @@ staying flat.
 
 ### 1. Clone and install
 
+Prerequisites (install these yourself first — `install.sh` does **not** install them):
+
+| Tool | Why | Install |
+|---|---|---|
+| [qmd](https://github.com/antiloger/qmd) | Hybrid search; called by the `post-commit` hook | `cargo install qmd` or [binary release](https://github.com/antiloger/qmd/releases) |
+| [Node.js](https://nodejs.org) | Runs the `docs-site/` generator + `pre-push` hook | `nvm install --lts` or distro package |
+| [zsh](https://www.zsh.org) | The shipped `post-commit` and `pre-push` hooks have `#!/bin/zsh` shebangs | `sudo apt install zsh` (or rewrite the shebangs to `bash`) |
+| [ollama](https://ollama.com) | Local LLM for `wiki-index` / `wiki-chat` | Download from ollama.com |
+
+Then:
+
 ```bash
 git clone git@github.com:vietbui1999ru/llm-wiki.git ~/repos/llm-wiki
 cd ~/repos/llm-wiki
 bash claude-setup/scripts/install.sh
 ```
 
-`install.sh` copies the `wiki-index` / `wiki-chat` / `wiki-mcp` tools to `~/.local/bin`, pulls
-local models via ollama, and installs the post-commit hook. Ensure `~/.local/bin` is on `$PATH`.
+`install.sh` handles the rest: `uv` (if missing), copies `wiki-index` / `wiki-chat` / `wiki-mcp`
+to `~/.local/bin`, pulls `nomic-embed-text` and `qwen2.5:3b` via ollama, installs the
+`post-commit` and `pre-push` git hooks. Ensure `~/.local/bin` is on `$PATH`:
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+```
 
 ### 2. Point Claude Code at the harness config
 

@@ -17,11 +17,13 @@ if [[ -n "$CHANGED" ]]; then
     cd "$WIKI_ROOT"
 
     # ── qmd (fast, synchronous) ──────────────────────────────────────────────
-    printf "  qmd: indexing... "
-    qmd update 2>/dev/null | grep -oE "[0-9]+ new" | head -1 | xargs -I{} printf "{} "
-    printf "embedding... "
-    qmd embed 2>/dev/null | grep -oE "Embedded [0-9]+ chunks" | head -1
-    printf "\n"
+    # qmd 0.9.0 emits a summary line per phase; capture the new/embedded counts.
+    # Tolerant of older ("Embedded N chunks") and newer ("Embedded N chunks"
+    # after "✓ Done!") formats — both match.
+    QMD_OUT="$(qmd update 2>&1; qmd embed 2>&1)"
+    QMD_NEW=$(printf "%s\n" "$QMD_OUT" | grep -oE "[0-9]+ new" | head -1)
+    QMD_EMB=$(printf "%s\n" "$QMD_OUT" | grep -oE "Embedded [0-9]+ chunks?" | head -1)
+    printf "  qmd: %s | %s\n" "${QMD_NEW:-no changes}" "${QMD_EMB:-nothing to embed}"
 
     # ── wiki-index (slow, background) ────────────────────────────────────────
     if command -v wiki-index &>/dev/null && [[ -d "$WIKI_ROOT/.lightrag" ]]; then

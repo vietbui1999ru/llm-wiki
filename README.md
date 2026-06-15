@@ -191,12 +191,13 @@ After the initial build, the post-commit hook keeps the index current automatica
 ### 4. Link Claude Code configuration
 
 ```bash
-# If starting fresh (no existing ~/.claude):
-ln -s ~/repos/llm-wiki/claude-setup ~/.claude
-
-# If you have an existing ~/.claude, merge manually:
-# Copy skills/, rules/, plugins/ from claude-setup/ into your ~/.claude
+bash ~/repos/llm-wiki/claude-setup/scripts/install-claude-symlink.sh
 ```
+
+This symlinks `~/.claude` → `~/repos/llm-wiki/claude-setup`. If `~/.claude` is an existing
+real directory, it is moved to `~/.claude.bak-<timestamp>` first. Re-running the script is a
+no-op. If `~/.claude` is already a symlink to a different path, the script refuses and tells
+you to remove it.
 
 ### 5. Wire wiki-mcp into OpenCode (optional)
 

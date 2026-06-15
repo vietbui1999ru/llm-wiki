@@ -105,10 +105,13 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
 ### 2. Point Claude Code at the harness config
 
 ```bash
-# Fresh machine (no existing ~/.claude):
-ln -s ~/repos/llm-wiki/claude-setup ~/.claude
-# Existing ~/.claude: merge skills/, rules/, plugins/ manually.
+bash claude-setup/scripts/install-claude-symlink.sh
 ```
+
+Symlinks `~/.claude` → `~/repos/llm-wiki/claude-setup`. If `~/.claude` is an existing real
+directory, the script moves it to `~/.claude.bak-<timestamp>` first. Re-running is a no-op.
+If `~/.claude` is already a symlink to a different path, the script refuses and tells you to
+remove it.
 
 This is what makes a session **agent-first**: the rules, skills, and prevention log load
 automatically.

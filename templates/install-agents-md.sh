@@ -53,7 +53,9 @@ if [[ ${#TARGETS[@]} -eq 0 ]]; then
   exit 0
 fi
 
-echo "\n${#TARGETS[@]} repo(s) found:\n"
+echo ""
+echo "${#TARGETS[@]} repo(s) found:"
+echo ""
 
 # ── install ───────────────────────────────────────────────────────────────────
 
@@ -89,30 +91,33 @@ for repo in "${TARGETS[@]}"; do
         b|B)
           cp "$dest" "${dest}.bak"
           echo "    → backed up to AGENTS.md.bak"
-          (( BACKED_UP++ )) ;;
+          BACKED_UP=$(( BACKED_UP + 1 )) ;;
         *)
           echo "    → skipped"
-          (( SKIPPED++ ))
+          SKIPPED=$(( SKIPPED + 1 ))
           continue ;;
       esac
     else
       # --yes mode: backup automatically
       cp "$dest" "${dest}.bak"
-      (( BACKED_UP++ ))
+      BACKED_UP=$(( BACKED_UP + 1 ))
     fi
   fi
 
   cp "$TEMPLATE" "$dest"
   echo "    ✓ installed"
-  (( INSTALLED++ ))
+  INSTALLED=$(( INSTALLED + 1 ))
 
   # Add .agents/ to .gitignore if not already there
   gitignore="$repo/.gitignore"
   if [[ ! -f "$gitignore" ]] || ! grep -q "^\.agents/" "$gitignore" 2>/dev/null; then
-    echo "\n.agents/" >> "$gitignore"
+    echo "" >> "$gitignore"
+    echo ".agents/" >> "$gitignore"
     echo "    ✓ added .agents/ to .gitignore"
   fi
 done
 
-echo "\nDone. Installed: $INSTALLED  Skipped: $SKIPPED  Backed up: $BACKED_UP"
-echo "\nNext: create .agents/tasks.md in each project to start tracking work."
+echo ""
+echo "Done. Installed: $INSTALLED  Skipped: $SKIPPED  Backed up: $BACKED_UP"
+echo ""
+echo "Next: create .agents/tasks.md in each project to start tracking work."

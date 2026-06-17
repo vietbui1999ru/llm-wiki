@@ -14,6 +14,16 @@
 # macOS
 .DS_Store
 
+# Headroom proxy local data
+.headroom/
+headroom_memory.db
+
+# Headroom/Claude Code backups and plugin cache
+claude-setup/backups/
+claude-setup/plugins/.last_inuse_sweep
+claude-setup/plugins/cache/
+claude-setup/plugins/marketplaces/
+
 # Raw source documents (local only — not tracked on remote)
 raw/
 

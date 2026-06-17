@@ -7,6 +7,8 @@ Do NOT load raw-log.md or individual mistakes/*.md at startup — use qmd for lo
 - docling: flag is `--output`, not `--output-dir` (confirmed 2026-04-30)
 - docling: `docling-slim` is missing `pypdfium2` — verify with `docling --version` before running; full install is `uv tool install docling` (2026-05-26)
 - Before any unfamiliar CLI flag or API: resolve via context7 first (`resolve-library-id` → `query-docs`), not `--help` or memory
+- For Markdown PR/issue bodies containing backticks or `$`: write a body file and pass `--body-file`/equivalent; never inline with double-quoted shell args (2026-06-15)
+- For interactive CLI verification, use scripted inputs for every prompt or test a lower-level non-interactive function instead; blank stdin can loop until timeout (2026-06-17)
 
 ## Wiki Authoring
 

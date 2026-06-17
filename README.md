@@ -127,10 +127,14 @@ qwen2.5:3b synthesis         Haiku or qwen2.5:3b synthesis
 | Tool | Purpose | Install |
 |---|---|---|
 | [Claude Code](https://claude.ai/code) | LLM interface — runs wiki operations | Download from claude.ai |
-| [qmd](https://github.com/antiloger/qmd) | Hybrid search (BM25 + vector) | `cargo install qmd` or binary release |
+| [qmd](https://github.com/antiloger/qmd) | Hybrid search (BM25 + vector) — `post-commit` hook calls it | `cargo install qmd` or [binary release](https://github.com/antiloger/qmd/releases) |
 | [ollama](https://ollama.com) | Local LLM inference (graph index + TUI) | Download from ollama.com |
 | [uv](https://docs.astral.sh/uv/) | Python script runner (install.sh handles this) | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
+| [Node.js](https://nodejs.org) | Runs `docs-site/` generator + `pre-push` hook | `nvm install --lts` or distro package |
+| [zsh](https://www.zsh.org) | `post-commit` and `pre-push` hooks use `#!/bin/zsh` | `sudo apt install zsh` (or change hook shebang to `bash`) |
 | Git | Version control | Standard |
+
+> **`install.sh` does not install `qmd`, `node`, or `zsh`.** It handles `uv` and the ollama model pull, then copies the wiki binaries + git hooks. The five items above must be present before you run it.
 
 ### Optional
 
@@ -153,18 +157,19 @@ cd ~/repos/llm-wiki
 bash claude-setup/scripts/install.sh
 ```
 
-`install.sh` handles everything: installs `uv` if missing, copies `wiki-index`/`wiki-chat`/`wiki-mcp` to `~/.local/bin`, pulls `qwen2.5:3b` and `nomic-embed-text` via ollama, installs the post-commit hook.
+`install.sh` handles: `uv` (if missing), copies `wiki-index`/`wiki-chat`/`wiki-mcp` to `~/.local/bin`, pulls `qwen2.5:3b` and `nomic-embed-text` via ollama, installs the `post-commit` and `pre-push` git hooks. **It does not install `qmd`, `node`, or `zsh`** — see Prerequisites above.
 
 Make sure `~/.local/bin` is on your `$PATH`:
 ```bash
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
 ```
 
-### 2. Configure the Anthropic key (optional)
+### 2. Configure the Anthropic key (optional, but decide before step 3)
 
 ```bash
 cp .env.example .env
 # edit .env — paste ANTHROPIC_API_KEY=sk-ant-...
+# or leave unset to use qwen2.5:3b locally (free)
 ```
 
 Without a key: all tools use `qwen2.5:3b` locally. Free, but lower extraction quality.
@@ -179,19 +184,20 @@ wiki-index --test
 wiki-index --full
 ```
 
-> **Cost warning:** `--full` with `ANTHROPIC_API_KEY` set costs **$10–30+** for ~150 pages. LightRAG runs 3 extraction phases per page (entity → relation → community), each with multiple LLM calls. Use `qwen2.5:3b` (unset API keys) for full rebuilds. If you want to use Haiku anyway, pass `--yes` to confirm: `wiki-index --full --yes`.
+> **Cost warning:** `--full` with `ANTHROPIC_API_KEY` set costs **$10–30+** for ~150 pages. LightRAG runs 3 extraction phases per page (entity → relation → community), each with multiple LLM calls. Use `qwen2.5:3b` (unset API keys) for full rebuilds. If you want to use Haiku anyway, pass `--yes` to confirm: `wiki-index --full --yes`. Decide on step 2 first.
 
 After the initial build, the post-commit hook keeps the index current automatically — no manual re-runs needed after ingests. The indexer prepends Obsidian wikilink structure as extraction hints, reducing LLM token cost ~40–55% per page.
 
 ### 4. Link Claude Code configuration
 
 ```bash
-# If starting fresh (no existing ~/.claude):
-ln -s ~/repos/llm-wiki/claude-setup ~/.claude
-
-# If you have an existing ~/.claude, merge manually:
-# Copy skills/, rules/, plugins/ from claude-setup/ into your ~/.claude
+bash ~/repos/llm-wiki/claude-setup/scripts/install-claude-symlink.sh
 ```
+
+This symlinks `~/.claude` → `~/repos/llm-wiki/claude-setup`. If `~/.claude` is an existing
+real directory, it is moved to `~/.claude.bak-<timestamp>` first. Re-running the script is a
+no-op. If `~/.claude` is already a symlink to a different path, the script refuses and tells
+you to remove it.
 
 ### 5. Wire wiki-mcp into OpenCode (optional)
 

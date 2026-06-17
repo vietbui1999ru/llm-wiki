@@ -1,7 +1,8 @@
 {
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
-    "teammateMode": "in-process"
+    "teammateMode": "in-process",
+    "ANTHROPIC_BASE_URL": "http://127.0.0.1:8787"
   },
   "permissions": {
     "allow": [
@@ -18,6 +19,30 @@
           {
             "type": "command",
             "command": "cd ~/repos/llm-wiki && git diff --name-only HEAD 2>/dev/null | grep -q 'log\\.md' && ./scripts/publish-ai-kb.sh || true"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/vietbui1999ru/.local/bin/headroom init hook ensure --profile init-user --marker headroom-init-claude",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/vietbui1999ru/.local/bin/headroom init hook ensure --profile init-user --marker headroom-init-claude",
+            "timeout": 15
           }
         ]
       }
@@ -61,12 +86,8 @@
     "pyright@claude-code-lsps": false,
     "typescript-lsp@claude-plugins-official": false,
     "caveman@caveman": true,
-    "qmd@qmd": true
-  },
-  "mcpServers": {
-    "shadcn": {
-      "url": "https://www.shadcn.io/api/mcp"
-    }
+    "qmd@qmd": true,
+    "headroom@headroom-marketplace": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
@@ -80,13 +101,24 @@
         "source": "github",
         "repo": "tobi/qmd"
       }
+    },
+    "headroom-marketplace": {
+      "source": {
+        "source": "github",
+        "repo": "chopratejas/headroom"
+      }
     }
   },
   "effortLevel": "medium",
   "autoUpdatesChannel": "latest",
-  "teammateMode": "in-process",
   "editorMode": "vim",
   "verbose": true,
   "autoCompactEnabled": false,
-  "agentPushNotifEnabled": true
+  "teammateMode": "in-process",
+  "agentPushNotifEnabled": true,
+  "mcpServers": {
+    "shadcn": {
+      "url": "https://www.shadcn.io/api/mcp"
+    }
+  }
 }

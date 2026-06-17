@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "plugins": {
+    "headroom@headroom-marketplace": [
+      {
+        "scope": "user",
+        "installPath": "/home/vietbui1999ru/.claude/plugins/cache/headroom-marketplace/headroom/0.22.3",
+        "version": "0.22.3",
+        "installedAt": "2026-06-17T16:35:11.707Z",
+        "lastUpdated": "2026-06-17T16:35:11.707Z",
+        "gitCommitSha": "0d89c674cd3522c0a46e3df9b98426e59b337b10"
+      }
+    ]
+  }
+}

@@ -48,5 +48,13 @@
     },
     "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/claude-plugins-official",
     "lastUpdated": "2026-05-08T16:07:47.492Z"
+  },
+  "headroom-marketplace": {
+    "source": {
+      "source": "github",
+      "repo": "chopratejas/headroom"
+    },
+    "installLocation": "/home/vietbui1999ru/.claude/plugins/marketplaces/headroom-marketplace",
+    "lastUpdated": "2026-06-17T16:35:11.026Z"
   }
 }

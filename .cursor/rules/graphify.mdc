@@ -1,0 +1,8 @@
+---
+description: graphify knowledge graph context
+alwaysApply: true
+---
+
+This repo may have a local ignored Graphify graph at `graphify-out/graph.json`.
+
+For codebase architecture questions, prefer `graphify query "<question>"` when the graph exists. Do not auto-update Graphify; run `graphify update .` only when graph freshness matters.

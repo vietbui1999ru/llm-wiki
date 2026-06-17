@@ -11,6 +11,9 @@
 *.sqlite-wal
 ~/.cache/qmd/
 
+# Graphify local graph cache. Rebuild manually with `graphify update .` or `/graphify .`.
+graphify-out/
+
 # macOS
 .DS_Store
 

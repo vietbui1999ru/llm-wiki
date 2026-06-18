@@ -53,7 +53,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/gemini-cli]] — Google's Gemini CLI: GEMINI.md + TOML commands + activate_skill; high parity with CC; hooks + subagents (experimental)
 - [[entities/opencode]] — Open-source Claude Code alternative; plugin system, compaction hooks, custom tools, headless `run`/`serve` modes, full HTTP API
 - [[entities/omp]] — oh-my-pi: batteries-included Pi fork; hashline/LSP/DAP/TTSR/eval kernels/Hindsight memory/Snapcompact/32 tools/40+ providers; see [[comparisons/our-stack-vs-omp]] for gap analysis
-- [[entities/pi-agent]] — pi-coding-agent CLI (pi-mono); primary harness for open-model workloads + council/adversarial review layer; difficulty-tiered model routing; pueue parallel delegation; srt sandboxing; Pi Subagents extension; forked by [[entities/omp]]
+- [[entities/pi-agent]] — pi-coding-agent CLI (pi-mono); primary harness for open-model workloads + council/adversarial review layer; difficulty-tiered model routing; pueue parallel delegation; srt sandboxing; Pi Subagents extension; specialization fallback ladder (specialized → adjacent → general → temp session agent); forked by [[entities/omp]]
 - [[entities/commandr]] — L3 bus (thin waist) of the 5-layer toolchain; .agents/ filesystem contract; SPEC v0.3 (28/0 conformance); bin/ tools; CC + OpenCode adapters; council gate; annotation loop
 - [[entities/diffviewer]] — L5 UI; real-time diff review (browser + Neovim); Pi extension (mid-turn blocking); mobile companion MVP-0 (Tailscale PWA + bus approval); CodeBoarding arch tab; Phase 5 target = Tauri
 - [[entities/opencode-go]] — OpenCode Go: $10/mo open-model subscription (DeepSeek V4 Pro, Kimi K2.6, Qwen3.6, etc.); subscription arbitrage alternative to Anthropic/OpenAI plans

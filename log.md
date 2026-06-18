@@ -2,6 +2,13 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-06-18] update | Pi specialization fallback ladder
+
+Updated:
+- wiki/entities/pi-agent.md — added specialization fallback ladder: specialized agent → next closest specialized → general Worker → temp session-scoped specialization; mirrors model-tier missing-model fallback.
+
+Decision: do not jump to general Worker first. Pick specialized agent matching context, fall back through adjacent specialization, then general, then create a temp specialization for the session if none fit. Temp agents are session-scoped, promoted to global only after proving useful.
+
 ## [2026-06-18] update | Missing-model fallback rule for tier routing
 
 Updated:

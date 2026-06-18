@@ -138,11 +138,28 @@ Pi Agent supports publishing sessions to Hugging Face via `badlogic/pi-share-hf`
 
 A community extension by Amos Blomqvist (`amosblomqvist/pi-subagents`) that adds a `spawn_subagent` tool to the Pi coding agent. Lets the master agent delegate exploration and research to cheaper, purpose-built subagents — keeping the main context window lean.
 
-Three shipped agent types: Scout (Haiku, read-only filesystem), Researcher (Sonnet, web search/fetch), Worker (Sonnet/Opus, full tools + can spawn its own scouts and researchers).
-
-Each agent is a markdown file: frontmatter declares tools, model, allowed sub-agents; body is the system prompt. Depth limiting via `agents` allowlist field — prevents recursive runaway. Default max depth: 3 layers.
-
 Three shipped agent types: Scout (Haiku, read-only filesystem), Researcher (Sonnet, web search/fetch), Worker (Sonnet/Opus, full tools + can spawn its own scouts and researchers). Depth limiting via `agents` allowlist field prevents recursive runaway. Default max depth: 3 layers.
+
+### Specialization fallback ladder
+
+When a task's context calls for a specialized agent, do not jump straight to the general Worker. Use a fallback ladder:
+
+| Step | Action | Example |
+|---|---|---|
+| 1 | Pick the **specialized agent** that matches the task context. | Debugging a runtime failure → Researcher (web/docs lookup) or a custom debug-specialist. |
+| 2 | If it fails, **demote or promote** to the next closest specialized agent — same axis, adjacent specialization. | Researcher failed to find the API mismatch → Scout (read-only codebase traverse) for a closer-to-code pass. |
+| 3 | If that still fails, fall back to the **general agent** (Worker, full tools). | Scout also failed → Worker with full tool access and no specialization constraint. |
+| 4 | For the session's context, **create a temporary Agent specialization** that fits the task if none of the shipped types fit. | Task is "reconcile two schemas" → temp `schema-reconciler` agent: Scout tools + a focused system prompt naming the two schemas and the merge rule. |
+
+Rules:
+
+- "Fails" = the specialized agent could not complete its bounded task, not "the output was imperfect". Specialized agents are allowed to produce draft-quality work; only structural inability counts as failure.
+- A temp specialization is session-scoped: write it to a session-local agents dir (e.g. `.pi/agents/<session>/`), not the global `~/.pi/agent/`. Promote it to global only after it proves useful across sessions.
+- Temp specialization must declare the same fields as shipped agents: `tools`, `model`, `agents` (allowlist), and a system prompt body. No blank-slate spawning.
+- Do not skip the ladder: jumping to general Worker first burns the context-window savings that specialization exists to provide.
+- The ladder is per-task, not per-session. A new task re-enters at step 1.
+
+This mirrors the [[concepts/model-tier-routing]] missing-model fallback: prefer the closest fit before widening, and only fall back to the general case when the specialized options are exhausted.
 
 ---
 

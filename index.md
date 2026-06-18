@@ -3,6 +3,10 @@
 Catalog of all pages. Updated on every ingest operation.
 
 ## Summaries
+- [[summaries/compound-engineering]] — Every guide: ideate→brainstorm→plan→work→review→polish→compound loop; turns tasks into durable system improvements
+- [[summaries/builderio-skills]] — Builder.io skills: visual-plan, visual-recap, agent-watchdog, plan-arbiter, efficient-frontier; artifact-first planning/review
+- [[summaries/builderio-agent-native]] — Builder.io Agent-Native: shared action surface for UI, agent, HTTP, MCP, A2A, and CLI over one SQL-backed app state
+- [[summaries/omp-oh-my-pi]] — omp (oh-my-pi): Pi fork by can1357; hashline editing, LSP/DAP wired in, 55k LoC Rust native core, 32 tools, 40+ providers, Hindsight memory, TTSR stream rules
 - [[summaries/what-is-an-agent-harness-parallel-ai]] — Parallel AI explainer: orchestrator/framework/harness taxonomy, DeepAgents, ICML 2025 modular harness, model-agnostic property; supplements [[concepts/agent-harness]]
 - [[summaries/pi-building-in-world-of-slop]] — Pi origin story: minimal harness thesis, 4-tool architecture, self-modifying extensions, Terminal Bench 6th, anti-slop philosophy (Mario Zechner talk)
 - [[summaries/opencode-headless-api]] — `opencode run` (subprocess), `opencode serve` (HTTP API), warm-server pattern, sync/async messages, SSE events, programmatic permission approval
@@ -32,6 +36,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/llm-serialization-formats]] — Schema-first formats (ONTO, TOON) cutting LLM input overhead 40–60% via schema-once design; covers format comparison, tradeoffs, and caveats on synthetic benchmarks
 
 ## Entities
+- [[entities/agent-native]] — Builder.io framework for agent-native apps: shared actions, SQL-backed state, rich UI + agent surfaces, MCP/A2A compatibility
 - [[entities/headroom]] — Context compression proxy/library/MCP for AI agents; ContentRouter (JSON/AST/prose), CacheAligner, CCR reversible compression, cross-agent memory, `headroom learn` failure mining
 - [[entities/everything-claude-code]] — Agent harness performance system (ECC): plugin + manual install; 9-harness support; DRY adapter pattern; instinct clustering; AgentShield
 - [[entities/agentshield]] — Security scanner for CC configs: 5 scan categories (secrets/permissions/hooks/MCP/agents), 102 rules, 3-agent Opus red-team pipeline
@@ -47,7 +52,10 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/agentops]] — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
 - [[entities/gemini-cli]] — Google's Gemini CLI: GEMINI.md + TOML commands + activate_skill; high parity with CC; hooks + subagents (experimental)
 - [[entities/opencode]] — Open-source Claude Code alternative; plugin system, compaction hooks, custom tools, headless `run`/`serve` modes, full HTTP API
-- [[entities/pi-agent]] — pi-coding-agent CLI (pi-mono); primary harness for open-model workloads + council/adversarial review layer; difficulty-tiered model routing; pueue parallel delegation; srt sandboxing; Pi Subagents extension
+- [[entities/omp]] — oh-my-pi: batteries-included Pi fork; hashline/LSP/DAP/TTSR/eval kernels/Hindsight memory/Snapcompact/32 tools/40+ providers; see [[comparisons/our-stack-vs-omp]] for gap analysis
+- [[entities/pi-agent]] — pi-coding-agent CLI (pi-mono); primary harness for open-model workloads + council/adversarial review layer; difficulty-tiered model routing; pueue parallel delegation; srt sandboxing; Pi Subagents extension; forked by [[entities/omp]]
+- [[entities/commandr]] — L3 bus (thin waist) of the 5-layer toolchain; .agents/ filesystem contract; SPEC v0.3 (28/0 conformance); bin/ tools; CC + OpenCode adapters; council gate; annotation loop
+- [[entities/diffviewer]] — L5 UI; real-time diff review (browser + Neovim); Pi extension (mid-turn blocking); mobile companion MVP-0 (Tailscale PWA + bus approval); CodeBoarding arch tab; Phase 5 target = Tauri
 - [[entities/opencode-go]] — OpenCode Go: $10/mo open-model subscription (DeepSeek V4 Pro, Kimi K2.6, Qwen3.6, etc.); subscription arbitrage alternative to Anthropic/OpenAI plans
 - [[entities/karpathy-llm-council]] — Karpathy's 3-stage council web app: parallel dispatch → anonymized peer review → Chairman synthesis; OpenRouter-based reference implementation
 - [[entities/agents-md-format]] — AGENTS.md format entity: origin, per-tool implementations (Codex/OpenCode/CC/Aider/Gemini), multi-file strategies
@@ -61,6 +69,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/opentelemetry]] — CNCF-graduated vendor-neutral observability framework; three signals, GenAI semantic conventions (incubating), instrumentation approaches, Collector config, compatible backends for AI workloads
 
 ## Concepts
+- [[concepts/compound-engineering]] — AI-native workflow principle: every task should leave durable knowledge, guardrails, or capabilities that make future work easier
 - [[concepts/mobile-design-patterns]] — mobile-first doctrine, MFRI scoring, Fitts' Law, gesture design, iOS/Android divergence matrix, RN/Flutter performance patterns, release checklist
 - [[concepts/unit-testing]] — AAA pattern, test doubles, naming convention, coverage philosophy, flaky test quarantine
 - [[concepts/cicd-testing]] — Testing pyramid, 6 test types, shift-left, pipeline stage map, relationship to verification-pipeline
@@ -145,6 +154,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[systems/otel-council]] — OTel instrumentation for council.py: three span types (session/voice/chairman), zero-dependency JSONL file output, GenAI semantic convention attributes, jq trace queries
 
 ## Comparisons
+- [[comparisons/our-stack-vs-omp]] — Feature gap: Claude Code + Pi + MCP stack vs omp; hard gaps (hashline/LSP/DAP/TTSR); our wins (wiki/skills/council); ~55% parity
 - [[comparisons/spec-driven-frameworks-vs-native]] — Heavy frameworks vs lean skills vs vanilla vs custom harness; community consensus; discrepancies with prior wiki
 - [[comparisons/claude-code-vs-opencode-plugins]] — Hook surface, compaction control, custom tools; OpenCode's compaction hook as key differentiator
 - [[comparisons/cc-to-cross-platform-migration]] — Full migration matrix: CC rules/skills/subagents/hooks/plugins → Gemini/OpenCode/Codex/Cursor/Copilot/Zed; parity rating per layer; hook event counts; DRY adapter pattern
@@ -154,5 +164,6 @@ Catalog of all pages. Updated on every ingest operation.
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern
 - [[syntheses/lean-agentic-workflow]] — Full stack: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes
 - [[syntheses/local-rag-wiki]] — two-path RAG stack: qmd (BM25+vector, Claude Code) + LightRAG graph (wiki-chat TUI + wiki-mcp MCP); qwen2.5:3b local or Haiku hybrid; manifest-based incremental indexing; post-commit automation
-- [[syntheses/control-plane-expansion-plan]] — Gap analysis (Phase 1 readiness), tool landscape (buy vs build), Phase 0.5–3 concrete steps for scaling to Agentic Engineering Control Plane
-- [[syntheses/agent-diff-viewer]] — Localhost real-time diff viewer for Claude Code: PostToolUse hooks → Hono SSE → diff2html browser UI; per-turn grouped diffs; clipboard→tmux steer injection; dotfiles-portable daemon
+- [[syntheses/control-plane-expansion-plan]] — Gap analysis and bootstrap path: cockpit action registry, agent-control skills, commandr-omp-runner; Phase 0.5–3 roadmap
+- [[syntheses/desktop-control-plane]] — *(local-only)* Big-picture synthesis: 5-layer toolchain (Commandr bus + DiffViewer/Tauri UI + omp workers + SKILL.md packages); action registry; evidence-first cockpit vision
+- [[syntheses/agent-diff-viewer]] *(partially-superseded)* — Localhost real-time diff viewer for Claude Code: original design; see [[entities/diffviewer]] for current state

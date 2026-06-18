@@ -2,9 +2,9 @@
 title: "Compounding Knowledge Base"
 type: concept
 tags: [llm, knowledge-management, wiki, rag, epistemics]
-sources: [llm-wiki.md]
+sources: [llm-wiki.md, "Compound Engineering.md"]
 created: 2026-04-21
-updated: 2026-04-21
+updated: 2026-06-17
 ---
 
 # Compounding Knowledge Base
@@ -27,6 +27,10 @@ The difference is analogous to an **interpreted vs. compiled program**: RAG inte
 
 The wiki accretes value from all three operations, not just from ingestion.
 
+## Relationship to compound engineering
+
+[[concepts/compound-engineering]] applies the same compounding principle to software delivery. A compounding knowledge base turns sources and questions into durable understanding; compound engineering turns tasks and reviews into durable capability. The shared rule is: do not let useful work evaporate after one session.
+
 ## Why humans abandon wikis
 
 The bottleneck isn't reading or thinking — it's bookkeeping. Updating cross-references, keeping summaries current, noting when new data contradicts old claims, maintaining consistency across dozens of pages. This cost grows faster than value. LLMs remove the bottleneck: they don't get bored, don't forget a cross-reference, can touch 15 files in one pass.
@@ -44,3 +48,4 @@ Curation, direction, and synthesis judgment. Specifically: which sources to inge
 - [[summaries/llm-wiki-pattern]] — the specific implementation of this pattern described by Karpathy
 - [[entities/qmd]] — search tool that enables efficient query operations as the wiki scales
 - [[concepts/contextual-retrieval]] — technique that significantly narrows the RAG/wiki performance gap for retrieval tasks
+- [[concepts/compound-engineering]] — workflow-level version of the same compounding principle

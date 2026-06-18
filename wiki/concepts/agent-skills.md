@@ -8,8 +8,9 @@ sources:
   - "9 Things People Get Wrong With My grill-* skills.md"
   - "mattpocockskills Skills for Real Engineers. Straight from my .claude directory..md"
   - "Top 8 Claude Skills for UIUX Engineers.md"
+  - "BuilderIOskills Skills for coding agents.md"
 created: 2026-04-26
-updated: 2026-05-27
+updated: 2026-06-17
 ---
 
 # Agent Skills
@@ -174,6 +175,17 @@ Skills add ~1,500+ tokens of overhead per invocation. Avoid when:
 
 Prefer direct prompting for: quick one-shot tasks, tasks fully specified in context, simple file transformations with no workflow complexity.
 
+## Visual Artifact Skills
+
+Builder.io's skills package adds a concrete pattern: skills that produce reviewable artifacts instead of more chat text.
+
+- `/visual-plan` turns implementation plans into MDX documents with diagrams, file maps, annotated code, open questions, and UI/prototype review surfaces.
+- `/visual-recap` turns a branch, commit, PR, or diff into a visual recap with annotated diffs, API/schema summaries, architecture diagrams, and UI impact notes.
+
+The pattern is valuable because it moves high-leverage context out of the transient chat stream and into durable, commentable artifacts. It also matches [[concepts/compound-engineering]]: plans and recaps become reusable system memory rather than one-off messages.
+
+Other Builder.io skills map to existing wiki patterns: `/plan-arbiter` implements [[concepts/multi-vendor-adversarial-review]] for competing plans, `/efficient-frontier` implements [[concepts/model-tier-routing]], and `/read-the-damn-docs` is an operational form of the context7/current-docs rule.
+
 ## Related Pages
 
 - [[concepts/agent-harness]] — harness components including skill/progressive disclosure as context management
@@ -181,3 +193,4 @@ Prefer direct prompting for: quick one-shot tasks, tasks fully specified in cont
 - [[concepts/agent-teams]] — teams and skill loading behavior
 - [[concepts/indirect-prompt-injection]] — attack vector via malicious skill content
 - [[concepts/claude-code-plugins]] — plugin system that namespaces and bundles skills
+- [[summaries/builderio-skills]] — Builder.io skill catalog with visual plan/recap artifacts

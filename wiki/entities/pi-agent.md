@@ -8,10 +8,12 @@ sources:
   - "Why You Should Try OpenCode Go and pi-coding-agent.md"
   - "Building pi in a World of Slop — Mario Zechner.md"
 created: 2026-05-04
-updated: 2026-06-04
+updated: 2026-06-17
 ---
 
 # Pi Agent (pi-mono)
+
+> **Note**: `can1357/oh-my-pi` (omp) is a major batteries-included fork of pi-mono. Same TypeScript shell, ~55k LoC Rust native core added, 4 tools → 32, hashline editing, LSP/DAP wired in, 40+ providers. See [[entities/omp]] and [[comparisons/our-stack-vs-omp]].
 
 TypeScript monorepo (`badlogic/pi-mono`) providing a unified multi-provider LLM API and interactive coding agent CLI. MIT license. The key value for cross-provider workflows: `@mariozechner/pi-ai` wraps OpenAI, Anthropic, Google, and other providers behind a single interface.
 
@@ -152,9 +154,10 @@ Pi's design is a direct reaction to context management failures in Claude Code a
 
 ## Related Pages
 
+- [[entities/omp]] — batteries-included fork of pi-mono; hashline/LSP/DAP/32 tools/40+ providers
+- [[comparisons/our-stack-vs-omp]] — feature gap vs our Claude Code + Pi setup
 - [[concepts/multi-vendor-adversarial-review]] — the council pattern Pi AI enables
 - [[comparisons/claude-code-vs-opencode-plugins]] — OpenCode as primary harness
 - [[entities/opencode]] — alternative primary harness; Pi AI as its council layer
 - [[entities/opencode-go]] — OpenCode Go subscription; primary open-model provider in source AGENTS.md
-- [[concepts/multi-vendor-adversarial-review]] — adversarial review pattern Pi AI enables
 - [[concepts/agent-self-correction]] — wiki-as-oracle; Pi AI for cross-vendor review

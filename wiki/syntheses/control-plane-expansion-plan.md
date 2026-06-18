@@ -2,9 +2,9 @@
 title: "Control Plane Expansion Plan — Gap Analysis and Phase 0.5 Roadmap"
 type: synthesis
 tags: [agent-orchestration, control-plane, multi-agent, planning, gap-analysis]
-sources: []
+sources: ["BuilderIOagent-native A framework for building agent-native applications..md", "BuilderIOskills Skills for coding agents.md", "omp oh-my-pi README (github.com/can1357/oh-my-pi)"]
 created: 2026-05-19
-updated: 2026-05-27
+updated: 2026-06-17
 ---
 
 # Control Plane Expansion Plan
@@ -160,6 +160,24 @@ Phase 0.5 → 1: Buy Langfuse + GitHub Projects. Build approval UI. Schema valid
 Phase 1 → 2: Git-based inbox migration. Multi-machine agent orchestrator.
 
 Phase 2 → 3: Wire council evaluators into Stop hook quality check.
+
+## 2026-06 Update: Bootstrap Path
+
+New source synthesis sharpens the next build order:
+
+1. **Cockpit action registry** — borrow [[entities/agent-native]]'s shared action/state philosophy. Define a local action vocabulary for tasks, sessions, approvals, artifacts, evidence, review packages, runners, and machines. Do not replace Commandr with Agent-Native's shared SQL runtime.
+2. **agent-control skills** — adapt Builder.io's SKILL.md packaging pattern for reusable workflows: commandr-task, evidence-package, review-package, pentest-finding, runner-adapter, approval-policy, bus-debugger.
+3. **commandr-omp-runner** — integrate [[entities/omp]] as the first serious L2 worker after local shell/Claude/OpenCode. Start with a wrapper, then add omp custom tools for bus-native progress and approvals.
+
+Recommended immediate artifacts:
+
+| Artifact | Purpose |
+|---|---|
+| `COCKPIT-ACTIONS.md` | Design contract for UI/agent shared action vocabulary |
+| `agent-control-skills/` | Portable SKILL.md workflow library |
+| `commandr-omp-runner` | L2 runner wrapper that speaks the L3 Commandr bus |
+
+Layer placement remains unchanged: skills are L1/L4, omp is L2, Commandr is L3, DiffViewer/Tauri is L5.
 
 ## Related Pages
 

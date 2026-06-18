@@ -2,6 +2,36 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-06-17] synthesis | Commandr/DiffViewer control-plane update — Agent-Native + Builder Skills + omp
+
+Updated:
+- wiki/syntheses/desktop-control-plane.md — added refined 5-layer mapping, Agent-Native action registry, omp integration ladder, and build-phase updates
+- wiki/syntheses/control-plane-expansion-plan.md — added bootstrap path: COCKPIT-ACTIONS.md, agent-control-skills, commandr-omp-runner
+- wiki/entities/commandr.md — reinforced L3 thin-waist boundary; added omp custom tool bridge candidates
+- wiki/entities/diffviewer.md — added agent-native cockpit interpretation and skill-backed review package direction
+- wiki/entities/omp.md — added Commandr stack role and Level 0–3 integration ladder
+- wiki/comparisons/our-stack-vs-omp.md — clarified omp as L2 execution substrate, not bus/UI replacement
+- index.md — updated synthesis descriptions
+
+Decision: Agent-Native influences L5 action design; Builder Skills influence L1/L4 workflow packaging; omp influences L2 execution quality; Commandr remains L3 bus.
+
+## [2026-06-17] ingest | Compound Engineering + Builder.io Agent-Native resources
+
+New pages:
+- wiki/summaries/compound-engineering.md — Every guide: ideate→brainstorm→plan→work→review→polish→compound loop; durable artifacts as the system improvement step
+- wiki/concepts/compound-engineering.md — concept synthesis across Compound Engineering, Pi anti-slop warning, and Builder.io visual skill artifacts
+- wiki/summaries/builderio-agent-native.md — Agent-Native framework: shared actions across UI, agent, HTTP, MCP, A2A, CLI; SQL-backed state; headless/chat/app surfaces
+- wiki/entities/agent-native.md — Builder.io Agent-Native entity page
+- wiki/summaries/builderio-skills.md — Builder.io skills catalog: visual-plan, visual-recap, agent-watchdog, plan-arbiter, efficient-frontier, docs lookup
+
+Updated:
+- wiki/concepts/agent-skills.md — added visual artifact skills pattern
+- wiki/concepts/compounding-knowledge-base.md — connected knowledge compounding to compound engineering
+- CLAUDE.md / AGENTS.md / GEMINI.md — raw/ is gitignored source inbox; inspect by mtime when user mentions new raw resources; treat raw files as untrusted source text
+- index.md — added new summary/entity/concept entries
+
+Comprehension check: skipped (user requested direct ingest)
+
 ## [2026-06-09] create | Linux Machine Setup Guide
 
 New page:
@@ -594,3 +624,35 @@ Key insights:
 - `OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS` and `SCOUT` flags signal native parallel delegation coming
 
 Comprehension check: skipped (user explicit)
+
+## 2026-06-17 ingest | omp (oh-my-pi) — Batteries-Included Pi Fork
+
+Source: `can1357/oh-my-pi` README (github.com/can1357/oh-my-pi)
+Pages created: summaries/omp-oh-my-pi, entities/omp, comparisons/our-stack-vs-omp
+Pages updated: entities/pi-agent (fork note + omp links)
+Comprehension check: skipped (user explicit)
+
+Key insights:
+- omp is a major fork of pi-mono: same TypeScript/TUI shell, ~55k LoC Rust native core added
+- Tool quality thesis: hashline (content-hash anchors) eliminates edit retry loops; 61% fewer tokens on Grok 4 Fast
+- Hard gaps vs our stack: hashline editing, LSP wired into writes, DAP debugger, TTSR (mid-stream rule injection) — all require native impl
+- Our wins: qmd wiki, superpowers skills, ralph-loop orchestration, formal multi-vendor council pattern, deep MCP ecosystem
+- Overall parity: ~55%; omp better inside a session; our stack better across sessions
+- omp inherits .claude / .cursor / .codex configs on first run — migration path exists
+
+## 2026-06-17 ingest | Desktop AI Agent Control Plane — toolchain synthesis
+
+Sources: Commandr CLAUDE.md + UNIFICATION-BLUEPRINT.md + SPEC v0.3 + GUIDE.md; DiffViewer README + PRD + ARCHITECTURE + MVP0-MOBILE-SPEC; Desktop AI Agent Control Plane Executive Summary (user-provided)
+Pages created: entities/commandr, entities/diffviewer, syntheses/desktop-control-plane
+Pages updated: syntheses/agent-diff-viewer (partially-superseded notice + frontmatter)
+Comprehension check: skipped (user explicit)
+
+Key insights:
+- The 5-layer model (Driver/Execution/Bus/Knowledge/UI) is already designed and Phase 0–1 are complete
+- Commandr = L3 thin waist; SPEC v0.3 live; 28/0 conformance; both CC + OC adapters done
+- DiffViewer = current L5; has grown far beyond original design: Pi extension (mid-turn blocking), mobile companion MVP-0 (Tailscale PWA + bus approvals), OC adapter, CodeBoarding arch tab
+- The Tauri app IS Phase 5 of the Unification Blueprint — not a new project, it's the planned evolution of DiffViewer
+- omp fits as an L2 execution substrate alongside Pi; its YOLO posture is compatible with the bus approval gate being the permission system
+- Conductor: parallel coding workspaces (workspace-first); this product: operations cockpit (task/session-first) — complementary, not competitive
+- Product wedge: security testing + engineering operations cockpit
+- syntheses/desktop-control-plane marked local-only (strategy + competitive positioning)

@@ -1,0 +1,265 @@
+---
+title: "DiffViewer"
+description: "~/repos/DiffViewer — the L5 UI in the 5-layer agent toolchain. Real-time diff review tool for agent-generated file changes, with steer injection and phone ap…"
+---
+
+# DiffViewer
+
+`~/repos/DiffViewer` — the **L5 UI** in the [5-layer agent toolchain](/syntheses/desktop-control-plane). Real-time diff review tool for agent-generated file changes, with steer injection and phone approval. Currently a Node.js/Hono browser server; Phase 5 target = Tauri desktop app.
+
+GitHub: https://github.com/vietbui1999ru/DiffViewer
+
+---
+
+## What It Does Now
+
+Receives hook events from Claude Code / OpenCode / Pi, groups file changes by agent turn, renders diff cards in a browser tab and a Neovim scratch buffer. Human reviews the turn's changes, optionally types a steer to redirect the agent, or approves/rejects via phone.
+
+---
+
+## Architecture (Current)
+
+```
+Claude Code
+  PostToolUse hook  →  curl POST :3333/event      (Write|Edit|MultiEdit)
+  Stop hook         →  curl POST :3333/turn-end    (turn boundary)
+
+OpenCode
+  adapters/opencode/diffviewer.js plugin
+    session.status:idle  →  flush sidecars to DiffViewer
+
+Pi extension (~/repos/DiffViewer/pi-extension/)
+  intercepts write/edit tool calls → interactive Accept/Edit/Deny UI
+  decisions → .pi/diff-review/decisions.jsonl + .pi/diff-review/latest.md
+
+server.js (Hono, Node 20+, always-running daemon, :3333)
+  POST /event       →  normalize → buffer into session TurnBuffer
+  POST /turn-end    →  flush → SSE broadcast + .diffviewer/turns/ sidecars
+  POST /steer       →  pbcopy (v1) / OpenCode HTTP inject (v2)
+  GET  /arch        →  layered import analysis (arch analyzer)
+  GET  /stream      →  SSE to browser + Neovim Lua plugin
+  GET  /            →  browser/index.html
+  GET  /api/architecture →  CodeBoarding artifact → Mermaid
+
+Mobile listener (:3334, loopback, --mobile flag)
+  WebSocket push of TurnSnapshots to PWA
+  POST /approve/:task  →  writes .agents/approvals/<task-id>.approved
+  POST /reject/:task   →  no-op (never creates token)
+  Tailscale-only transport: loopback + `tailscale serve --bg 3334` for phone access
+
+browser/ (diff2html + vanilla JS, no build step)
+  EventSource → per-session turn cards
+  Turn-level layer summary bar (frontend/backend/infra/unclassified counts)
+  Collapsible per-file diffs; Write vs Edit distinguished
+  Architecture section (lazy GET /arch on first expand)
+  Steer input box → POST /steer
+  Tab title: "(N) Diff Viewer"
+
+nvim/ (Lua plugin)
+  vim.system curl SSE → on_stdout parse → pending turn queue
+  Statusline: "[DV: N]" when pending turns > 0
+  <leader>dv → scratch buffer (filetype=diff, latest turn)
+  Keymaps: q=accept-all, d=decline-file (git checkout), c=steer
+  Auto-reconnect on process exit
+```
+
+---
+
+## Data Shapes
+
+**NormalizedEvent**: per-file change (tool, path, layer, unifiedDiff, isNew, seq, ts)
+
+**TurnSnapshot**: per-turn group (sessionId, turnNumber, events[], startedAt, completedAt)
+
+**ArchResult**: per-file architecture analysis (layer, forwardImports, reverseImports, importChain depth-3)
+
+---
+
+## Pi Extension
+
+`pi-extension/` — a Pi package. Install with `pi install /path/to/DiffViewer/pi-extension`.
+
+Intercepts Pi worker write/edit tool calls. Before the worker continues, shows interactive line-level Accept/Edit/Deny review UI. Decisions are written to:
+- `.pi/diff-review/decisions.jsonl` — event log of every decision
+- `.pi/diff-review/latest.md` — readable summary for the commander to inspect
+
+This is qualitatively different from the browser server: it blocks the Pi worker mid-turn, not between turns. Human can edit content before the write lands.
+
+---
+
+## Mobile Companion (MVP-0)
+
+Implements Commandr issue #1. Phone reviews per-turn diffs and approves/rejects. Phone is a projection and remote control — never a second source of truth.
+
+**Transport**: Tailscale-only. Daemon binds `127.0.0.1:3334`. For real phone: `tailscale serve --bg 3334` exposes as HTTPS on tailnet. Shared token is second factor (token lives in `~/.diffviewer/`, never in `.agents/`).
+
+**Auth**: single shared token, stale-diff digest guard, null-task approval refusal.
+
+**PWA**: WebSocket connection, renders TurnSnapshot diff cards, swipe right=approve / swipe left=reject. Approve writes `<repo>/.agents/approvals/<task-id>.approved`. Reject writes nothing.
+
+**Out of scope (MVP-1+)**: Kanban, chat/voice capture, GitHub proxy, per-device tokens, push notifications, multi-machine.
+
+---
+
+## Architecture Tab (CodeBoarding Integration)
+
+`GET /api/architecture` reads an existing CodeBoarding artifact at `<repo>/.codeboarding/analysis.json` and transforms the top-level component graph to Mermaid. DiffViewer does not run CodeBoarding — it reads a pre-generated artifact. Override path: `DIFFVIEWER_ARCH_PATH` env var.
+
+---
+
+## Layered Import Analysis (Arch Analyzer)
+
+Pure function: `analyzeFile(filePath, gitRoot, heuristics) → ArchResult`
+
+Layers: `frontend`, `backend`, `infra`, `unclassified`. Derived from path segments via `heuristics.json` (built-in) or `.diffviewer.json` at git root (per-project override).
+
+Languages: TypeScript/JS, Python, Go, Lua. Unsupported extensions get layer badge only, no import analysis.
+
+Import chain: recursive forward parse, capped at depth 3.
+
+---
+
+## Phase 5 Target: Tauri Desktop App
+
+Per the Unification Blueprint (decision 5 + Phase 5): DiffViewer browser UI becomes the Tauri shell. The bus watching (reading `.agents/` and `.diffviewer/turns/` sidecars) replaces the CC hook ingestion path.
+
+Tauri benefits:
+- Native OS shell, SQLite for persistent state
+- Native menus, notifications, file system access without server
+- Mobile companion becomes a native iOS/Android companion app or stays PWA
+- Cockpit expands beyond diff review to full taskboard, session list, approval queue, machine inventory
+
+The Executive Summary document names this product: "local-first desktop AI operations cockpit for supervising agents, tasks, terminals, machines, logs, approvals, and review packages."
+
+### Agent-native cockpit implication
+
+Builder.io's Agent-Native source sharpens the Tauri direction: DiffViewer should not become a passive dashboard. It should expose the same action vocabulary to humans and agents.
+
+Examples:
+
+| UI action | Agent-native interpretation |
+|---|---|
+| Move task to Review | Agent requests `task.progress` or `task.complete`; UI reflects transition |
+| Approve command | Agent requests `approval.request`; human/UI decides `approval.approve` or `approval.deny` |
+| Pin evidence | Human or agent emits `evidence.pin` for an artifact/log line |
+| Generate review package | Button or agent invokes `review.generate` |
+| Start runner | UI click or agent action invokes `runner.start` |
+| Open machine/session/log | UI navigation or agent context target |
+
+DiffViewer/Tauri owns the human-facing projection and local SQLite audit view. [Commandr](/entities/commandr) remains the lifecycle source of truth.
+
+### Skill-backed review packages
+
+Builder.io's visual-plan/visual-recap skills suggest a concrete DiffViewer extension path: review packages should be generated as inspectable artifacts, not chat prose. A future `review-package-generator` skill can produce diagrams, file maps, API/schema summaries, pinned evidence, and residual risk notes for the Tauri review screen.
+
+---
+
+## Setup
+
+```bash
+npm install
+node server.js                    # start server on :3333
+bash scripts/install.sh           # patch ~/.claude/settings.json hooks (idempotent)
+open http://localhost:3333
+
+# OpenCode + Commandr integration:
+opencode --port 4096 ~/repos/Commandr
+OPENCODE_SERVER_URL=http://127.0.0.1:4096 node server.js ~/repos/Commandr
+
+# Mobile:
+node server.js --mobile --pair ~/repos/Commandr
+tailscale serve --bg 3334         # expose to tailnet
+```
+
+---
+
+## Related Pages
+
+- [Desktop AI Agent Control Plane — Architecture Synthesis](/syntheses/desktop-control-plane) — big-picture synthesis; Tauri path
+- [Commandr](/entities/commandr) — L3 bus; approval token format; events.jsonl
+- [omp (oh-my-pi)](/entities/omp) — potential L2 worker with built-in browser + eval kernel; could replace Pi extension
+- [Agent-Native](/entities/agent-native) — action/state philosophy for the cockpit
+- Builderio Skills — visual-plan/visual-recap artifact pattern
+- [Agent Diff Viewer — Real-Time Code Review Tool](/syntheses/agent-diff-viewer) — earlier synthesis (pre-bus-watching, pre-mobile, pre-Pi-extension; partially superseded)
+- [Agent Harness](/concepts/agent-harness) — hook system, PostToolUse event shape
+
+
+<iframe srcDoc="<!doctype html><html><head><meta charset=&quot;utf-8&quot;><style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel input[type=range]{width:100%;margin:0}
+#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><div id=&quot;gear&quot;>⚙</div>
+<div id=&quot;panel&quot;>
+<label>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<div class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;><span>Directional arrows</span></div>
+</div>
+<div id=&quot;g&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;entities/diffviewer&quot;,&quot;label&quot;:&quot;DiffViewer&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;concepts/agent-harness&quot;,&quot;label&quot;:&quot;Agent Harness&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:7.324555320336759},{&quot;id&quot;:&quot;syntheses/desktop-control-plane&quot;,&quot;label&quot;:&quot;Desktop AI Agent Control Plane — Architecture Synthesis&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;entities/commandr&quot;,&quot;label&quot;:&quot;Commandr&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;entities/omp&quot;,&quot;label&quot;:&quot;omp (oh-my-pi)&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;entities/agent-native&quot;,&quot;label&quot;:&quot;Agent-Native&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.6457513110645907},{&quot;id&quot;:&quot;syntheses/agent-diff-viewer&quot;,&quot;label&quot;:&quot;Agent Diff Viewer — Real-Time Code Review Tool&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;label&quot;:&quot;Lean Agentic Coding Workflow&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:5.795831523312719},{&quot;id&quot;:&quot;concepts/context-compression&quot;,&quot;label&quot;:&quot;Context Compression Strategies&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.795831523312719},{&quot;id&quot;:&quot;concepts/agent-skills&quot;,&quot;label&quot;:&quot;Agent Skills&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.358898943540674},{&quot;id&quot;:&quot;concepts/verification-pipeline&quot;,&quot;label&quot;:&quot;Verification Pipeline&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.358898943540674},{&quot;id&quot;:&quot;entities/opencode&quot;,&quot;label&quot;:&quot;OpenCode&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:5.242640687119285},{&quot;id&quot;:&quot;concepts/agent-self-correction&quot;,&quot;label&quot;:&quot;Agent Self-Correction&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:5.123105625617661},{&quot;id&quot;:&quot;concepts/agent-context-instructions&quot;,&quot;label&quot;:&quot;Agent Context Instructions&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.872983346207417},{&quot;id&quot;:&quot;concepts/ralph-loop&quot;,&quot;label&quot;:&quot;Ralph Loop&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.872983346207417},{&quot;id&quot;:&quot;entities/pi-agent&quot;,&quot;label&quot;:&quot;Pi Agent (pi-mono)&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:4.741657386773941},{&quot;id&quot;:&quot;concepts/agent-subagents&quot;,&quot;label&quot;:&quot;Agent Subagents&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.741657386773941},{&quot;id&quot;:&quot;concepts/context-degradation&quot;,&quot;label&quot;:&quot;Context Degradation Patterns&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.60555127546399},{&quot;id&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;label&quot;:&quot;Agentic Sandbox Controls&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;concepts/context-engineering&quot;,&quot;label&quot;:&quot;Context Engineering&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;label&quot;:&quot;Agent Primitive Selection&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:4.464101615137754},{&quot;id&quot;:&quot;syntheses/control-plane-expansion-plan&quot;,&quot;label&quot;:&quot;Control Plane Expansion Plan — Gap Analysis and Phase 0.5 Roadmap&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:4.3166247903554},{&quot;id&quot;:&quot;systems/ai-ml&quot;,&quot;label&quot;:&quot;AI and ML Engineering&quot;,&quot;group&quot;:&quot;systems&quot;,&quot;val&quot;:4.3166247903554},{&quot;id&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;label&quot;:&quot;Spec-Driven Frameworks vs Native Claude Code&quot;,&quot;group&quot;:&quot;comparisons&quot;,&quot;val&quot;:4.3166247903554},{&quot;id&quot;:&quot;concepts/agent-teams&quot;,&quot;label&quot;:&quot;Agent Teams&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;concepts/self-healing-loop&quot;,&quot;label&quot;:&quot;Self-Healing Loop&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;entities/dangeresque&quot;,&quot;label&quot;:&quot;Dangeresque&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;entities/sandcastle&quot;,&quot;label&quot;:&quot;SandCastle&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:4.16227766016838},{&quot;id&quot;:&quot;comparisons/our-stack-vs-omp&quot;,&quot;label&quot;:&quot;Our Stack vs omp&quot;,&quot;group&quot;:&quot;comparisons&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;,&quot;label&quot;:&quot;Claude Code vs OpenCode Plugin Systems&quot;,&quot;group&quot;:&quot;comparisons&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;concepts/branch-strategy-for-agents&quot;,&quot;label&quot;:&quot;Branch Strategy for Agents&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.8284271247461903},{&quot;id&quot;:&quot;concepts/tool-design-for-agents&quot;,&quot;label&quot;:&quot;Tool Design for Agents&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;concepts/deep-modules&quot;,&quot;label&quot;:&quot;Deep Modules&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;syntheses/pi-orchestration-architecture&quot;,&quot;label&quot;:&quot;Pi Orchestration Architecture&quot;,&quot;group&quot;:&quot;syntheses&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;entities/everything-claude-code&quot;,&quot;label&quot;:&quot;Everything Claude Code (ECC)&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.449489742783178},{&quot;id&quot;:&quot;concepts/compound-engineering&quot;,&quot;label&quot;:&quot;Compound Engineering&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;entities/codegraphcontext&quot;,&quot;label&quot;:&quot;CodeGraphContext&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;entities/headroom&quot;,&quot;label&quot;:&quot;Headroom&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3.23606797749979},{&quot;id&quot;:&quot;concepts/github-issue-handoff&quot;,&quot;label&quot;:&quot;GitHub Issue as Handoff Artifact&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;concepts/llm-observability&quot;,&quot;label&quot;:&quot;LLM Observability&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;concepts/pentest-agent-design&quot;,&quot;label&quot;:&quot;Pen Test Agent Design&quot;,&quot;group&quot;:&quot;concepts&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;entities/dspy&quot;,&quot;label&quot;:&quot;DSPy&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;entities/opentelemetry&quot;,&quot;label&quot;:&quot;OpenTelemetry&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:3},{&quot;id&quot;:&quot;entities/pentagi&quot;,&quot;label&quot;:&quot;PentAGI&quot;,&quot;group&quot;:&quot;entities&quot;,&quot;val&quot;:2.732050807568877}],LINKS=[{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;concepts/tool-design-for-agents&quot;},{&quot;source&quot;:&quot;concepts/agent-harness&quot;,&quot;target&quot;:&quot;syntheses/agent-diff-viewer&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/branch-strategy-for-agents&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;concepts/agent-self-correction&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/compound-engineering&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/agent-skills&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agent-subagents&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/agent-teams&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;concepts/agentic-sandbox-controls&quot;,&quot;target&quot;:&quot;concepts/self-healing-loop&quot;},{&quot;source&quot;:&quot;concepts/branch-strategy-for-agents&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;concepts/branch-strategy-for-agents&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;concepts/branch-strategy-for-agents&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/branch-strategy-for-agents&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/branch-strategy-for-agents&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/compound-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/compound-engineering&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/compound-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;entities/headroom&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;entities/everything-claude-code&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-compression&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-degradation&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/tool-design-for-agents&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/context-engineering&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/deep-modules&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;concepts/github-issue-handoff&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;concepts/github-issue-handoff&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/llm-observability&quot;,&quot;target&quot;:&quot;entities/opentelemetry&quot;},{&quot;source&quot;:&quot;concepts/llm-observability&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;concepts/llm-observability&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/pentest-agent-design&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/pentest-agent-design&quot;,&quot;target&quot;:&quot;concepts/tool-design-for-agents&quot;},{&quot;source&quot;:&quot;concepts/pentest-agent-design&quot;,&quot;target&quot;:&quot;entities/pentagi&quot;},{&quot;source&quot;:&quot;concepts/ralph-loop&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;concepts/self-healing-loop&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;concepts/tool-design-for-agents&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;concepts/verification-pipeline&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;systems/ai-ml&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;syntheses/agent-diff-viewer&quot;,&quot;target&quot;:&quot;entities/diffviewer&quot;},{&quot;source&quot;:&quot;syntheses/agent-diff-viewer&quot;,&quot;target&quot;:&quot;syntheses/desktop-control-plane&quot;},{&quot;source&quot;:&quot;syntheses/agent-diff-viewer&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;syntheses/agent-diff-viewer&quot;,&quot;target&quot;:&quot;concepts/tool-design-for-agents&quot;},{&quot;source&quot;:&quot;syntheses/agent-diff-viewer&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-subagents&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;syntheses/agent-primitive-selection&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;syntheses/control-plane-expansion-plan&quot;,&quot;target&quot;:&quot;entities/agent-native&quot;},{&quot;source&quot;:&quot;syntheses/control-plane-expansion-plan&quot;,&quot;target&quot;:&quot;entities/omp&quot;},{&quot;source&quot;:&quot;syntheses/control-plane-expansion-plan&quot;,&quot;target&quot;:&quot;concepts/agent-teams&quot;},{&quot;source&quot;:&quot;syntheses/desktop-control-plane&quot;,&quot;target&quot;:&quot;entities/commandr&quot;},{&quot;source&quot;:&quot;syntheses/desktop-control-plane&quot;,&quot;target&quot;:&quot;entities/diffviewer&quot;},{&quot;source&quot;:&quot;syntheses/desktop-control-plane&quot;,&quot;target&quot;:&quot;entities/omp&quot;},{&quot;source&quot;:&quot;syntheses/desktop-control-plane&quot;,&quot;target&quot;:&quot;entities/agent-native&quot;},{&quot;source&quot;:&quot;syntheses/desktop-control-plane&quot;,&quot;target&quot;:&quot;comparisons/our-stack-vs-omp&quot;},{&quot;source&quot;:&quot;syntheses/desktop-control-plane&quot;,&quot;target&quot;:&quot;entities/pi-agent&quot;},{&quot;source&quot;:&quot;syntheses/desktop-control-plane&quot;,&quot;target&quot;:&quot;syntheses/control-plane-expansion-plan&quot;},{&quot;source&quot;:&quot;syntheses/desktop-control-plane&quot;,&quot;target&quot;:&quot;syntheses/agent-diff-viewer&quot;},{&quot;source&quot;:&quot;syntheses/desktop-control-plane&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;syntheses/desktop-control-plane&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/agent-skills&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;concepts/agent-self-correction&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;syntheses/lean-agentic-workflow&quot;,&quot;target&quot;:&quot;syntheses/control-plane-expansion-plan&quot;},{&quot;source&quot;:&quot;syntheses/pi-orchestration-architecture&quot;,&quot;target&quot;:&quot;entities/pi-agent&quot;},{&quot;source&quot;:&quot;syntheses/pi-orchestration-architecture&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;syntheses/pi-orchestration-architecture&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;syntheses/pi-orchestration-architecture&quot;,&quot;target&quot;:&quot;syntheses/agent-primitive-selection&quot;},{&quot;source&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;comparisons/our-stack-vs-omp&quot;,&quot;target&quot;:&quot;entities/commandr&quot;},{&quot;source&quot;:&quot;comparisons/our-stack-vs-omp&quot;,&quot;target&quot;:&quot;entities/omp&quot;},{&quot;source&quot;:&quot;comparisons/our-stack-vs-omp&quot;,&quot;target&quot;:&quot;entities/pi-agent&quot;},{&quot;source&quot;:&quot;comparisons/our-stack-vs-omp&quot;,&quot;target&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;},{&quot;source&quot;:&quot;comparisons/our-stack-vs-omp&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;comparisons/our-stack-vs-omp&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;comparisons/spec-driven-frameworks-vs-native&quot;,&quot;target&quot;:&quot;concepts/branch-strategy-for-agents&quot;},{&quot;source&quot;:&quot;entities/agent-native&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/agent-native&quot;,&quot;target&quot;:&quot;concepts/tool-design-for-agents&quot;},{&quot;source&quot;:&quot;entities/agent-native&quot;,&quot;target&quot;:&quot;concepts/agent-context-instructions&quot;},{&quot;source&quot;:&quot;entities/codegraphcontext&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/codegraphcontext&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;entities/codegraphcontext&quot;,&quot;target&quot;:&quot;concepts/tool-design-for-agents&quot;},{&quot;source&quot;:&quot;entities/commandr&quot;,&quot;target&quot;:&quot;syntheses/desktop-control-plane&quot;},{&quot;source&quot;:&quot;entities/commandr&quot;,&quot;target&quot;:&quot;entities/agent-native&quot;},{&quot;source&quot;:&quot;entities/commandr&quot;,&quot;target&quot;:&quot;entities/omp&quot;},{&quot;source&quot;:&quot;entities/commandr&quot;,&quot;target&quot;:&quot;entities/diffviewer&quot;},{&quot;source&quot;:&quot;entities/commandr&quot;,&quot;target&quot;:&quot;entities/pi-agent&quot;},{&quot;source&quot;:&quot;entities/commandr&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/commandr&quot;,&quot;target&quot;:&quot;syntheses/control-plane-expansion-plan&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;entities/sandcastle&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;concepts/agentic-sandbox-controls&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;entities/dangeresque&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;entities/diffviewer&quot;,&quot;target&quot;:&quot;syntheses/desktop-control-plane&quot;},{&quot;source&quot;:&quot;entities/diffviewer&quot;,&quot;target&quot;:&quot;entities/commandr&quot;},{&quot;source&quot;:&quot;entities/diffviewer&quot;,&quot;target&quot;:&quot;entities/omp&quot;},{&quot;source&quot;:&quot;entities/diffviewer&quot;,&quot;target&quot;:&quot;entities/agent-native&quot;},{&quot;source&quot;:&quot;entities/diffviewer&quot;,&quot;target&quot;:&quot;syntheses/agent-diff-viewer&quot;},{&quot;source&quot;:&quot;entities/diffviewer&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/dspy&quot;,&quot;target&quot;:&quot;concepts/context-engineering&quot;},{&quot;source&quot;:&quot;entities/dspy&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/everything-claude-code&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/everything-claude-code&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/headroom&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/headroom&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/omp&quot;,&quot;target&quot;:&quot;entities/commandr&quot;},{&quot;source&quot;:&quot;entities/omp&quot;,&quot;target&quot;:&quot;entities/pi-agent&quot;},{&quot;source&quot;:&quot;entities/omp&quot;,&quot;target&quot;:&quot;comparisons/our-stack-vs-omp&quot;},{&quot;source&quot;:&quot;entities/omp&quot;,&quot;target&quot;:&quot;entities/diffviewer&quot;},{&quot;source&quot;:&quot;entities/omp&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/omp&quot;,&quot;target&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/opencode&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/opentelemetry&quot;,&quot;target&quot;:&quot;concepts/llm-observability&quot;},{&quot;source&quot;:&quot;entities/opentelemetry&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/opentelemetry&quot;,&quot;target&quot;:&quot;concepts/context-degradation&quot;},{&quot;source&quot;:&quot;entities/pentagi&quot;,&quot;target&quot;:&quot;concepts/context-compression&quot;},{&quot;source&quot;:&quot;entities/pentagi&quot;,&quot;target&quot;:&quot;concepts/pentest-agent-design&quot;},{&quot;source&quot;:&quot;entities/pentagi&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/pi-agent&quot;,&quot;target&quot;:&quot;entities/omp&quot;},{&quot;source&quot;:&quot;entities/pi-agent&quot;,&quot;target&quot;:&quot;comparisons/our-stack-vs-omp&quot;},{&quot;source&quot;:&quot;entities/pi-agent&quot;,&quot;target&quot;:&quot;comparisons/claude-code-vs-opencode-plugins&quot;},{&quot;source&quot;:&quot;entities/pi-agent&quot;,&quot;target&quot;:&quot;entities/opencode&quot;},{&quot;source&quot;:&quot;entities/pi-agent&quot;,&quot;target&quot;:&quot;concepts/agent-self-correction&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;concepts/branch-strategy-for-agents&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;entities/dangeresque&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;syntheses/lean-agentic-workflow&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;concepts/agent-harness&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;concepts/ralph-loop&quot;},{&quot;source&quot;:&quot;entities/sandcastle&quot;,&quot;target&quot;:&quot;concepts/verification-pipeline&quot;}],CUR=&quot;entities/diffviewer&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return 'rgba(255,255,255,0.12)';})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return 'rgba(255,255,255,0.4)';})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle='#fff';ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+function fit(){G.zoomToFit(400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){G.pauseAnimation();}function resume(){G.resumeAnimation();}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){if(hd.hasPointerCapture(e.pointerId))hd.releasePointerCapture(e.pointerId);hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e2){if(window.console)console.debug('graph: could not persist position',e2);}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />

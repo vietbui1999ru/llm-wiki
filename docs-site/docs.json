@@ -44,6 +44,7 @@
           "concepts/branch-strategy-for-agents",
           "concepts/cicd-testing",
           "concepts/claude-code-plugins",
+          "concepts/compound-engineering",
           "concepts/compounding-knowledge-base",
           "concepts/context-compression",
           "concepts/context-degradation",
@@ -126,6 +127,7 @@
           "syntheses/agent-diff-viewer",
           "syntheses/agent-primitive-selection",
           "syntheses/control-plane-expansion-plan",
+          "syntheses/desktop-control-plane",
           "syntheses/lean-agentic-workflow",
           "syntheses/local-rag-wiki",
           "syntheses/pi-orchestration-architecture"
@@ -136,19 +138,23 @@
         "pages": [
           "comparisons/cc-to-cross-platform-migration",
           "comparisons/claude-code-vs-opencode-plugins",
+          "comparisons/our-stack-vs-omp",
           "comparisons/spec-driven-frameworks-vs-native"
         ]
       },
       {
         "group": "Entities",
         "pages": [
+          "entities/agent-native",
           "entities/agentops",
           "entities/agents-md-format",
           "entities/agentshield",
           "entities/ai-coding-agents",
           "entities/codegraphcontext",
           "entities/codex",
+          "entities/commandr",
           "entities/dangeresque",
+          "entities/diffviewer",
           "entities/docling",
           "entities/dspy",
           "entities/eggroll",
@@ -159,6 +165,7 @@
           "entities/karpathy-llm-council",
           "entities/lean-session",
           "entities/mnemory",
+          "entities/omp",
           "entities/opencode",
           "entities/opencode-dcp",
           "entities/opencode-go",

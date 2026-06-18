@@ -2,6 +2,31 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-06-18] synthesis | Neovim as AI operator cockpit
+
+Created:
+- wiki/syntheses/neovim-ai-operator-workflow.md — Neovim/Mason/nvim-dap as human IDE lane while agents run as supervised workers
+
+Updated:
+- wiki/concepts/lsp-agent-baseline.md — added Neovim/Mason exception: do not duplicate Mason-managed LSPs with global Claude LSP plugins
+- wiki/syntheses/desktop-control-plane.md — added Neovim bridge and operator evidence lane
+- index.md — added synthesis entry
+
+Decision: Neovim should be the human operator cockpit for review/debug/small edits; Mason owns operator LSP/DAP setup; agent runners use LSP lazily in their own lane; Commandr stores only neutral progress/artifact references.
+
+Sources researched: mason.nvim, nvim-lspconfig, nvim-dap, mason-nvim-dap, CodeCompanion.nvim, Avante.nvim, MCPHub.nvim, claudecode.nvim, Xata Neovim+Claude Code workflow, Daniel Miessler Neovim+Claude Code pane workflow.
+
+## [2026-06-18] synthesis | LSP as agent baseline for control plane
+
+Created:
+- wiki/concepts/lsp-agent-baseline.md — LSP as lazy project-scoped L2 capability for coding agents; not L3 bus state
+
+Updated:
+- wiki/syntheses/desktop-control-plane.md — added LSP baseline policy, startup rule, runner/session placement, and UI evidence path
+- index.md — added concept entry
+
+Decision: do not start every LSP globally at session startup. Detect project stack, enable only matching LSPs, start lazily on first code task, reuse per workspace/worktree, and pair LSP diagnostics with typecheck/tests/diff review.
+
 ## [2026-06-17] synthesis | Commandr/DiffViewer control-plane update — Agent-Native + Builder Skills + omp
 
 Updated:

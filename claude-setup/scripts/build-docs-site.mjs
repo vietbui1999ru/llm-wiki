@@ -434,6 +434,11 @@ const docsJson = {
   name: "LLM Wiki",
   description: "A compounding, agent-maintained knowledge base on AI agent engineering.",
   colors: { primary: "#6E56CF", light: "#9E8CFC", dark: "#4C3AAE" },
+  navbar: {
+    links: [
+      { label: "GitHub", href: "https://github.com/vietbui1999ru/llm-wiki", type: "github" },
+    ],
+  },
   navigation: { groups },
 };
 writeFileSync(join(OUT, "docs.json"), JSON.stringify(docsJson, null, 2) + "\n");

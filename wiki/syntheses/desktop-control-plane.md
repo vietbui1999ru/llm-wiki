@@ -2,9 +2,9 @@
 title: "Desktop AI Agent Control Plane — Architecture Synthesis"
 type: synthesis
 tags: [control-plane, agent-orchestration, tauri, commandr, diffviewer, thin-waist, desktop-app, product-architecture]
-sources: ["Commandr UNIFICATION-BLUEPRINT.md", "Commandr protocol/SPEC.md v0.3", "DiffViewer README + PRD + ARCHITECTURE + MVP0-MOBILE-SPEC", "Desktop AI Agent Control Plane Executive Summary (2026-06-17)", "BuilderIOagent-native A framework for building agent-native applications..md", "BuilderIOskills Skills for coding agents.md", "omp oh-my-pi README (github.com/can1357/oh-my-pi)"]
+sources: ["Commandr UNIFICATION-BLUEPRINT.md", "Commandr protocol/SPEC.md v0.3", "DiffViewer README + PRD + ARCHITECTURE + MVP0-MOBILE-SPEC", "Desktop AI Agent Control Plane Executive Summary (2026-06-17)", "BuilderIOagent-native A framework for building agent-native applications..md", "BuilderIOskills Skills for coding agents.md", "omp oh-my-pi README (github.com/can1357/oh-my-pi)", "cc-linting-debugging-reddit.md"]
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-18
 ---
 
 # Desktop AI Agent Control Plane — Architecture Synthesis
@@ -43,7 +43,8 @@ Three recent sources strengthen the model without changing the layer boundaries:
 
 - [[entities/agent-native]] informs **L5 action design**: UI and agents should share one action vocabulary, but the product should not adopt Agent-Native's SQL runtime as the bus.
 - [[summaries/builderio-skills]] informs **L1/L4 workflow packaging**: reusable capabilities should ship as portable `SKILL.md` packages, not live only in prompts.
-- [[entities/omp]] informs **L2 execution quality**: use high-quality runners for edits, LSP/DAP, subagents, and tool schemas; do not let a runner own lifecycle state.
+- [[entities/omp]] and [[concepts/lsp-agent-baseline]] inform **L2 execution quality**: use high-quality runners for edits, LSP/DAP, subagents, diagnostics, and tool schemas; do not let a runner own lifecycle state.
+- [[syntheses/neovim-ai-operator-workflow]] informs the **human operator lane**: Neovim + Mason + nvim-dap remain the hands-on IDE/debug surface while agents run as supervised workers.
 
 **Invariant**: none of these replace [[entities/commandr]]. Commandr remains L3, the stable lifecycle/audit contract.
 
@@ -120,6 +121,7 @@ The main UI is an **operations cockpit**, not a chat window:
 | Machine inventory | Local + SSH targets; health status; auth profiles |
 | Review package | End-of-task: summary, commands, diff, pinned evidence, approvals, next step |
 | Architecture tab | CodeBoarding-backed component graph for the active repo |
+| Neovim bridge | Open file/line in Neovim; ingest selected code/context, LSP diagnostics, DAP evidence |
 
 ---
 
@@ -156,6 +158,25 @@ The desktop app does not build its own coding agent. It supervises existing runn
 | Goose / OpenHands | Later | Additional open-source runners |
 
 Every runner produces: stdout/stderr stream, exit code, file diffs (via git), and bus events.
+
+### LSP baseline for code runners
+
+Language servers should be treated as baseline capability for code-changing runners, not as global always-on background noise. LSP gives agents IDE-grade facts: symbol lookup, go-to-definition, references, diagnostics, hover/type information, and safe rename support.
+
+Placement:
+
+| Layer | Policy |
+|---|---|
+| L1 driver | May expose LSP tools/plugins to a session when project profile selects them. |
+| L2 runner | Best home for warm language servers; `omp` is reference implementation because LSP/DAP are built in. |
+| L3 bus | Store only neutral progress or artifact references, never LSP caches or raw server state. |
+| L5 UI | Display diagnostics and symbol/blast-radius evidence in review packages. |
+
+Startup rule: lazy per-project LSP, not global always-on. Detect stack from project profile/files, enable only matching servers, start on first code task, reuse per workspace/worktree, and clean up with runner/session lifecycle.
+
+When the human uses Neovim as IDE replacement, split the lanes: Mason/lspconfig/nvim-dap own the human operator LSP/DAP surface, while agent runners own autonomous LSP usage. The control plane should not duplicate Mason by starting all LSPs globally. Instead, it should import or display operator evidence: diagnostics summaries, diffview review state, debug reproduction notes, and file/line selections.
+
+LSP is not enough by itself. The verification ladder stays: LSP diagnostics → typecheck/compiler → tests → diff review/human approval.
 
 ### omp integration ladder
 
@@ -295,6 +316,7 @@ The Commandr `events.jsonl` + DiffViewer `TurnSnapshot` already capture most of 
 - Approval queue (reads from bus + native UI to write approval token)
 - Local shell + CC CLI runner adapters
 - `commandr-omp-runner` Level 1 wrapper once shell/CC adapter shape is stable
+- Project-scoped LSP capability metadata on runner sessions (`ts`, `py`, `go`, `rs`, etc.), shown in UI but not stored as bus state
 
 ### Phase B: Review + Evidence
 - DiffViewer rendered natively in Tauri (replaces Node server)
@@ -302,6 +324,8 @@ The Commandr `events.jsonl` + DiffViewer `TurnSnapshot` already capture most of 
 - Artifact store (SQLite-backed, file-linked)
 - Evidence pinning + annotation (replaces `bin/annotate-write`)
 - Architecture tab (CodeBoarding artifact → Mermaid → native render)
+- LSP evidence panel: diagnostics clean/dirty, changed exported symbols, references/callers for risky diffs
+- Neovim bridge: file/line deep links, selection-to-annotation, diffview refresh hooks, DAP evidence import
 
 ### Phase C: Remote + Security Workflow
 - SSH machine profiles + remote runner adapter
@@ -322,6 +346,8 @@ The Commandr `events.jsonl` + DiffViewer `TurnSnapshot` already capture most of 
 - [[entities/commandr]] — L3 bus entity; SPEC v0.3; bin/ tools; adapter details
 - [[entities/diffviewer]] — L5 UI entity; architecture; Pi extension; mobile companion
 - [[entities/omp]] — L2 execution option; feature reference
+- [[concepts/lsp-agent-baseline]] — LSP as lazy project-scoped agent capability, not bus state
+- [[syntheses/neovim-ai-operator-workflow]] — Neovim/Mason/nvim-dap as human operator IDE lane
 - [[entities/agent-native]] — action/state philosophy for the Tauri cockpit
 - [[summaries/builderio-skills]] — skill packaging inspiration for workflow distribution
 - [[entities/pi-agent]] — current L2 substrate; council subprocess; pueue

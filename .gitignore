@@ -30,6 +30,9 @@ claude-setup/plugins/marketplaces/
 # Raw source documents (local only — not tracked on remote)
 raw/
 
+# Firecrawl web research cache (local only)
+.firecrawl/
+
 # Assets are tracked but large — add to LFS later if needed
 # assets/
 .env

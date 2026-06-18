@@ -69,6 +69,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/opentelemetry]] — CNCF-graduated vendor-neutral observability framework; three signals, GenAI semantic conventions (incubating), instrumentation approaches, Collector config, compatible backends for AI workloads
 
 ## Concepts
+- [[concepts/lsp-agent-baseline]] — Language servers as lazy project-scoped baseline for coding agents; L2 capability, not L3 bus state; pairs with typecheck/tests/diff review
 - [[concepts/compound-engineering]] — AI-native workflow principle: every task should leave durable knowledge, guardrails, or capabilities that make future work easier
 - [[concepts/mobile-design-patterns]] — mobile-first doctrine, MFRI scoring, Fitts' Law, gesture design, iOS/Android divergence matrix, RN/Flutter performance patterns, release checklist
 - [[concepts/unit-testing]] — AAA pattern, test doubles, naming convention, coverage philosophy, flaky test quarantine
@@ -160,6 +161,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[comparisons/cc-to-cross-platform-migration]] — Full migration matrix: CC rules/skills/subagents/hooks/plugins → Gemini/OpenCode/Codex/Cursor/Copilot/Zed; parity rating per layer; hook event counts; DRY adapter pattern
 
 ## Syntheses
+- [[syntheses/neovim-ai-operator-workflow]] — Neovim as human operator cockpit for AI agents: Mason LSP/DAP lane, diffview auto-refresh, selection context, CodeCompanion/Avante/MCPHub/claudecode.nvim roles
 - [[syntheses/pi-orchestration-architecture]] — Pueue-dispatched pi workers, diff-review gate, status artifact, retry limit, two-mode review (interactive vs headless), human-commits-last
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern
 - [[syntheses/lean-agentic-workflow]] — Full stack: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes

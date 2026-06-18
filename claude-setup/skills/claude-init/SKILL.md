@@ -78,6 +78,61 @@ Report: file count, languages, infra detected, threshold verdict (2+ languages O
 "overall structure / complexity" → CodeGraphContext: get_repository_stats + find_most_complex_functions
 ```
 
+Proceed to Step 0.6.
+
+## Step 0.6 — LSP Baseline Decision
+
+**Policy:** LSPs are project-scoped code-task tools, not global startup daemons. Do not enable every LSP globally. Pick only servers matching the project stack and prefer lazy startup on first code task.
+
+If the user uses Neovim as IDE replacement with Mason, record that separately. Mason/lspconfig/nvim-dap already own the human operator LSP/DAP lane; Claude/agent LSP plugins are only needed for autonomous runner code intelligence, not for the user's editor diagnostics.
+
+Check existing flag:
+```bash
+grep "^lsp:" .claude/profile.md 2>/dev/null
+```
+
+| Result | Action |
+|---|---|
+| `lsp: enabled` | Skip Step 0.6; project already selected LSP support |
+| `lsp: lazy` | Skip Step 0.6; project uses lazy startup |
+| `lsp: disabled` | Skip Step 0.6; user declined |
+| No output | Continue below |
+
+Detect likely servers from files/config:
+
+| Stack signal | Candidate LSP plugin/server |
+|---|---|
+| `package.json`, `*.ts`, `*.tsx`, `*.js`, `*.jsx` | `vtsls@claude-code-lsps` or `typescript-lsp@claude-plugins-official` |
+| `pyproject.toml`, `requirements.txt`, `*.py` | `pyright@claude-code-lsps` or `basedpyright@claude-code-lsps` |
+| `go.mod`, `*.go` | `gopls@claude-code-lsps` |
+| `Cargo.toml`, `*.rs` | `rust-analyzer@claude-code-lsps` |
+| `compile_commands.json`, `*.c`, `*.cpp`, `*.h` | `clangd@claude-code-lsps` |
+
+Ask one question:
+> "Enable lazy project LSP support for detected stack?" (lazy / always / no)
+
+If user says they use Neovim+Mason, ask this instead:
+> "Use Neovim+Mason as the operator LSP/DAP lane and keep agent LSP lazy?" (yes / no)
+
+If yes, write:
+```
+operator_ide: neovim
+lsp_manager: mason
+dap_manager: mason+nvim-dap
+lsp: lazy
+```
+
+| Answer | Action | Write to profile.md |
+|---|---|---|
+| `lazy` | Enable only matching LSP plugin(s); start on first code task | `lsp: lazy` + `lsp_servers: [...]` |
+| `always` | Enable matching LSP plugin(s) and allow project startup | `lsp: enabled` + `lsp_servers: [...]` |
+| `no` | Leave LSP plugins disabled | `lsp: disabled` |
+
+Add to project `CLAUDE.md` under `## Codebase search routing` or `## Project Context`:
+```
+LSP policy: lazy project-scoped. Use LSP diagnostics/symbols before broad edits; still run typecheck/tests before claiming completion.
+```
+
 Proceed to Step 1.
 
 ## Step 1 — Ask These Questions (one at a time)
@@ -159,6 +214,11 @@ security_sensitive: yes | no
 agent_work: yes | no
 linting: enabled | disabled
 codegraphcontext: enabled | session | disabled
+lsp: lazy | enabled | disabled
+lsp_servers: [<server/plugin names>]
+operator_ide: neovim | other | none
+lsp_manager: mason | claude-plugin | runner | none
+dap_manager: mason+nvim-dap | runner | none
 plugins_enabled:
   - <plugin-1>
   - <plugin-2>

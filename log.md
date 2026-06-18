@@ -2,6 +2,14 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-06-18] update | Missing-model fallback rule for tier routing
+
+Updated:
+- wiki/concepts/model-tier-routing.md — added missing-model fallback: prefer same-provider closest-tier before crossing providers; never silently demote a task below its minimum tier; log every fallback.
+- wiki/entities/pi-agent.md — added same-provider-first fallback rule for AGENTS.md difficulty-tier chains.
+
+Decision: a fallback chain row is only the cross-provider path. Missing model → same-provider sibling/demote before crossing. Entire provider down → halt.
+
 ## [2026-06-18] synthesis | Neovim as AI operator cockpit
 
 Created:

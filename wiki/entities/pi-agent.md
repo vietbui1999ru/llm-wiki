@@ -103,6 +103,19 @@ pueue wait <task-id> && pueue log <task-id>
 
 **Why pi over Claude Code for open models (claimed):** CC has API compatibility issues with non-Anthropic providers; its instructions are tuned to Anthropic's long-context and instruction-following strengths, degrading on other models. Pi's minimal system prompt performs more predictably across providers.
 
+### Missing-model fallback rule
+
+A fallback chain row is only the *cross-provider* path. When a model id is missing or returns unavailable, prefer the **closest model of the same provider** before crossing providers:
+
+- `opencode-go/kimi-k2.6:high` missing → try `opencode-go/kimi-k2.6:medium` (demote one tier, same provider) before jumping to the next chain entry.
+- `openai-codex/gpt-5.5:high` missing → try `openai-codex/gpt-5.4:high` (sibling, same tier, same provider) before demoting or crossing.
+- No same-provider option at any tier → cross to the next entry in the fallback chain.
+- Entire provider down → halt and surface the failure; do not pick a random provider.
+- If the fallback model is below the task's minimum tier, halt for human direction instead of proceeding.
+- Log every fallback so the run is auditable.
+
+This keeps difficulty-tier routing honest: a "high" task must not silently become a "low" run because one model id drifted. See [[concepts/model-tier-routing]] for the authoritative rule.
+
 ## Sandboxing with srt
 
 `srt` (Anthropic Sandbox Runtime) is Claude Code's sandboxing layer extracted as a standalone tool. Since pi has no built-in permission system, `srt` fills the gap:

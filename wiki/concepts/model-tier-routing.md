@@ -29,6 +29,25 @@ This page is the authoritative pull target for the routing rule. The always-load
 
 User-specified tiers always override this table.
 
+## Missing model fallback
+
+When a configured model is unavailable (rate-limited, retired, provider outage, wrong id), do not silently cross to a different provider's model. Demote or promote to the **closest model of the same provider** first:
+
+| Situation | Action |
+|---|---|
+| Configured model missing, same-tier sibling exists | Use the sibling (e.g. `gpt-5.5:high` missing → `gpt-5.4:high`). |
+| Same-tier sibling missing | Demote one tier within the same provider before crossing providers (e.g. `kimi-k2.6:high` missing → `kimi-k2.6:medium`). |
+| No same-provider model at any tier | Only then cross to the next provider in the configured fallback chain. |
+| Entire provider down | Halt and surface the failure; do not pick a random provider. |
+
+Rules:
+- Prefer same-provider closest-tier over cross-provider same-tier. Provider tuning matters more than tier label.
+- Never silently fall back to a model the user explicitly removed from their config.
+- Log the fallback so the run is auditable (`task_progress: model fallback X → Y, reason: missing`).
+- If the fallback model is below the task's minimum tier, halt for human direction instead of proceeding.
+
+This rule is what keeps difficulty-tier routing honest: a "high" task should not silently become a "low" run because one model id drifted.
+
 ## Agent spawning
 
 Always set the `model` parameter explicitly on the `Agent` tool. Never let it default — defaults are blocked in code repositories.

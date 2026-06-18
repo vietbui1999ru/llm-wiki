@@ -99,7 +99,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/agent-skills]] — Skill meta-tool: SKILL.md schema, three-tier loading, isMeta dual-message execution, supply chain risk, composition patterns, grill-* antipatterns, when NOT to use skills
 - [[concepts/agent-subagents]] — Subagents: own context window, YAML frontmatter format, all fields, scopes, invocation patterns, fork mode
 - [[concepts/agent-teams]] — Agent teams: lead+teammates+task list+mailbox; when to use vs subagents; quality gate hooks; best practices
-- [[concepts/model-tier-routing]] — Haiku/Sonnet/Opus selection table; escalate/downgrade criteria; explicit `model` param on spawns; tier→subagent_type mapping; authoritative pull target for the routing rule
+- [[concepts/model-tier-routing]] — Haiku/Sonnet/Opus selection table; escalate/downgrade criteria; explicit `model` param on spawns; tier→subagent_type mapping; missing-model fallback (same-provider closest-tier before cross-provider); authoritative pull target for the routing rule
 - [[concepts/worker-coordination]] — Partial result passing between parallel workers: contract-first, pipeline, filesystem blackboard, actor mailbox; decision table; failure modes
 - [[concepts/wikilink-graph-extraction]] — Reducing LightRAG indexing cost by injecting Obsidian wikilink structure as extraction hints; ~40-55% token reduction; chunking_func hook; future direct graph injection path
 - [[concepts/verification-pipeline]] — Four-tier quality ladder: typecheck → visual verification → screenshot gate → design critique; origin failures; protocol rules

@@ -2,6 +2,28 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-06-18] create | Headroom compression plugin for omp (pi-headroom)
+
+Created:
+- `pi-headroom/` — working plugin: `plugin.json`, `package.json`, `hooks/pre/headroom-compress.ts`, `tools/headroom-retrieve/index.ts`, `README.md`
+- `wiki/summaries/omp-plugins.md` — full plugin system architecture reference
+
+Installed and tested on omp v16.0.9:
+- `omp` installed via `curl -fsSL https://omp.sh/install | sh` (bun global)
+- `omp install ./pi-headroom` — linked successfully
+- `tool_result` hook — ✅ fires and modifies content the model sees
+- `headroom_retrieve` tool — ✅ registered and callable
+- `context` hook `{ messages }` — ❌ return contract ignored in v16.0.9
+- Headroom compression — ⚠️ requires proxy passthrough or cloud API key; fallback truncation works
+- Verified end-to-end: 32KB markdown file truncated from 501 lines to 50 lines + retrieval hint
+
+Updated:
+- `wiki/entities/omp.md` — added Plugin Architecture section with headroom integration example + test results table
+- `wiki/entities/pi-agent.md` — added Plugin / Extension Surface section
+- `index.md` — added omp-plugins entry
+
+Decision: (X) local dotfiles first, defer (Z) upstream PR. Plugin uses `tool_result` hook (not `context`) + `headroom_retrieve` custom tool. `context` hook message replacement does not work in omp 16.0.9; `tool_result` covers bulk of token bloat.
+
 ## [2026-06-18] update | Pi specialization fallback ladder
 
 Updated:

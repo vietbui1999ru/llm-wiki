@@ -182,9 +182,23 @@ Pi's design is a direct reaction to context management failures in Claude Code a
 
 ---
 
+## Plugin / Extension Surface
+
+Pi-mono and omp share the same extension architecture: hooks, custom tools, skills, and commands discovered from filesystem paths or bundled in plugins. See [[summaries/omp-plugins]] for the full plugin system reference.
+
+| Extension | Discovery | Pi | omp |
+|---|---|---|---|
+| Hooks | `~/.pi/agent/hooks/`, `.pi/hooks/`, plugin | ✅ | ✅ |
+| Custom Tools | `~/.pi/agent/tools/`, `.pi/tools/`, plugin | ✅ | ✅ |
+| Skills | `skills/<name>/SKILL.md` | ✅ | ✅ |
+| Commands | `commands/<name>.md` | ✅ | ✅ |
+
+omp adds `omp install` / `omp marketplace` for distribution; Pi relies on manual path placement.
+
 ## Related Pages
 
 - [[entities/omp]] — batteries-included fork of pi-mono; hashline/LSP/DAP/32 tools/40+ providers
+- [[summaries/omp-plugins]] — plugin system architecture (hooks, tools, marketplace)
 - [[comparisons/our-stack-vs-omp]] — feature gap vs our Claude Code + Pi setup
 - [[concepts/multi-vendor-adversarial-review]] — the council pattern Pi AI enables
 - [[comparisons/claude-code-vs-opencode-plugins]] — OpenCode as primary harness

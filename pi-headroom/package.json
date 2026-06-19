@@ -1,0 +1,12 @@
+{
+  "name": "pi-headroom",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Headroom context compression plugin for oh-my-pi",
+  "dependencies": {
+    "headroom-ai": "^0.22.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.x"
+  }
+}

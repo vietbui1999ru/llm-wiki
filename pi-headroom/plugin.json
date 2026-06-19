@@ -1,0 +1,5 @@
+{
+  "name": "pi-headroom",
+  "version": "0.1.0",
+  "description": "Headroom context compression for Pi — reversible CCR with transparent compression and on-demand retrieval"
+}

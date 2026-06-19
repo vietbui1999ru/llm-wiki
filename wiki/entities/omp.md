@@ -167,6 +167,44 @@ Inherits from `.claude`, `.cursor`, `.windsurf`, `.gemini`, `.codex`, `.cline`, 
 
 ---
 
+## Plugin Architecture
+
+omp bundles skills, commands, hooks, custom tools, MCP servers, and themes in a single installable package. The surface is Claude-Code-compatible — existing `.claude-plugin/` catalogs work as-is.
+
+| Piece | Discovery | What it does |
+|---|---|---|
+| Hooks | `hooks/pre/*.ts`, `hooks/post/*.ts` | Intercept `tool_call`, `tool_result`, `context`, session lifecycle |
+| Custom Tools | `tools/<name>/index.ts` | Register new tools with Zod/TypeBox schemas |
+| Skills | `skills/<name>/SKILL.md` | On-demand markdown playbooks |
+| Commands | `commands/<name>.md` | Slash-command prompt templates |
+| MCP | `mcp.json` | Extra `mcpServers` entries |
+
+Install: `omp install ./path` (symlinks + watches), `omp install github:user/repo`, `omp install @scope/plugin`. Project-scoped with `-l`.
+
+### Headroom Compression Plugin (Local)
+
+A working example lives at `pi-headroom/` in this repo:
+
+- **`hooks/pre/headroom-compress.ts`** — `tool_result` hook that compresses or truncates large tool outputs before the model sees them using `headroom-ai`
+- **`tools/headroom-retrieve/index.ts`** — custom tool that lets the model fetch original uncompressed content on demand
+
+Install:
+```bash
+cd pi-headroom && npm install
+omp install ./pi-headroom
+```
+
+**Tested on omp v16.0.9:**
+
+| Feature | Status |
+|---|---|
+| `tool_result` hook | ✅ Fires and modifies content the model sees |
+| `headroom_retrieve` tool | ✅ Registered and callable |
+| `context` hook `{ messages }` | ❌ Return contract ignored in v16.0.9 |
+| Headroom compression | ⚠️ Requires proxy passthrough or cloud API key; fallback truncation works |
+
+The plugin uses `tool_result` instead of `context` because omp 16.0.9 does not support message-array replacement via `context` hook returns. This still covers the bulk of token bloat (tool outputs). See `pi-headroom/README.md` for full test results and configuration.
+
 ## Role in Commandr Stack
 
 omp is the strongest practical L2 runner candidate: a high-quality worker, not the bus. Its value is execution quality inside a task: hashline edits, LSP/DAP, typed subagent outputs, internal schemes, persistent eval kernels, and provider routing. [[entities/commandr]] should still own claim/progress/approval/complete lifecycle.
@@ -178,9 +216,9 @@ Integration ladder:
 | 0 | `omp -p "<task packet>"` subprocess; Tauri captures stdout/stderr |
 | 1 | `commandr-omp-runner` wrapper claims next packet, creates workspace, runs omp, streams logs, emits progress, completes/fails |
 | 2 | omp custom tools for Commandr: progress, request approval, emit artifact, complete |
-| 3 | omp extension intercepts tool calls/events and writes turn snapshots/approval requests directly |
+| 3 | omp plugin intercepts tool calls/events and writes turn snapshots/approval requests directly |
 
-Start at Level 1. Level 2 becomes useful once task/event/approval schemas stabilize.
+Start at Level 1. Level 2 becomes useful once task/event/approval schemas stabilize. Level 3 (plugin-based bidirectional sync) is where the headroom plugin pattern also lives — a plugin can both intercept context and register tools that talk back to Commandr's bus.
 
 ---
 

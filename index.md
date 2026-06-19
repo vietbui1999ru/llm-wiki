@@ -7,6 +7,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/builderio-skills]] — Builder.io skills: visual-plan, visual-recap, agent-watchdog, plan-arbiter, efficient-frontier; artifact-first planning/review
 - [[summaries/builderio-agent-native]] — Builder.io Agent-Native: shared action surface for UI, agent, HTTP, MCP, A2A, and CLI over one SQL-backed app state
 - [[summaries/omp-oh-my-pi]] — omp (oh-my-pi): Pi fork by can1357; hashline editing, LSP/DAP wired in, 55k LoC Rust native core, 32 tools, 40+ providers, Hindsight memory, TTSR stream rules
+- [[summaries/omp-plugins]] — omp plugin system: hooks, custom tools, skills, commands, MCP, themes; install from npm/git/local/marketplace; Claude-Code-compatible catalogs
 - [[summaries/what-is-an-agent-harness-parallel-ai]] — Parallel AI explainer: orchestrator/framework/harness taxonomy, DeepAgents, ICML 2025 modular harness, model-agnostic property; supplements [[concepts/agent-harness]]
 - [[summaries/pi-building-in-world-of-slop]] — Pi origin story: minimal harness thesis, 4-tool architecture, self-modifying extensions, Terminal Bench 6th, anti-slop philosophy (Mario Zechner talk)
 - [[summaries/opencode-headless-api]] — `opencode run` (subprocess), `opencode serve` (HTTP API), warm-server pattern, sync/async messages, SSE events, programmatic permission approval

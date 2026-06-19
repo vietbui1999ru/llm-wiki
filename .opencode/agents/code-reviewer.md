@@ -1,7 +1,7 @@
 ---
 description: "Code review specialist. Reviews existing implementations for correctness, security, performance, and maintainability. Invoked after code-writer completes or when the user asks for a review. Does not implement fixes — flags issues and suggests improvements for code-writer to apply."
 mode: subagent
-model: "opencode-go/deepseek-v4-pro"
+model: "opencode/gpt-5.5"
 color: "#FF9800"
 permission:
   edit: deny

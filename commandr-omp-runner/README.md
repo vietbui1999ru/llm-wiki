@@ -2,22 +2,24 @@
 
 Commandr L2 runner wrapper for [omp](https://omp.sh) (oh-my-pi).
 
-## What it does
+**Status: scaffold / smoke test only (2026-06-19).** `runner.sh` launches omp in `--mode json` and tees NDJSON to a side file + stderr. It is NOT yet bus-integrated: it does not call `bin/claim`, does not set `AGENTS_TASK_ID`, does not write `.agents/events.jsonl`, does not emit `task_progress`/`task_complete`/`task_failed`, does not move packets to `done/`, performs no approval/policy logic, and has no tests. See `PLAN-control-plane-runner-packages.md` "Level 1 acceptance criteria" for the TODO list to make this real.
 
-Translates between Commandr's L3 bus protocol and omp's CLI interface. Commandr calls this wrapper with a task packet; the wrapper runs omp, streams progress back, and reports completion/failure.
+## What it does (current)
+
+Translates between Commandr's L3 bus protocol and omp's CLI interface — *aspirationally*. Today it runs omp with a task packet, streams omp's raw NDJSON to a runner-local progress file + stderr, and propagates the exit code. Bus integration (claim, progress, complete/fail events on `.agents/events.jsonl`) is not yet implemented.
 
 ## Architecture
 
 ```
 Commandr (L3 bus)
-  │ claim task
+  │ claim task (bin/claim) — NOT yet done by this runner
   │ write task packet
   ▼
-commandr-omp-runner
+commandr-omp-runner  (scaffold)
   │ create workspace
   │ run omp -p "<task>" --mode json
-  │ stream NDJSON output
-  │ extract progress events
+  │ stream NDJSON output (to runner-local file + stderr, NOT events.jsonl)
+  │ TODO: extract neutral progress → bin/progress
   ▼
 omp (L2 runner)
   │ execute task
@@ -25,11 +27,11 @@ omp (L2 runner)
   │ optionally use pi-headroom plugin for compression
   ▼
 commandr-omp-runner
-  │ report complete/fail
+  │ TODO: report complete/fail → bin/complete (task_complete/task_failed + done/ move)
   │ write artifacts to workspace
   ▼
 Commandr (L3 bus)
-  │ mark done
+  │ mark done (via bin/complete) — NOT yet done by this runner
 ```
 
 ## Setup
@@ -71,9 +73,9 @@ cat task.json | ./commandr-omp-runner/runner.sh \
 }
 ```
 
-## Progress Events
+## Progress Events (runner-local — NOT `.agents/events.jsonl`)
 
-The runner emits NDJSON progress events to stderr and optionally to a file:
+The runner emits NDJSON progress events to stderr and optionally to a file. **These are runner-local, not bus events** — they use `event` names `start`/`omp_launch`/`output`/`complete`/`fail` that are NOT SPEC §6 event types and do not appear on `.agents/events.jsonl`. Bus integration (writing `task_progress`/`task_complete`/`task_failed` via `bin/progress`/`bin/complete`) is a TODO.
 
 ```json
 {"timestamp":"2026-06-19T01:00:00Z","runner":"omp","event":"start","data":{"workspace":"./workspaces/task-123","model":"claude-sonnet-4"}}
@@ -84,14 +86,14 @@ The runner emits NDJSON progress events to stderr and optionally to a file:
 
 ## Integration Levels
 
-Per [[entities/omp]] integration ladder:
+Per [[entities/omp]] integration ladder (corrected 2026-06-19 — Level 1 is scaffold, not complete):
 
 | Level | Status | Description |
 |---|---|---|
 | 0 | ✅ | `omp -p "<task>"` subprocess; capture stdout/stderr |
-| 1 | ✅ | This wrapper: claim task, create workspace, run omp, stream logs, emit progress, complete/fail |
-| 2 | 🚧 | omp custom tools for Commandr: `commandr_progress`, `commandr_request_approval`, `commandr_emit_artifact` |
-| 3 | 📋 | Plugin-based bidirectional sync: omp plugin writes turn snapshots directly to Commandr bus |
+| 1 | ⚠️ scaffold | This wrapper runs omp + tees NDJSON, but does NOT yet: claim task, set `AGENTS_TASK_ID`, emit `task_progress`/`task_complete`/`task_failed` to `.agents/events.jsonl`, move packets to `done/`, or run any approval/policy logic. No tests. |
+| 2 | 🚧 design only | RPC host tools (`commandr_progress`, `commandr_request_approval`, `commandr_emit_artifact`, `commandr_complete`, `commandr_fail`); schema in `HOST-TOOLS.md` (non-normative); blocked on `omp --mode rpc`. |
+| 3 | 📋 future | Plugin-based bidirectional sync. |
 
 ## pi-headroom Plugin
 

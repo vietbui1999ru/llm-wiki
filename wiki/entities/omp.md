@@ -218,7 +218,7 @@ Integration ladder:
 | 2 | omp custom tools for Commandr: progress, request approval, emit artifact, complete |
 | 3 | omp plugin intercepts tool calls/events and writes turn snapshots/approval requests directly |
 
-Start at Level 1. Level 2 becomes useful once task/event/approval schemas stabilize. Level 3 (plugin-based bidirectional sync) is where the headroom plugin pattern also lives — a plugin can both intercept context and register tools that talk back to Commandr's bus.
+Level 1 is complete with `commandr-omp-runner` (see `commandr-omp-runner/` in this repo). Level 2 becomes useful once task/event/approval schemas stabilize. Level 3 (plugin-based bidirectional sync) is where the headroom plugin pattern also lives — a plugin can both intercept context and register tools that talk back to Commandr's bus.
 
 ---
 

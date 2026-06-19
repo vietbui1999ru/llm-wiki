@@ -170,3 +170,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[syntheses/control-plane-expansion-plan]] — Gap analysis and bootstrap path: cockpit action registry, agent-control skills, commandr-omp-runner; Phase 0.5–3 roadmap
 - [[syntheses/desktop-control-plane]] — *(local-only)* Big-picture synthesis: 5-layer toolchain (Commandr bus + DiffViewer/Tauri UI + omp workers + SKILL.md packages); action registry; evidence-first cockpit vision
 - [[syntheses/agent-diff-viewer]] *(partially-superseded)* — Localhost real-time diff viewer for Claude Code: original design; see [[entities/diffviewer]] for current state
+
+## Project Tools
+- `pi-headroom/` — Headroom context compression plugin for omp (tool_result hook + headroom_retrieve custom tool); tested on omp v16.0.9
+- `commandr-omp-runner/` — L2 runner wrapper: bootstrap (`setup.sh`) + runner (`runner.sh`) with runner-agnostic interface; Level 1 integration complete

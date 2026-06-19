@@ -171,13 +171,25 @@ New source synthesis sharpens the next build order:
 
 Recommended immediate artifacts:
 
-| Artifact | Purpose |
-|---|---|
-| `COCKPIT-ACTIONS.md` | Design contract for UI/agent shared action vocabulary |
-| `agent-control-skills/` | Portable SKILL.md workflow library |
-| `commandr-omp-runner` | L2 runner wrapper that speaks the L3 Commandr bus |
+| Artifact | Status | Purpose |
+|---|---|---|
+| `COCKPIT-ACTIONS.md` | 📋 Pending | Design contract for UI/agent shared action vocabulary |
+| `agent-control-skills/` | 📋 Pending | Portable SKILL.md workflow library |
+| `commandr-omp-runner` | ✅ Level 1 complete | L2 runner wrapper that speaks the L3 Commandr bus |
 
 Layer placement remains unchanged: skills are L1/L4, omp is L2, Commandr is L3, DiffViewer/Tauri is L5.
+
+### commandr-omp-runner — Level 1 Complete
+
+Created: `commandr-omp-runner/setup.sh` + `runner.sh` + `README.md`
+
+- **Bootstrap** (`setup.sh`): installs omp, pi-headroom plugin, copies hooks/tools to agent dirs
+- **Runner** (`runner.sh`): runner-agnostic interface — task packet in, NDJSON out, progress events to file/stderr
+- **Interface**: `--task <json> --workspace <dir> [--progress <file>] [--model <id>]`
+- **Exit**: 0 = success, 1 = failure
+- **Plugin**: auto-installs pi-headroom for context compression
+
+Next: Level 2 (omp custom tools: `commandr_progress`, `commandr_request_approval`, `commandr_emit_artifact`).
 
 ## Related Pages
 

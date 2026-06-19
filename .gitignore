@@ -43,3 +43,4 @@ raw/
 .playwright-mcp/
 docs-site/.mintlify/
 /tmp/mint-dev.log
+pi-headroom/node_modules/

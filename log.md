@@ -2,6 +2,26 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-06-19] create | commandr-omp-runner bootstrap (Level 1)
+
+Created:
+- `commandr-omp-runner/setup.sh` — one-time bootstrap: installs omp, pi-headroom plugin, copies hooks/tools to agent dirs
+- `commandr-omp-runner/runner.sh` — per-task runner with runner-agnostic interface
+- `commandr-omp-runner/README.md` — architecture, usage, integration levels
+
+Interface: `--task <json> --workspace <dir> [--progress <file>] [--model <id>]`
+- Input: Task packet JSON (stdin or --task)
+- Output: NDJSON stream (stdout)
+- Progress: NDJSON events to stderr + optional file
+- Exit: 0 = success, 1 = failure
+
+Updated:
+- `wiki/syntheses/control-plane-expansion-plan.md` — marked commandr-omp-runner Level 1 as complete; added status table
+- `wiki/entities/omp.md` — updated integration ladder to reference completed Level 1
+- `index.md` — added Project Tools section with pi-headroom and commandr-omp-runner
+
+Decision: runner-agnostic interface first, omp-specific implementation second. Commandr should depend on the interface, not on omp. This prevents mental-model drift toward omp as the default runner.
+
 ## [2026-06-18] create | Headroom compression plugin for omp (pi-headroom)
 
 Created:

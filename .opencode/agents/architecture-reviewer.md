@@ -1,6 +1,7 @@
 ---
 description: "Holistic architecture and system design reviewer. Use for structural assessment of codebases, system designs, or technical plans. Evaluates coherence, scalability, maintainability, and hidden risks. Invoked after design-explorer or before major implementation to validate direction."
 mode: subagent
+# opencode-go: "opencode-go/deepseek-v4-pro"
 model: "github-copilot/claude-opus-4.5"
 color: "#9C27B0"
 permission:

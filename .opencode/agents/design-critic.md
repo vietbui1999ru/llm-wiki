@@ -1,6 +1,7 @@
 ---
 description: "Design pattern critic and improvement specialist. Use for critiquing existing code or designs, identifying anti-patterns, and suggesting better patterns. Operates at medium temperature — balanced between creative suggestion and precise diagnosis. Use after implementation or when reviewing a specific design decision."
 mode: subagent
+# opencode-go: "opencode-go/deepseek-v4-pro"
 model: "github-copilot/claude-opus-4.5"
 color: "#FF5722"
 permission:

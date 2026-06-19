@@ -1,6 +1,7 @@
 ---
 description: "Main communication layer and task orchestrator. Routes all user requests to the right agent based on task type and complexity. Decides model tier, delegation strategy (sequential vs parallel), and whether to invoke agent teams, testing agents, or devops agents."
 mode: subagent
+# opencode-go: "opencode-go/deepseek-v4-pro"
 model: "github-copilot/claude-opus-4.5"
 color: "#673AB7"
 permission:

@@ -1,6 +1,7 @@
 ---
 description: "Creative design and exploration specialist. Use for brainstorming, ideation, what-if analysis, exploring alternative approaches, and divergent thinking. Invoked before committing to an approach when the solution space is open. Do not use for implementation."
 mode: subagent
+# opencode-go: "opencode-go/deepseek-v4-pro"
 model: "github-copilot/claude-opus-4.5"
 color: "#9C27B0"
 temperature: 0.7

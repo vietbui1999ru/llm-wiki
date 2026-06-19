@@ -1,6 +1,7 @@
 ---
 description: "Code review specialist. Reviews existing implementations for correctness, security, performance, and maintainability. Invoked after code-writer completes or when the user asks for a review. Does not implement fixes — flags issues and suggests improvements for code-writer to apply."
 mode: subagent
+# opencode-go: "opencode-go/kimi-k2.6"
 model: "github-copilot/claude-sonnet-4.5"
 color: "#FF9800"
 permission:

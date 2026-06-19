@@ -1,6 +1,7 @@
 ---
 description: "Documentation writer and maintainer. Writes and updates docs to standard whenever implementation work happens — new functions, APIs, modules, planning, or edits. Outputs structured markdown to the project's docs/ folder in a format suitable for Docusaurus, MkDocs, or similar platforms. Invoked after code-writer, during planning, or when the user says 'document this', 'write docs', 'update the docs'."
 mode: subagent
+# opencode-go: "opencode-go/kimi-k2.6"
 model: "github-copilot/claude-sonnet-4.5"
 color: "#009688"
 permission:

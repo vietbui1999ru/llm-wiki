@@ -18,10 +18,10 @@ All heuristics are community-sourced unless marked **confirmed**.
 | Task Type | Model | Tier | Confidence |
 |---|---|---|---|
 | Orchestration, routing, analysis | `opencode-go/deepseek-v4-pro` | Opus | confirmed (pi delegate); best issue analyst per head-to-head vs GLM+Kimi |
-| Sequential plan file generation | `opencode-go/deepseek-v4-pro` or GLM-5.2 | Opus | community pattern: Mimo→GLM→Kimi→Qwen; GLM ID unconfirmed |
+| Sequential plan file generation | `opencode-go/deepseek-v4-pro` or `opencode-go/glm-5.2` | Opus | community pattern: Mimo→GLM→Kimi→Qwen; GLM ID confirmed by `opencode models opencode-go` |
 | Brainstorming, creative ideation | `opencode-go/kimi-k2.6` | Sonnet | **confirmed** (in opencode.json) |
 | Standard coding, multi-file impl | `opencode-go/kimi-k2.6` | Sonnet | community positive; lower hallucination than DS on impl per AA bench (cited, unverified) |
-| Code review, adversarial check | `opencode-go/deepseek-v4-pro` | Opus | community pattern: Qwen3.6 Plus also used; ID unconfirmed |
+| Code review, adversarial check | `opencode-go/deepseek-v4-pro` | Opus | community pattern; `opencode-go/qwen3.6-plus` also available but not default |
 | Fast boilerplate, rote edits | `opencode-go/deepseek-v4-flash` | Haiku | confirmed (subagent usage) |
 
 ## Per-Model Profile
@@ -32,20 +32,30 @@ All heuristics are community-sourced unless marked **confirmed**.
 
 **`deepseek-v4-flash`** — Haiku analog. Fast, very cheap. Use for read-only, boilerplate, rote subagent work. $0.14/$0.28 per M tokens.
 
-**`glm-5.2`** — Community niche: sequential plan file generation and structured planning, *not* general orchestration. Lower hallucination rate than Kimi K2.6 for implementation per "AA bench" (source: one r/opencodeCLI commenter — benchmark name uncited, unverified). Fast in OpenCode Go. "Opus-comparable" claim is overstated: a separate commenter rates it "around k2.6 level, maybe slightly worse"; DeepSeek V4 Pro outperforms it for issue analysis in direct comparison. Most expensive model in roster at $1.40/$4.40 per M tokens. **Model ID `opencode-go/glm-5.2` unconfirmed** — do not add to agent config until verified.
+**`glm-5.2`** — Community niche: sequential plan file generation and structured planning, *not* general orchestration. Lower hallucination rate than Kimi K2.6 for implementation per "AA bench" (source: one r/opencodeCLI commenter — benchmark name uncited, unverified). Fast in OpenCode Go. "Opus-comparable" claim is overstated: a separate commenter rates it "around k2.6 level, maybe slightly worse"; DeepSeek V4 Pro outperforms it for issue analysis in direct comparison. Most expensive model in roster at $1.40/$4.40 per M tokens. Model ID `opencode-go/glm-5.2` is confirmed locally, but remains unassigned until behavior beats current defaults for a specific role.
 
-**`qwen3.6-plus`** — Mentioned in subscription roster. Good for review/analysis per community. No confirmed model ID yet.
+**`glm-5.1`** — Older version, still available as `opencode-go/glm-5.1`. Prefer 5.2.
+
+**`qwen3.6-plus`** — Good for review/analysis per community. ID `opencode-go/qwen3.6-plus` confirmed. `opencode-go/qwen3.7-max` and `opencode-go/qwen3.7-plus` also available (newer, uncharacterized).
+
+**`kimi-k2.7-code`** — Code-specialized successor to k2.6. ID `opencode-go/kimi-k2.7-code` confirmed. Not yet characterized — candidate to replace k2.6 for implementation tasks.
+
+**`mimo-v2.5-pro`** — Used in community spec→plan workflow. ID `opencode-go/mimo-v2.5-pro` confirmed. `opencode-go/mimo-v2.5` (base) also available.
+
+**`minimax-m3`** — Successor to m2.7. ID `opencode-go/minimax-m3` confirmed. Uncharacterized.
 
 ## Community Workflow Pattern
 
-Multiple r/opencodeCLI users converged on this multi-model pipeline for complex tasks (all model IDs unconfirmed except those in config):
+Multiple r/opencodeCLI users converged on this multi-model pipeline for complex tasks:
 
 ```
-Mimo 2.5 Pro  → high-level spec
-GLM-5.2       → sequential plan files from spec
-Kimi K2.6     → implement each plan file
-Qwen 3.6 Plus / DeepSeek V4 Pro → adversarial review of each step
+opencode-go/mimo-v2.5-pro  → high-level spec
+opencode-go/glm-5.2        → sequential plan files from spec
+opencode-go/kimi-k2.6      → implement each plan file
+opencode-go/qwen3.6-plus / opencode-go/deepseek-v4-pro → adversarial review of each step
 ```
+
+All IDs confirmed via `opencode models` (2026-06-19). `kimi-k2.7-code` may supersede `kimi-k2.6` for implementation once characterized.
 
 Key insight from the thread: "each model has significant strengths and weaknesses. Unlike Opus, you do not want to use just one model for everything." — `look` (8 upvotes)
 

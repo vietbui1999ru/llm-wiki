@@ -172,5 +172,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[syntheses/agent-diff-viewer]] *(partially-superseded)* — Localhost real-time diff viewer for Claude Code: original design; see [[entities/diffviewer]] for current state
 
 ## Project Tools
-- `pi-headroom/` — Headroom context compression plugin for omp (tool_result hook + headroom_retrieve custom tool); tested on omp v16.0.9
-- `commandr-omp-runner/` — L2 runner wrapper: bootstrap (`setup.sh`) + runner (`runner.sh`) with runner-agnostic interface; Level 1 integration complete
+- `pi-headroom/` — Headroom context compression plugin for omp (tool_result hook + headroom_retrieve custom tool); tested on omp v16.0.9; complementary to snapcompact
+- `commandr-omp-runner/` — L2 runner wrapper: bootstrap (`setup.sh`) + runner (`runner.sh`) with runner-agnostic interface; Level 1 complete; RPC host tools path for Level 2+
+
+## Research
+- [[research/omp-snapcompact-rpc]] — Deep dive: snapcompact tool-result truncation defaults, RPC mode protocol, host tools as polyglot bus bridge

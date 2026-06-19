@@ -2,10 +2,30 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-06-19] research | omp snapcompact + RPC mode deep dive
+
+Created:
+- `wiki/research/omp-snapcompact-rpc.md` — comprehensive research from source code analysis
+
+Key findings:
+- **snapcompact** already truncates tool results (2000 char cap, head/tail 60/40 split) during archival compaction
+- **snapcompact** = conversation-level (old turns → PNG frames); **pi-headroom** = turn-level (current turn tool outputs) — complementary
+- **RPC mode** (`omp --mode rpc`) enables language-agnostic host tools — Python, Rust, Go, bash can all implement Commandr bus tools
+- **RPC host tools** are the better path for Level 2+ integration than TypeScript plugins
+- RPC provides: bidirectional commands+events, real-time streaming, subagent monitoring, URI scheme extension, UI request/response
+
+Updated:
+- `wiki/entities/omp.md` — added snapcompact detail + RPC mode deep dive section
+- `wiki/syntheses/control-plane-expansion-plan.md` — documented RPC host tools as preferred Level 2 path
+- `pi-headroom/README.md` — added snapcompact relationship section
+- `index.md` — added Research section
+
+Decision: RPC host tools > TS plugins for bus integration. Maintains runner-agnostic interface while enabling deep omp integration. Prevents language lock-in.
+
 ## [2026-06-19] create | commandr-omp-runner bootstrap (Level 1)
 
 Created:
-- `commandr-omp-runner/setup.sh` — one-time bootstrap: installs omp, pi-headroom plugin, copies hooks/tools to agent dirs
+- `commandr-omp-runner/setup.sh` — one-time bootstrap: installs omp, copies hooks/tools to agent dirs
 - `commandr-omp-runner/runner.sh` — per-task runner with runner-agnostic interface
 - `commandr-omp-runner/README.md` — architecture, usage, integration levels
 
@@ -16,7 +36,7 @@ Interface: `--task <json> --workspace <dir> [--progress <file>] [--model <id>]`
 - Exit: 0 = success, 1 = failure
 
 Updated:
-- `wiki/syntheses/control-plane-expansion-plan.md` — marked commandr-omp-runner Level 1 as complete; added status table
+- `wiki/syntheses/control-plane-expansion-plan.md` — marked commandr-omp-runner Level 1 as complete; added RPC path
 - `wiki/entities/omp.md` — updated integration ladder to reference completed Level 1
 - `index.md` — added Project Tools section with pi-headroom and commandr-omp-runner
 

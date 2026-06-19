@@ -26,6 +26,23 @@ omp install ./pi-headroom
 # The tool auto-discovers from ~/.omp/agent/tools/headroom-retrieve/
 ```
 
+## Relationship to omp's snapcompact
+
+omp has **snapcompact** — native bitmap-frame context compression that renders old conversation turns into PNG frames for vision models. During compaction, snapcompact already truncates tool results:
+
+- Default cap: **2000 chars** per tool result
+- Head/tail truncation with 60/40 split
+- "Useless" results skipped entirely
+
+**snapcompact = conversation-level archival compression** (old turns → PNG frames when context window fills)
+**pi-headroom = turn-level tool output truncation** (current turn, before model sees it)
+
+They are **complementary**, not redundant. pi-headroom adds value for:
+- Bash command output (not truncated by read tool)
+- Search results
+- Eval kernel output
+- Any tool output that exceeds attention budget in a single turn
+
 ## How it works
 
 1. **After every tool call**, the `tool_result` hook checks if the output is large (> 2k chars).

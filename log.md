@@ -22,6 +22,35 @@ Updated:
 
 Decision: RPC host tools > TS plugins for bus integration. Maintains runner-agnostic interface while enabling deep omp integration. Prevents language lock-in.
 
+## [2026-06-19] design | Host tool schema for Commandr bus integration (Level 2)
+
+Grill session with user on mental model, snapcompact research, RPC mode, and host tool design.
+
+Created:
+- `commandr-omp-runner/HOST-TOOLS.md` — Complete host tool schema with grill-validated decisions
+
+Decisions reached:
+1. **Hybrid explicit/inferred**: Explicit host tools for artifacts/completion; inferred from NDJSON for routine progress; runner-intercepted for policy violations
+2. **Policy table**: Global config (.agents/runner-policy.yml), agent-aware but transparently enforced
+3. **Storage**: Filesystem + NDJSON/JSONL only. No SQLite. Artifacts in workspace, events in events.jsonl
+4. **Level 1 vs Level 2**: Level 1 = log-only approvals (can't block with --mode json); Level 2 = blocking approvals via RPC mode
+5. **Runner-agnostic**: Schema works for any L2 runner (omp, Claude Code, OpenCode)
+
+Host tools defined:
+- `commandr_progress` — milestone logging
+- `commandr_emit_artifact` — artifact declaration (workspace + events.jsonl)
+- `commandr_request_approval` — policy-enforced approval
+- `commandr_complete` / `commandr_fail` — task finalization
+
+Policy table initial rules:
+- bash: rm -rf, sudo, docker run/exec/rm, git push → request approval
+- write: .env files, ~/.ssh/ → request approval
+- read, edit → allow (edit logs artifact)
+
+Updated:
+- `wiki/syntheses/control-plane-expansion-plan.md` — referenced HOST-TOOLS.md
+- `index.md` — added HOST-TOOLS.md to Project Tools
+
 ## [2026-06-19] create | commandr-omp-runner bootstrap (Level 1)
 
 Created:

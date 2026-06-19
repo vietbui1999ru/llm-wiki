@@ -214,7 +214,13 @@ See [[research/omp-snapcompact-rpc]] for full protocol analysis.
 
 **pi-headroom status:** Keep as opt-in stopgap. Document that it handles bash output, search results, and eval kernel output — things not already truncated by omp's native read tool.
 
-Next: Level 2 via RPC host tools (not TS plugins).
+Next: Level 2 via RPC host tools. Schema designed in `commandr-omp-runner/HOST-TOOLS.md`:
+- `commandr_progress` — milestone logging to events.jsonl
+- `commandr_emit_artifact` — artifact declaration (workspace + events.jsonl)
+- `commandr_request_approval` — policy-enforced approval (log-only at Level 1, blocking at Level 2)
+- `commandr_complete` / `commandr_fail` — task finalization
+- Policy table: bash rm/sudo/docker, write to .env/ssh, git push
+- Runner-agnostic: any L2 runner can implement the same schema
 
 ## Related Pages
 

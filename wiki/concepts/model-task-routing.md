@@ -18,7 +18,7 @@ All heuristics are community-sourced unless marked **confirmed**.
 | Task Type | Model | Tier | Confidence |
 |---|---|---|---|
 | Orchestration, routing, analysis | `opencode-go/deepseek-v4-pro` | Opus | confirmed (pi delegate); best issue analyst per head-to-head vs GLM+Kimi |
-| Sequential plan file generation | `opencode-go/deepseek-v4-pro` or GLM-5.1 | Opus | community pattern: Mimo→GLM→Kimi→Qwen; GLM ID unconfirmed |
+| Sequential plan file generation | `opencode-go/deepseek-v4-pro` or GLM-5.2 | Opus | community pattern: Mimo→GLM→Kimi→Qwen; GLM ID unconfirmed |
 | Brainstorming, creative ideation | `opencode-go/kimi-k2.6` | Sonnet | **confirmed** (in opencode.json) |
 | Standard coding, multi-file impl | `opencode-go/kimi-k2.6` | Sonnet | community positive; lower hallucination than DS on impl per AA bench (cited, unverified) |
 | Code review, adversarial check | `opencode-go/deepseek-v4-pro` | Opus | community pattern: Qwen3.6 Plus also used; ID unconfirmed |
@@ -32,7 +32,7 @@ All heuristics are community-sourced unless marked **confirmed**.
 
 **`deepseek-v4-flash`** — Haiku analog. Fast, very cheap. Use for read-only, boilerplate, rote subagent work. $0.14/$0.28 per M tokens.
 
-**`glm-5.1`** — Community niche: sequential plan file generation and structured planning, *not* general orchestration. Lower hallucination rate than Kimi K2.6 for implementation per "AA bench" (source: one r/opencodeCLI commenter — benchmark name uncited, unverified). Fast in OpenCode Go. "Opus-comparable" claim is overstated: a separate commenter rates it "around k2.6 level, maybe slightly worse"; DeepSeek V4 Pro outperforms it for issue analysis in direct comparison. Most expensive model in roster at $1.40/$4.40 per M tokens. **Model ID `opencode-go/glm-5.1` unconfirmed** — do not add to agent config until verified.
+**`glm-5.2`** — Community niche: sequential plan file generation and structured planning, *not* general orchestration. Lower hallucination rate than Kimi K2.6 for implementation per "AA bench" (source: one r/opencodeCLI commenter — benchmark name uncited, unverified). Fast in OpenCode Go. "Opus-comparable" claim is overstated: a separate commenter rates it "around k2.6 level, maybe slightly worse"; DeepSeek V4 Pro outperforms it for issue analysis in direct comparison. Most expensive model in roster at $1.40/$4.40 per M tokens. **Model ID `opencode-go/glm-5.2` unconfirmed** — do not add to agent config until verified.
 
 **`qwen3.6-plus`** — Mentioned in subscription roster. Good for review/analysis per community. No confirmed model ID yet.
 
@@ -42,7 +42,7 @@ Multiple r/opencodeCLI users converged on this multi-model pipeline for complex 
 
 ```
 Mimo 2.5 Pro  → high-level spec
-GLM-5.1       → sequential plan files from spec
+GLM-5.2       → sequential plan files from spec
 Kimi K2.6     → implement each plan file
 Qwen 3.6 Plus / DeepSeek V4 Pro → adversarial review of each step
 ```
@@ -72,9 +72,9 @@ Example: `opencode-go/kimi-k2.6:high` for a deep grill-me session.
 |---|---|---|---|---|
 | `kimi-k2.6` | Brainstorming / grill-me | anecdotal positive | session usage | 2026-06 |
 | `deepseek-v4-pro` | Structured delegation | anecdotal positive | pi delegate usage | 2026-06 |
-| `deepseek-v4-pro` | Issue analysis (vs GLM-5.1 and Kimi K2.6 max) | best of three | r/opencodeCLI head-to-head (1 user, unverified) | 2026-05 |
-| `glm-5.1` | Implementation hallucination rate (vs Kimi) | lower per "AA bench" | r/opencodeCLI (1 user, bench uncited) | 2026-05 |
-| `glm-5.1` | Opus-tier equivalence | contested — "around k2.6 level" vs "trounces Kimi" | r/opencodeCLI conflicting reports | 2026-05 |
+| `deepseek-v4-pro` | Issue analysis (vs GLM-5.2 and Kimi K2.6 max) | best of three | r/opencodeCLI head-to-head (1 user, unverified) | 2026-05 |
+| `glm-5.2` | Implementation hallucination rate (vs Kimi) | lower per "AA bench" | r/opencodeCLI (1 user, bench uncited) | 2026-05 |
+| `glm-5.2` | Opus-tier equivalence | contested — "around k2.6 level" vs "trounces Kimi" | r/opencodeCLI conflicting reports | 2026-05 |
 
 ## Fallback Chain (per provider)
 

@@ -243,9 +243,9 @@ From r/opencodeCLI community (2026-05-03, n≈30 responses):
 
 | Role | Model | Notes |
 |---|---|---|
-| Planning / council | GLM-5.1, Opus 4.7 | Strong consensus |
+| Planning / council | GLM-5.2, Opus 4.7 | Strong consensus |
 | Reasoning / bug hunt | DeepSeek V4 Flash (max reasoning) | Cheaper than Pro; max reasoning is the unlock |
-| Open-ended implementation | DeepSeek V4 Pro, GLM-5.1 | Strong |
+| Open-ended implementation | DeepSeek V4 Pro, GLM-5.2 | Strong |
 | Fast targeted changes | DeepSeek V4 Flash, Qwen 3.6 Plus | Fast + cheap |
 | Adversarial review | DeepSeek V4 Pro, Qwen 3.6 Plus | Different training = different blindspots |
 | UI / frontend | Kimi K2.6, Gemini | Visual reasoning strength |

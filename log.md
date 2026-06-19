@@ -795,3 +795,17 @@ New pages:
 
 Updated:
 - index.md — added model-task-routing entry under Concepts
+
+## [2026-06-19] research | GLM-5.1 as Opus-tier orchestrator
+
+Source: r/opencodeCLI thread (raw/claude-runaway-tried-kimi-2-6-and-deepseek-v4-5y-fullstack-dev.md)
+
+Findings:
+- GLM-5.1 community niche is sequential plan file generation, NOT general orchestration
+- DeepSeek V4 Pro > GLM-5.1 for issue analysis in head-to-head
+- "Opus-comparable" claim contested: one user says "around k2.6 level maybe slightly worse"
+- Lower hallucination than Kimi for impl per "AA bench" (uncited, unverified)
+- Model ID opencode-go/glm-5.1 still unconfirmed in any config
+- Community converged pattern: Mimo(spec) → GLM(plan) → Kimi(impl) → Qwen/DS(review)
+
+Updated: wiki/concepts/model-task-routing.md — revised GLM-5.1 profile, task table, benchmark table, community workflow pattern

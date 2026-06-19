@@ -1,7 +1,7 @@
 ---
 description: "Shell command and script execution specialist with safety guardrails. Executes read-only commands freely. Stops and asks permission before any command that modifies files, deletes anything, installs packages, or changes dependencies. Use for running commands, creating scripts, or when execution is needed."
 mode: subagent
-model: "github-copilot/gpt-5.4-mini"
+model: "opencode-go/deepseek-v4-flash"
 color: "#8BC34A"
 permission:
   edit: deny

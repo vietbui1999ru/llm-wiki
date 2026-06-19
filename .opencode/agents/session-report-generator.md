@@ -1,7 +1,7 @@
 ---
 description: "Session summary report generator. Produces structured summaries after a single or multi-agent session completes. Captures git diffs, file-level changes, and short summaries of what was created, modified, or deleted. Run when a session is complete and no further edits are expected."
 mode: subagent
-model: "github-copilot/gpt-5.4-mini"
+model: "opencode-go/deepseek-v4-flash"
 color: "#FFC107"
 permission:
   edit: deny

@@ -1,7 +1,7 @@
 ---
 description: "Project health and memory specialist. Detects changes, updates project memory, and reports task updates, new tasks, health suggestions, and bugs. Run proactively after code-writer, code-reviewer, or cmd-executor completes. Read-only — never modifies code."
 mode: subagent
-model: "github-copilot/gpt-5.4-mini"
+model: "opencode-go/deepseek-v4-flash"
 color: "#CDDC39"
 permission:
   edit: deny

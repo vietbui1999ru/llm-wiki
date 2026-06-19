@@ -1,7 +1,7 @@
 ---
 description: "Fast boilerplate and routine code generation specialist. Use for simple, well-defined, low-risk code tasks — scaffolding, boilerplate, repetitive patterns, simple utilities. Invoked when the task is routine and speed matters more than deep reasoning. Do not use for complex features or anything requiring design judgment."
 mode: subagent
-model: "github-copilot/gpt-5.4-mini"
+model: "opencode-go/deepseek-v4-flash"
 color: "#4CAF50"
 permission:
   edit: allow

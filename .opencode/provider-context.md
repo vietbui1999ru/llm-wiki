@@ -1,1 +1,1 @@
-provider: github-copilot
+provider: opencode-go

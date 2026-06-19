@@ -1,7 +1,7 @@
 ---
 description: "Infrastructure and agent orchestration decision specialist. Use when deciding whether to use agent teams, which testing strategy to adopt, whether to add devops agents, which infra approach to take, or any decision about system-level architecture of the development workflow itself. High-judgment, low-temperature Opus work."
 mode: subagent
-model: "github-copilot/claude-opus-4.5"
+model: "opencode-go/deepseek-v4-pro"
 color: "#607D8B"
 permission:
   edit: deny

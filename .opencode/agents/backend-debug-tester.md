@@ -1,7 +1,6 @@
 ---
 description: "Backend debugging and testing specialist. Finds, replicates, fixes, and writes unit tests for backend bugs. Invoked after project-health-monitor reports backend issues, or when user reports a backend bug directly. Scope include API routes, controllers, services, models, DB layer, server logic."
 mode: subagent
-# opencode-go: "opencode-go/kimi-k2.6"
 model: "github-copilot/gpt-5.2-codex"
 color: "#F44336"
 permission:

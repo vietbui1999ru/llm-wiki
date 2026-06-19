@@ -1,7 +1,6 @@
 ---
 description: "Full-stack code implementation specialist. Use for implementing features from clear requirements, refactoring existing code to new specs, and prototyping. Invoked when requirements are defined and the approach is approved. Do not use for exploration or design — use design-explorer first."
 mode: subagent
-# opencode-go: "opencode-go/kimi-k2.6"
 model: "github-copilot/gpt-5.2-codex"
 color: "#2196F3"
 permission:

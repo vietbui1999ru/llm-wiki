@@ -1,7 +1,6 @@
 ---
 description: "Deep security audit specialist. Runs OWASP-depth analysis, secrets scanning, indirect prompt injection checks, and agentic sandbox review. Use for pre-deploy audits, security-critical PRs, or when code-reviewer flags a potential vulnerability requiring deeper analysis. Produces a structured threat report — does not implement fixes."
 mode: subagent
-# opencode-go: "opencode-go/deepseek-v4-pro"
 model: "github-copilot/claude-opus-4.5"
 color: "#F44336"
 permission:

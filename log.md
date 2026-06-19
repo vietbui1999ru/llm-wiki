@@ -787,3 +787,11 @@ Key insights:
 - Conductor: parallel coding workspaces (workspace-first); this product: operations cockpit (task/session-first) — complementary, not competitive
 - Product wedge: security testing + engineering operations cockpit
 - syntheses/desktop-control-plane marked local-only (strategy + competitive positioning)
+
+## [2026-06-19] wiki | model-task-routing concept page
+
+New pages:
+- wiki/concepts/model-task-routing.md — OpenCode Go model ID → task mapping; per-model profiles; thinking budget suffixes; benchmark tracking table; fallback chain
+
+Updated:
+- index.md — added model-task-routing entry under Concepts

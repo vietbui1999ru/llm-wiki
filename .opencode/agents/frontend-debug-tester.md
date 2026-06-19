@@ -1,7 +1,7 @@
 ---
 description: "Frontend debugging and testing specialist. Finds, replicates, fixes, and writes unit tests for frontend bugs. Invoked after project-health-monitor reports frontend issues, or when user reports a frontend bug directly. Scope include UI components, client-side state, routing, API usage from client."
 mode: subagent
-model: "opencode-go/kimi-k2.6"
+model: "opencode-go/kimi-k2.7-code"
 color: "#FF9800"
 permission:
   edit: allow

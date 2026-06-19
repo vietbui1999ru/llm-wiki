@@ -19,8 +19,8 @@ All heuristics are community-sourced unless marked **confirmed**.
 |---|---|---|---|
 | Orchestration, routing, analysis | `opencode-go/deepseek-v4-pro` | Opus | confirmed (pi delegate); best issue analyst per head-to-head vs GLM+Kimi |
 | Sequential plan file generation | `opencode-go/deepseek-v4-pro` or `opencode-go/glm-5.2` | Opus | community pattern: Mimo→GLM→Kimi→Qwen; GLM ID confirmed by `opencode models opencode-go` |
-| Brainstorming, creative ideation | `opencode-go/kimi-k2.6` | Sonnet | **confirmed** (in opencode.json) |
-| Standard coding, multi-file impl | `opencode-go/kimi-k2.6` | Sonnet | community positive; lower hallucination than DS on impl per AA bench (cited, unverified) |
+| Brainstorming, creative ideation | `opencode-go/kimi-k2.7-code` | Sonnet | **confirmed** (in opencode.json) |
+| Standard coding, multi-file impl | `opencode-go/kimi-k2.7-code` | Sonnet | community positive; lower hallucination than DS on impl per AA bench (cited, unverified) |
 | Code review, adversarial check | `opencode-go/deepseek-v4-pro` | Opus | community pattern; `opencode-go/qwen3.6-plus` also available but not default |
 | Fast boilerplate, rote edits | `opencode-go/deepseek-v4-flash` | Haiku | confirmed (subagent usage) |
 
@@ -28,7 +28,7 @@ All heuristics are community-sourced unless marked **confirmed**.
 
 **`deepseek-v4-pro`** — Opus analog. Reliable for planning and structured tasks. Confirmed in `pi delegate` and `pueue` usage. $0.435/$0.87 per M tokens.
 
-**`kimi-k2.6`** — Sonnet analog. Strong at creative/exploratory tasks. Confirmed as `kimi-creative` agent in `opencode.json`. $0.95/$4.00 per M tokens (high output cost — avoid for bulk).
+**`kimi-k2.6`** — Superseded by `kimi-k2.7-code` in active agent config. Still available as `opencode-go/kimi-k2.6`.
 
 **`deepseek-v4-flash`** — Haiku analog. Fast, very cheap. Use for read-only, boilerplate, rote subagent work. $0.14/$0.28 per M tokens.
 
@@ -38,7 +38,7 @@ All heuristics are community-sourced unless marked **confirmed**.
 
 **`qwen3.6-plus`** — Good for review/analysis per community. ID `opencode-go/qwen3.6-plus` confirmed. `opencode-go/qwen3.7-max` and `opencode-go/qwen3.7-plus` also available (newer, uncharacterized).
 
-**`kimi-k2.7-code`** — Code-specialized successor to k2.6. ID `opencode-go/kimi-k2.7-code` confirmed. Not yet characterized — candidate to replace k2.6 for implementation tasks.
+**`kimi-k2.7-code`** — Code-specialized successor to k2.6. Active Sonnet-tier model in all agent configs as of 2026-06-19. ID `opencode-go/kimi-k2.7-code` confirmed.
 
 **`mimo-v2.5-pro`** — Used in community spec→plan workflow. ID `opencode-go/mimo-v2.5-pro` confirmed. `opencode-go/mimo-v2.5` (base) also available.
 
@@ -51,11 +51,11 @@ Multiple r/opencodeCLI users converged on this multi-model pipeline for complex 
 ```
 opencode-go/mimo-v2.5-pro  → high-level spec
 opencode-go/glm-5.2        → sequential plan files from spec
-opencode-go/kimi-k2.6      → implement each plan file
+opencode-go/kimi-k2.7-code      → implement each plan file
 opencode-go/qwen3.6-plus / opencode-go/deepseek-v4-pro → adversarial review of each step
 ```
 
-All IDs confirmed via `opencode models` (2026-06-19). `kimi-k2.7-code` may supersede `kimi-k2.6` for implementation once characterized.
+All IDs confirmed via `opencode models` (2026-06-19). `kimi-k2.7-code` now active in agent config in place of `kimi-k2.6`.
 
 Key insight from the thread: "each model has significant strengths and weaknesses. Unlike Opus, you do not want to use just one model for everything." — `look` (8 upvotes)
 
@@ -72,7 +72,7 @@ Model IDs accept an effort suffix that controls extended thinking:
 | `:high` | Max reasoning. Use for hard planning, security, architecture. |
 | (none) | Provider default. Usually equivalent to `:off` or `:medium`. |
 
-Example: `opencode-go/kimi-k2.6:high` for a deep grill-me session.
+Example: `opencode-go/kimi-k2.7-code:high` for a deep grill-me session.
 
 ## Benchmark Tracking
 

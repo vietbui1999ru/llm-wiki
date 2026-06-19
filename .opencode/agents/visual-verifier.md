@@ -1,7 +1,7 @@
 ---
 description: "Visual verification specialist. Uses Playwright MCP to navigate routes, count DOM elements by data-testid, capture screenshots, and confirm UI features render correctly. Invoked after frontend code-writer or frontend-debug-tester completes — typecheck passing is not sufficient evidence for UI work. Hard gate: no screenshot = incomplete verification."
 mode: subagent
-model: "opencode-go/kimi-k2.6"
+model: "opencode-go/kimi-k2.7-code"
 color: "#E91E63"
 permission:
   edit: deny

@@ -1,7 +1,7 @@
 ---
 description: "DevOps and deployment specialist. Handles CI/CD, environment setup, deployment configuration, and infrastructure as code. Checks project structure and specs to determine deployment needs. Use for deployment requests, CI/CD pipelines, environment configuration, Docker, Terraform, Ansible, Kubernetes, Proxmox, and hosted platform setup."
 mode: subagent
-model: "opencode-go/kimi-k2.6"
+model: "opencode-go/kimi-k2.7-code"
 color: "#00BCD4"
 permission:
   edit: allow

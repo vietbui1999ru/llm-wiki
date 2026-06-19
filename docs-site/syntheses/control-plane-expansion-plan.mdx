@@ -179,13 +179,38 @@ Layer placement remains unchanged: skills are L1/L4, omp is L2, Commandr is L3, 
 
 Created: `commandr-omp-runner/setup.sh` + `runner.sh` + `README.md`
 
-- **Bootstrap** (`setup.sh`): installs omp, pi-headroom plugin, copies hooks/tools to agent dirs
+- **Bootstrap** (`setup.sh`): installs omp, copies hooks/tools to agent dirs
 - **Runner** (`runner.sh`): runner-agnostic interface — task packet in, NDJSON out, progress events to file/stderr
 - **Interface**: `--task <json> --workspace <dir> [--progress <file>] [--model <id>]`
 - **Exit**: 0 = success, 1 = failure
-- **Plugin**: auto-installs pi-headroom for context compression
+- **Plugin**: pi-headroom documented as opt-in (not auto-installed)
 
-Next: Level 2 (omp custom tools: `commandr_progress`, `commandr_request_approval`, `commandr_emit_artifact`).
+### RPC Mode Discovery
+
+Research on `omp --mode rpc` reveals a better path than custom TypeScript plugins for bus integration:
+
+| Integration Approach | Effort | Language Lock-in | Bidirectional |
+|---|---|---|---|
+| Custom TS plugins (Level 3) | High | TypeScript only | Limited |
+| **RPC host tools (Level 2+)** | **Medium** | **None — any JSON-lines process** | **Full** |
+| Subprocess + parse stdout (Level 1) | Low | None | One-way |
+
+**RPC host tools** let Commandr register `commandr_progress`, `commandr_request_approval`, etc. as host-side tools. The agent calls them via standard tool calling; the host (our runner) handles the bus side effects. No TypeScript required — the host can be Python, Rust, Go, or bash.
+
+**Recommended evolution:**
+- Phase 1 (current): `--mode json`, one-shot runner ✅
+- Phase 2: `--mode rpc`, register host tools for bus-native progress/approvals/artifacts
+- Phase 3: `--mode rpc-ui`, handle `extension_ui_request` for approval flows
+
+See Omp Snapcompact Rpc for full protocol analysis.
+
+### snapcompact vs pi-headroom
+
+`snapcompact` (omp's native compaction) already truncates tool results to 2000 chars with head/tail preservation during archival compression. This is **conversation-level** (old turns → PNG frames). `pi-headroom` is **turn-level** (current turn tool outputs). They are complementary, not redundant.
+
+**pi-headroom status:** Keep as opt-in stopgap. Document that it handles bash output, search results, and eval kernel output — things not already truncated by omp's native read tool.
+
+Next: Level 2 via RPC host tools (not TS plugins).
 
 ## Related Pages
 

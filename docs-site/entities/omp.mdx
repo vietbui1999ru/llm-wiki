@@ -112,7 +112,15 @@ Persistent Python + Bun cells that share a prelude and can call back into agent 
 SQLite memory engine, project-scoped. `retain` (write) / `recall` (search) / `reflect` (synthesize). Survives sessions. Qualitatively different from manually maintained MEMORY.md.
 
 ### Snapcompact
-Bitmap-frame context compression — distinct from summarization-based compaction.
+Bitmap-frame context compression — distinct from summarization-based compaction. Renders discarded conversation history into dense PNG frames of pixel-font glyphs that vision models read back directly. Local and deterministic — no LLM call, no API key.
+
+**Key detail for tool outputs:** snapcompact already truncates tool results during archival compaction:
+- Default cap: **2000 chars** per tool result (`toolResultMaxChars`)
+- Head/tail truncation with 60/40 split (`truncateHeadRatio`)
+- "Useless" tool results skipped entirely
+- Tool arguments capped at 500 chars per value, 2000 chars per call
+
+This is **conversation-level** archival compression (old turns → PNG frames). It complements but does not replace per-turn tool output truncation. See Omp Snapcompact Rpc for full research.
 
 ---
 
@@ -153,13 +161,36 @@ Inherits from `.claude`, `.cursor`, `.windsurf`, `.gemini`, `.codex`, `.cline`, 
 
 ## Entry Points
 
-| Mode | Command |
-|---|---|
-| Interactive TUI | `omp` |
-| One-shot | `omp -p "..."` |
-| Node/TS SDK | `@oh-my-pi/pi-coding-agent` |
-| NDJSON RPC | `omp --mode rpc` |
-| ACP (Zed) | `omp acp` |
+| Mode | Command | Use Case |
+|---|---|---|
+| Interactive TUI | `omp` | Daily coding sessions |
+| One-shot | `omp -p "..."` | CI, quick tasks |
+| Node/TS SDK | `@oh-my-pi/pi-coding-agent` | Embedding in Node apps |
+| NDJSON RPC | `omp --mode rpc` | **Headless automation, bus integration, polyglot host tools** |
+| ACP (Zed) | `omp acp` | Editor integration |
+
+### RPC Mode (Deep Dive)
+
+`omp --mode rpc` is a JSON-lines protocol: commands on stdin, responses/events on stdout.
+
+**Key capabilities for bus integration:**
+- `set_host_tools` — register host-side tools that the agent can call (language-agnostic: Python, Rust, Go, bash)
+- `set_host_uri_schemes` — custom URI schemes (e.g., `commandr://events.jsonl`)
+- `host_tool_call` / `host_tool_result` — bidirectional structured RPC
+- `extension_ui_request` — agent requests UI: selector, confirm, input, OAuth
+- `subagent_lifecycle` / `subagent_progress` / `subagent_event` — native subagent monitoring
+- Real-time event streaming: `message_update`, `tool_execution_*`, `agent_start`/`agent_end`
+
+**Why it matters for Commandr:** RPC mode enables Level 2+ integration without writing TypeScript plugins. The host (commandr-omp-runner) can be any language — it just speaks JSON lines. See Omp Snapcompact Rpc for full protocol research.
+
+**RPC vs MCP:**
+| Dimension | RPC mode | MCP |
+|---|---|---|
+| Transport | stdin/stdout JSON lines | stdio or HTTP/SSE |
+| Scope | Full agent lifecycle + UI | Tools only |
+| Direction | Bidirectional commands+events | Request/response |
+| Session | Stateful | Stateless |
+| Subagents | Native monitoring | Not applicable |
 
 ---
 

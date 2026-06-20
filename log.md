@@ -809,3 +809,37 @@ Findings:
 - Community converged pattern: Mimo(spec) → GLM(plan) → Kimi(impl) → Qwen/DS(review)
 
 Updated: wiki/concepts/model-task-routing.md — revised GLM-5.2 profile, task table, benchmark table, community workflow pattern
+
+## [2026-06-19] opencode | agent model mapping verification
+
+Verified:
+- `opencode models opencode-go` lists DeepSeek V4 Pro/Flash, GLM-5.1/5.2, Kimi K2.6/K2.7 Code, Mimo V2.5/Pro, MiniMax M2.7/M3, Qwen3.6 Plus, Qwen3.7 Max/Plus
+- `opencode agent list` discovers specialized project/global agents
+- `~/.config/opencode/agents/*.md` are symlinks to `.opencode/agents/*.md`
+
+Updated:
+- `.opencode/agents/design-explorer.md` — Kimi K2.6 for creative exploration
+- `.opencode/agents/code-reviewer.md` — DeepSeek V4 Pro for review/adversarial checks
+- `.opencode/agents/agent-delegator.md` — route docs now use actual OpenCode Go role/model names
+- `claude-setup/README.md` — replaced stale GitHub Copilot mapping with OpenCode Go mapping
+- `wiki/concepts/model-task-routing.md` and `wiki/entities/opencode-go.md` — recorded confirmed OpenCode Go model IDs
+
+## [2026-06-19] synthesis | Builder.io integration for Commandr + DiffViewer
+
+New:
+- wiki/syntheses/builderio-control-plane-integration.md — concrete action/artifact mapping from Builder.io Agent-Native + Skills into Commandr/DiffViewer workflow; includes SPEC-safe action table, DiffViewer artifact paths, visual-plan/visual-recap package shapes, workflow, implementation slices, and non-goals
+
+Updated:
+- index.md — added synthesis entry
+- wiki/entities/commandr.md — linked concrete Builder.io integration contract from L3 boundary notes
+- wiki/entities/diffviewer.md — linked concrete action/artifact contract from Phase 5 section
+
+## [2026-06-19] opencode | plan-writer agent (glm-5.2)
+
+New:
+- .opencode/agents/plan-writer.md — GLM-5.2 sequential plan file specialist; decomposes settled design into ordered task file with acceptance criteria; sits between design-explorer and code-writer in agent team workflow; symlinked to ~/.config/opencode/agents/
+
+Updated:
+- .opencode/agents/agent-delegator.md — added GLM-5.2 routing rule + plan-writer to agent team workflow
+- claude-setup/README.md — added GLM-5.2 planning agent section; fixed kimi-k2.6 → kimi-k2.7-code throughout
+- wiki/concepts/model-task-routing.md — marked glm-5.2 as assigned to plan-writer role

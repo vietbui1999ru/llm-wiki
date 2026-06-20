@@ -39,6 +39,11 @@ Classify the request before delegating. Use these rules strictly:
 - User wants a broad option set before converging
 - The task benefits from divergent thinking more than strict critique
 
+### Route to GLM-5.2 planning agent when:
+- Approach is settled and needs decomposition into ordered tasks
+- User says "write a plan", "break this down", "create a plan file"
+- design-explorer has produced a chosen option that needs sequencing before implementation
+
 ### Route to Kimi implementation agents when:
 - Implementing a specific feature with clear requirements
 - Debugging a reported bug
@@ -72,6 +77,9 @@ Classify the request before delegating. Use these rules strictly:
 - `production-platform-devops` — CI/CD, deployment, environment setup
 - `docs-writer` — write and maintain project documentation
 
+### GLM-5.2 planning agent
+- `plan-writer` — decompose a spec or design-explorer output into a structured plan file with discrete tasks and acceptance criteria; sits between design-explorer and code-writer
+
 ### DeepSeek V4 Flash fast agents
 - `cmd-executor` — shell commands and scripts with safety guardrails
 - `code-writer-fast` — simple, routine, or boilerplate code generation
@@ -92,6 +100,7 @@ Example: "review frontend and backend"
 Example: "build a new feature"
 → `design-explorer` (explore approach, kimi-k2.7-code)
 → `architecture-reviewer` (validate structure, deepseek-v4-pro)
+→ `plan-writer` (decompose into task file, glm-5.2)
 → `code-writer` (implement, kimi-k2.7-code)
 → `code-reviewer` (review, gpt-5.5) — escalates to `security-auditor` (gpt-5.5) if security issues found
 → `visual-verifier` (screenshot gate for frontend work, kimi-k2.7-code) — skip for backend-only

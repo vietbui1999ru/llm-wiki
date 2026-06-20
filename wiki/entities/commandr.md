@@ -4,7 +4,7 @@ type: entity
 tags: [agent-bus, control-plane, task-queue, approval-gate, council, filesystem-contract, thin-waist]
 sources: ["Commandr CLAUDE.md", "Commandr UNIFICATION-BLUEPRINT.md", "Commandr protocol/SPEC.md v0.3", "Commandr GUIDE.md", "BuilderIOagent-native A framework for building agent-native applications..md", "BuilderIOskills Skills for coding agents.md", "omp oh-my-pi README (github.com/can1357/oh-my-pi)"]
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-19
 ---
 
 # Commandr
@@ -175,6 +175,7 @@ Recent synthesis reinforces the same boundary:
 
 - [[entities/agent-native]] is action/state inspiration for the UI, not a replacement for `.agents/`.
 - [[summaries/builderio-skills]] are workflow packages consumed by runners, not lifecycle state.
+- [[syntheses/builderio-control-plane-integration]] defines the concrete action/artifact mapping: live SPEC actions go through `bin/` tools; visual plans/recaps stay DiffViewer-local until a conformance-backed artifact event exists.
 - [[entities/omp]] is an L2 worker, not the owner of claims, approvals, events, or final task status.
 
 Commandr should remain small: claim, progress, complete/fail, approval tokens, event log, council verdicts, annotations, and derived index. It should reference skills or runner capabilities, but not store skill internals or runner-local session state.
@@ -199,6 +200,7 @@ This is preferable to parsing prose from `omp -p` long-term, but it should follo
 ## Related Pages
 
 - [[syntheses/desktop-control-plane]] — big-picture synthesis; Tauri path; where omp fits
+- [[syntheses/builderio-control-plane-integration]] — concrete Builder.io action/artifact integration plan
 - [[entities/diffviewer]] — L5 UI that reads the bus
 - [[entities/pi-agent]] — L2 execution substrate; council subprocess
 - [[entities/omp]] — potential L2 alternative; batteries-included Pi fork

@@ -137,6 +137,7 @@
         "pages": [
           "syntheses/agent-diff-viewer",
           "syntheses/agent-primitive-selection",
+          "syntheses/builderio-control-plane-integration",
           "syntheses/control-plane-expansion-plan",
           "syntheses/desktop-control-plane",
           "syntheses/lean-agentic-workflow",

@@ -4,7 +4,7 @@ type: entity
 tags: [agent-tooling, diff-review, real-time, claude-code, opencode, pi, mobile, tauri, l5-ui]
 sources: ["DiffViewer README", "DiffViewer docs/PRD.md", "DiffViewer docs/ARCHITECTURE.md", "DiffViewer docs/MVP0-MOBILE-SPEC.md", "BuilderIOagent-native A framework for building agent-native applications..md", "BuilderIOskills Skills for coding agents.md"]
 created: 2026-06-17
-updated: 2026-06-17
+updated: 2026-06-19
 ---
 
 # DiffViewer
@@ -156,6 +156,8 @@ DiffViewer/Tauri owns the human-facing projection and local SQLite audit view. [
 
 Builder.io's visual-plan/visual-recap skills suggest a concrete DiffViewer extension path: review packages should be generated as inspectable artifacts, not chat prose. A future `review-package-generator` skill can produce diagrams, file maps, API/schema summaries, pinned evidence, and residual risk notes for the Tauri review screen.
 
+The concrete integration contract is [[syntheses/builderio-control-plane-integration]]: DiffViewer implements a local action dispatcher and writes regenerable artifacts under `.diffviewer/artifacts/<task>/`, while Commandr lifecycle mutations still go through SPEC-defined `bin/` tools and event types.
+
 ---
 
 ## Setup
@@ -180,6 +182,7 @@ tailscale serve --bg 3334         # expose to tailnet
 ## Related Pages
 
 - [[syntheses/desktop-control-plane]] — big-picture synthesis; Tauri path
+- [[syntheses/builderio-control-plane-integration]] — concrete Builder.io action/artifact integration plan
 - [[entities/commandr]] — L3 bus; approval token format; events.jsonl
 - [[entities/omp]] — potential L2 worker with built-in browser + eval kernel; could replace Pi extension
 - [[entities/agent-native]] — action/state philosophy for the cockpit

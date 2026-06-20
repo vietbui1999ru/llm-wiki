@@ -4,7 +4,7 @@ type: entity
 tags: [opencode, open-models, subscription, cost, multi-provider]
 sources: ["Why You Should Try OpenCode Go and pi-coding-agent.md"]
 created: 2026-05-25
-updated: 2026-05-27
+updated: 2026-06-19
 ---
 
 # OpenCode Go
@@ -29,6 +29,22 @@ Pricing: $5 first month, then $10/month. Usage capped per window (5hr/$12, weekl
 | Qwen3.5 Plus | $0.20 | $1.20 | 2,401M |
 
 All figures (claimed, unverified against official OpenCode pricing docs).
+
+Local `opencode models opencode-go` confirmation (2026-06-19):
+
+- `opencode-go/deepseek-v4-flash`
+- `opencode-go/deepseek-v4-pro`
+- `opencode-go/glm-5.1`
+- `opencode-go/glm-5.2`
+- `opencode-go/kimi-k2.6`
+- `opencode-go/kimi-k2.7-code`
+- `opencode-go/mimo-v2.5`
+- `opencode-go/mimo-v2.5-pro`
+- `opencode-go/minimax-m2.7`
+- `opencode-go/minimax-m3`
+- `opencode-go/qwen3.6-plus`
+- `opencode-go/qwen3.7-max`
+- `opencode-go/qwen3.7-plus`
 
 ---
 

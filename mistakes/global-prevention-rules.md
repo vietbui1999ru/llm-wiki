@@ -49,3 +49,4 @@ Classify complexity before every task and agent spawn. Always set the `model` pa
 - Before running any test command: check `package.json` scripts.test — do NOT assume `npx jest`; Vitest projects produce misleading Jest errors from worktree files (2026-05-18)
 - Never chain an evaluate step and its record step unconditionally — gate the record on the evaluate output's error branch (judge-eval → judge-state add, 2026-06-09)
 - When editing repeated JSON/YAML keys, anchor patches on a unique parent identifier and verify neighboring records; never patch by repeated key alone (2026-06-18)
+- Before invoking `apply_patch`, confirm `patchText` contains `*** Begin Patch`, at least one file operation, and `*** End Patch` (2026-06-19)

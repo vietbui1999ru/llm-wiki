@@ -32,7 +32,7 @@ All heuristics are community-sourced unless marked **confirmed**.
 
 **`deepseek-v4-flash`** — Haiku analog. Fast, very cheap. Use for read-only, boilerplate, rote subagent work. $0.14/$0.28 per M tokens.
 
-**`glm-5.2`** — Community niche: sequential plan file generation and structured planning, *not* general orchestration. Lower hallucination rate than Kimi K2.6 for implementation per "AA bench" (source: one r/opencodeCLI commenter — benchmark name uncited, unverified). Fast in OpenCode Go. "Opus-comparable" claim is overstated: a separate commenter rates it "around k2.6 level, maybe slightly worse"; DeepSeek V4 Pro outperforms it for issue analysis in direct comparison. Most expensive model in roster at $1.40/$4.40 per M tokens. Model ID `opencode-go/glm-5.2` is confirmed locally, but remains unassigned until behavior beats current defaults for a specific role.
+**`glm-5.2`** — Assigned role: `plan-writer` agent (sequential plan file decomposition). Community niche confirmed: structured planning from spec, *not* general orchestration. Lower hallucination rate than Kimi K2.6 for implementation per "AA bench" (source: one r/opencodeCLI commenter — benchmark name uncited, unverified). Fast in OpenCode Go. "Opus-comparable" claim is overstated: a separate commenter rates it "around k2.6 level, maybe slightly worse"; DeepSeek V4 Pro outperforms it for issue analysis in direct comparison. Most expensive model in roster at $1.40/$4.40 per M tokens.
 
 **`glm-5.1`** — Older version, still available as `opencode-go/glm-5.1`. Prefer 5.2.
 

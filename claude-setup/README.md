@@ -39,7 +39,7 @@ Reads agents directly from `claude-setup/agents/*.md` with Claude Code frontmatt
 
 ### OpenCode
 Reads agents from `.opencode/agents/*.md` (project-level) or `~/.config/opencode/agents/` (global) with OpenCode frontmatter:
-- `model: "github-copilot/claude-sonnet-4.5"` (full provider/model path)
+- `model: "opencode-go/kimi-k2.7-code"` (full provider/model path)
 - `permission:` with `edit: deny`, `bash: allow`, etc.
 - `mode: subagent`, `color`, `temperature`
 
@@ -49,11 +49,12 @@ The prompt body is identical between both formats.
 
 | Claude Code tier | OpenCode model |
 |---|---|
-| `opus` | `github-copilot/claude-opus-4.5` |
-| `sonnet` | `github-copilot/claude-sonnet-4.5` or `github-copilot/gpt-5.2-codex` |
-| `haiku` | `github-copilot/gpt-5.4-mini` |
+| `opus` | `opencode-go/deepseek-v4-pro` |
+| `sonnet` | `opencode-go/kimi-k2.7-code` |
+| `haiku` | `opencode-go/deepseek-v4-flash` |
+| planning | `opencode-go/glm-5.2` |
 
-Implementation agents (code-writer, backend-debug-tester) use `gpt-5.2-codex` for cost efficiency. Review and design agents use Claude Opus/Sonnet for judgment quality.
+OpenCode Go routing follows [[concepts/model-task-routing]]: DeepSeek V4 Pro for orchestration, review, architecture, and security judgment; Kimi K2.7 Code for creative exploration and standard implementation; DeepSeek V4 Flash for boilerplate and routine read-only work; GLM-5.2 for sequential plan file decomposition (community Mimo→GLM→Kimi→DS workflow pattern).
 
 ## Field mapping
 
@@ -72,27 +73,30 @@ Implementation agents (code-writer, backend-debug-tester) use `gpt-5.2-codex` fo
 2. Update the corresponding `.opencode/agents/<name>.md` with the same prompt body but OpenCode frontmatter
 3. Symlinks in `~/.config/opencode/agents/` update automatically
 
-## Agent tiers
+## OpenCode Go agent roles
 
-### Opus tier (judgment, design, exploration)
+### DeepSeek V4 Pro reasoning agents
 - `agent-delegator` — routes all requests, decides delegation strategy
-- `design-explorer` — brainstorm, ideate, explore alternatives
 - `architecture-reviewer` — holistic system/code review
 - `design-critic` — critique patterns, identify anti-patterns
 - `infra-decision-maker` — agent team, testing strategy, devops decisions
+- `code-reviewer` — review implementations (read-only)
 - `security-auditor` — OWASP-depth security analysis (read-only)
 
-### Sonnet tier (implementation, review, debugging)
+### GLM-5.2 planning agent
+- `plan-writer` — decompose settled design into ordered task file; sits between design-explorer and code-writer
+
+### Kimi K2.7-code creative and implementation agents
+- `design-explorer` — brainstorm, ideate, explore alternatives
 - `code-writer` — implement features from clear requirements
-- `code-reviewer` — review implementations (read-only)
 - `backend-debug-tester` — find, fix, test backend bugs
 - `frontend-debug-tester` — find, fix, test frontend bugs
 - `visual-verifier` — Playwright DOM audit + screenshot gate (read-only)
 - `production-platform-devops` — CI/CD, deployment, environment config
 - `docs-writer` — write and maintain project documentation
-- `project-health-monitor` — detect changes, report health (read-only)
 
-### Haiku tier (fast execution, reporting)
+### DeepSeek V4 Flash fast agents
 - `cmd-executor` — shell commands with safety guardrails
 - `code-writer-fast` — boilerplate and routine code generation
+- `project-health-monitor` — detect changes, report health (read-only)
 - `session-report-generator` — session summaries and git diffs (read-only)

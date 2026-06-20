@@ -171,13 +171,13 @@ Recommended immediate artifacts:
 |---|---|---|
 | `COCKPIT-ACTIONS.md` | 📋 Pending | Design contract for UI/agent shared action vocabulary |
 | `agent-control-skills/` | 📋 Pending | Portable SKILL.md workflow library |
-| `commandr-omp-runner` | ✅ Level 1 complete | L2 runner wrapper that speaks the L3 Commandr bus |
+| `commandr-omp-runner` | Scaffold/smoke only | L2 runner wrapper target; RPC host tools needed for real bus-native progress and approvals |
 
 Layer placement remains unchanged: skills are L1/L4, omp is L2, Commandr is L3, DiffViewer/Tauri is L5.
 
-### commandr-omp-runner — Level 1 Complete
+### commandr-omp-runner — Scaffold/Smoke Status
 
-Created: `commandr-omp-runner/setup.sh` + `runner.sh` + `README.md`
+Created scaffold: `commandr-omp-runner/setup.sh` + `runner.sh` + `README.md`
 
 - **Bootstrap** (`setup.sh`): installs omp, copies hooks/tools to agent dirs
 - **Runner** (`runner.sh`): runner-agnostic interface — task packet in, NDJSON out, progress events to file/stderr
@@ -198,7 +198,7 @@ Research on `omp --mode rpc` reveals a better path than custom TypeScript plugin
 **RPC host tools** let Commandr register `commandr_progress`, `commandr_request_approval`, etc. as host-side tools. The agent calls them via standard tool calling; the host (our runner) handles the bus side effects. No TypeScript required — the host can be Python, Rust, Go, or bash.
 
 **Recommended evolution:**
-- Phase 1 (current): `--mode json`, one-shot runner ✅
+- Phase 1 (current): `--mode json`, one-shot scaffold/smoke path
 - Phase 2: `--mode rpc`, register host tools for bus-native progress/approvals/artifacts
 - Phase 3: `--mode rpc-ui`, handle `extension_ui_request` for approval flows
 

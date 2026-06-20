@@ -163,19 +163,19 @@ Catalog of all pages. Updated on every ingest operation.
 - [[comparisons/cc-to-cross-platform-migration]] — Full migration matrix: CC rules/skills/subagents/hooks/plugins → Gemini/OpenCode/Codex/Cursor/Copilot/Zed; parity rating per layer; hook event counts; DRY adapter pattern
 
 ## Syntheses
-- [[syntheses/builderio-control-plane-integration]] — Concrete Builder.io integration plan for Commandr + DiffViewer: shared action vocabulary, visual plan/recap artifacts, SPEC-safe bus mapping, implementation slices
+- [[syntheses/builderio-control-plane-integration]] — Concrete Builder.io integration plan for Commandr + DiffViewer: shared action vocabulary, visual plan/recap artifacts, SPEC-safe bus mapping, Mermaid workflows, implementation slices
 - [[syntheses/neovim-ai-operator-workflow]] — Neovim as human operator cockpit for AI agents: Mason LSP/DAP lane, diffview auto-refresh, selection context, CodeCompanion/Avante/MCPHub/claudecode.nvim roles
 - [[syntheses/pi-orchestration-architecture]] — Pueue-dispatched pi workers, diff-review gate, status artifact, retry limit, two-mode review (interactive vs headless), human-commits-last
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern
 - [[syntheses/lean-agentic-workflow]] — Full stack: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes
 - [[syntheses/local-rag-wiki]] — two-path RAG stack: qmd (BM25+vector, Claude Code) + LightRAG graph (wiki-chat TUI + wiki-mcp MCP); qwen2.5:3b local or Haiku hybrid; manifest-based incremental indexing; post-commit automation
 - [[syntheses/control-plane-expansion-plan]] — Gap analysis and bootstrap path: cockpit action registry, agent-control skills, commandr-omp-runner; Phase 0.5–3 roadmap
-- [[syntheses/desktop-control-plane]] — *(local-only)* Big-picture synthesis: 5-layer toolchain (Commandr bus + DiffViewer/Tauri UI + omp workers + SKILL.md packages); action registry; evidence-first cockpit vision
+- [[syntheses/desktop-control-plane]] — *(local-only)* Big-picture synthesis: 5-layer toolchain (Commandr bus + DiffViewer/Tauri UI + omp workers + SKILL.md packages); Mermaid architecture/workflow diagrams; action registry; evidence-first cockpit vision
 - [[syntheses/agent-diff-viewer]] *(partially-superseded)* — Localhost real-time diff viewer for Claude Code: original design; see [[entities/diffviewer]] for current state
 
 ## Project Tools
 - `pi-headroom/` — Headroom context compression plugin for omp (tool_result hook + headroom_retrieve custom tool); tested on omp v16.0.9; complementary to snapcompact
-- `commandr-omp-runner/` — L2 runner wrapper: bootstrap (`setup.sh`) + runner (`runner.sh`) with runner-agnostic interface; Level 1 complete; RPC host tools path for Level 2+
+- `commandr-omp-runner/` — L2 runner wrapper: bootstrap (`setup.sh`) + runner (`runner.sh`) with runner-agnostic interface; scaffold/smoke only; RPC host tools path for Level 2+
   - `HOST-TOOLS.md` — Host tool schema for Commandr bus integration: progress, artifacts, approvals, complete/fail; policy table; runner-agnostic interface
 
 ## Research

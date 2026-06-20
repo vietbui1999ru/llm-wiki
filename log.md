@@ -843,3 +843,11 @@ Updated:
 - .opencode/agents/agent-delegator.md — added GLM-5.2 routing rule + plan-writer to agent team workflow
 - claude-setup/README.md — added GLM-5.2 planning agent section; fixed kimi-k2.6 → kimi-k2.7-code throughout
 - wiki/concepts/model-task-routing.md — marked glm-5.2 as assigned to plan-writer role
+
+## [2026-06-19] docs | control-plane Mermaid diagrams
+
+Updated:
+- wiki/syntheses/desktop-control-plane.md — added layered architecture Mermaid diagram and task lifecycle sequence diagram for L1/L2/L3/L4/L5 system
+- wiki/syntheses/builderio-control-plane-integration.md — added Builder.io action dispatcher diagram and visual plan/recap workflow diagram
+- wiki/syntheses/control-plane-expansion-plan.md — corrected commandr-omp-runner status from Level 1 complete to scaffold/smoke only
+- index.md — noted new Mermaid diagrams and corrected commandr-omp-runner status to scaffold/smoke only

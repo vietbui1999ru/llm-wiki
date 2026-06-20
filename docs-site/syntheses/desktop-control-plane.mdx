@@ -31,6 +31,80 @@ L4  Knowledge  llm-wiki, qmd, CGC, SKILL.md libs    retrieval + durable workflow
 L5  UI         DiffViewer → Tauri cockpit           actions, approvals, evidence, review packages
 ```
 
+```mermaid
+flowchart TB
+  subgraph L1["L1 Driver / Harness UX"]
+    CC["Claude Code"]
+    OC["OpenCode"]
+    Codex["Codex / Gemini / Cursor"]
+    Skills["Portable SKILL.md packages"]
+  end
+
+  subgraph L2["L2 Execution Substrates"]
+    Pi["Pi workers"]
+    Omp["omp / oh-my-pi"]
+    Shell["local shell"]
+    Remote["SSH / Docker / future runners"]
+  end
+
+  subgraph L3["L3 Commandr Thin Waist"]
+    Bus[".agents/ bus"]
+    Claim["inbox -> claimed -> done"]
+    Events["events.jsonl"]
+    Approvals["approvals/<task>.approved"]
+    Council["council verdicts"]
+    Annotations["annotations/"]
+  end
+
+  subgraph L4["L4 Knowledge and Patterns"]
+    Wiki["llm-wiki + qmd"]
+    CGC["CGC / CodeBoarding graph"]
+    Builder["Builder.io action/artifact patterns"]
+    Rules["AGENTS.md / model routing / docs"]
+  end
+
+  subgraph L5["L5 Human Supervision UI"]
+    DV["DiffViewer browser"]
+    Tauri["Tauri cockpit target"]
+    Mobile["mobile approval PWA"]
+    Nvim["Neovim operator bridge"]
+    Artifacts["visual plans + review packages"]
+  end
+
+  CC --> Bus
+  OC --> Bus
+  Codex -. adapter .-> Bus
+  Skills --> CC
+  Skills --> OC
+
+  Pi --> Bus
+  Omp --> Bus
+  Shell --> Bus
+  Remote -. future .-> Bus
+
+  Wiki --> CC
+  Wiki --> OC
+  Wiki --> Skills
+  CGC --> Artifacts
+  Builder --> DV
+  Builder --> Skills
+  Rules --> CC
+  Rules --> OC
+
+  Bus --> DV
+  Events --> DV
+  Approvals --> Mobile
+  Council --> Artifacts
+  Annotations --> DV
+  DV --> Tauri
+  DV --> Nvim
+  DV --> Artifacts
+
+  DV -. approve .-> Approvals
+  Mobile -. approve .-> Approvals
+  Nvim -. annotate / steer .-> Annotations
+```
+
 **The thin waist**: L1/L2/L5 communicate exclusively through the `.agents/` filesystem contract defined in `Commandr/protocol/SPEC.md`. A harness (L1), a worker (L2), or a UI (L5) interoperates without knowing what's on the other side. Changing from Claude Code to OpenCode doesn't require changing DiffViewer. Changing from Pi to omp doesn't require changing Commandr.
 
 This is the same architecture principle as TCP/IP: a narrow stable protocol layer lets both ends evolve independently.
@@ -43,6 +117,34 @@ Three recent sources strengthen the model without changing the layer boundaries:
 - [Neovim AI Operator Workflow](/syntheses/neovim-ai-operator-workflow) informs the **human operator lane**: Neovim + Mason + nvim-dap remain the hands-on IDE/debug surface while agents run as supervised workers.
 
 **Invariant**: none of these replace [Commandr](/entities/commandr). Commandr remains L3, the stable lifecycle/audit contract.
+
+### Current Task Lifecycle
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Human
+  participant Wiki as llm-wiki/qmd
+  participant DV as DiffViewer/Tauri
+  participant Cmd as Commandr .agents bus
+  participant Runner as CC/OpenCode/Pi/omp
+  participant Council as bin/council
+
+  Human->>Wiki: retrieve patterns, prior decisions, docs
+  Human->>Cmd: create mission packet in inbox/
+  DV->>Cmd: read packet and bus state
+  DV->>DV: optional visual plan artifact
+  Runner->>Cmd: claim task via bin/claim
+  Runner->>Wiki: pull just-in-time context
+  Runner->>Cmd: append neutral task_progress
+  Runner->>DV: write sidecar turns / local artifacts
+  DV->>Human: render diffs, evidence, logs, plan/recap
+  Human->>Cmd: annotate or approve via approved token
+  Runner->>Cmd: complete pass/fail via bin/complete
+  Council->>Cmd: write advisory verdict + council_verdict
+  DV->>DV: generate visual recap / review package
+  Human->>Cmd: final approval token gates commit
+```
 
 ---
 

@@ -12,6 +12,49 @@ Builder.io's Agent-Native and Skills repos help our workflow in two concrete way
 
 They do **not** replace [Commandr](/entities/commandr) or its `.agents/` bus. Commandr remains L3 source of truth. DiffViewer remains L5 projection and action UI. Builder.io patterns shape the seams between them.
 
+```mermaid
+flowchart LR
+  subgraph Inputs["Action Triggers"]
+    HumanClick["human click"]
+    AgentProposal["agent proposal"]
+    RunnerEvent["runner adapter"]
+    SkillCall["visual-plan / visual-recap skill"]
+  end
+
+  subgraph Dispatcher["DiffViewer Action Dispatcher"]
+    Schema["schema validation"]
+    Risk["risk classification"]
+    Policy["approval policy"]
+  end
+
+  subgraph Commandr["Commandr Live SPEC Actions"]
+    Claim["task.claim"]
+    Progress["task.progress"]
+    Complete["task.complete / task.fail"]
+    Annotate["annotation.create"]
+    Approve["approval.approve"]
+    Council["council.run"]
+  end
+
+  subgraph Local["DiffViewer / Runner Local Projections"]
+    Plan["plan.md"]
+    Recap["review-package.json"]
+    Evidence["screenshots / logs / LSP summaries"]
+    Proposal["approval proposal card"]
+  end
+
+  Inputs --> Schema --> Risk --> Policy
+  Policy -->|SPEC mutation| Commandr
+  Policy -->|local projection| Local
+  SkillCall --> Plan
+  SkillCall --> Recap
+  RunnerEvent --> Evidence
+  Local -. optional neutral note .-> Progress
+
+  Commandr -->|source of truth| Recap
+  Local -. never authoritative .-> Commandr
+```
+
 ---
 
 ## Layer Mapping
@@ -171,6 +214,30 @@ DiffViewer can render this as cards: overview, file map, risk, verification, scr
 ```
 
 This preserves the thin waist: Commandr records lifecycle; DiffViewer records UI/action/audit projections; runners own private execution state.
+
+```mermaid
+flowchart TD
+  A["Task packet created"] --> B["Optional visual plan generated"]
+  B --> C{"Human direction clear?"}
+  C -->|needs clarification| D["annotation.create"]
+  D --> B
+  C -->|yes| E["Runner claims task"]
+  E --> F["Implement / research / test"]
+  F --> G["Neutral task_progress"]
+  F --> H["Sidecar turns + local artifacts"]
+  G --> I["DiffViewer review surface"]
+  H --> I
+  I --> J{"Risk or gap?"}
+  J -->|yes| K["human annotation / steer"]
+  K --> F
+  J -->|no| L["Runner completes task"]
+  L --> M["Council advisory review"]
+  M --> N["Visual recap / review package"]
+  N --> O{"Human approves commit?"}
+  O -->|no| K
+  O -->|yes| P[".agents/approvals/<task>.approved"]
+  P --> Q["Commit gate passes"]
+```
 
 ---
 

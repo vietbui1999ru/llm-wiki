@@ -3,6 +3,7 @@
 Catalog of all pages. Updated on every ingest operation.
 
 ## Summaries
+- [[summaries/ponytail]] — Ponytail repo: cross-agent minimality ladder for coding agents; YAGNI/stdlib/native/dependency/one-line before custom code; self-reported LOC/token/cost/time reductions
 - [[summaries/compound-engineering]] — Every guide: ideate→brainstorm→plan→work→review→polish→compound loop; turns tasks into durable system improvements
 - [[summaries/builderio-skills]] — Builder.io skills: visual-plan, visual-recap, agent-watchdog, plan-arbiter, efficient-frontier; artifact-first planning/review
 - [[summaries/builderio-agent-native]] — Builder.io Agent-Native: shared action surface for UI, agent, HTTP, MCP, A2A, and CLI over one SQL-backed app state
@@ -37,6 +38,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/llm-serialization-formats]] — Schema-first formats (ONTO, TOON) cutting LLM input overhead 40–60% via schema-once design; covers format comparison, tradeoffs, and caveats on synthetic benchmarks
 
 ## Entities
+- [[entities/ponytail]] — Cross-agent coding skill/plugin that reduces AI overbuild via a minimality ladder; adapters for Claude Code, Codex, OpenCode, Gemini, Pi, Copilot CLI, and more
 - [[entities/agent-native]] — Builder.io framework for agent-native apps: shared actions, SQL-backed state, rich UI + agent surfaces, MCP/A2A compatibility
 - [[entities/headroom]] — Context compression proxy/library/MCP for AI agents; ContentRouter (JSON/AST/prose), CacheAligner, CCR reversible compression, cross-agent memory, `headroom learn` failure mining
 - [[entities/everything-claude-code]] — Agent harness performance system (ECC): plugin + manual install; 9-harness support; DRY adapter pattern; instinct clustering; AgentShield
@@ -85,7 +87,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/bm25]] — Lexical ranking function; exact-match complement to semantic embeddings in hybrid search
 - [[concepts/reranking]] — Post-retrieval filtering: score top ~150 candidates, pass top 20 to LLM; stacks with contextual retrieval
 - [[concepts/ai-code-review]] — Reviewing AI-generated code: automated + human layers, 8-point checklist, core risk of intent misalignment
-- [[concepts/ai-specific-pitfalls]] — Failure modes unique to AI code: hallucinated APIs, slopsquatting, deleted tests, "looks right" logic errors
+- [[concepts/ai-specific-pitfalls]] — Failure modes unique to AI code: hallucinated APIs, slopsquatting, deleted tests, "looks right" logic errors, over-engineering mitigations
 - [[concepts/agent-context-instructions]] — Standards documents that align agent output to team conventions before generation
 - [[concepts/indirect-prompt-injection]] — Primary attack vector on AI agents: adversarial instructions in third-party content; dev-loop vectors; rules files as persistent steering; CI/CD confused deputy; MCP tool shadowing; typoglycemia; Best-of-N power-law scaling; RAG poisoning; dual-LLM pattern
 - [[concepts/agentic-sandbox-controls]] — OS-level security controls for AI agents; Anthropic ToS constraint on CC in containers; host-native alternative

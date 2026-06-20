@@ -2,9 +2,9 @@
 title: "AI-Specific Code Pitfalls"
 type: concept
 tags: [ai-agents, code-review, pitfalls, security, testing]
-sources: [Review AI-generated code.md, General Best Practices for vetting AI Code.md, How to Avoid AI Code Slop.md, What Is Clean Code? A Guide to Principles and Best Practices.md]
+sources: [Review AI-generated code.md, General Best Practices for vetting AI Code.md, How to Avoid AI Code Slop.md, What Is Clean Code? A Guide to Principles and Best Practices.md, "DietrichGebertponytail Makes your AI agent think like the laziest senior dev in the room. The best code is the code you never wrote..md"]
 created: 2026-04-22
-updated: 2026-05-27
+updated: 2026-06-20
 ---
 
 # AI-Specific Code Pitfalls
@@ -33,6 +33,8 @@ Agent doesn't see all relevant code. Produces solutions that are locally correct
 
 **Over-engineering**
 AI is trained on enterprise patterns and production architectures. Asked for 15 lines, produces a 200-line abstraction layer anticipating generality nobody requested. Passes review because the code is technically correct.
+
+Mitigation pattern: use a minimum-necessary-code ladder before implementation. [[entities/ponytail]] packages this as an agent skill: first ask whether the code needs to exist, then prefer stdlib, native platform features, and existing dependencies before writing custom code. Keep security, validation, data-loss handling, and accessibility outside the deletion budget.
 
 **Defensive overreach**
 Excessive try-catch blocks, silent error absorption, redundant logging. Code "handles" failures gracefully by swallowing them silently, making debugging substantially harder. Looks thorough; actually obscures failure modes.
@@ -100,6 +102,7 @@ The OWASP Secure Coding with AI cheat sheet adds failure modes not covered above
 
 - [[concepts/ai-code-review]] — full review process that includes this lens
 - [[entities/ai-coding-agents]] — the agents producing this code
+- [[entities/ponytail]] — concrete skill for reducing over-engineering without removing safety checks
 - [[concepts/owasp-security-checklist]] — checklist form of the same AI-specific risks
 - [[concepts/agent-context-instructions]] — slop register as context instruction
 - [[concepts/verification-pipeline]] — spec-first + agent verification as a tier-0 gate

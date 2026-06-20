@@ -851,3 +851,14 @@ Updated:
 - wiki/syntheses/builderio-control-plane-integration.md — added Builder.io action dispatcher diagram and visual plan/recap workflow diagram
 - wiki/syntheses/control-plane-expansion-plan.md — corrected commandr-omp-runner status from Level 1 complete to scaffold/smoke only
 - index.md — noted new Mermaid diagrams and corrected commandr-omp-runner status to scaffold/smoke only
+
+## [2026-06-20] ingest | Ponytail
+
+New:
+- wiki/summaries/ponytail.md — source summary for DietrichGebert/ponytail minimality ladder, host adapters, commands, claimed results, and caveats
+- wiki/entities/ponytail.md — entity page for Ponytail as cross-agent anti-overbuild skill/plugin
+- mistakes/2026-06-20-pre-digest-timeout-empty.md — captured empty pre-digest timeout during ingest
+
+Updated:
+- wiki/concepts/ai-specific-pitfalls.md — added Ponytail-style minimum-necessary-code ladder as over-engineering mitigation
+- index.md — added Ponytail summary/entity entries and updated AI-specific pitfalls description

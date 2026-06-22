@@ -13,7 +13,7 @@ elif ! git rev-parse HEAD~1 >/dev/null 2>&1; then
     CHANGED=1
 fi
 
-if [[ -n "$CHANGED" ]]; then
+if [[ -n "${CHANGED:-}" ]]; then
     cd "$WIKI_ROOT"
 
     # ── qmd (fast, synchronous) ──────────────────────────────────────────────
@@ -42,4 +42,10 @@ if [[ -n "$CHANGED" ]]; then
             printf "  wiki-index: indexing new pages in background (log: .lightrag/last-index.log)\n"
         fi
     fi
+fi
+
+# ── Tier 0 drift detection ───────────────────────────────────────────────────
+DRIFT_SCRIPT="$WIKI_ROOT/claude-setup/scripts/detect-tier0-drift.sh"
+if [[ -x "$DRIFT_SCRIPT" ]]; then
+    "$DRIFT_SCRIPT" 2>/dev/null || true
 fi

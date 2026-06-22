@@ -56,8 +56,31 @@ Classify the request before delegating. Use these rules strictly:
 - `cmd-executor` — shell commands and scripts with safety guardrails
 - `code-writer-fast` — simple, routine, or boilerplate code generation
 - `session-report-generator` — session summaries and git diffs
+- `Explore` (built-in) — read-only codebase search: find files, grep symbols, map dependencies; use proactively before implementation to avoid polluting the main context with exploration noise
 
 ## Delegation strategy
+
+### Spawn depth policy (3-layer max)
+
+Agents operate in at most 3 layers: Orchestrator → Worker → Scout. Do not spawn across layers upward or sideways.
+
+| Layer | Role | Can spawn |
+|---|---|---|
+| 0 — Orchestrator | `agent-delegator` | Any Layer 1 or Layer 2 |
+| 1 — Worker | `code-writer`, `backend-debug-tester`, `frontend-debug-tester`, `design-explorer`, `architecture-reviewer`, `security-auditor` | Layer 2 only (`cmd-executor`, `code-writer-fast`, `Explore`) |
+| 2 — Scout/Leaf | `cmd-executor`, `code-writer-fast`, `session-report-generator`, `Explore` | Nothing — leaf nodes |
+
+Enforcement: `tools:` allowlist in agent frontmatter. `cmd-executor` is already enforced (its `tools:` field lists `Bash,Read,Glob,Grep` — no `Agent` = cannot spawn). For other agents: enforce by adding `Agent(allowed-type)` to their `tools:` allowlist when adding full tool lists. Do not add `Agent(...)` without providing a complete `tools:` allowlist — it would accidentally restrict all other tools.
+
+Source: [[concepts/agent-subagents]] "Depth limiting via spawn allowlist"
+
+### Exploration offloading (proactive, not reactive)
+
+Before any implementation task on an unfamiliar codebase area: delegate read-only exploration to `Explore` (Haiku, built-in) first. The lead agent stays execution-clean; `Explore` runs grep/glob/read sweeps and returns a concise map. Do not wait for context bloat to trigger this — delegate proactively.
+
+Pattern: `Explore` (map) → `design-explorer` or `code-writer` (execute with clean context).
+
+Source: [[concepts/agent-subagents]] "exploration offloading pattern"
 
 ### Sequential — use when steps depend on each other
 Example: "fix bug then add tests"

@@ -54,6 +54,24 @@ These conditions mean verification FAILED, regardless of what the code says:
 - **Verdict** — PASS or FAIL with specific reason
 - **Next step** — if FAIL, route back to frontend-debug-tester or code-writer with specific failure details
 
+## Tier 4: Design Critique (post-screenshot)
+
+After screenshot gate passes, invoke `design-critic` with three required perspectives:
+
+- **Spec Auditor** — does output match the original requirements exactly?
+- **User Advocate** — would a human enjoy using this? friction, clarity, delight
+- **Art Director** — does it match the project's visual identity and existing patterns?
+
+Rules:
+- Maximum **two refinement rounds** before escalating to human review
+- Pass to `design-critic`: screenshot artifacts + original spec/issue reference
+- If design-critic finds Critical/High issues: route back to `frontend-debug-tester`
+- If only Low/Info issues: report findings and mark verification complete
+
+Skip Tier 4 when: backend-only change, no UI surface affected, or user explicitly says "skip design critique".
+
+Source: [[concepts/verification-pipeline]]
+
 ## Constraints
 
 - Read-only — no code modifications

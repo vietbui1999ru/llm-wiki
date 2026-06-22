@@ -100,3 +100,23 @@ Required before declaring done:
 - [ ] The correct hypothesis is stated in the commit/PR message
 
 **Then ask: what would have prevented this bug?** If architectural change is needed, hand off to `/improve-codebase-architecture` with the specifics.
+
+## Budget Guardrails
+
+Conservative defaults for bounded debugging sessions. Declare budget before starting; stop and escalate when exceeded.
+
+```yaml
+retry_per_failure: 3       # max attempts per single hypothesis
+retry_total_session: 10    # hard cap across entire session
+token_per_task: 50000      # escalate if exceeded without fix
+runtime_per_task: 1800s    # 30 min wall-clock cap
+```
+
+Guardrails:
+- **Same-failure signature twice in a row** → stop, escalate to human or council
+- **Diff size cap** → reject any single patch > 150 lines; break it down first
+- **No-progress detection** → if 3 consecutive attempts produce no change in test output, stop and re-hypothesise from scratch
+- **Auto-destructive migrations** → never auto-run without human approval, regardless of budget remaining
+- **Budget exceeded** → write findings to `debug-session.md`, hand off cleanly
+
+Source: [[concepts/error-budget]], [[concepts/self-healing-loop]]

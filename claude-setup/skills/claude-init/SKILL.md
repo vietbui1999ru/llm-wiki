@@ -155,6 +155,10 @@ Proceed to Step 1.
 
 7. **Long-running autonomous loops?** (ralph-loop, overnight agents) — yes/no
 
+7b. **Cross-session memory?** _(only ask when agent_work=yes OR long_running=yes)_
+    For multi-session projects: use Memory Bank (`_memory/` + repomix compile) for persistent task state?
+    (yes / no)
+
 ## Step 2 — Map Answers to Plugins
 
 | Condition | Enable |
@@ -214,6 +218,7 @@ security_sensitive: yes | no
 agent_work: yes | no
 linting: enabled | disabled
 codegraphcontext: enabled | session | disabled
+memory_bank: enabled | disabled
 lsp: lazy | enabled | disabled
 lsp_servers: [<server/plugin names>]
 operator_ide: neovim | other | none
@@ -251,6 +256,82 @@ status: initialized
 last_active: <YYYY-MM-DD>
 in_progress: none
 ```
+
+### 4.5. Memory Bank scaffold (only when user answered yes to question 7b)
+
+Show the user what will be created, then ask: "Create Memory Bank structure? (yes/no)"
+
+Do NOT create until user confirms.
+
+On yes, create the following directory structure and stub files:
+
+**`_memory/basicTruths/productContext.md`**
+```markdown
+# Product Context
+<!-- What this project does and why it exists. -->
+```
+
+**`_memory/basicTruths/projectScope.md`**
+```markdown
+# Project Scope
+<!-- Current milestone, what's in/out of scope. -->
+```
+
+**`_memory/basicTruths/repoStructure.md`**
+```markdown
+# Repo Structure
+<!-- Key directories and what lives where. -->
+```
+
+**`_memory/basicTruths/systemArchitecture.md`**
+```markdown
+# System Architecture
+<!-- Components, data flows, integration points. -->
+```
+
+**`_memory/basicTruths/theBacklog.md`**
+```markdown
+# Backlog
+<!-- Ordered task list. Top = next up. -->
+```
+
+**`_memory/basicTruths/theTechContext.md`**
+```markdown
+# Tech Context
+<!-- Stack, versions, tooling decisions. -->
+```
+
+**`_memory/currentState/currentEpic.md`**
+```markdown
+# Current Epic
+<!-- Active epic name, goal, success criteria. -->
+```
+
+**`_memory/currentState/currentTaskState.md`**
+```markdown
+# Current Task State
+<!-- What's in progress right now. Updated every turn. -->
+```
+
+Add to `.gitignore`:
+```
+_memory/knowledgeBase/
+.claude/homunculus/
+```
+
+Add to project `CLAUDE.md` under a new `## Memory Bank` section:
+```markdown
+## Memory Bank
+
+Bootstrap command — run as first action every session:
+npx repomix --quiet --include _memory/ --ignore _memory/knowledgeBase --style markdown --stdout
+
+`_memory/basicTruths/` — read every session start.
+`_memory/currentState/` — update every turn.
+`_memory/knowledgeBase/` — lazy-load; gitignored.
+```
+
+Write `memory_bank: enabled` to profile.md.
 
 ## Step 5 — Done
 

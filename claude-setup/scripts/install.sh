@@ -29,6 +29,7 @@ chmod +x "$BIN_DIR/wiki-chat" "$BIN_DIR/wiki-index" "$BIN_DIR/wiki-mcp"
 echo "==> Installing git hooks"
 cp "$REPO_DIR/claude-setup/scripts/post-commit" "$REPO_DIR/.git/hooks/post-commit"
 chmod +x "$REPO_DIR/.git/hooks/post-commit"
+chmod +x "$REPO_DIR/claude-setup/scripts/detect-tier0-drift.sh"
 # pre-push: rebuild docs-site/ and block the push if it drifts from wiki sources
 cp "$REPO_DIR/claude-setup/scripts/pre-push" "$REPO_DIR/.git/hooks/pre-push"
 chmod +x "$REPO_DIR/.git/hooks/pre-push"

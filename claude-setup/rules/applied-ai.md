@@ -23,9 +23,15 @@ Applies to: ML/AI, AI Engineering, Agent Orchestration, Data Analyst, Data Engin
 
 **ralph-structured**: suggest before any task with 3+ deliverables, feature-scope refactor, or >30 min estimate. Format: "This looks multi-step. `/ralph-structured` would break it into one-task-per-iteration with stuckness protection. Want to use it?" Don't auto-launch.
 
-**Council (Codex via Pi)**: fire before architectural decisions, security changes, irreversible ops.
+**Council (Codex via Pi)**: three stages — (1) parallel dispatch to voices, (2) optional anonymized peer review (prevents anchoring), (3) Chairman (Opus) synthesis. Fire for: architectural decisions, security changes, irreversible ops.
 ```bash
 pi -p "Peer review: [decision]. Flag concerns." \
    --model openai-codex/gpt-5.3-codex --no-session --no-extensions --no-skills
 ```
-Output is advisory. Don't invoke for: routine impl, single-file edits, config, ingest, <30 min tasks.
+Output is advisory. Don't invoke for: routine impl, single-file edits, config, ingest, <30 min tasks. [[concepts/council-pattern]]
+
+**Self-correction**: before deviating from core workflow — claiming complete without tests, 3+ failed fixes, wrong model tier, large unrequested edits, saturated context — run `qmd query "<situation>"` to load the relevant pattern before proceeding. [[concepts/agent-self-correction]]
+
+**Domain glossary**: check for `CONTEXT.md` at repo root on project start. If present: load it, use its terms exclusively in code and communication — no synonyms for defined terms. If absent on a multi-session project: suggest `/grill-with-docs`. [[concepts/domain-glossary]]
+
+**Compaction seams**: compact at logical transitions, never mid-task. Good seams: after exploration, after milestone, after a failed approach. Never compact mid-implementation (loses partial state) or mid-debugging (loses hypothesis chain). Env: `CLAUDE_CODE_SUBAGENT_MODEL=haiku` cuts subagent cost. [[concepts/context-compression]]

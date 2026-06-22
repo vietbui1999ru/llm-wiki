@@ -84,6 +84,28 @@ From [[summaries/agentic-sandbox-security]]:
 - [ ] Destructive operations (delete, overwrite) require explicit confirmation
 - [ ] Secrets injected at runtime, not baked into prompts or config
 
+## Memory Poisoning (Agentic Memory Tool)
+
+Memory files are read back into Claude's context — they are a prompt injection vector.
+
+- [ ] Memory stored per-project in isolated dirs (`/memories/<project>/`) — not globally shared
+- [ ] Content sanitized before storing (strip markdown-instruction patterns)
+- [ ] Memory writes logged — audit trail for unexpected stores
+- [ ] System prompt explicitly tells agent to ignore instruction-like content in memory files
+- [ ] Review memory files before sensitive operations if external input could have written them
+
+Source: [[concepts/agentic-memory-tool]]
+
+## MCP Security Controls
+
+- [ ] Tool definitions hash-pinned (SHA-256 over canonical JSON of name + description + input schema) at discovery time — rehash before execution; mismatch = reject and alert
+- [ ] Cross-server tool shadowing checked: two servers with identical tool names is a conflict; block the later-registered one
+- [ ] Run `mcp-scan` before installing or trusting a new MCP server — detects poisoned descriptions and shadowing
+- [ ] MCP server source reviewed before installation — treat like a software package (see [[concepts/indirect-prompt-injection]] supply-chain risk)
+- [ ] Tool descriptions from external sources (user-provided URLs, dynamic registration) treated as untrusted input
+
+Source: [[concepts/indirect-prompt-injection]]
+
 ## Severity Classification
 
 | Level | Criteria | Action |

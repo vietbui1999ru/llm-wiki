@@ -4,6 +4,8 @@
 @claude-setup/rules/applied-ai.md
 @claude-setup/rules/wiki-context-override.md
 @claude-setup/rules/agent-orchestration-default.md
+@claude-setup/rules/startup-sync-check.md
+@claude-setup/rules/startup-instinct-inject.md
 
 This is a personal knowledge wiki maintained collaboratively between Viet and Claude.
 Claude owns the wiki layer entirely. Viet curates sources and asks questions.

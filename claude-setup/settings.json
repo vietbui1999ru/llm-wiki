@@ -46,6 +46,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/repos/llm-wiki/claude-setup/scripts/instinct-observer.sh 2>/dev/null || true",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   },
   "statusLine": {

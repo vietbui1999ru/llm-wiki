@@ -36,6 +36,7 @@ raw/
 # Assets are tracked but large — add to LFS later if needed
 # assets/
 .env
+pending-sync.md
 .mcp.json
 .obsidian
 .claude

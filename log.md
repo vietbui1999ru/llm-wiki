@@ -862,3 +862,8 @@ New:
 Updated:
 - wiki/concepts/ai-specific-pitfalls.md — added Ponytail-style minimum-necessary-code ladder as over-engineering mitigation
 - index.md — added Ponytail summary/entity entries and updated AI-specific pitfalls description
+
+## [2026-06-20] setup | Ponytail decision matrix
+
+Updated:
+- claude-setup/README.md — added Ponytail decision matrix for current, future, and planned projects; documents prompt-only setup for `plan-writer`, `code-writer`, and `code-reviewer` plus safety boundaries

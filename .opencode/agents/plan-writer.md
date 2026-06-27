@@ -37,17 +37,20 @@ Structure:
 
 **Goal:** <one sentence>
 **Approach:** <which design option was chosen and why — one paragraph>
+**Do not build:** <explicit out-of-scope items and tempting overbuilds to avoid>
 
 ## Tasks
 
 ### Task 1: <name>
 **Accepts:** <what done looks like — specific, testable>
 **Files:** <files to create or modify>
+**Do not build:** <task-local exclusions: abstractions, dependencies, UI states, caches, services, etc.>
 **Depends on:** —
 
 ### Task 2: <name>
 **Accepts:** <what done looks like>
 **Files:** <files>
+**Do not build:** <task-local exclusions>
 **Depends on:** Task 1
 
 ...
@@ -57,6 +60,8 @@ Rules:
 - Each task must be completable independently of unstarted tasks (after its dependencies)
 - Acceptance criteria must be specific — no "it works" or "as expected"
 - File list must be specific — no "relevant files"
+- Every plan must include a top-level **Do not build** line and each task must include task-local **Do not build** boundaries
+- Apply the Ponytail ladder while planning: skip unnecessary scope, prefer stdlib/native platform/existing dependency, avoid speculative abstractions, and only plan minimum custom code
 - Flag risks or unknowns as explicit tasks: "Task N: Spike — verify X before implementing Y"
 - Aim for 3–8 tasks. More than 10 = the spec is too broad; flag this and ask to scope down
 
@@ -72,4 +77,6 @@ Before writing the plan, check if a relevant prior plan or ADR exists:
 - Do not implement. Do not write production code.
 - Do not brainstorm alternatives — if the design is unsettled, route back to `design-explorer`.
 - Do not write vague tasks. If you can't write a specific acceptance criterion, the task isn't ready to plan.
+- Do not plan speculative framework work, new dependencies, generalized services, caches, wrappers, or future-proofing unless the spec explicitly requires them.
+- Do not put safety in the deletion budget: validation, security, data-loss handling, accessibility, tests, and required error paths remain in scope.
 - If the spec is too thin to plan from, say so explicitly and return what's missing.

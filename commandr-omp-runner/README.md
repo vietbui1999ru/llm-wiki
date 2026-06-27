@@ -1,37 +1,31 @@
 # commandr-omp-runner
 
+> Relocated: canonical source now lives in `~/repos/Commandr/adapters/omp/`. This directory is archival reference only; do not extend runner behavior here.
+
 Commandr L2 runner wrapper for [omp](https://omp.sh) (oh-my-pi).
 
-**Status: scaffold / smoke test only (2026-06-19).** `runner.sh` launches omp in `--mode json` and tees NDJSON to a side file + stderr. It is NOT yet bus-integrated: it does not call `bin/claim`, does not set `AGENTS_TASK_ID`, does not write `.agents/events.jsonl`, does not emit `task_progress`/`task_complete`/`task_failed`, does not move packets to `done/`, performs no approval/policy logic, and has no tests. See `PLAN-control-plane-runner-packages.md` "Level 1 acceptance criteria" for the TODO list to make this real.
+**Status: Level 1 complete (2026-06-20).** `runner.sh` is bus-integrated: accepts pre-claimed packet (`--claimed`), exports `AGENTS_TASK_ID`, calls `PROGRESS_CMD` for neutral milestones, calls `COMPLETE_CMD pass/fail` on exit, scans omp NDJSON for policy hits (neutral progress + workspace artifact; no mid-turn blocking gate). `OMP_BIN`/`PROGRESS_CMD`/`COMPLETE_CMD` env seams; 13-case smoke test at `test/smoke.sh`, all pass. Canonical implementation is `~/repos/Commandr/adapters/omp/`.
 
-## What it does (current)
+## What it does
 
-Translates between Commandr's L3 bus protocol and omp's CLI interface — *aspirationally*. Today it runs omp with a task packet, streams omp's raw NDJSON to a runner-local progress file + stderr, and propagates the exit code. Bus integration (claim, progress, complete/fail events on `.agents/events.jsonl`) is not yet implemented.
-
-## Architecture
+Bridges Commandr's L3 bus protocol and omp's CLI interface.
 
 ```
 Commandr (L3 bus)
-  │ claim task (bin/claim) — NOT yet done by this runner
-  │ write task packet
-  ▼
-commandr-omp-runner  (scaffold)
-  │ create workspace
-  │ run omp -p "<task>" --mode json
-  │ stream NDJSON output (to runner-local file + stderr, NOT events.jsonl)
-  │ TODO: extract neutral progress → bin/progress
-  ▼
-omp (L2 runner)
-  │ execute task
-  │ use tools (read, edit, bash, lsp, debug, ...)
-  │ optionally use pi-headroom plugin for compression
+  │ orchestrator pre-claims task: bin/claim → claimed/<host>_<pid>_TASK.md
   ▼
 commandr-omp-runner
-  │ TODO: report complete/fail → bin/complete (task_complete/task_failed + done/ move)
-  │ write artifacts to workspace
+  │ reads claimed packet, extracts task id
+  │ export AGENTS_TASK_ID
+  │ PROGRESS_CMD <id> "omp runner started"
+  │ run: OMP_BIN --no-lsp --mode json -p "<prompt>" > workspace/omp.stdout
+  │ scan omp.stdout NDJSON for policy hits → PROGRESS_CMD neutral milestone + artifact
+  │ PROGRESS_CMD <id> "omp complete" OR "omp failed: exit N"
+  │ COMPLETE_CMD <claimed-path> pass|fail
   ▼
 Commandr (L3 bus)
-  │ mark done (via bin/complete) — NOT yet done by this runner
+  │ events.jsonl: task_progress* + task_complete or task_failed
+  │ done/<host>_<pid>_TASK.md
 ```
 
 ## Setup
@@ -44,17 +38,25 @@ Commandr (L3 bus)
 ## Usage
 
 ```bash
-# From Commandr: run a task packet through omp
-./commandr-omp-runner/runner.sh \
-  --task task.json \
-  --workspace ./workspaces/task-123 \
-  --progress ./workspaces/task-123/progress.ndjson \
-  --model claude-sonnet-4
+# Bus mode: pass a pre-claimed packet (orchestrator calls bin/claim first)
+commandr-omp-runner \
+  --claimed /path/to/.agents/claimed/host_123_TASK-001.md \
+  --workspace ./workspaces/TASK-001 \
+  --model claude-sonnet-4-6
 
-# Or pipe task JSON directly
-cat task.json | ./commandr-omp-runner/runner.sh \
-  --workspace ./workspaces/task-123
+# Offline / smoke mode: no bus integration, omp exits with its own exit code
+commandr-omp-runner \
+  --task task.json \
+  --workspace ./workspaces/TASK-001
 ```
+
+## Env var seams (testability)
+
+| Var | Default | Purpose |
+|---|---|---|
+| `OMP_BIN` | `omp` | Path to omp binary |
+| `PROGRESS_CMD` | `progress` | `bin/progress` from Commandr on PATH |
+| `COMPLETE_CMD` | `complete` | `bin/complete` from Commandr on PATH |
 
 ## Task Packet Format
 

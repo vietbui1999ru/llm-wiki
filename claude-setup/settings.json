@@ -6,7 +6,7 @@
   },
   "permissions": {
     "allow": [
-      "Bash(/Users/vietquocbui/.claude/plugins/cache/claude-plugins-official/superpowers/5.0.7/skills/brainstorming/scripts/start-server.sh:*)"
+      "Bash(~/.claude/plugins/cache/claude-plugins-official/superpowers/*/skills/brainstorming/scripts/start-server.sh:*)"
     ],
     "defaultMode": "default"
   },
@@ -29,7 +29,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/vietbui1999ru/.local/bin/headroom init hook ensure --profile init-user --marker headroom-init-claude",
+            "command": "~/.local/bin/headroom init hook ensure --profile init-user --marker headroom-init-claude",
             "timeout": 15
           }
         ]
@@ -41,7 +41,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/home/vietbui1999ru/.local/bin/headroom init hook ensure --profile init-user --marker headroom-init-claude",
+            "command": "~/.local/bin/headroom init hook ensure --profile init-user --marker headroom-init-claude",
             "timeout": 15
           }
         ]

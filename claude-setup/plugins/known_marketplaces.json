@@ -4,7 +4,7 @@
       "source": "github",
       "repo": "muratcankoylan/Agent-Skills-for-Context-Engineering"
     },
-    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/context-engineering-marketplace",
+    "installLocation": "${HOME}/.claude/plugins/marketplaces/context-engineering-marketplace",
     "lastUpdated": "2026-02-15T23:14:14.273Z"
   },
   "obsidian-skills": {
@@ -12,7 +12,7 @@
       "source": "github",
       "repo": "kepano/obsidian-skills"
     },
-    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/obsidian-skills",
+    "installLocation": "${HOME}/.claude/plugins/marketplaces/obsidian-skills",
     "lastUpdated": "2026-05-08T16:12:57.026Z",
     "autoUpdate": true
   },
@@ -21,7 +21,7 @@
       "source": "github",
       "repo": "Piebald-AI/claude-code-lsps"
     },
-    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/claude-code-lsps",
+    "installLocation": "${HOME}/.claude/plugins/marketplaces/claude-code-lsps",
     "lastUpdated": "2026-05-08T16:12:56.121Z",
     "autoUpdate": true
   },
@@ -30,7 +30,7 @@
       "source": "github",
       "repo": "JuliusBrussee/caveman"
     },
-    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/caveman",
+    "installLocation": "${HOME}/.claude/plugins/marketplaces/caveman",
     "lastUpdated": "2026-04-10T18:01:07.216Z"
   },
   "qmd": {
@@ -38,7 +38,7 @@
       "source": "github",
       "repo": "tobi/qmd"
     },
-    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/qmd",
+    "installLocation": "${HOME}/.claude/plugins/marketplaces/qmd",
     "lastUpdated": "2026-04-21T02:50:42.803Z"
   },
   "claude-plugins-official": {
@@ -46,7 +46,7 @@
       "source": "github",
       "repo": "anthropics/claude-plugins-official"
     },
-    "installLocation": "/Users/vietquocbui/.claude/plugins/marketplaces/claude-plugins-official",
+    "installLocation": "${HOME}/.claude/plugins/marketplaces/claude-plugins-official",
     "lastUpdated": "2026-05-08T16:07:47.492Z"
   },
   "headroom-marketplace": {
@@ -54,7 +54,7 @@
       "source": "github",
       "repo": "chopratejas/headroom"
     },
-    "installLocation": "/home/vietbui1999ru/.claude/plugins/marketplaces/headroom-marketplace",
+    "installLocation": "${HOME}/.claude/plugins/marketplaces/headroom-marketplace",
     "lastUpdated": "2026-06-17T16:35:11.026Z"
   }
 }

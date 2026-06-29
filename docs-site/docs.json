@@ -166,6 +166,7 @@
           "entities/codegraphcontext",
           "entities/codex",
           "entities/commandr",
+          "entities/context7",
           "entities/dangeresque",
           "entities/diffviewer",
           "entities/docling",

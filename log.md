@@ -867,3 +867,5 @@ Updated:
 
 Updated:
 - claude-setup/README.md — added Ponytail decision matrix for current, future, and planned projects; documents prompt-only setup for `plan-writer`, `code-writer`, and `code-reviewer` plus safety boundaries
+
+## [2026-06-29] ingest | Context7 — entity page, programmatic REST + CLI access patterns

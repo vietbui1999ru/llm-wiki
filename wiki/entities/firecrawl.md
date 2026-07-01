@@ -85,6 +85,8 @@ Credit alerts: `FIRECRAWL_CREDIT_WARNING_THRESHOLD`, `FIRECRAWL_CREDIT_CRITICAL_
 **Use Pydoll when**: fingerprint evasion matters (scraping anti-bot-protected sites).
 **Use Playwright MCP when**: you need direct browser control for UI testing/interaction.
 
+See also [[entities/ketch]] — stateless CLI covering scrape/crawl plus web/code/docs search in one binary; narrower per-surface than Firecrawl (no schema extraction or autonomous agent mode) but config-driven backend swap and no daemon/cloud dependency.
+
 ## Links
 - GitHub: [firecrawl/firecrawl-mcp-server](https://github.com/firecrawl/firecrawl-mcp-server)
 - API keys: [firecrawl.dev/app/api-keys](https://www.firecrawl.dev/app/api-keys)

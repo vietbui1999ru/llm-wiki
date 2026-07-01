@@ -85,6 +85,8 @@ The CLAUDE.md rule (always-loaded): "Before using any library, framework, CLI to
 
 Similar tool (wiki search, not doc fetch): [[entities/qmd]].
 
+Wrapped as one of three surfaces (alongside web/code search) in [[entities/ketch]]'s `ketch docs` command — same resolve → fetch flow, unified under a single agent-facing CLI.
+
 ## Key Storage and Rotation
 
 Single source of truth: `~/secrets/.env`

@@ -869,3 +869,13 @@ Updated:
 - claude-setup/README.md — added Ponytail decision matrix for current, future, and planned projects; documents prompt-only setup for `plan-writer`, `code-writer`, and `code-reviewer` plus safety boundaries
 
 ## [2026-06-29] ingest | Context7 — entity page, programmatic REST + CLI access patterns
+
+## [2026-06-30] ingest | ketch — stateless CLI for web/code/docs research
+
+New:
+- wiki/entities/ketch.md — entity page: unified web search/scrape/crawl + OSS code search + Context7 docs behind one Go binary; backend abstraction table, JS-render detection override condition, comparison to Firecrawl/Context7/qmd
+
+Updated:
+- wiki/entities/context7.md — cross-link noting ketch wraps Context7's resolve→fetch flow as its `docs` command
+- wiki/entities/firecrawl.md — cross-link comparing scope (ketch narrower per-surface, no schema extraction/agent mode, but config-driven backend swap + no daemon)
+- index.md — added ketch entity entry

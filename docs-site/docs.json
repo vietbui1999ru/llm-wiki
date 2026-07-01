@@ -177,6 +177,7 @@
           "entities/gemini-cli",
           "entities/headroom",
           "entities/karpathy-llm-council",
+          "entities/ketch",
           "entities/lean-session",
           "entities/mnemory",
           "entities/omp",

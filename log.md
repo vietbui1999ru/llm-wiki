@@ -879,3 +879,20 @@ Updated:
 - wiki/entities/context7.md — cross-link noting ketch wraps Context7's resolve→fetch flow as its `docs` command
 - wiki/entities/firecrawl.md — cross-link comparing scope (ketch narrower per-surface, no schema extraction/agent mode, but config-driven backend swap + no daemon)
 - index.md — added ketch entity entry
+
+## [2026-07-01] ingest | Obsidian CLI ecosystem — official CLI, agent skill, REST/MCP bridge, Claude Code MCP bridge, automation patterns
+
+New:
+- raw/Obsidian CLI - kepano Agent Skill.md — verbatim kepano/obsidian-skills SKILL.md (agent-facing syntax + plugin-dev workflow)
+- raw/Obsidian CLI - Official Command Reference (help.obsidian.md).md — model-extracted (JS-rendered page, ketch scrape returned 0 words) full command reference from help.obsidian.md/cli
+- raw/The Obsidian CLI Complete Guide - Frank Anaya.md — full ketch scrape: syntax, 12-category reference, 10 automation scripts, Claude Code MCP pairing, mistakes to avoid
+- raw/Obsidian CLI REST MCP (developassion).md — native GitBook markdown: overview, MCP integration (Code Mode: search/execute), full command-reference table with HTTP method + dangerous-command flags
+- wiki/entities/obsidian-cli.md — official CLI entity page; flags a real cross-source contradiction (bare-word vs double-dash boolean flags) rather than silently picking one
+- wiki/entities/obsidian-cli-rest-mcp.md — community REST/MCP plugin (Sebastien Dubois); Code Mode 2-tool pattern (search+execute) for large command surfaces
+- wiki/entities/obsidian-claude-code-mcp.md *(stub)* — community WebSocket MCP bridge for live Claude Code vault access; single-source, flagged unverified
+- wiki/concepts/cli-driven-vault-automation.md — wrapper-script conventions pulled from two real GitHub scripts found via `ketch code` (doctor/health-check pattern, "Obsidian must be running" guard, small-stable-verb-set instinct)
+
+Updated:
+- index.md — added 3 entity entries + 1 concept entry
+
+Note: firecrawl MCP was not connected this session; research used ketch (scrape/code) + WebFetch/WebSearch instead, with source fidelity noted per-file (verbatim ketch/curl scrapes vs. WebFetch's model-extracted summaries where a page was JS-rendered).

@@ -72,6 +72,9 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/codegraphcontext]] — Python MCP server + CLI; indexes codebases into graph DB (KuzuDB); Tree-sitter parsing; 20 languages; relationship discovery, blast radius, dead code; session or daemon persistence
 - [[entities/pentagi]] — OSS autonomous pen testing system (vxcontrol); 20+ tools in sandboxed Docker; orchestrator + researcher/developer/executor agents; pgvector + Neo4j memory; chain summarization for context; reference for our pentest-agent design
 - [[entities/opentelemetry]] — CNCF-graduated vendor-neutral observability framework; three signals, GenAI semantic conventions (incubating), instrumentation approaches, Collector config, compatible backends for AI workloads
+- [[entities/obsidian-cli]] — Official Obsidian CLI (v1.12.4+, free); requires app running; key=value + bare-word flags (flag-syntax contradiction flagged); 100+ commands across search/daily/tasks/properties/dev
+- [[entities/obsidian-cli-rest-mcp]] — Community REST API + MCP plugin wrapping the CLI; 2-tool Code Mode (search/execute); StreamableHTTP, Bearer auth, dangerous-command gating
+- [[entities/obsidian-claude-code-mcp]] *(stub)* — Community WebSocket MCP bridge for live Claude Code ↔ vault connection; alternative to REST/MCP and raw CLI
 
 ## Concepts
 - [[concepts/lsp-agent-baseline]] — Language servers as lazy project-scoped baseline for coding agents; L2 capability, not L3 bus state; pairs with typecheck/tests/diff review
@@ -135,6 +138,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/llm-observability]] — Observability patterns for LLM and agent systems: OpenTelemetry GenAI semantic conventions (incubating), span types, metrics, sampling, multi-agent trace correlation, production monitoring tools
 - [[concepts/slash-commands]] — Decision guide for Claude Code session commands: when to use /goal, /loop, /ralph-structured, /clear, /compact, /save-session, /handoff, and how they differ
 - [[concepts/linux-setup-guide]] — Authoritative step-by-step guide for bootstrapping the full AI workflow on a fresh Linux machine; AI-executable; covers dotfiles, Claude Code, plugins, wiki toolchain, LightRAG index
+- [[concepts/cli-driven-vault-automation]] — Wrapper-script + cron patterns over the Obsidian CLI; doctor/health-check convention, "Obsidian must be running" guard, small-stable-verb-set instinct shared with MCP Code Mode
 
 ## Patterns
 - [[patterns/principles]] — SOLID (SRP/OCP/LSP/ISP/DIP), DRY, YAGNI, KISS, Law of Demeter, SoC, composition over inheritance; per-principle violation patterns and decision table

@@ -1,6 +1,6 @@
 ---
 name: agent-orchestration
-description: Load multi-agent coordination patterns for designing agent workflows, choosing between skills/subagents/teams, routing delegation, and building harness systems. Use when designing agent architectures, deciding how to break work across agents, or building orchestration systems.
+description: Load multi-agent coordination patterns: choosing between skills/subagents/teams, routing delegation, and building harness systems. Invoke when designing agent architectures or deciding how to break work across agents.
 allowed-tools: "Read,Bash"
 ---
 

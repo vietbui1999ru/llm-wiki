@@ -1,6 +1,6 @@
 ---
 name: code-writer
-description: Full-stack code implementation specialist. Use for implementing features from clear requirements, refactoring existing code to new specs, and prototyping. Invoked when requirements are defined and the approach is approved. Do not use for exploration or design — use design-explorer first.
+description: Implement features from clear requirements, refactor to new specs, and prototype. Invoke when requirements are defined and the approach is approved. Use design-explorer first if the approach is open.
 model: sonnet
 disallowedTools: WebSearch
 ---

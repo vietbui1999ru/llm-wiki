@@ -1,6 +1,6 @@
 ---
 name: design-explorer
-description: Creative design and exploration specialist. Use for brainstorming, ideation, what-if analysis, exploring alternative approaches, and divergent thinking. Invoked before committing to an approach when the solution space is open. Do not use for implementation.
+description: Brainstorm, ideate, run what-if analysis, and explore alternative approaches. Invoke before committing to an approach when the solution space is open. Do not use for implementation.
 model: opus
 ---
 

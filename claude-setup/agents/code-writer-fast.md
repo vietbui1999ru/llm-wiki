@@ -1,6 +1,6 @@
 ---
 name: code-writer-fast
-description: Fast boilerplate and routine code generation specialist. Use for simple, well-defined, low-risk code tasks — scaffolding, boilerplate, repetitive patterns, simple utilities. Invoked when the task is routine and speed matters more than deep reasoning. Do not use for complex features or anything requiring design judgment.
+description: Generate simple, well-defined, low-risk code: scaffolding, boilerplate, repetitive patterns, utilities. Use when the task is routine and speed beats deep reasoning. Do not use for complex features or anything needing design judgment.
 model: haiku
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---

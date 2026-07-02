@@ -1,5 +1,5 @@
 ---
-description: "Deep security audit specialist. Runs OWASP-depth analysis, secrets scanning, indirect prompt injection checks, and agentic sandbox review. Use for pre-deploy audits, security-critical PRs, or when code-reviewer flags a potential vulnerability requiring deeper analysis. Produces a structured threat report — does not implement fixes."
+description: Run OWASP-depth analysis, secrets scanning, indirect-prompt-injection checks, and agentic sandbox review. Invoke for pre-deploy audits, security-critical PRs, or when code-reviewer flags a vulnerability. Produces a structured threat report — does not fix.
 mode: subagent
 model: "opencode/gpt-5.5"
 color: "#F44336"

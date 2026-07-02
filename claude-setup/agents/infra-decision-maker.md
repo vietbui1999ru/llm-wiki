@@ -1,6 +1,6 @@
 ---
 name: infra-decision-maker
-description: Infrastructure and agent orchestration decision specialist. Use when deciding whether to use agent teams, which testing strategy to adopt, whether to add devops agents, which infra approach to take, or any decision about system-level architecture of the development workflow itself. High-judgment, low-temperature Opus work.
+description: Decide whether to use agent teams, which testing strategy to adopt, which infra approach to take, or any system-level architecture of the dev workflow itself. High-judgment, low-temperature. Invoke when the question is about how to work, not what to build.
 model: opus
 ---
 

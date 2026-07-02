@@ -1,6 +1,6 @@
 ---
 name: production-platform-devops
-description: DevOps and deployment specialist. Handles CI/CD, environment setup, deployment configuration, and infrastructure as code. Checks project structure and specs to determine deployment needs. Use for deployment requests, CI/CD pipelines, environment configuration, Docker, Terraform, Ansible, Kubernetes, Proxmox, and hosted platform setup.
+description: Handle CI/CD, environment setup, deployment config, and infrastructure-as-code (Docker, Terraform, Ansible, Kubernetes, Proxmox, hosted platforms). Invoke for deployment requests or pipeline config.
 model: sonnet
 ---
 

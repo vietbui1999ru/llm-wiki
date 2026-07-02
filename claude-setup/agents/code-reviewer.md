@@ -1,6 +1,6 @@
 ---
 name: code-reviewer
-description: Code review specialist. Reviews existing implementations for correctness, security, performance, and maintainability. Invoked after code-writer completes or when the user asks for a review. Does not implement fixes — flags issues and suggests improvements for code-writer to apply.
+description: Review existing implementations for correctness, security, performance, and maintainability. Invoke after code-writer completes or when a review is requested. Flags issues and suggests fixes — does not apply them.
 model: sonnet
 disallowedTools: Edit, Write, NotebookEdit, MultiEdit
 memory: project

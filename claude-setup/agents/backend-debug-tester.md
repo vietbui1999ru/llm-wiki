@@ -1,6 +1,6 @@
 ---
 name: backend-debug-tester
-description: Backend debugging and testing specialist. Finds, replicates, fixes, and writes unit tests for backend bugs. Invoked after project-health-monitor reports backend issues, or when user reports a backend bug directly. Scope include API routes, controllers, services, models, DB layer, server logic.
+description: Find, replicate, fix, and write unit tests for backend bugs across API routes, controllers, services, models, DB, and server logic. Invoke after project-health-monitor reports a backend issue, or when a backend bug is reported.
 model: sonnet
 isolation: worktree
 ---

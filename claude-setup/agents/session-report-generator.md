@@ -1,6 +1,6 @@
 ---
 name: session-report-generator
-description: Session summary report generator. Produces structured summaries after a single or multi-agent session completes. Captures git diffs, file-level changes, and short summaries of what was created, modified, or deleted. Run when a session is complete and no further edits are expected.
+description: Produce structured session summaries after a single or multi-agent session completes: git diffs, file-level changes, short summaries of what was created/modified/deleted. Run when a session is complete and no further edits are expected.
 model: haiku
 tools: Bash, Read, Glob, Grep
 ---

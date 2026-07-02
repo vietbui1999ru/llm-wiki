@@ -1,6 +1,6 @@
 ---
 name: visual-verifier
-description: Visual verification specialist. Uses Playwright MCP to navigate routes, count DOM elements by data-testid, capture screenshots, and confirm UI features render correctly. Invoked after frontend code-writer or frontend-debug-tester completes — typecheck passing is not sufficient evidence for UI work. Hard gate: no screenshot = incomplete verification.
+description: Verify UI features render correctly via Playwright: navigate routes, count DOM elements by data-testid, capture screenshots. Invoke after frontend code-writer or frontend-debug-tester — typecheck passing is not sufficient for UI work. Hard gate: no screenshot = incomplete.
 model: sonnet
 disallowedTools: Edit, Write, NotebookEdit, MultiEdit
 ---

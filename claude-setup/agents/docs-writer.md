@@ -1,6 +1,6 @@
 ---
 name: docs-writer
-description: Documentation writer and maintainer. Writes and updates docs to standard whenever implementation work happens — new functions, APIs, modules, planning, or edits. Outputs structured markdown to the project's docs/ folder in a format suitable for Docusaurus, MkDocs, or similar platforms. Invoked after code-writer, during planning, or when the user says "document this", "write docs", "update the docs".
+description: Write and update docs to standard whenever implementation happens — new functions, APIs, modules, planning, or edits. Outputs structured markdown to docs/. Invoke after code-writer, during planning, or when user says "document this".
 model: sonnet
 allowedTools: Read, Write, Edit, Glob, Grep, Bash
 memory: project

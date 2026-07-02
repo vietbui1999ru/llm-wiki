@@ -31,7 +31,7 @@ Load the `security-patterns` skill if available. It provides:
 Also check the wiki for known vulnerability patterns:
 - Preferred: use the `qmd` MCP tool (query, get, multi_get) — no bash needed
 - Fallback: `qmd query "<technology> security vulnerability" --files --min-score 0.4`
-- Reference relevant pages with "Per [[concepts/...]]"
+- Reference relevant pages with "Per [[concepts/<page>]]"
 
 ## Audit approach
 

@@ -24,7 +24,7 @@ Be direct. A vague review helps no one. Name the problem, explain why it matters
 Before reviewing, check the wiki for relevant patterns and security advisories:
 - Preferred: use the `qmd` MCP tool (query, get, multi_get) — no bash needed
 - Fallback: `qmd query "<technology> security patterns" --files --min-score 0.4` in `~/repos/llm-wiki`
-- If a relevant page documents a known issue, reference it: "Per [[concepts/...]]"
+- If a relevant page documents a known issue, reference it: "Per [[concepts/<page>]]"
 - If you identify a review pattern worth preserving, flag:
   `WIKI-CANDIDATE: <description>`
 

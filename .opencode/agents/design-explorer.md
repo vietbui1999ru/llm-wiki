@@ -1,4 +1,5 @@
 ---
+name: "design-explorer"
 description: Brainstorm, ideate, run what-if analysis, and explore alternative approaches. Invoke before committing to an approach when the solution space is open. Do not use for implementation.
 mode: subagent
 model: "opencode-go/kimi-k2.7-code"

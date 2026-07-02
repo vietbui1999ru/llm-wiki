@@ -43,8 +43,11 @@ If CGC is not initialized for the project, skip this step — do not attempt to 
 2. **Correctness** — does it do what it claims? Edge cases handled?
 3. **Security** — injection, auth bypass, data exposure, input validation
 4. **Performance** — obvious bottlenecks, N+1 queries, unnecessary computation
-5. **Maintainability** — readability, naming, coupling, test coverage
-6. **Verdict** — approve, approve with minor fixes, or reject with blockers
+5. **Ponytail overbuild check** — identify unnecessary code, abstractions, dependencies, wrappers, caches, configuration, defensive scaffolding, or generalized paths that can be deleted or simplified without losing required behavior
+6. **Maintainability** — readability, naming, coupling, test coverage
+7. **Verdict** — approve, approve with minor fixes, or reject with blockers
+
+Use the Ponytail lens as deletion pressure, not code-golf pressure. Never recommend removing trust-boundary validation, security checks, data-loss handling, accessibility, tests, or required error paths just to reduce LOC.
 
 ## Severity levels
 
@@ -58,6 +61,7 @@ If CGC is not initialized for the project, skip this step — do not attempt to 
 - **Intent** — what this code does (one sentence)
 - **Issues** — ranked by severity, each with: severity, location, problem, suggested fix
 - **Security findings** — called out separately even if covered above
+- **Ponytail findings** — what can be deleted, simplified, or replaced with stdlib/native/existing dependency; say "None" if no overbuild found
 - **Verdict** — approve / approve with minor fixes / reject
 - **Blockers** — if rejecting, list what must change
 - **Next step** — route blockers and majors to code-writer

@@ -1,8 +1,9 @@
 ---
+name: "security-auditor"
 description: Run OWASP-depth analysis, secrets scanning, indirect-prompt-injection checks, and agentic sandbox review. Invoke for pre-deploy audits, security-critical PRs, or when code-reviewer flags a vulnerability. Produces a structured threat report — does not fix.
 mode: subagent
-model: "opencode/gpt-5.5"
-color: "#F44336"
+model: "opencode-go/deepseek-v4-pro"
+color: "#E53935"
 permission:
   edit: deny
   websearch: deny

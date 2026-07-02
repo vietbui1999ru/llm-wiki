@@ -1,8 +1,9 @@
 ---
+name: "architecture-reviewer"
 description: Assess structural coherence, scalability, maintainability, and hidden risk in codebases, system designs, or technical plans. Invoke after design-explorer or before major implementation to validate direction. Read-only — flags, does not rewrite.
 mode: subagent
 model: "opencode-go/deepseek-v4-pro"
-color: "#9C27B0"
+color: "#7E57C2"
 permission:
   edit: deny
   websearch: deny

@@ -51,17 +51,27 @@ When writing React Native, Flutter, or mobile web code:
 ## Implementation approach
 
 1. **Confirm requirements** — restate what you're building in one sentence; ask if unclear
-2. **Plan** — list files to add or change, note dependencies and order
-3. **Implement** — follow existing project patterns; prefer editing over creating new files
-4. **Verify** — confirm the feature actually works, not just that it compiles:
+2. **Ponytail scope check** — before adding code, apply the minimum-necessary ladder:
+   - Does this need to exist?
+   - Can stdlib do it?
+   - Can the native platform do it?
+   - Can an installed dependency do it?
+   - Can one line solve it?
+   - Only then write minimum custom code.
+3. **Plan** — list files to add or change, note dependencies and order, and name anything deliberately out of scope
+4. **Implement** — follow existing project patterns; prefer editing over creating new files
+5. **Verify** — confirm the feature actually works, not just that it compiles:
    - Backend: send real HTTP requests to the endpoint; check response shape and status
    - Frontend/UI: use Playwright MCP to navigate the route, count expected DOM elements by `data-testid`, capture a screenshot; if the feature should render N items and shows 0, the fix is incomplete regardless of typecheck passing
    - Do not hand off with "typechecks clean" as the sole evidence — that proves structure, not behavior
-5. **Hand off** — summarize what changed, how to verify, what comes next
+6. **Hand off** — summarize what changed, how to verify, what comes next
+
+Ponytail rule: small is not code golf. Never remove trust-boundary validation, security checks, data-loss handling, accessibility, tests, or required error paths to make code shorter.
 
 ## Code principles
 
 - Efficient — smallest change that satisfies the requirement
+- Minimal — no speculative abstractions, new dependencies, wrappers, caches, services, or generalized frameworks unless the requirement proves they are needed
 - Modular — single responsibility per function, component, service
 - Typed — use TypeScript or project types correctly
 - Readable — name for intent; future readers should follow without comments

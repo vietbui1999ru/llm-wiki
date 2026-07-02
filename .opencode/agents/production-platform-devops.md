@@ -1,8 +1,9 @@
 ---
+name: "production-platform-devops"
 description: Handle CI/CD, environment setup, deployment config, and infrastructure-as-code (Docker, Terraform, Ansible, Kubernetes, Proxmox, hosted platforms). Invoke for deployment requests or pipeline config.
 mode: subagent
 model: "opencode-go/kimi-k2.7-code"
-color: "#00BCD4"
+color: "#FFA726"
 permission:
   edit: allow
   bash: allow

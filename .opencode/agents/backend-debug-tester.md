@@ -1,8 +1,9 @@
 ---
+name: "backend-debug-tester"
 description: Find, replicate, fix, and write unit tests for backend bugs across API routes, controllers, services, models, DB, and server logic. Invoke after project-health-monitor reports a backend issue, or when a backend bug is reported.
 mode: subagent
 model: "opencode-go/kimi-k2.7-code"
-color: "#F44336"
+color: "#26A69A"
 permission:
   edit: allow
   bash: allow

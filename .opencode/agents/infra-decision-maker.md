@@ -1,8 +1,9 @@
 ---
+name: "infra-decision-maker"
 description: Decide whether to use agent teams, which testing strategy to adopt, which infra approach to take, or any system-level architecture of the dev workflow itself. High-judgment, low-temperature. Invoke when the question is about how to work, not what to build.
 mode: subagent
 model: "opencode-go/deepseek-v4-pro"
-color: "#607D8B"
+color: "#5C6BC0"
 permission:
   edit: deny
   websearch: deny

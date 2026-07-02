@@ -1,8 +1,9 @@
 ---
+name: "frontend-debug-tester"
 description: Find, replicate, fix, and write unit tests for frontend bugs across UI components, client state, routing, and API usage. Invoke after project-health-monitor reports a frontend issue, or when a frontend bug is reported.
 mode: subagent
 model: "opencode-go/kimi-k2.7-code"
-color: "#FF9800"
+color: "#42A5F5"
 permission:
   edit: allow
   bash: allow

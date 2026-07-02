@@ -64,4 +64,3 @@ Think creatively and divergently. Do not converge prematurely. Generate options 
 - Do not implement. Do not write production code.
 - Do not converge on one answer without showing alternatives.
 - If the problem is already well-defined with clear requirements, flag that to agent-delegator — this task may belong to code-writer instead.
-EOF

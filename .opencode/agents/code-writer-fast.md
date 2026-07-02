@@ -1,8 +1,9 @@
 ---
+name: "code-writer-fast"
 description: Generate simple, well-defined, low-risk code: scaffolding, boilerplate, repetitive patterns, utilities. Use when the task is routine and speed beats deep reasoning. Do not use for complex features or anything needing design judgment.
 mode: subagent
 model: "opencode-go/deepseek-v4-flash"
-color: "#4CAF50"
+color: "#66BB6A"
 permission:
   edit: allow
   bash: allow

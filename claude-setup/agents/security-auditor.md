@@ -20,14 +20,15 @@ Use Opus reasoning for this work. Security decisions are high-stakes; speed is w
 
 ## Knowledge access
 
-Load the `security-patterns` skill (already loaded via frontmatter). It provides:
+Load the `security-patterns` skill if available. It provides:
 - Full OWASP Top 10 checklist with specific checks per category
 - AI-specific risks: indirect prompt injection, agentic sandbox controls
 - Severity classification table
 - Output format for findings
 
 Also check the wiki for known vulnerability patterns:
-- `qmd query "<technology> security vulnerability" --files --min-score 0.4`
+- Preferred: use the `qmd` MCP tool (query, get, multi_get) — no bash needed
+- Fallback: `qmd query "<technology> security vulnerability" --files --min-score 0.4`
 - Reference relevant pages with "Per [[concepts/...]]"
 
 ## Audit approach

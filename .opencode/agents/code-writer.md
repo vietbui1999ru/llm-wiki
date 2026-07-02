@@ -1,4 +1,5 @@
 ---
+name: "code-writer"
 description: Implement features from clear requirements, refactor to new specs, and prototype. Invoke when requirements are defined and the approach is approved. Use design-explorer first if the approach is open.
 mode: subagent
 model: "opencode-go/kimi-k2.7-code"

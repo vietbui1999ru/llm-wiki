@@ -1,15 +1,22 @@
 ---
 name: save-session
-description: Full session summary save. Use before clearing context, compacting, or ending a long session. Writes detailed state to .claude/session-state.md.
+description: Full session summary save. Use before clearing context, compacting, or ending a long session. Writes to the universal session inbox at .agents/sessions/ via the agent-session CLI.
 ---
 
 # Save Session — Full Context Capture
 
 ## Purpose
-Write a complete, resumable snapshot of the current session to `.claude/session-state.md`.
-The stop hook writes lightweight checkpoints automatically. This skill writes the full human+agent-readable summary.
+
+Write a complete, resumable snapshot of the current session to the **universal
+session inbox** at `.agents/sessions/` (one inbox per repo, shared across all
+agent harnesses). Uses the `agent-session` CLI for consistent naming, tagging,
+and index maintenance.
+
+Legacy `.claude/session-state.md` is kept as a thin pointer for backward
+compatibility.
 
 ## When to Use
+
 - Before `/clear` or context compact
 - Before closing Claude Code after significant work
 - When user says "save", "wrapping up", "done for now", "save state"
@@ -20,23 +27,29 @@ The stop hook writes lightweight checkpoints automatically. This skill writes th
 ```bash
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
 MAIN_REPO=$(cd "$(dirname "$(git rev-parse --git-common-dir)")" && pwd)
-# Env vars don't cross hook/skill process boundaries — use sentinel file instead
 TASK_ID=$(cat "${REPO_ROOT}/.agent-task-id" 2>/dev/null)
-if [[ -n "$TASK_ID" ]]; then
-  STATE_FILE="${MAIN_REPO}/.agents/claimed/${TASK_ID}.state.md"
-  CONTEXT="agent (task: $TASK_ID)"
-else
-  STATE_FILE="${MAIN_REPO}/.claude/session-state.md"
-  CONTEXT="orchestrator"
-fi
 ```
 
-Use `$STATE_FILE` for all reads and writes below. In agent context, the state lands in
-`.agents/claimed/<TASK-ID>.state.md` — no contention with other agents or the orchestrator.
+**Agent context** (`.agent-task-id` sentinel present): state goes to
+`.agents/claimed/<TASK-ID>.state.md` — unchanged, no contention with other agents.
+
+**Orchestrator context** (no sentinel): state goes to the universal inbox via:
+
+```bash
+agent-session save --harness cc --goal "<one-sentence goal>" --body -
+```
+
+Pipe the full state body (see Step 2) via stdin (`--body -`). The CLI writes
+`.agents/sessions/<timestamp>_cc_<work-type>_<slug>.md`, updates `index.json`,
+and writes a 1-line pointer to `.claude/session-state.md` for backward compat.
+
+Auto-derived: work-type from branch name, slug from goal. Override with
+`--work-type feature|fix|refactor|...` and `--slug <slug>` as needed.
 
 ## Step 1 — Gather State
 
 Run in parallel:
+
 ```bash
 git status --short
 git log --oneline -5
@@ -44,6 +57,7 @@ cat "$STATE_FILE" 2>/dev/null || echo "NO_PRIOR_STATE"
 ```
 
 Also read from current conversation context:
+
 - What was the original goal this session?
 - What was completed?
 - What decisions were made (and why)?
@@ -52,19 +66,18 @@ Also read from current conversation context:
 
 ## Step 2 — Write state file
 
-Overwrite `$STATE_FILE` with:
+For **agent context** (sentinel): overwrite `$STATE_FILE` (`.agents/claimed/<TASK>.state.md`)
+with the markdown below.
+
+For **orchestrator context**: pipe the markdown below as stdin to:
+
+```bash
+agent-session save --harness cc --goal "<goal>" --body -
+```
+
+The markdown body:
 
 ```markdown
-# Session State
-status: active
-saved_at: <ISO8601 timestamp e.g. 2026-05-19T14:30:00Z>
-updated: <YYYY-MM-DD HH:MM UTC>
-branch: <current branch>
-agent_task: <AGENT_TASK_ID if set, else omit this line>
-
-## Goal
-<one sentence: what this session was trying to accomplish>
-
 ## Completed
 - <item 1>
 - <item 2>
@@ -90,19 +103,25 @@ agent_task: <AGENT_TASK_ID if set, else omit this line>
 ```
 
 `status: active` signals the next session to inject this state into context.
+(The CLI sets this automatically in frontmatter.)
 
 ## Step 3 — Confirm
 
-Tell user: "Session state saved to `$STATE_FILE`. Resume anytime — next session will inject this automatically."
+Tell user: "Session state saved to `.agents/sessions/` (universal inbox).
+Resume anytime — next session will inject this automatically."
 
 Do NOT commit the state file unless user asks.
 
 ## Step 4 — Flip to Idle (when work is done)
 
-If the user says work is complete, paused indefinitely, or says "mark session idle" / "clear session state":
+For **agent context**: `sed -i '' 's/^status: active$/status: idle/' "$STATE_FILE"`
+
+For **orchestrator context**:
 
 ```bash
-sed -i '' 's/^status: active$/status: idle/' "$STATE_FILE"
+agent-session idle
 ```
+
+This flips the latest active session in the universal inbox to idle.
 
 Tell user: "Session state marked idle — next session will start fresh."

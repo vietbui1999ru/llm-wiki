@@ -81,6 +81,7 @@
           "concepts/model-task-routing",
           "concepts/model-tier-routing",
           "concepts/multi-vendor-adversarial-review",
+          "concepts/nurture-first-development",
           "concepts/owasp-security-checklist",
           "concepts/pentest-agent-design",
           "concepts/preference-feedback-loop",
@@ -143,6 +144,7 @@
           "syntheses/desktop-control-plane",
           "syntheses/lean-agentic-workflow",
           "syntheses/local-rag-wiki",
+          "syntheses/minimal-coding-agent",
           "syntheses/neovim-ai-operator-workflow",
           "syntheses/pi-orchestration-architecture"
         ]
@@ -194,6 +196,7 @@
           "entities/ponytail",
           "entities/pydoll",
           "entities/qmd",
+          "entities/rtk",
           "entities/sandcastle",
           "entities/spotme"
         ]

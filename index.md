@@ -3,6 +3,9 @@
 Catalog of all pages. Updated on every ingest operation.
 
 ## Summaries
+- [[summaries/nurture-first-agent-development]] — Zhang 2026 (arXiv 2603.10808): grow domain-expert agents via conversation instead of code/prompt; Knowledge Crystallization Cycle over a 3-layer memory architecture; single-user case study *(illustrative, not validated)*
+- [[summaries/how-to-build-an-agent]] — Thorsten Ball (Amp): code-editing agent in ~300 lines Go via the Anthropic **native** tool-use API; LLM+loop+3 tools (read/list/edit); model chains tools unprompted
+- [[summaries/coding-agent-200-lines]] — Mihai Eric: ~200-line Python coding agent using a **prompt-parsed** `tool: NAME({json})` protocol (no native tool API); twin of how-to-build-an-agent; flags an OpenAI-vs-Anthropic source contradiction
 - [[summaries/ponytail]] — Ponytail repo: cross-agent minimality ladder for coding agents; YAGNI/stdlib/native/dependency/one-line before custom code; self-reported LOC/token/cost/time reductions
 - [[summaries/compound-engineering]] — Every guide: ideate→brainstorm→plan→work→review→polish→compound loop; turns tasks into durable system improvements
 - [[summaries/builderio-skills]] — Builder.io skills: visual-plan, visual-recap, agent-watchdog, plan-arbiter, efficient-frontier; artifact-first planning/review
@@ -38,6 +41,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/llm-serialization-formats]] — Schema-first formats (ONTO, TOON) cutting LLM input overhead 40–60% via schema-once design; covers format comparison, tradeoffs, and caveats on synthetic benchmarks
 
 ## Entities
+- [[entities/rtk]] — Rust CLI proxy that filters/compresses command output before it hits LLM context; PreToolUse hook across 15 agents; 4 strategies (filter/group/truncate/dedup); 60-90% token savings *(claimed, unverified — self-reported estimates)*
 - [[entities/context7]] — Live library doc fetching (MCP + ctx7 CLI); per-platform: CC/Opencode/Codex/Pi/OMP
 - [[entities/ponytail]] — Cross-agent coding skill/plugin that reduces AI overbuild via a minimality ladder; adapters for Claude Code, Codex, OpenCode, Gemini, Pi, Copilot CLI, and more
 - [[entities/agent-native]] — Builder.io framework for agent-native apps: shared actions, SQL-backed state, rich UI + agent surfaces, MCP/A2A compatibility
@@ -100,6 +104,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/proxy-rotation]] — Proxy types by OSI layer, rotation strategies, limits vs. full fingerprinting evasion
 - [[concepts/webrtc-ip-leak]] — WebRTC UDP bypass of proxy configuration; ICE/STUN mechanism and mitigations
 - [[concepts/agent-harness]] — Model + harness = agent; core components: filesystem, bash, sandbox, context management, long-horizon loops; orchestrator/harness/framework distinction; model-agnostic property
+- [[concepts/nurture-first-development]] — Grow domain-expert agents through conversation vs code-first/prompt-first build-then-deploy; 3-layer memory (Constitutional/Skill/Experiential) + Knowledge Crystallization Cycle + dual-workspace; theory behind this wiki's own memory system; *(proposed, single-source)*
 - [[concepts/ralph-loop]] — Harness pattern: intercept exit, reinjecting original prompt with clean context + durable filesystem state
 - [[concepts/context-degradation]] — Five named failure modes: lost-in-middle, poisoning, distraction, confusion, clash; thresholds and mitigations
 - [[concepts/context-compression]] — Five strategies + serialization format axis (ONTO/TOON 40–60% reduction); clear-over-compact consensus; KV-cache cost trap; SAC as learned soft compression alternative
@@ -171,6 +176,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[comparisons/cc-to-cross-platform-migration]] — Full migration matrix: CC rules/skills/subagents/hooks/plugins → Gemini/OpenCode/Codex/Cursor/Copilot/Zed; parity rating per layer; hook event counts; DRY adapter pattern
 
 ## Syntheses
+- [[syntheses/minimal-coding-agent]] — Cross-source thesis from Ball (Go) + Eric (Python): the coding-agent core is LLM+loop+3 tools with no secret; the one real axis is native-API vs prompt-parsed tool protocol (two layers of one idea); leverage lives in the surrounding "elbow grease"
 - [[syntheses/builderio-control-plane-integration]] — Concrete Builder.io integration plan for Commandr + DiffViewer: shared action vocabulary, visual plan/recap artifacts, SPEC-safe bus mapping, Mermaid workflows, implementation slices
 - [[syntheses/neovim-ai-operator-workflow]] — Neovim as human operator cockpit for AI agents: Mason LSP/DAP lane, diffview auto-refresh, selection context, CodeCompanion/Avante/MCPHub/claudecode.nvim roles
 - [[syntheses/pi-orchestration-architecture]] — Pueue-dispatched pi workers, diff-review gate, status artifact, retry limit, two-mode review (interactive vs headless), human-commits-last

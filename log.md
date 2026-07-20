@@ -896,3 +896,25 @@ Updated:
 - index.md — added 3 entity entries + 1 concept entry
 
 Note: firecrawl MCP was not connected this session; research used ketch (scrape/code) + WebFetch/WebSearch instead, with source fidelity noted per-file (verbatim ketch/curl scrapes vs. WebFetch's model-extracted summaries where a page was JS-rendered).
+
+## [2026-07-20] ingest | Minimal coding-agent tutorials (Ball Go + Eric Python) + rtk
+Created:
+- wiki/summaries/how-to-build-an-agent.md — Thorsten Ball/Amp: ~300-line Go code-editing agent via Anthropic native tool-use API
+- wiki/summaries/coding-agent-200-lines.md — Mihai Eric: ~200-line Python agent via prompt-parsed `tool: NAME({json})` protocol; flagged OpenAI-vs-Anthropic source contradiction
+- wiki/syntheses/minimal-coding-agent.md — cross-source thesis: LLM+loop+3 tools; native-API vs prompt-parsed as the one differing axis (two layers of one idea)
+- wiki/entities/rtk.md — Rust Token Killer: CLI output-compression proxy, PreToolUse hook across 15 agents; 60-90% savings marked (claimed, unverified)
+
+Updated:
+- index.md — added 2 summary, 1 entity, 1 synthesis entries
+
+Skipped questions per user request. Twins share stateless-server + string-replace-edit + inner tool-loop; rtk cross-links [[entities/ketch]] and [[concepts/context-compression]].
+
+## [2026-07-20] ingest | Nurture-First Agent Development (Zhang, arXiv 2603.10808v1) → summaries + concept
+Parsed with Docling (`--no-ocr`; RapidOCR model-config crash on default run — arXiv PDF has embedded text so OCR unneeded). Created:
+- wiki/summaries/nurture-first-agent-development.md — full paper summary (problem → NFD paradigm → 3-layer arch → Knowledge Crystallization Cycle → dual-workspace/spiral → case study → limitations)
+- wiki/concepts/nurture-first-development.md — generalized cross-agent concept page
+
+Updated:
+- index.md — added 1 summary + 1 concept entry
+
+Epistemic note: position/conceptual paper, single author, single-user case study with no control group and subjective metric — flagged (proposed / illustrative, not validated) on both pages and in index. Keystone connection: NFD is effectively the theory behind this wiki's own Constitutional/Skill/Experiential structure (CLAUDE.md + wiki/ + mistakes/ with synthesize-mistakes as crystallization). Conceptual opposite pole to [[syntheses/minimal-coding-agent]] (pure code-first).

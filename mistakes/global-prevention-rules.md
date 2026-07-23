@@ -50,3 +50,9 @@ Classify complexity before every task and agent spawn. Always set the `model` pa
 - Never chain an evaluate step and its record step unconditionally — gate the record on the evaluate output's error branch (judge-eval → judge-state add, 2026-06-09)
 - When editing repeated JSON/YAML keys, anchor patches on a unique parent identifier and verify neighboring records; never patch by repeated key alone (2026-06-18)
 - Before invoking `apply_patch`, confirm `patchText` contains `*** Begin Patch`, at least one file operation, and `*** End Patch` (2026-06-19)
+
+## Planning / Subagents
+- Plans cite only files/symbols verified via Read/Grep in the current tree; never embed unverified names or commit refs in subagent prompts — agents amplify orchestrator slop (2026-07-07)
+- User-named artifacts (models, packages, tools) are used verbatim; verify in repo/env before "correcting" to a training-data-familiar name (2026-07-07)
+- Enumerate existing deploy/config artifacts (compose files, Dockerfiles, deploy docs, lib modules) before proposing new ones; state why each isn't reusable (2026-07-07)
+- Validation guarantees come from validator code, not prompt text; absence claims ("no X exists") need a shown empty search — same evidence bar as presence (2026-07-07)

@@ -3,7 +3,7 @@ title: "Onboarding: Run llm-wiki as an Agent-First Harness"
 type: guide
 audience: adopters
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-07-23
 ---
 
 # Onboarding: Run llm-wiki as an Agent-First Harness
@@ -66,6 +66,15 @@ agent reliable across sessions:
 4. **Retrieval (RAG)** — three tools over the same corpus: in-session search (`wiki-context` via
    qmd), a standalone terminal Q&A TUI (`wiki-chat`), and an MCP server (`wiki-mcp`) for other
    agents. See [[syntheses/local-rag-wiki]].
+
+Parts 1 and 4 are two ends of a deliberate spectrum, not a redundancy: Rules are **pushed** into
+every session (cheap per-use, paid whether or not you need them that session); Retrieval is
+**pulled** on demand (zero cost when idle, only as reliable as the agent choosing to search).
+Neither pole alone is right — pure push doesn't scale past a handful of facts, pure pull risks
+high-stakes knowledge never getting fetched. See [[concepts/tiered-knowledge-delivery]] for the
+three-tier model (push / hook / pull) this repo actually runs, and why "agent-first" here means
+*pre-synthesized structure the agent doesn't have to search for*, not just "written for agents
+to read."
 
 The compounding effect: every source you ingest enriches existing pages, surfaces
 contradictions, and adds cross-links — so the agent's answers get better over time instead of

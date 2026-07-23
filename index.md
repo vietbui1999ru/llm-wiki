@@ -92,6 +92,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/software-documentation]] — Doc types (Diátaxis), audiences (including AI agents), principles, structure for doc-hosting platforms
 - [[concepts/claude-code-plugins]] — Plugin structure, manifest format, namespacing, symlink gotcha, when to use plugins vs. personal config
 - [[concepts/compounding-knowledge-base]] — Knowledge bases that accumulate compiled structure vs. RAG's per-query retrieval
+- [[concepts/tiered-knowledge-delivery]] — This wiki's push/hook/pull model (Tier 0 always-loaded / Tier 1 hook-fired / Tier 2 JIT pull); decided 2026-06-12, promoted by frequency × cost-of-violation; the actual mechanism behind "agent-first"
 - [[concepts/contextual-retrieval]] — RAG preprocessing technique: LLM-generated context prepended to chunks before embedding + BM25 indexing
 - [[concepts/bm25]] — Lexical ranking function; exact-match complement to semantic embeddings in hybrid search
 - [[concepts/reranking]] — Post-retrieval filtering: score top ~150 candidates, pass top 20 to LLM; stacks with contextual retrieval
@@ -105,6 +106,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/webrtc-ip-leak]] — WebRTC UDP bypass of proxy configuration; ICE/STUN mechanism and mitigations
 - [[concepts/agent-harness]] — Model + harness = agent; core components: filesystem, bash, sandbox, context management, long-horizon loops; orchestrator/harness/framework distinction; model-agnostic property
 - [[concepts/nurture-first-development]] — Grow domain-expert agents through conversation vs code-first/prompt-first build-then-deploy; 3-layer memory (Constitutional/Skill/Experiential) + Knowledge Crystallization Cycle + dual-workspace; theory behind this wiki's own memory system; *(proposed, single-source)*
+- [[concepts/knowledge-crystallization-cycle]] — Four-phase mechanism (Immersion → Accumulation → Crystallization → Application) turning tagged conversational fragments into Skill Layer assets; maps our partial implementation (raw-log.md, synthesize-mistakes) against the full cycle; *(proposed, single-source — pending review, see `claude-setup/rules/nfd-knowledge-capture.md`)*
 - [[concepts/ralph-loop]] — Harness pattern: intercept exit, reinjecting original prompt with clean context + durable filesystem state
 - [[concepts/context-degradation]] — Five named failure modes: lost-in-middle, poisoning, distraction, confusion, clash; thresholds and mitigations
 - [[concepts/context-compression]] — Five strategies + serialization format axis (ONTO/TOON 40–60% reduction); clear-over-compact consensus; KV-cache cost trap; SAC as learned soft compression alternative

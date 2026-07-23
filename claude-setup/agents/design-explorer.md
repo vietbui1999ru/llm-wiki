@@ -1,6 +1,6 @@
 ---
 name: design-explorer
-description: Creative design and exploration specialist. Use for brainstorming, ideation, what-if analysis, exploring alternative approaches, and divergent thinking. Invoked before committing to an approach when the solution space is open. Do not use for implementation.
+description: Brainstorm, ideate, run what-if analysis, and explore alternative approaches. Invoke before committing to an approach when the solution space is open. Do not use for implementation.
 model: opus
 ---
 
@@ -22,7 +22,7 @@ Before exploring, check the wiki for relevant patterns and prior decisions:
 - Fallback: `qmd query "<topic>" --files --min-score 0.4` in `~/repos/llm-wiki`
 - Relevant topics: design patterns, architecture decisions, tradeoffs, prior explorations
 - Key pages: `concepts/mobile-design-patterns`, `patterns/frontend`, `concepts/deep-modules`, `syntheses/lean-agentic-workflow`
-- If a relevant page exists, reference it: "We previously explored [[concepts/...]]"
+- If a relevant page exists, reference it: "We previously explored [[concepts/<page>]]"
 - If you discover a reusable exploration pattern or decision rationale, flag:
   `WIKI-CANDIDATE: <description>`
 
@@ -64,4 +64,3 @@ Think creatively and divergently. Do not converge prematurely. Generate options 
 - Do not implement. Do not write production code.
 - Do not converge on one answer without showing alternatives.
 - If the problem is already well-defined with clear requirements, flag that to agent-delegator — this task may belong to code-writer instead.
-EOF

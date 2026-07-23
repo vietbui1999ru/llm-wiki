@@ -1,6 +1,6 @@
 ---
 name: wiki-context
-description: Search the personal LLM wiki for concepts, patterns, and decisions relevant to the current task. Use when you need to look up agent engineering patterns, context management strategies, security concepts, or any topic that may have a wiki page. Invoke before designing systems, reviewing patterns, or answering architecture questions.
+description: Search the personal LLM wiki for concepts, patterns, and decisions relevant to the current task. Invoke before designing systems, reviewing patterns, or answering architecture questions — any topic that may have a wiki page.
 allowed-tools: "Bash,Read"
 ---
 

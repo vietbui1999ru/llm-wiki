@@ -1,8 +1,9 @@
 ---
-description: "Documentation writer and maintainer. Writes and updates docs to standard whenever implementation work happens — new functions, APIs, modules, planning, or edits. Outputs structured markdown to the project's docs/ folder in a format suitable for Docusaurus, MkDocs, or similar platforms. Invoked after code-writer, during planning, or when the user says 'document this', 'write docs', 'update the docs'."
+name: "docs-writer"
+description: Write and update docs to standard whenever implementation happens — new functions, APIs, modules, planning, or edits. Outputs structured markdown to docs/. Invoke after code-writer, during planning, or when user says "document this".
 mode: subagent
 model: "opencode-go/kimi-k2.7-code"
-color: "#009688"
+color: "#78909C"
 permission:
   edit: allow
   bash: allow
@@ -73,4 +74,4 @@ After writing, report:
 
 - Do not modify source code files — read only
 - Do not guess at behavior you haven't confirmed by reading the code
-- If implementation is incomplete or ambiguous, write a stub doc and flag it: `> Implementation in progress — this section is a placeholder.`
+- If implementation is incomplete or ambiguous, write a stub doc and flag it: `> ⚠️ Implementation in progress — this section is a placeholder.`

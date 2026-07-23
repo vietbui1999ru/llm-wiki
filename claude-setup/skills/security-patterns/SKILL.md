@@ -1,6 +1,6 @@
 ---
 name: security-patterns
-description: Load security review checklist and OWASP patterns. Use during code review when security analysis is needed, when auditing authentication or authorization code, or when reviewing APIs and data handling. Preloaded into security-auditor agent at startup.
+description: Load the security review checklist and OWASP patterns. Invoke during code review when security analysis is needed, when auditing auth/authz code, or when reviewing APIs and data handling.
 allowed-tools: "Read,Grep,Bash"
 ---
 

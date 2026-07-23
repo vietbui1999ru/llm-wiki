@@ -1,6 +1,6 @@
 ---
 name: architecture-reviewer
-description: Holistic architecture and system design reviewer. Use for structural assessment of codebases, system designs, or technical plans. Evaluates coherence, scalability, maintainability, and hidden risks. Invoked after design-explorer or before major implementation to validate direction.
+description: Assess structural coherence, scalability, maintainability, and hidden risk in codebases, system designs, or technical plans. Invoke after design-explorer or before major implementation to validate direction. Read-only — flags, does not rewrite.
 model: opus
 ---
 

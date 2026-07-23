@@ -1,5 +1,5 @@
 ---
-description: "Sequential implementation plan specialist. Takes a spec, feature description, or design-explorer output and produces a structured step-by-step plan file with discrete tasks, acceptance criteria, and dependencies. Sits between design-explorer and code-writer in the workflow. Do not use for brainstorming or implementation."
+description: Decompose a settled design into an ordered task file with acceptance criteria. Invoke between design-explorer and code-writer in the agent team workflow.
 mode: subagent
 model: "opencode-go/glm-5.2"
 color: "#00BCD4"

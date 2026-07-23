@@ -1,6 +1,6 @@
 ---
 name: frontend-debug-tester
-description: Frontend debugging and testing specialist. Finds, replicates, fixes, and writes unit tests for frontend bugs. Invoked after project-health-monitor reports frontend issues, or when user reports a frontend bug directly. Scope include UI components, client-side state, routing, API usage from client.
+description: Find, replicate, fix, and write unit tests for frontend bugs across UI components, client state, routing, and API usage. Invoke after project-health-monitor reports a frontend issue, or when a frontend bug is reported.
 model: sonnet
 isolation: worktree
 ---

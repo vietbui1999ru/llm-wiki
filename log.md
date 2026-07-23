@@ -867,3 +867,54 @@ Updated:
 
 Updated:
 - claude-setup/README.md — added Ponytail decision matrix for current, future, and planned projects; documents prompt-only setup for `plan-writer`, `code-writer`, and `code-reviewer` plus safety boundaries
+
+## [2026-06-29] ingest | Context7 — entity page, programmatic REST + CLI access patterns
+
+## [2026-06-30] ingest | ketch — stateless CLI for web/code/docs research
+
+New:
+- wiki/entities/ketch.md — entity page: unified web search/scrape/crawl + OSS code search + Context7 docs behind one Go binary; backend abstraction table, JS-render detection override condition, comparison to Firecrawl/Context7/qmd
+
+Updated:
+- wiki/entities/context7.md — cross-link noting ketch wraps Context7's resolve→fetch flow as its `docs` command
+- wiki/entities/firecrawl.md — cross-link comparing scope (ketch narrower per-surface, no schema extraction/agent mode, but config-driven backend swap + no daemon)
+- index.md — added ketch entity entry
+
+## [2026-07-01] ingest | Obsidian CLI ecosystem — official CLI, agent skill, REST/MCP bridge, Claude Code MCP bridge, automation patterns
+
+New:
+- raw/Obsidian CLI - kepano Agent Skill.md — verbatim kepano/obsidian-skills SKILL.md (agent-facing syntax + plugin-dev workflow)
+- raw/Obsidian CLI - Official Command Reference (help.obsidian.md).md — model-extracted (JS-rendered page, ketch scrape returned 0 words) full command reference from help.obsidian.md/cli
+- raw/The Obsidian CLI Complete Guide - Frank Anaya.md — full ketch scrape: syntax, 12-category reference, 10 automation scripts, Claude Code MCP pairing, mistakes to avoid
+- raw/Obsidian CLI REST MCP (developassion).md — native GitBook markdown: overview, MCP integration (Code Mode: search/execute), full command-reference table with HTTP method + dangerous-command flags
+- wiki/entities/obsidian-cli.md — official CLI entity page; flags a real cross-source contradiction (bare-word vs double-dash boolean flags) rather than silently picking one
+- wiki/entities/obsidian-cli-rest-mcp.md — community REST/MCP plugin (Sebastien Dubois); Code Mode 2-tool pattern (search+execute) for large command surfaces
+- wiki/entities/obsidian-claude-code-mcp.md *(stub)* — community WebSocket MCP bridge for live Claude Code vault access; single-source, flagged unverified
+- wiki/concepts/cli-driven-vault-automation.md — wrapper-script conventions pulled from two real GitHub scripts found via `ketch code` (doctor/health-check pattern, "Obsidian must be running" guard, small-stable-verb-set instinct)
+
+Updated:
+- index.md — added 3 entity entries + 1 concept entry
+
+Note: firecrawl MCP was not connected this session; research used ketch (scrape/code) + WebFetch/WebSearch instead, with source fidelity noted per-file (verbatim ketch/curl scrapes vs. WebFetch's model-extracted summaries where a page was JS-rendered).
+
+## [2026-07-20] ingest | Minimal coding-agent tutorials (Ball Go + Eric Python) + rtk
+Created:
+- wiki/summaries/how-to-build-an-agent.md — Thorsten Ball/Amp: ~300-line Go code-editing agent via Anthropic native tool-use API
+- wiki/summaries/coding-agent-200-lines.md — Mihai Eric: ~200-line Python agent via prompt-parsed `tool: NAME({json})` protocol; flagged OpenAI-vs-Anthropic source contradiction
+- wiki/syntheses/minimal-coding-agent.md — cross-source thesis: LLM+loop+3 tools; native-API vs prompt-parsed as the one differing axis (two layers of one idea)
+- wiki/entities/rtk.md — Rust Token Killer: CLI output-compression proxy, PreToolUse hook across 15 agents; 60-90% savings marked (claimed, unverified)
+
+Updated:
+- index.md — added 2 summary, 1 entity, 1 synthesis entries
+
+Skipped questions per user request. Twins share stateless-server + string-replace-edit + inner tool-loop; rtk cross-links [[entities/ketch]] and [[concepts/context-compression]].
+
+## [2026-07-20] ingest | Nurture-First Agent Development (Zhang, arXiv 2603.10808v1) → summaries + concept
+Parsed with Docling (`--no-ocr`; RapidOCR model-config crash on default run — arXiv PDF has embedded text so OCR unneeded). Created:
+- wiki/summaries/nurture-first-agent-development.md — full paper summary (problem → NFD paradigm → 3-layer arch → Knowledge Crystallization Cycle → dual-workspace/spiral → case study → limitations)
+- wiki/concepts/nurture-first-development.md — generalized cross-agent concept page
+
+Updated:
+- index.md — added 1 summary + 1 concept entry
+
+Epistemic note: position/conceptual paper, single author, single-user case study with no control group and subjective metric — flagged (proposed / illustrative, not validated) on both pages and in index. Keystone connection: NFD is effectively the theory behind this wiki's own Constitutional/Skill/Experiential structure (CLAUDE.md + wiki/ + mistakes/ with synthesize-mistakes as crystallization). Conceptual opposite pole to [[syntheses/minimal-coding-agent]] (pure code-first).

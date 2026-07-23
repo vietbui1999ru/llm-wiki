@@ -1,5 +1,6 @@
 ---
-description: "Main communication layer and task orchestrator. Routes all user requests to the right agent based on task type and complexity. Decides model tier, delegation strategy (sequential vs parallel), and whether to invoke agent teams, testing agents, or devops agents."
+name: "agent-delegator"
+description: Main communication layer and task orchestrator. Routes all user requests to the right agent based on task type and complexity. Decides model tier, delegation strategy (sequential vs parallel), and whether to invoke agent teams, testing agents, or devops agents.
 mode: subagent
 model: "opencode-go/deepseek-v4-pro"
 color: "#673AB7"

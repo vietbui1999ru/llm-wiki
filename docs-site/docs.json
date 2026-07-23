@@ -53,6 +53,7 @@
           "concepts/branch-strategy-for-agents",
           "concepts/cicd-testing",
           "concepts/claude-code-plugins",
+          "concepts/cli-driven-vault-automation",
           "concepts/compound-engineering",
           "concepts/compounding-knowledge-base",
           "concepts/context-compression",
@@ -80,6 +81,7 @@
           "concepts/model-task-routing",
           "concepts/model-tier-routing",
           "concepts/multi-vendor-adversarial-review",
+          "concepts/nurture-first-development",
           "concepts/owasp-security-checklist",
           "concepts/pentest-agent-design",
           "concepts/preference-feedback-loop",
@@ -142,6 +144,7 @@
           "syntheses/desktop-control-plane",
           "syntheses/lean-agentic-workflow",
           "syntheses/local-rag-wiki",
+          "syntheses/minimal-coding-agent",
           "syntheses/neovim-ai-operator-workflow",
           "syntheses/pi-orchestration-architecture"
         ]
@@ -166,6 +169,7 @@
           "entities/codegraphcontext",
           "entities/codex",
           "entities/commandr",
+          "entities/context7",
           "entities/dangeresque",
           "entities/diffviewer",
           "entities/docling",
@@ -176,8 +180,12 @@
           "entities/gemini-cli",
           "entities/headroom",
           "entities/karpathy-llm-council",
+          "entities/ketch",
           "entities/lean-session",
           "entities/mnemory",
+          "entities/obsidian-claude-code-mcp",
+          "entities/obsidian-cli",
+          "entities/obsidian-cli-rest-mcp",
           "entities/omp",
           "entities/opencode",
           "entities/opencode-dcp",
@@ -188,6 +196,7 @@
           "entities/ponytail",
           "entities/pydoll",
           "entities/qmd",
+          "entities/rtk",
           "entities/sandcastle",
           "entities/spotme"
         ]

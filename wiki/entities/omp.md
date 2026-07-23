@@ -27,6 +27,7 @@ Pi's thesis: **minimal harness beats feature-heavy harness** (validated by Termi
 ## Tool Surface (32 tools)
 
 ### Files & Search
+
 | Tool | Description |
 |---|---|
 | `read` | Files, dirs, archives, SQLite, PDFs, notebooks, URLs, internal `://` schemes |
@@ -38,6 +39,7 @@ Pi's thesis: **minimal harness beats feature-heavy harness** (validated by Termi
 | `find` | Glob path lookup |
 
 ### Runtime
+
 | Tool | Description |
 |---|---|
 | `bash` | Workspace shell; optional PTY or background jobs |
@@ -45,12 +47,14 @@ Pi's thesis: **minimal harness beats feature-heavy harness** (validated by Termi
 | `ssh` | One remote command against configured host |
 
 ### Code Intelligence
+
 | Tool | Description |
 |---|---|
 | `lsp` | Diagnostics, navigation, symbols, renames, code actions, raw requests |
 | `debug` | DAP sessions — breakpoints, stepping, threads, stack, variables |
 
 ### Coordination
+
 | Tool | Description |
 |---|---|
 | `task` | Fan-out subagents; worktree isolation; typed schema results |
@@ -60,6 +64,7 @@ Pi's thesis: **minimal harness beats feature-heavy harness** (validated by Termi
 | `ask` | Structured option picker for interactive runs |
 
 ### Outside the Box
+
 | Tool | Description |
 |---|---|
 | `browser` | Puppeteer/CDP; headless Chromium; stealth on by default; can drive Electron apps |
@@ -70,6 +75,7 @@ Pi's thesis: **minimal harness beats feature-heavy harness** (validated by Termi
 | `tts` | Text-to-speech via xAI Grok Voice |
 
 ### Memory & State
+
 | Tool | Description |
 |---|---|
 | `checkpoint` | Mark conversation state for later collapse |
@@ -79,6 +85,7 @@ Pi's thesis: **minimal harness beats feature-heavy harness** (validated by Termi
 | `reflect` | Synthesize answer over Hindsight bank |
 
 ### Misc
+
 | Tool | Description |
 |---|---|
 | `resolve` | Apply or discard a queued preview action |
@@ -188,6 +195,7 @@ Inherits from `.claude`, `.cursor`, `.windsurf`, `.gemini`, `.codex`, `.cline`, 
 **Why it matters for Commandr:** RPC mode enables Level 2+ integration without writing TypeScript plugins. The host (commandr-omp-runner) can be any language — it just speaks JSON lines. See [[research/omp-snapcompact-rpc]] for full protocol research.
 
 **RPC vs MCP:**
+
 | Dimension | RPC mode | MCP |
 |---|---|---|
 | Transport | stdin/stdout JSON lines | stdio or HTTP/SSE |

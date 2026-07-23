@@ -75,6 +75,7 @@ Agent declares an artifact. Runner writes to workspace + logs to events.
 ```
 
 **Artifact types:**
+
 | Type | Example | Created by |
 |---|---|---|
 | `diff` | `git diff` output | bash tool |

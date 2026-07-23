@@ -1,0 +1,22 @@
+# aislop config — see docs/rules.md in scanaislop/aislop for rule IDs.
+#
+# This repo is a knowledge wiki, not an npm-managed codebase: no root
+# package.json, and the handful of real code files span isolated
+# subprojects (pi-headroom/, templates/, claude-setup/scripts/) that
+# don't share one dependency manifest. Rules that resolve imports
+# against "the project manifest" structurally can't work here and
+# throw false positives — e.g. pi-headroom's *.ts files import
+# "@oh-my-pi/pi-coding-agent", a runtime API the Pi host injects into
+# hooks/tools at execution time, not an installable package (the same
+# false-positive class upstream aislop itself hit and excluded for
+# VS Code's `vscode` import in its own self-scan).
+rules:
+  ai-slop/hallucinated-import: "off"
+  knip/unlisted: "off"
+  knip/unresolved: "off"
+  knip/dependencies: "off"
+  knip/devDependencies: "off"
+  knip/binaries: "off"
+
+ci:
+  failBelow: 60

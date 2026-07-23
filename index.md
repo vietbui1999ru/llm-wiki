@@ -92,6 +92,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/software-documentation]] — Doc types (Diátaxis), audiences (including AI agents), principles, structure for doc-hosting platforms
 - [[concepts/claude-code-plugins]] — Plugin structure, manifest format, namespacing, symlink gotcha, when to use plugins vs. personal config
 - [[concepts/compounding-knowledge-base]] — Knowledge bases that accumulate compiled structure vs. RAG's per-query retrieval
+- [[concepts/tiered-knowledge-delivery]] — This wiki's push/hook/pull model (Tier 0 always-loaded / Tier 1 hook-fired / Tier 2 JIT pull); decided 2026-06-12, promoted by frequency × cost-of-violation; the actual mechanism behind "agent-first"
 - [[concepts/contextual-retrieval]] — RAG preprocessing technique: LLM-generated context prepended to chunks before embedding + BM25 indexing
 - [[concepts/bm25]] — Lexical ranking function; exact-match complement to semantic embeddings in hybrid search
 - [[concepts/reranking]] — Post-retrieval filtering: score top ~150 candidates, pass top 20 to LLM; stacks with contextual retrieval

@@ -370,3 +370,41 @@ graph TD
 ```
 
 **Pi is not in the agent fleet.** It is a thin subprocess called via Bash when a Codex second opinion is needed. It does not share the Claude Code hooks system, `.agents/` coordination bus, or skill invocation contract.
+
+---
+
+## Chart 8 — Tiered Knowledge Delivery (Push / Hook / Pull)
+
+The retrieval stack in Chart 3 is the **pull** tier only. It's one third of the model that
+makes this repo "agent-first": full detail in [[concepts/tiered-knowledge-delivery]].
+
+```mermaid
+graph TD
+    subgraph T0["Tier 0 — push (paid every session)"]
+        CLAUDEMD[CLAUDE.md]
+        GPR["mistakes/global-prevention-rules.md<br>capped <=45 non-blank lines"]
+        APPLIEDAI[claude-setup/rules/applied-ai.md]
+    end
+
+    subgraph T1["Tier 1 — hook (fires on trigger, zero cost idle)"]
+        POSTCOMMIT[post-commit -> re-index graph]
+        CAPTUREMISTAKE[capture-mistake -> on self-correction]
+    end
+
+    subgraph T2["Tier 2 — pull (JIT, default)"]
+        WC[wiki-context skill]
+        QMDQ[qmd query]
+        WIKIPAGES["wiki/concepts, patterns, entities,<br>syntheses, systems, comparisons"]
+    end
+
+    AGENT[Agent session] -->|loaded at session start| T0
+    AGENT -->|triggered by specific actions| T1
+    AGENT -->|explicit search, on demand| T2
+
+    T2 --> WC --> QMDQ --> WIKIPAGES
+```
+
+Promotion between tiers: **frequency × cost-of-violation**, decided 2026-06-12 by a 4-lens
+agent council audit (`docs/wiki-dual-use-audit-2026-06.md`). Hard constraint: Tier 2 stays the
+default — nothing large gets pushed into Tier 0 (the 32KB wiki-index-at-startup removal, which
+reclaimed ~8,400 tokens/session, stands as the reference case for what NOT to push).

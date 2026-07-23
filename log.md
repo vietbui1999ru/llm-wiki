@@ -918,3 +918,13 @@ Updated:
 - index.md — added 1 summary + 1 concept entry
 
 Epistemic note: position/conceptual paper, single author, single-user case study with no control group and subjective metric — flagged (proposed / illustrative, not validated) on both pages and in index. Keystone connection: NFD is effectively the theory behind this wiki's own Constitutional/Skill/Experiential structure (CLAUDE.md + wiki/ + mistakes/ with synthesize-mistakes as crystallization). Conceptual opposite pole to [[syntheses/minimal-coding-agent]] (pure code-first).
+
+## [2026-07-23] recover | Knowledge Crystallization Cycle concept + proposed knowledge-capture rule
+Recovered from a stale worktree (uncommitted, never merged) alongside general repo housekeeping (dirty worktree cleanup, unmerged NFD/rtk ingest, dotfiles rule sync). Created:
+- wiki/concepts/knowledge-crystallization-cycle.md — four-phase KCC mechanism from the same NFD source paper; maps our partial implementation (raw-log.md → synthesize-mistakes) against the full cycle, names the gap (no [INSIGHT]/[PATTERN] tagging path)
+- claude-setup/rules/nfd-knowledge-capture.md — proposed fragment-tagging protocol closing that gap; explicitly NOT wired into any CLAUDE.md @-import
+
+Updated:
+- index.md — added 1 concept entry, tagged *(proposed, single-source)* matching its sibling nurture-first-development entry
+
+Status: captured, not adopted. Flagged for a dedicated review/grill pass against the wiki's existing patterns/rules split before any part of it goes live.

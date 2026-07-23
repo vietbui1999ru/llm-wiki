@@ -105,6 +105,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/webrtc-ip-leak]] — WebRTC UDP bypass of proxy configuration; ICE/STUN mechanism and mitigations
 - [[concepts/agent-harness]] — Model + harness = agent; core components: filesystem, bash, sandbox, context management, long-horizon loops; orchestrator/harness/framework distinction; model-agnostic property
 - [[concepts/nurture-first-development]] — Grow domain-expert agents through conversation vs code-first/prompt-first build-then-deploy; 3-layer memory (Constitutional/Skill/Experiential) + Knowledge Crystallization Cycle + dual-workspace; theory behind this wiki's own memory system; *(proposed, single-source)*
+- [[concepts/knowledge-crystallization-cycle]] — Four-phase mechanism (Immersion → Accumulation → Crystallization → Application) turning tagged conversational fragments into Skill Layer assets; maps our partial implementation (raw-log.md, synthesize-mistakes) against the full cycle; *(proposed, single-source — pending review, see `claude-setup/rules/nfd-knowledge-capture.md`)*
 - [[concepts/ralph-loop]] — Harness pattern: intercept exit, reinjecting original prompt with clean context + durable filesystem state
 - [[concepts/context-degradation]] — Five named failure modes: lost-in-middle, poisoning, distraction, confusion, clash; thresholds and mitigations
 - [[concepts/context-compression]] — Five strategies + serialization format axis (ONTO/TOON 40–60% reduction); clear-over-compact consensus; KV-cache cost trap; SAC as learned soft compression alternative

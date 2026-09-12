@@ -928,3 +928,12 @@ Updated:
 - index.md — added 1 concept entry, tagged *(proposed, single-source)* matching its sibling nurture-first-development entry
 
 Status: captured, not adopted. Flagged for a dedicated review/grill pass against the wiki's existing patterns/rules split before any part of it goes live.
+
+## [2026-09-11] ingest | r/ExperiencedDevs — "use an AI agent live" coding interview evaluation
+Reddit community thread, no code/library content — pure qualitative discussion. Created:
+- wiki/summaries/ai-agent-interview-evaluation.md — distilled: no industry-standard rubric (contradictory reported failure modes across companies); the "plausible-and-wrong output" moment as the real signal (ItaySela); convergent evaluation axes across independent company reports (scoping, critical review vs blind acceptance, tests, post-hoc explainability with agent removed); DrCaret2's AI-adoption-spectrum framing; contested points with no resolution (plan mode value, subagent usage as signal, bring-your-own-CLAUDE.md prep, subscription cost)
+
+Updated:
+- index.md — added 1 summary entry
+
+Epistemic note: single Reddit thread, self-reported hiring practices, no cross-source corroboration — tagged *(anecdotal, unverified)* throughout the page itself, not just in the index line.

@@ -39,6 +39,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/hn-junior-devs-and-ai]] — HN community: AI amplifies existing ability; juniors lack evaluation frame; repetition/debugging gap; agentic tools harmful for beginners; 7 actionable heuristics
 - [[summaries/cc-linting-debugging-reddit]] — r/ClaudeCode community: Stop hook for file-modifying linters (file-state conflict); PostToolUse read-only only; noslop quality gates; layered shellcheck/biome/pre-commit setup; gdb/Replay MCP/JetBrains debugger
 - [[concepts/llm-serialization-formats]] — Schema-first formats (ONTO, TOON) cutting LLM input overhead 40–60% via schema-once design; covers format comparison, tradeoffs, and caveats on synthetic benchmarks
+- [[summaries/ai-agent-interview-evaluation]] — r/ExperiencedDevs thread on "use an AI agent live" coding interviews: no industry-standard rubric; plausible-and-wrong output as the real signal moment; convergent axes (scoping, critical review, tests, post-hoc explainability); contested plan-mode/subagent/rules-file prep *(anecdotal, unverified)*
 
 ## Entities
 - [[entities/rtk]] — Rust CLI proxy that filters/compresses command output before it hits LLM context; PreToolUse hook across 15 agents; 4 strategies (filter/group/truncate/dedup); 60-90% token savings *(claimed, unverified — self-reported estimates)*

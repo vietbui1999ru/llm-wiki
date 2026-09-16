@@ -53,3 +53,12 @@ Before claiming complete: run type-checker and test suite, show output. `superpo
 ## Bug Fixing
 
 Identify root cause before fixing. State it explicitly. Never patch symptoms.
+
+## Next-step convention
+
+End every agent run with exactly one final line:
+
+`NEXT: <action> [plan|build|you]`
+
+No text follows that line. Use `plan` for Claude work, `build` for Pi work, and
+`you` for a human decision.

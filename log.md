@@ -937,3 +937,14 @@ Updated:
 - index.md — added 1 summary entry
 
 Epistemic note: single Reddit thread, self-reported hiring practices, no cross-source corroboration — tagged *(anecdotal, unverified)* throughout the page itself, not just in the index line.
+
+## [2026-09-16] ingest | Hello Interview + dev.to — AI-agent interview prep guides (corroboration pass)
+Follow-up to the 2026-09-11 Reddit ingest, at Viet's request to find practice resources. Fetched via Firecrawl (`firecrawl search` + `firecrawl scrape`), saved to raw/ for traceability. Created:
+- wiki/summaries/hellointerview-ai-coding-interviews.md — structured prep course built from actual Meta/Shopify/LinkedIn/Canva/Uber interviewer debriefs; 4 evaluation axes with named per-company failure examples (Rippling, Canva); scored live practice mode
+- wiki/summaries/vibe-coding-interview-checklists.md — dev.to tactical guide: CRATE prompt framework, 30-second review checklist (incl. agent-specific block: claimed-vs-run tests, scope creep, hallucinated imports), 7-format taxonomy, 5 failure archetypes
+
+Updated:
+- wiki/summaries/ai-agent-interview-evaluation.md — added update note + 2 Connections entries; both new sources independently converge on the same four-axis taxonomy (scoping/control/verification/communication) as the original Reddit thread
+- index.md — added 2 summary entries, updated Reddit thread's entry to flag corroboration
+
+Epistemic note: these are prep-guide/blog sources (Hello Interview: aggregated candidate+interviewer interviews; dev.to: single-author, unverified against real grading). Corroboration here is about the *taxonomy converging across independently-authored sources*, not about any individual unverified claim becoming more true — per citation discipline in `mistakes/global-prevention-rules.md`.

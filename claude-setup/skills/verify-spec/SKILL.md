@@ -9,7 +9,7 @@ allowed-tools: "Bash,Read,Write,Edit,Agent"
 ## When to invoke
 
 Invoke after implementation is complete, before opening a PR:
-- After `/tdd` completes a slice
+- After a TDD (superpowers:test-driven-development) slice completes
 - After any AI-assisted feature implementation
 - When you want a structured pass/fail report against a spec
 
@@ -88,7 +88,7 @@ it('<AC text>', () => {
 
 Write stubs to the appropriate test file. If no test file exists, ask where to write them.
 
-These stubs are the entry point for `/tdd` to drive to green.
+These stubs are the entry point for TDD to drive to green.
 
 ## Step 4: Report
 
@@ -102,7 +102,7 @@ ACs verified: <total>
   UNVERIFIABLE:  <n>
 
 Test stubs written: <n files>
-Next: /tdd to drive failing stubs to green
+Next: drive failing stubs to green with TDD
 ```
 
 ## Notes

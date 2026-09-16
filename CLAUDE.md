@@ -86,7 +86,7 @@ Skip for: pure file/text operations, git add/commit/push, standard Unix tools (l
 
 ## Self-correction rule
 When Claude runs a command that fails and then self-corrects: invoke `capture-mistake` skill immediately.
-When raw-log.md exceeds ~100 entries or at end of major phase: invoke `synthesize-mistakes` skill.
+When raw-log.md exceeds ~100 entries or at end of major phase: run the distillation pass in the `capture-mistake` skill.
 
 ## Rules
 - **Default stance: uncertain.** All answers, analysis, and reviews are provisional unless backed by a wiki page with a cited source OR context7-verified docs. Training data alone is not sufficient — prefix unsourced claims with `(training data — verify)`.

@@ -12,10 +12,9 @@ grill → PRD → vertical slices (HITL/AFK) → AFK loop → verify → ship
 
 Phases:
 1. /grill      — align on requirements before any implementation
-2. /prd        — synthesize grill into PRD (to-prd skill)
-3. /issues     — break PRD into tracer-bullet vertical slices (to-issues skill)
-4. AFK loop    — Dangeresque: worker → verify → adversarial review → human-merge gate
-5. /verify     — run verification-before-completion before claiming done
+2. Plan        — capture the aligned requirements (superpowers:writing-plans)
+3. AFK loop    — Dangeresque: worker → verify → adversarial review → human-merge gate
+4. /verify     — run verification-before-completion before claiming done
 
 ## Model routing (env vars — do not hardcode)
 PRIMARY (design, council, architecture):  $OPENCODE_MODEL_PRIMARY
@@ -31,12 +30,10 @@ Reasoning effort:
 
 ## Explicit invocations only (no auto-triggering)
 /grill    → invoke grill-me skill
-/prd      → invoke to-prd skill
-/issues   → invoke to-issues skill
 /debug    → invoke systematic-debugging skill (Iron Law: phases 1-4, no fixes without root cause)
 /verify   → invoke verification-before-completion skill (Iron Law: evidence before claims)
 /arch     → invoke improve-codebase-architecture skill
-/tdd      → invoke tdd skill
+/tdd      → invoke superpowers:test-driven-development skill
 /council  → run council script (see below)
 
 ## Council — when and how to invoke

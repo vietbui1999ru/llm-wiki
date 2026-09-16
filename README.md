@@ -351,7 +351,7 @@ mistakes/
 └── global-prevention-rules.md  # Max 30 lines of distilled rules, loaded every session
 ```
 
-`global-prevention-rules.md` is @-imported into `CLAUDE.md` and active every session. `capture-mistake` skill files new entries; `synthesize-mistakes` distills them into the global file.
+`global-prevention-rules.md` is @-imported into `CLAUDE.md` and active every session. `capture-mistake` skill files new entries; its distillation pass refreshes the global file.
 
 ---
 

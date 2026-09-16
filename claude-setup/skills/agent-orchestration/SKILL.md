@@ -25,11 +25,11 @@ Do workers need to talk to each other?
 
 Is work genuinely parallel with non-overlapping file scope?
   → No: single session or sequential subagents
-  → Yes, parallel bug investigation (reactive, short): /superpowers:dispatching-parallel-agents
+  → Yes, parallel bug investigation (reactive, short): multiple agents in git worktrees
   → Yes, parallel feature implementation (proactive, structured tasks): AGENT TEAM or WORKTREE POOL
       → tasks short (<30 min), ≤5: AGENT TEAM (in-process, shared task list)
       → tasks long (>30 min), or >5 tasks, or need clean context: WORKTREE POOL
-          → invoke /spawn-parallel-agents skill
+          → spawn agents in isolated git worktrees
 ```
 
 ## Model Tier Routing
@@ -140,7 +140,7 @@ Surviving theory = actual root cause
 
 **Worktree pool (long parallel tasks):**
 ```
-invoke /spawn-parallel-agents skill
+spawn agents in isolated git worktrees
   → reads .agents/inbox/ (or open issue files)
   → verifies non-overlapping file scope
   → spawns N agents in isolated worktrees (isolation: "worktree")

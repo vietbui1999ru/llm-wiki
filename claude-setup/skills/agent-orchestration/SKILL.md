@@ -36,9 +36,9 @@ Is work genuinely parallel with non-overlapping file scope?
 
 | Model | Use when | Examples |
 |---|---|---|
-| **Opus** | Judgment, design, architecture, security | design-explorer, architecture-reviewer, security-auditor |
-| **Sonnet** | Implementation, review, debugging | code-writer, code-reviewer, backend-debug-tester |
-| **Haiku** | Fast, repetitive, low-judgment | cmd-executor, code-writer-fast, session-report-generator |
+| **Opus** | Judgment, design, architecture, security | built-in Explore or Plan role |
+| **Sonnet** | Implementation, review, debugging | general-purpose implementation role |
+| **Haiku** | Fast, repetitive, low-judgment | bounded read-only exploration |
 
 Rule: route security and architectural decisions to Opus. wshobson finding: Opus achieves 65% fewer tokens on complex tasks, often offsetting the higher rate.
 
@@ -50,7 +50,7 @@ From [[concepts/agent-subagents]]:
 
 **Minimal tools.** `disallowedTools` over broad allowlists. If the agent only reads, deny Write/Edit. Reduces blast radius.
 
-**Memory for learning agents.** `memory: project` for agents that benefit from accumulated knowledge: code-reviewer (patterns), project-health-monitor (trends). `memory: user` for cross-project generalists.
+**Memory for learning work.** Use project-scoped memory for recurring patterns and user-scoped memory for cross-project general guidance.
 
 **Isolation for risky changes.** `isolation: worktree` for agents that make experimental or structural changes. Worktree auto-cleaned if no changes; path+branch returned otherwise.
 
@@ -122,12 +122,12 @@ Use for: systematic refactors, multi-session research→design→implement→ver
 
 **Sequential (steps depend on each other):**
 ```
-design-explorer → architecture-reviewer → code-writer → code-reviewer → project-health-monitor
+Explore → Plan → implementation → built-in review → human decision
 ```
 
 **Parallel review team:**
 ```
-Lead spawns: security-auditor + code-reviewer + visual-verifier
+Use bounded built-in reviewers in isolated git worktrees.
 Each owns a distinct scope → lead synthesizes findings
 ```
 

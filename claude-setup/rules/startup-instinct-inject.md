@@ -20,7 +20,7 @@ When injecting, surface as:
 >
 > Apply unless current task explicitly overrides them.
 
-To build instincts for this project: run `/instinct-triage` after a few sessions of work.
+To turn repeated observations into durable guidance, use the `capture-mistake` distillation pass after a few sessions of work.
 Observations accumulate at `~/.claude/homunculus/projects/<id>/observations.jsonl`.
 
 **Override:** "ignore instincts" or "fresh start" → skip injection for this session.

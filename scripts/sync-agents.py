@@ -13,10 +13,11 @@ file reappears under a preset's name, the preset is applied automatically.
 Presets are not a list of agents that must exist.
 
 A canonical file whose name has no preset gets conservative defaults:
-mode: subagent, model from the canonical frontmatter's model: field (falling
-back to DEFAULT_MODEL — the medium/Sonnet tier), and permission all-deny, with
-no color. A newly added agent never acquires write or shell access merely
-because nobody specified it.
+mode: subagent, permission all-deny, no color, and a model translated from the
+canonical frontmatter's model: field — a Claude tier such as "sonnet" maps
+through TIER_TO_OC_MODEL, a provider/model ID passes through, anything else
+falls back to DEFAULT_MODEL. A newly added agent never acquires write or shell
+access merely because nobody specified it.
 
 Per-harness overrides: if .opencode/agents/<name>.md.overrides-body exists,
 that file's body replaces the canonical body for the OpenCode emit only — used
@@ -74,10 +75,37 @@ OC_PRESETS: dict[str, dict] = {
 
 OC_ONLY = {"plan-writer"}  # OpenCode-only agents, not emitted from canonical
 
-# Medium (Sonnet) tier default for a canonical file whose name has no preset and
-# no model: field of its own. See claude-setup/README.md "Model mapping":
-# sonnet → opencode-go/kimi-k2.7-code.
-DEFAULT_MODEL = "opencode-go/kimi-k2.7-code"
+# Canonical files write a Claude Code tier ("model: sonnet"), not an OpenCode
+# model ID, so the tier has to be translated on the way out. Table is
+# claude-setup/README.md "Model mapping"; keep the two in step.
+TIER_TO_OC_MODEL = {
+    "opus": "opencode-go/deepseek-v4-pro",
+    "sonnet": "opencode-go/kimi-k2.7-code",
+    "haiku": "opencode-go/deepseek-v4-flash",
+    "planning": "opencode-go/glm-5.2",
+}
+
+# Medium (Sonnet) tier default for a canonical file with no preset and no
+# model: field of its own.
+DEFAULT_MODEL = TIER_TO_OC_MODEL["sonnet"]
+
+
+def oc_model(canon_model: str | None) -> str:
+    """Translate a canonical model: field to an OpenCode model ID.
+
+    A tier name maps through TIER_TO_OC_MODEL. A value that already looks like
+    a provider/model ID passes through, so a canonical file can pin one
+    explicitly. Anything else falls back to the default rather than emitting a
+    model ID OpenCode cannot resolve.
+    """
+    if not canon_model:
+        return DEFAULT_MODEL
+    value = canon_model.strip().strip('"').strip("'")
+    if value in TIER_TO_OC_MODEL:
+        return TIER_TO_OC_MODEL[value]
+    if "/" in value:
+        return value
+    return DEFAULT_MODEL
 
 
 def split_frontmatter(text: str) -> tuple[str, str]:
@@ -157,7 +185,7 @@ def main() -> int:
             source = "preset"
         else:
             spec = {
-                "model": fm_field(canon_fm, "model") or DEFAULT_MODEL,
+                "model": oc_model(fm_field(canon_fm, "model")),
                 "permission": {"edit": "deny", "websearch": "deny", "bash": "deny"},
             }
             source = "default"

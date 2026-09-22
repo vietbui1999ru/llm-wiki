@@ -1,13 +1,22 @@
 #!/usr/bin/env python3
 """sync-agents.py — single-source-of-truth agent generator for llm-wiki.
 
-Reads canonical agent bodies from claude-setup/agents/<name>.md and emits
-.opencode/agents/<name>.md with OpenCode frontmatter + the shared body.
+The canonical directory claude-setup/agents/ IS the roster: every
+claude-setup/agents/<name>.md is emitted as .opencode/agents/<name>.md with
+OpenCode frontmatter + the same body. A name with no canonical file simply
+does not exist here — the generator iterates the directory, not a remembered
+name list.
 
-This ends the drift between claude-setup/agents and .opencode/agents: the body
-lives once in claude-setup (Claude's source), and OpenCode gets the SAME body
-with only the frontmatter swapped to OpenCode's vocabulary (mode/model/color/
-permission). harness-agnostic by construction.
+OC_PRESETS holds remembered OpenCode settings (model/color/permission/
+temperature) keyed by name, for agents that used to exist. When a canonical
+file reappears under a preset's name, the preset is applied automatically.
+Presets are not a list of agents that must exist.
+
+A canonical file whose name has no preset gets conservative defaults:
+mode: subagent, model from the canonical frontmatter's model: field (falling
+back to DEFAULT_MODEL — the medium/Sonnet tier), and permission all-deny, with
+no color. A newly added agent never acquires write or shell access merely
+because nobody specified it.
 
 Per-harness overrides: if .opencode/agents/<name>.md.overrides-body exists,
 that file's body replaces the canonical body for the OpenCode emit only — used
@@ -24,6 +33,7 @@ Usage:
   scripts/sync-agents.py --check    # dry-run, report drift, exit nonzero if any
 """
 from __future__ import annotations
+
 import argparse
 import sys
 from pathlib import Path
@@ -32,12 +42,14 @@ ROOT = Path(__file__).resolve().parents[1]
 CANON = ROOT / "claude-setup" / "agents"      # canonical source (Claude frontmatter + body)
 OC = ROOT / ".opencode" / "agents"            # emit target (OpenCode frontmatter + body)
 
-# Per-agent OpenCode frontmatter. Mirrors the existing .opencode/agents/*.md
-# frontmatter so the swap is mechanical. Keys: model (opencode-go full ID),
-# color, temperature (optional), permission {edit,websearch,bash}. mode is
-# always "subagent". description is pulled from the canonical file (kept in
-# sync by the description-rewrite pass) so it's never duplicated here.
-OC_FRONTMATTER: dict[str, dict] = {
+# Remembered OpenCode settings for agents that used to exist, keyed by name.
+# Applied automatically when a canonical claude-setup/agents/<name>.md of that
+# name reappears. NOT a list of agents that must exist — the canonical
+# directory is the roster. Keys: model (opencode-go full ID), color,
+# temperature (optional), permission {edit,websearch,bash}. mode is always
+# "subagent". description is pulled from the canonical file so it's never
+# duplicated here.
+OC_PRESETS: dict[str, dict] = {
     "agent-delegator":          {"model": "opencode-go/deepseek-v4-pro",   "color": "#673AB7", "permission": {"edit": "deny",  "websearch": "deny"}},
     "architecture-reviewer":    {"model": "opencode-go/deepseek-v4-pro",   "color": "#7E57C2", "permission": {"edit": "deny",  "websearch": "deny"}},
     "backend-debug-tester":     {"model": "opencode-go/kimi-k2.7-code",   "color": "#26A69A", "permission": {"edit": "allow", "websearch": "deny", "bash": "allow"}},
@@ -61,6 +73,11 @@ OC_FRONTMATTER: dict[str, dict] = {
 }
 
 OC_ONLY = {"plan-writer"}  # OpenCode-only agents, not emitted from canonical
+
+# Medium (Sonnet) tier default for a canonical file whose name has no preset and
+# no model: field of its own. See claude-setup/README.md "Model mapping":
+# sonnet → opencode-go/kimi-k2.7-code.
+DEFAULT_MODEL = "opencode-go/kimi-k2.7-code"
 
 
 def split_frontmatter(text: str) -> tuple[str, str]:
@@ -87,9 +104,10 @@ def fm_field(fm_text: str, key: str) -> str | None:
     return None
 
 
-def render_oc_frontmatter(name: str, description: str) -> str:
-    spec = OC_FRONTMATTER[name]
-    lines = ["---", f'name: "{name}"', f"description: {description}", "mode: subagent", f'model: "{spec["model"]}"', f'color: "{spec["color"]}"']
+def render_oc_frontmatter(name: str, description: str, spec: dict) -> str:
+    lines = ["---", f'name: "{name}"', f"description: {description}", "mode: subagent", f'model: "{spec["model"]}"']
+    if "color" in spec:
+        lines.append(f'color: "{spec["color"]}"')
     if "temperature" in spec:
         lines.append(f"temperature: {spec['temperature']}")
     perm = spec["permission"]
@@ -114,16 +132,18 @@ def main() -> int:
     ap.add_argument("--check", action="store_true", help="dry-run: report drift, exit nonzero if any")
     args = ap.parse_args()
 
+    canonical_files = sorted(CANON.glob("*.md"))
+    if not canonical_files:
+        print("canonical directory is empty — add claude-setup/agents/<name>.md to register an agent")
+        return 0
+
     OC.mkdir(parents=True, exist_ok=True)
     drift: list[str] = []
-    emitted: list[str] = []
+    emitted: list[tuple[str, str]] = []
     skipped: list[str] = []
 
-    for name in sorted(OC_FRONTMATTER):
-        canon_path = CANON / f"{name}.md"
-        if not canon_path.exists():
-            skipped.append(f"{name}: canonical missing")
-            continue
+    for canon_path in canonical_files:
+        name = canon_path.stem
         canon_text = canon_path.read_text(encoding="utf-8")
         canon_fm, canon_body = split_frontmatter(canon_text)
         desc = fm_field(canon_fm, "description")
@@ -131,14 +151,27 @@ def main() -> int:
             skipped.append(f"{name}: no description in canonical")
             continue
 
-        body = project_health_monitor_reconcile(canon_body)
+        preset = OC_PRESETS.get(name)
+        if preset is not None:
+            spec = preset
+            source = "preset"
+        else:
+            spec = {
+                "model": fm_field(canon_fm, "model") or DEFAULT_MODEL,
+                "permission": {"edit": "deny", "websearch": "deny", "bash": "deny"},
+            }
+            source = "default"
+
+        body = canon_body
+        if name == "project-health-monitor":
+            body = project_health_monitor_reconcile(canon_body)
 
         # per-harness body override
         override = OC / f"{name}.md.overrides-body"
         if override.exists():
             body = override.read_text(encoding="utf-8").lstrip("\n")
 
-        out = render_oc_frontmatter(name, desc) + "\n\n" + body.rstrip() + "\n"
+        out = render_oc_frontmatter(name, desc, spec) + "\n\n" + body.rstrip() + "\n"
 
         oc_path = OC / f"{name}.md"
         if oc_path.exists():
@@ -150,16 +183,16 @@ def main() -> int:
                 if not args.force:
                     continue
         oc_path.write_text(out, encoding="utf-8")
-        emitted.append(name)
+        emitted.append((name, source))
 
     for name in sorted(OC_ONLY):
         p = OC / f"{name}.md"
         if p.exists():
-            emitted.append(f"{name} (opencode-only, passthrough)")
+            emitted.append((name, "opencode-only, passthrough"))
 
     print(f"emitted: {len(emitted)}")
-    for e in emitted:
-        print(f"  ✓ {e}")
+    for name, source in emitted:
+        print(f"  ✓ {name} ({source})")
     if skipped:
         print(f"skipped: {len(skipped)}")
         for s in skipped:

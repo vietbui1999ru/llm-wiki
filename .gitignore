@@ -11,9 +11,6 @@
 *.sqlite-wal
 ~/.cache/qmd/
 
-# Graphify local graph cache. Rebuild manually with `graphify update .` or `/graphify .`.
-graphify-out/
-
 # macOS
 .DS_Store
 
@@ -40,6 +37,8 @@ pending-sync.md
 .mcp.json
 .obsidian
 .claude
+.agents/
+.pi/
 .claude/pre-digest/
 .playwright-mcp/
 docs-site/.mintlify/

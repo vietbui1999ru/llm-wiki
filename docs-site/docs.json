@@ -83,7 +83,10 @@
           "concepts/model-tier-routing",
           "concepts/multi-vendor-adversarial-review",
           "concepts/nurture-first-development",
+          "concepts/owasp-ai-agent-risks",
           "concepts/owasp-security-checklist",
+          "concepts/owasp-top-10-checklist",
+          "concepts/owasp-web-security-reference",
           "concepts/pentest-agent-design",
           "concepts/preference-feedback-loop",
           "concepts/proxy-rotation",
@@ -127,10 +130,12 @@
       {
         "group": "Systems",
         "pages": [
+          "systems/agent-review",
           "systems/ai-ml",
           "systems/architectural-patterns",
           "systems/data-modeling",
           "systems/distributed-systems",
+          "systems/dotfiles-agent-harness-layout",
           "systems/otel-council",
           "systems/scalability-reliability",
           "systems/system-design-process"

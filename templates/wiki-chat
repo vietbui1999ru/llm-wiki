@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.10"
 # dependencies = [
-#   "lightrag-hku",
+#   "lightrag-hku>=1.5.7,<1.6",   # tested on 1.5.7; constructor kwargs moved between releases
 #   "ollama",
 #   "openai",
 #   "python-dotenv",
@@ -68,6 +68,9 @@ _API_KEY         = os.environ.get("OPENCODE_GO_API_KEY_LIGHTRAG", "")
 _OPENCODE_URL    = os.environ.get("OPENCODE_LIGHTRAG_BASE_URL", "https://opencode.ai/zen/go/v1")
 _OPENCODE_MODEL  = os.environ.get("OPENCODE_LIGHTRAG_MODEL", "deepseek-v4.1-flash")
 _LOCAL_LLM_URL   = os.environ.get("LLAMACPP_BASE_URL", "")  # empty = no local backend
+# deepseek-v4.1-flash reasons by default and can spend the whole max_tokens budget on thinking
+# (empty content, finish_reason=length). Send thinking={"type":"disabled"}; set to 0 to omit.
+_DISABLE_THINKING = os.environ.get("OPENCODE_LIGHTRAG_DISABLE_THINKING", "1") == "1"
 
 # OpenCode Go asks clients to identify themselves and send a stable session id
 # (https://opencode.ai/docs/go/#where-can-i-use-it) so routing/prompt caching work.
@@ -76,6 +79,8 @@ _OPENCODE_HEADERS = {"User-Agent": "llm-wiki-lightrag/1.0", "x-opencode-session"
 
 async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
     kwargs.setdefault("max_tokens", 4096)
+    if _DISABLE_THINKING:
+        kwargs.setdefault("extra_body", {"thinking": {"type": "disabled"}})
     result = await openai_complete_if_cache(
         _OPENCODE_MODEL, prompt,
         system_prompt=system_prompt,
@@ -129,11 +134,10 @@ def _build_rag() -> LightRAG:
         llm_model_func=_llm_func,
         llm_model_name=LLM_MODEL,
         llm_model_max_async=_llm_async,
-        max_extract_input_tokens=16384,
         chunk_token_size=800,
         chunk_overlap_token_size=64,
         top_k=20,
-        cosine_threshold=0.3,
+        cosine_better_than_threshold=0.3,
         embedding_func=EmbeddingFunc(
             embedding_dim=EMBED_DIM,
             max_token_size=8192,
@@ -188,7 +192,8 @@ async def run(args: argparse.Namespace) -> None:
     try:
       while True:
         try:
-            raw = pt_prompt("→ ", history=hist).strip()
+            # prompt_toolkit's sync prompt() calls asyncio.run(); run it in a thread, not inside our loop
+            raw = (await asyncio.to_thread(pt_prompt, "→ ", history=hist)).strip()
         except (KeyboardInterrupt, EOFError):
             break
 

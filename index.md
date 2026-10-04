@@ -59,7 +59,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/sandcastle]] — Matt Pocock's TS lib for parallel agents in worktrees; branch strategy (head/merge-to-head/branch), token telemetry, provider abstraction
 - [[entities/dangeresque]] — Host-native CLI orchestrator; mandatory adversarial reviewer + human-merge gate; ToS-compliant (no container for CC)
 - [[entities/mnemory]] — Self-hosted MCP cross-session memory: Qdrant vector search + S3/MinIO artifact store; OSS alternative to Anthropic memory tool
-- [[entities/agentops]] — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
+- [[entities/agentops]] *(documented-not-adopted)* — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
 - [[entities/gemini-cli]] — Google's Gemini CLI: GEMINI.md + TOML commands + activate_skill; high parity with CC; hooks + subagents (experimental)
 - [[entities/opencode]] — Open-source Claude Code alternative; plugin system, compaction hooks, custom tools, headless `run`/`serve` modes, full HTTP API
 - [[entities/omp]] — oh-my-pi: batteries-included Pi fork; hashline/LSP/DAP/TTSR/eval kernels/Hindsight memory/Snapcompact/32 tools/40+ providers; see [[comparisons/our-stack-vs-omp]] for gap analysis
@@ -120,7 +120,10 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/worker-coordination]] — Partial result passing between parallel workers: contract-first, pipeline, filesystem blackboard, actor mailbox; decision table; failure modes
 - [[concepts/wikilink-graph-extraction]] — Reducing LightRAG indexing cost by injecting Obsidian wikilink structure as extraction hints; ~40-55% token reduction; chunking_func hook; future direct graph injection path
 - [[concepts/verification-pipeline]] — Four-tier quality ladder: typecheck → visual verification → screenshot gate → design critique; origin failures; protocol rules
-- [[concepts/owasp-security-checklist]] — OWASP Top 10 checklist + AI-specific extensions: tool least-privilege, memory security, DoW, slopsquatting, test fabrication, CI/CD confused deputy, rules file injection; severity classification table
+- [[concepts/owasp-security-checklist]] — hub for the OWASP pages (split 2026-10-04): severity classification table and pointers to the three pages below
+- [[concepts/owasp-top-10-checklist]] — OWASP Top 10 (A01-A10) review checklist
+- [[concepts/owasp-ai-agent-risks]] — AI-specific extensions: indirect prompt injection, sandbox controls, tool least-privilege, memory security, DoW, slopsquatting, test fabrication, CI/CD confused deputy, rules file injection
+- [[concepts/owasp-web-security-reference]] — stack-agnostic stubs: session management, CSRF, DOM XSS, IDOR, transaction authorization, third-party scripts, deserialization, DoS
 - [[concepts/pentest-agent-design]] — Blueprint for Next.js + ECS Fargate + Neon pen test agent: supervisor + recon/web/db specialists, two-phase (black-box HTTP + gray-box AWS), safety constraints (scope lock, rate cap, read-only), findings.json + report.md output, wiki ingest pipeline
 - [[concepts/domain-glossary]] — CONTEXT.md pattern: shared language between dev and agent; token efficiency, consistent naming, reduced context distraction
 - [[concepts/deep-modules]] — Ousterhout's deep vs shallow modules; narrow interface, wide implementation; test boundary design; why AI produces shallow codebases by default
@@ -169,6 +172,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[systems/system-design-process]] — requirements clarification framework (functional/non-functional), capacity estimation (QPS/storage/bandwidth), component decomposition, data flow mapping, API contract-first, tradeoff articulation, common design mistakes
 - [[systems/scalability-reliability]] — caching strategies (cache-aside/write-through/write-behind; layer placement; invalidation), database sharding (shard key selection, failure modes), rate limiting algorithms (token bucket/leaky bucket/sliding window), load balancing (L4 vs L7, sticky sessions), observability (RED/USE methods, structured logs, distributed tracing), SLO/SLA/availability numbers
 - [[systems/data-modeling]] — relational/document/wide-column/graph/time-series decision criteria, normalization (1NF-3NF) vs denormalization (when to break rules), schema evolution (expand-contract, versioned events), event sourcing as data model, polyglot persistence tradeoffs, access-pattern-driven design
+- [[systems/agent-review]] — per-run human review gate for Pi inside Neovim (diffview + gitsigns): snapshot/pending/decision record flow, `:AgentReview` commands, trial vs DiffViewer `pi-diff-review` (trial not yet registered), known limits
+- [[systems/dotfiles-agent-harness-layout]] — dotfiles provisioning (stow / materialized / sync-pushed), what each of `~/.claude` `~/.codex` `~/.pi` `~/.config/opencode` `~/.agents` manages vs runtime state, where agent definitions and blueprints live
 - [[systems/ai-ml]] — 9-step ML system design process, metrics (offline/online, counter metrics), data labeling strategies, feature stores (training-serving consistency), model selection heuristic, batch vs real-time serving, edge inference (quantization/pruning/distillation), A/B/shadow/canary deployment, monitoring (covariate vs concept drift); AI agent patterns → wiki/concepts/
 - [[systems/otel-council]] — OTel instrumentation for council.py: three span types (session/voice/chairman), zero-dependency JSONL file output, GenAI semantic convention attributes, jq trace queries
 

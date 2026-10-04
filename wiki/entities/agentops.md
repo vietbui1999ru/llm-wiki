@@ -4,10 +4,14 @@ type: entity
 tags: [orchestration, cross-vendor, memory, adversarial-review, repo-native]
 sources: ["Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md"]
 created: 2026-05-04
-updated: 2026-05-04
+updated: 2026-10-04
 ---
 
 # AgentOps (boshu2)
+
+> **Status: documented-not-adopted** (checked 2026-10-04). The `ao` CLI is not installed (`ao` / `agentops` not on `PATH`) and nothing in the live Claude, Codex or OpenCode configs references it. This page records the external project (boshu2/agentops) as a design reference only. The `.agents/` directory convention it popularised is used here independently via home-grown skills (`claim-task`, `kanban-status`, `save-session`), not via this tool.
+>
+> **Not to be confused with** the "AgentOps" in the `~/dotfiles` docs: that was a separate, personal Pi/Obsidian project at `~/repos/AgentOps`, deliberately torn down (see `docs/workflows/ai-workflow-consolidation.md` in dotfiles); the directory no longer exists and some references to it are still dangling.
 
 Repo-native operational layer for AI coding agents. Not a framework — a context-compiler and coordination CLI. Cross-vendor: works with Claude Code, Codex, Cursor, OpenCode simultaneously on the same repo.
 

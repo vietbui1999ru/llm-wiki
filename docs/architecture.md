@@ -122,7 +122,7 @@ graph TD
         HYBRID[hybrid mode\nentity + community]
         NAIVE[naive mode\nflat vector]
         OLLAMA_EMB[nomic-embed-text\nvia ollama]
-        LLM_SYNTH[synthesis LLM\nqwen2.5:3b or Haiku]
+        LLM_SYNTH[synthesis LLM\nOpenCode Go]
     end
 
     subgraph FRONTENDS["Access Points"]

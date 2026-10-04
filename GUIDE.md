@@ -104,7 +104,7 @@ wiki-chat --mode global# cross-concept, community-level questions
 ```
 Inside `wiki-chat`: `/mode local|global|hybrid|naive` to switch, `/reindex` to rebuild after ingests, `/status` for index stats, `q` to quit.
 
-> First time: run `wiki-index --full` to build the graph. Takes ~30–60 min for ~150 pages with local `qwen2.5:3b` (free). **With `ANTHROPIC_API_KEY` set, expect $10–30+** — LightRAG runs 3 extraction phases per page. Use local LLM for full builds; unset `ANTHROPIC_API_KEY` or pass `--yes` to confirm API cost.
+> First time: run `wiki-index --full` to build the graph. Takes ~30–60 min for ~150 pages with local `qwen2.5:3b` (free). **With `OPENCODE_GO_API_KEY_LIGHTRAG` set, expect heavy usage against the OpenCode Go 5-hour/weekly limits** — LightRAG runs 3 extraction phases per page. Use local LLM for full builds; unset `OPENCODE_GO_API_KEY_LIGHTRAG` or pass `--yes` to confirm.
 
 **Read a specific page:**
 ```bash

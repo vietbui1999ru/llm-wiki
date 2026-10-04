@@ -3,7 +3,7 @@
 # requires-python = ">=3.10"
 # dependencies = [
 #   "lightrag-hku",
-#   "anthropic",
+#   "openai",
 #   "ollama",
 #   "numpy",
 #   "python-dotenv",
@@ -13,19 +13,22 @@
 
 Usage:
   wiki-index            index new/changed pages (incremental)
-  wiki-index --full     wipe and rebuild from scratch  *** see cost warning below ***
+  wiki-index --full     wipe and rebuild from scratch  *** see usage note below ***
   wiki-index --status   show manifest stats without indexing
 
 Extraction backend (priority order, set env var in .env):
-  ANTHROPIC_API_KEY=sk-ant-...  → Claude Haiku (best quality)
-  OPENROUTER_API_KEY=sk-or-...  → OpenRouter (not yet implemented — stub only)
-  unset                         → qwen2.5:7b via ollama (fully local, FREE — recommended for --full)
+  OPENCODE_GO_API_KEY_LIGHTRAG=...  → OpenCode Go (OpenAI-compatible, flat monthly plan)
+      OPENCODE_LIGHTRAG_MODEL       model id (default deepseek-v4.1-flash)
+      OPENCODE_LIGHTRAG_BASE_URL    default https://opencode.ai/zen/go/v1
+  OPENROUTER_API_KEY=sk-or-...      → OpenRouter (not yet implemented — stub only)
+  unset                             → qwen2.5:7b via ollama (fully local, FREE — recommended for --full)
 
-COST WARNING — --full with Anthropic API:
+USAGE NOTE — --full with OpenCode Go:
   LightRAG runs 3 extraction phases per page (entity → relation → community),
-  each with multiple LLM calls. At ~150 pages, expect $10–30 with Claude Haiku.
-  Use qwen2.5:7b (ollama, free) for full rebuilds. Reserve Haiku for incremental
-  updates where per-page cost (~$0.07–0.20) is acceptable.
+  each with multiple LLM calls. Go plans cap usage at 5-hour / weekly / monthly
+  dollar limits per model, so a --full rebuild can exhaust the 5-hour window.
+  Prefer qwen2.5:7b (ollama, free) for full rebuilds; use OpenCode Go for
+  incremental updates. Limits: https://opencode.ai/docs/go/#usage-limits
 
 Requires:
   uv run --script wiki-index   (deps declared inline above)
@@ -45,7 +48,7 @@ try:
     from dotenv import load_dotenv
     from lightrag import LightRAG, QueryParam
     from lightrag.llm.ollama import ollama_model_complete
-    from lightrag.llm.anthropic import anthropic_complete_if_cache
+    from lightrag.llm.openai import openai_complete_if_cache
     from lightrag.utils import EmbeddingFunc
 except ImportError:
     print("Missing: pip install lightrag-hku python-dotenv")
@@ -59,16 +62,24 @@ MANIFEST    = WORK_DIR / "manifest.json"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 
-_API_KEY          = os.environ.get("ANTHROPIC_API_KEY", "")
+_API_KEY          = os.environ.get("OPENCODE_GO_API_KEY_LIGHTRAG", "")
+_OPENCODE_URL     = os.environ.get("OPENCODE_LIGHTRAG_BASE_URL", "https://opencode.ai/zen/go/v1")
+_OPENCODE_MODEL   = os.environ.get("OPENCODE_LIGHTRAG_MODEL", "deepseek-v4.1-flash")
 _OPENROUTER_KEY   = os.environ.get("OPENROUTER_API_KEY", "")
 
-async def _anthropic_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
+# OpenCode Go asks clients to identify themselves and send a stable session id
+# (https://opencode.ai/docs/go/#where-can-i-use-it) so routing/prompt caching work.
+_OPENCODE_HEADERS = {"User-Agent": "llm-wiki-lightrag/1.0", "x-opencode-session": f"wiki-index-{os.getpid()}"}
+
+async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
     kwargs.setdefault("max_tokens", 4096)
-    result = await anthropic_complete_if_cache(
-        "claude-haiku-4-5-20251001", prompt,
+    result = await openai_complete_if_cache(
+        _OPENCODE_MODEL, prompt,
         system_prompt=system_prompt,
         history_messages=history_messages or [],
+        base_url=_OPENCODE_URL,
         api_key=_API_KEY,
+        extra_headers=_OPENCODE_HEADERS,  # per-request; LightRAG overwrites client-level default_headers
         **kwargs,
     )
     if hasattr(result, "__aiter__"):
@@ -76,13 +87,13 @@ async def _anthropic_llm(prompt, system_prompt=None, history_messages=None, **kw
     return result
 
 if _API_KEY:
-    LLM_MODEL      = "claude-haiku-4-5-20251001"
-    _llm_func      = _anthropic_llm
+    LLM_MODEL      = _OPENCODE_MODEL
+    _llm_func      = _opencode_llm
     _llm_max_async = 4
 elif _OPENROUTER_KEY:
     # TODO: wire up OpenRouter backend via lightrag.llm.openai.openai_complete_if_cache
-    # base_url="https://openrouter.ai/api/v1", model e.g. "anthropic/claude-haiku-4-5"
-    raise NotImplementedError("OpenRouter backend not yet implemented. Set ANTHROPIC_API_KEY or leave unset for local.")
+    # base_url="https://openrouter.ai/api/v1"
+    raise NotImplementedError("OpenRouter backend not yet implemented. Set OPENCODE_GO_API_KEY_LIGHTRAG or leave unset for local.")
 else:
     LLM_MODEL      = "qwen2.5:7b"
     _llm_func      = ollama_model_complete
@@ -210,7 +221,7 @@ async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
         print("Index up to date — no changes detected.")
         return manifest
 
-    backend = "anthropic" if _API_KEY else "ollama"
+    backend = "opencode-go" if _API_KEY else "ollama"
     print(f"Indexing {len(changed)} new/changed pages (of {len(pages)} total) · extraction: {LLM_MODEL} ({backend})")
     for i, p in enumerate(changed, 1):
         rel = p.relative_to(WIKI_DIR)
@@ -240,7 +251,7 @@ def show_status(pages: list[Path], manifest: dict) -> None:
 
 
 async def test_llm_backend() -> None:
-    backend = "anthropic" if _API_KEY else "ollama"
+    backend = "opencode-go" if _API_KEY else "ollama"
     print(f"Testing LLM backend: {LLM_MODEL} ({backend})")
     try:
         result = await _llm_func("Reply with the single word OK.", max_tokens=16)
@@ -274,9 +285,9 @@ async def main() -> None:
         return
 
     if args.full and (_API_KEY or _OPENROUTER_KEY) and not args.yes:
-        backend = "Anthropic Haiku" if _API_KEY else "OpenRouter"
+        backend = f"OpenCode Go ({_OPENCODE_MODEL})" if _API_KEY else "OpenRouter"
         print(f"WARNING: --full with {backend} backend on {len(pages)} pages.")
-        print(f"  LightRAG runs 3 extraction phases per page → expect $10–30+ in API costs.")
+        print(f"  LightRAG runs 3 extraction phases per page → may exhaust the 5-hour/weekly usage limit.")
         print(f"  Use qwen2.5:7b (unset API keys) for free full rebuilds.")
         print(f"  Pass --yes to confirm and proceed.")
         raise SystemExit(1)

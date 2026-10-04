@@ -140,8 +140,8 @@ qwen2.5:3b synthesis         Haiku or qwen2.5:3b synthesis
 
 | Tool | Purpose |
 |---|---|
-| `ANTHROPIC_API_KEY` in `.env` | Claude Haiku for entity extraction (`wiki-index`) and OpenCode synthesis (`wiki-mcp`). Without it everything runs locally for free. |
-| `OPENROUTER_API_KEY` in `.env` | OpenRouter as alternative extraction backend for `wiki-index` / `wiki-mcp` (stub — not yet implemented; set `ANTHROPIC_API_KEY` or leave unset for local). |
+| `OPENCODE_GO_API_KEY_LIGHTRAG` in `.env` | OpenCode Go (OpenAI-compatible, default model `deepseek-v4.1-flash`) for entity extraction (`wiki-index`) and synthesis (`wiki-mcp`). Override with `OPENCODE_LIGHTRAG_MODEL` / `OPENCODE_LIGHTRAG_BASE_URL`. Without the key everything runs locally for free. |
+| `OPENROUTER_API_KEY` in `.env` | OpenRouter as alternative extraction backend for `wiki-index` / `wiki-mcp` (stub — not yet implemented; set `OPENCODE_GO_API_KEY_LIGHTRAG` or leave unset for local). |
 | [OpenCode](https://opencode.ai) | AFK agent orchestration; connects to `wiki-mcp` for in-session wiki queries |
 | GitHub PAT | Cross-vendor council via GitHub Models API |
 
@@ -184,7 +184,7 @@ wiki-index --test
 wiki-index --full
 ```
 
-> **Cost warning:** `--full` with `ANTHROPIC_API_KEY` set costs **$10–30+** for ~150 pages. LightRAG runs 3 extraction phases per page (entity → relation → community), each with multiple LLM calls. Use `qwen2.5:3b` (unset API keys) for full rebuilds. If you want to use Haiku anyway, pass `--yes` to confirm: `wiki-index --full --yes`. Decide on step 2 first.
+> **Usage warning:** `--full` with `OPENCODE_GO_API_KEY_LIGHTRAG` set runs 3 extraction phases per page (entity → relation → community), each with multiple LLM calls, and can exhaust the OpenCode Go 5-hour/weekly usage limit ([limits](https://opencode.ai/docs/go/#usage-limits)). Use `qwen2.5:3b` (unset API keys) for full rebuilds. To use OpenCode Go anyway, pass `--yes` to confirm: `wiki-index --full --yes`. Decide on step 2 first.
 
 After the initial build, the post-commit hook keeps the index current automatically — no manual re-runs needed after ingests. The indexer prepends Obsidian wikilink structure as extraction hints, reducing LLM token cost ~40–55% per page.
 

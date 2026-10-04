@@ -120,7 +120,10 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/worker-coordination]] — Partial result passing between parallel workers: contract-first, pipeline, filesystem blackboard, actor mailbox; decision table; failure modes
 - [[concepts/wikilink-graph-extraction]] — Reducing LightRAG indexing cost by injecting Obsidian wikilink structure as extraction hints; ~40-55% token reduction; chunking_func hook; future direct graph injection path
 - [[concepts/verification-pipeline]] — Four-tier quality ladder: typecheck → visual verification → screenshot gate → design critique; origin failures; protocol rules
-- [[concepts/owasp-security-checklist]] — OWASP Top 10 checklist + AI-specific extensions: tool least-privilege, memory security, DoW, slopsquatting, test fabrication, CI/CD confused deputy, rules file injection; severity classification table
+- [[concepts/owasp-security-checklist]] — hub for the OWASP pages (split 2026-10-04): severity classification table and pointers to the three pages below
+- [[concepts/owasp-top-10-checklist]] — OWASP Top 10 (A01-A10) review checklist
+- [[concepts/owasp-ai-agent-risks]] — AI-specific extensions: indirect prompt injection, sandbox controls, tool least-privilege, memory security, DoW, slopsquatting, test fabrication, CI/CD confused deputy, rules file injection
+- [[concepts/owasp-web-security-reference]] — stack-agnostic stubs: session management, CSRF, DOM XSS, IDOR, transaction authorization, third-party scripts, deserialization, DoS
 - [[concepts/pentest-agent-design]] — Blueprint for Next.js + ECS Fargate + Neon pen test agent: supervisor + recon/web/db specialists, two-phase (black-box HTTP + gray-box AWS), safety constraints (scope lock, rate cap, read-only), findings.json + report.md output, wiki ingest pipeline
 - [[concepts/domain-glossary]] — CONTEXT.md pattern: shared language between dev and agent; token efficiency, consistent naming, reduced context distraction
 - [[concepts/deep-modules]] — Ousterhout's deep vs shallow modules; narrow interface, wide implementation; test boundary design; why AI produces shallow codebases by default

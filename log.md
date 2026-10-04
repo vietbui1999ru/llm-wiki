@@ -950,3 +950,13 @@ Updated:
 - index.md — 2 new systems entries; agentops marked *(documented-not-adopted)*
 
 Contradiction flagged: pi-orchestration-architecture still named pi-diff-review as the review gate (now stale; note added at top).
+
+## [2026-10-04] update | Split concepts/owasp-security-checklist into a hub + 3 pages
+LightRAG extraction of the single page failed deterministically (chunk worker timeouts, 3 attempts, 2 models). Diagnosis with throwaway-home experiments: the page body is fine (all sections and the whole page index in 16-28 s); the 31-filename `sources:` frontmatter line is what stalls chunk 0. Split by topic so each page carries a short sources list. Created:
+- wiki/concepts/owasp-top-10-checklist.md (A01-A10, 14 sources)
+- wiki/concepts/owasp-ai-agent-risks.md (AI-specific risks, 6 sources)
+- wiki/concepts/owasp-web-security-reference.md (stack-agnostic stubs, 11 sources)
+Updated:
+- wiki/concepts/owasp-security-checklist.md — now the hub (intro, severity table, pointers); path kept so the 9 inbound wikilinks still resolve
+- index.md — hub entry reworded, 3 entries added
+Moved text is byte-identical (sliced by script; every non-heading content line verified present). Sources were distributed by topical affinity, not per-claim citation. Also carried onto this branch: 4 commits from PR #8 that the squash merge missed.

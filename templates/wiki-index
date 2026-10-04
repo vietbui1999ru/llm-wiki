@@ -254,7 +254,18 @@ async def test_llm_backend() -> None:
     backend = "opencode-go" if _API_KEY else "ollama"
     print(f"Testing LLM backend: {LLM_MODEL} ({backend})")
     try:
-        result = await _llm_func("Reply with the single word OK.", max_tokens=16)
+        if _API_KEY:
+            result = await _llm_func("Reply with the single word OK.", max_tokens=16)
+        else:
+            # ollama_model_complete needs LightRAG's hashing_kv, which --test doesn't have;
+            # call ollama directly to check the model is pulled and the daemon is up.
+            loop = asyncio.get_event_loop()
+            resp = await loop.run_in_executor(None, lambda: _ollama.chat(
+                model=LLM_MODEL,
+                messages=[{"role": "user", "content": "Reply with the single word OK."}],
+                options={"num_predict": 16},
+            ))
+            result = resp.message.content
         # result may be a string or an async generator (streaming)
         if hasattr(result, "__aiter__"):
             text = "".join([chunk async for chunk in result])

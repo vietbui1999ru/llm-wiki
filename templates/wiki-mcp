@@ -3,8 +3,8 @@
 # requires-python = ">=3.10"
 # dependencies = [
 #   "lightrag-hku",
-#   "anthropic",
-#   "mcp",
+#   "openai",
+#   "mcp>=1.0,<2",   # 2.x removed the @app.list_tools()/@app.call_tool() decorators used below
 #   "ollama",
 #   "numpy",
 #   "python-dotenv",
@@ -13,14 +13,17 @@
 """wiki-mcp — local MCP server: graph-aware wiki queries via LightRAG
 
 Retrieval always runs locally (nomic-embed-text + graph traversal, zero cost).
-Synthesis backend auto-selected by env var (priority order):
-  ANTHROPIC_API_KEY=sk-ant-...  → Claude Haiku (frontier, ~$0.001/query)
-  OPENROUTER_API_KEY=sk-or-...  → OpenRouter (not yet implemented — stub only)
-  unset                         → qwen2.5:3b via ollama (fully local, free)
+Synthesis backend (first one configured wins):
+  LLAMACPP_BASE_URL=...             → self-hosted llama.cpp (RESERVED — not wired yet, errors if set)
+  OPENCODE_GO_API_KEY_LIGHTRAG=...  → OpenCode Go (OpenAI-compatible, flat monthly plan)
+      OPENCODE_LIGHTRAG_MODEL       model id (default deepseek-v4.1-flash)
+      OPENCODE_LIGHTRAG_BASE_URL    default https://opencode.ai/zen/go/v1
+  OPENROUTER_API_KEY=sk-or-...      → OpenRouter (not yet implemented — stub only)
+  none configured                   → wiki_query returns an error; wiki_status still works
 
 Requires:
   uv run --script wiki-mcp   (deps declared inline above)
-  ollama running with qwen2.5:3b + nomic-embed-text
+  ollama running with nomic-embed-text (embeddings only; no local LLM is used)
   wiki-index run at least once to build the graph
 """
 from __future__ import annotations
@@ -36,8 +39,7 @@ try:
     import ollama as _ollama
     from dotenv import load_dotenv
     from lightrag import LightRAG, QueryParam
-    from lightrag.llm.ollama import ollama_model_complete
-    from lightrag.llm.anthropic import anthropic_complete_if_cache
+    from lightrag.llm.openai import openai_complete_if_cache
     from lightrag.utils import EmbeddingFunc
     from mcp.server import Server
     from mcp.server.stdio import stdio_server
@@ -52,34 +54,51 @@ WORK_DIR    = WIKI_DIR / ".lightrag"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 
-# Synthesis backend: frontier if API key present, local otherwise
-_API_KEY        = os.environ.get("ANTHROPIC_API_KEY", "")
-_OPENROUTER_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+# Synthesis backend: local llama.cpp slot (reserved) -> OpenCode Go -> none
+_API_KEY        = os.environ.get("OPENCODE_GO_API_KEY_LIGHTRAG", "")
+_OPENCODE_URL    = os.environ.get("OPENCODE_LIGHTRAG_BASE_URL", "https://opencode.ai/zen/go/v1")
+_OPENCODE_MODEL  = os.environ.get("OPENCODE_LIGHTRAG_MODEL", "deepseek-v4.1-flash")
+_OPENROUTER_KEY  = os.environ.get("OPENROUTER_API_KEY", "")
 
-async def _anthropic_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
+# OpenCode Go asks clients to identify themselves and send a stable session id
+# (https://opencode.ai/docs/go/#where-can-i-use-it) so routing/prompt caching work.
+_OPENCODE_HEADERS = {"User-Agent": "llm-wiki-lightrag/1.0", "x-opencode-session": f"wiki-mcp-{os.getpid()}"}
+
+async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
     kwargs.setdefault("max_tokens", 4096)
-    result = await anthropic_complete_if_cache(
-        "claude-haiku-4-5-20251001", prompt,
+    result = await openai_complete_if_cache(
+        _OPENCODE_MODEL, prompt,
         system_prompt=system_prompt,
         history_messages=history_messages or [],
+        base_url=_OPENCODE_URL,
         api_key=_API_KEY,
+        extra_headers=_OPENCODE_HEADERS,  # per-request; LightRAG overwrites client-level default_headers
         **kwargs,
     )
     if hasattr(result, "__aiter__"):
         return "".join([chunk async for chunk in result])
     return result
 
-if _API_KEY:
-    LLM_MODEL      = "claude-haiku-4-5-20251001"
-    _llm_func      = _anthropic_llm
+async def _no_backend(*args, **kwargs):
+    raise RuntimeError("No LLM backend configured. Set OPENCODE_GO_API_KEY_LIGHTRAG (in ~/secrets/.env).")
+
+_LOCAL_LLM_URL = os.environ.get("LLAMACPP_BASE_URL", "")  # empty = no local backend
+
+if _LOCAL_LLM_URL:
+    # TODO: self-hosted llama.cpp (llama-server exposes an OpenAI-compatible /v1 API).
+    # Slot is intentionally left empty until an instance exists.
+    raise NotImplementedError("llama.cpp backend not wired yet. Unset LLAMACPP_BASE_URL.")
+elif _API_KEY:
+    LLM_MODEL      = _OPENCODE_MODEL
+    _llm_func      = _opencode_llm
     _llm_max_async = 4
 elif _OPENROUTER_KEY:
     # TODO: wire up OpenRouter backend via lightrag.llm.openai.openai_complete_if_cache
-    # base_url="https://openrouter.ai/api/v1", model e.g. "anthropic/claude-haiku-4-5"
-    raise NotImplementedError("OpenRouter backend not yet implemented.")
+    # base_url="https://openrouter.ai/api/v1"
+    raise NotImplementedError("OpenRouter backend not yet implemented. Set OPENCODE_GO_API_KEY_LIGHTRAG.")
 else:
-    LLM_MODEL      = "qwen2.5:3b"
-    _llm_func      = ollama_model_complete
+    LLM_MODEL      = "none"
+    _llm_func      = _no_backend
     _llm_max_async = 1
 
 _rag: LightRAG | None = None
@@ -128,8 +147,8 @@ async def list_tools() -> list[types.Tool]:
         types.Tool(
             name="wiki_query",
             description=(
-                "Query the personal LLM wiki using graph-aware RAG (LightRAG + ollama). "
-                "Returns a synthesized answer from the knowledge graph — no API cost. "
+                "Query the personal LLM wiki using graph-aware RAG (LightRAG)."
+                "Returns a synthesized answer from the knowledge graph (counts against the OpenCode Go plan limits)."
                 "Better than keyword search for concept questions, cross-topic synthesis, "
                 "and relationship queries. "
                 "mode: hybrid=entity+community graph (default), "

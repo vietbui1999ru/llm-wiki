@@ -40,9 +40,8 @@ if ! command -v ollama &>/dev/null; then
   exit 1
 fi
 
-echo "==> Pulling ollama models (may take a few minutes)"
+echo "==> Pulling ollama embedding model (embeddings only; the LLM backend is OpenCode Go)"
 ollama pull nomic-embed-text
-ollama pull qwen2.5:3b
 
 # ── done ────────────────────────────────────────────────────────────────────
 echo ""
@@ -51,8 +50,8 @@ echo ""
 echo "Next — point Claude Code at this repo's harness (backs up any existing ~/.claude):"
 echo "  bash $REPO_DIR/claude-setup/scripts/install-claude-symlink.sh"
 echo ""
-echo "Then build the knowledge graph (one-time, ~30-60 min):"
-echo "  wiki-index --full"
+echo "Then set OPENCODE_GO_API_KEY_LIGHTRAG (e.g. in ~/secrets/.env) and build the knowledge graph (one-time):"
+echo "  wiki-index --test && wiki-index --full --yes"
 echo ""
 echo "Then query interactively:"
 echo "  wiki-chat"

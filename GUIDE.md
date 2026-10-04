@@ -104,7 +104,7 @@ wiki-chat --mode global# cross-concept, community-level questions
 ```
 Inside `wiki-chat`: `/mode local|global|hybrid|naive` to switch, `/reindex` to rebuild after ingests, `/status` for index stats, `q` to quit.
 
-> First time: run `wiki-index --full` to build the graph. Takes ~30–60 min for ~150 pages with local `qwen2.5:3b` (free). **With `ANTHROPIC_API_KEY` set, expect $10–30+** — LightRAG runs 3 extraction phases per page. Use local LLM for full builds; unset `ANTHROPIC_API_KEY` or pass `--yes` to confirm API cost.
+> First time: set `OPENCODE_GO_API_KEY_LIGHTRAG`, then run `wiki-index --full --yes` to build the graph. **Expect heavy usage against the OpenCode Go 5-hour/weekly limits** — LightRAG runs 3 extraction phases per page. There is no local LLM backend yet (a self-hosted llama.cpp slot is reserved); without the key, indexing exits with an error.
 
 **Read a specific page:**
 ```bash
@@ -128,7 +128,7 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 | `pre-digest`          | `/pre-digest`                  | Runs gemma4:e4b locally to pre-process a source file into a digest before full ingest   |
 | `agent-orchestration` | Auto (agent/multi-step work)   | Multi-agent coordination patterns, subagent design, harness systems                     |
 | `security-patterns`   | Auto (security review)         | OWASP checklist + AI-specific threats (indirect prompt injection, agentic sandbox)      |
-| `wiki-index`          | `wiki-index` in terminal       | Build/update LightRAG graph index; incremental by default; `--full` wipes+rebuilds; `--yes` bypasses $10–30+ cost confirmation when API key is set |
+| `wiki-index`          | `wiki-index` in terminal       | Build/update LightRAG graph index; incremental by default; `--full` wipes+rebuilds; `--yes` confirms a `--full` rebuild (can exhaust the OpenCode Go 5-hour limit) |
 | `wiki-chat`           | `wiki-chat` in terminal        | Interactive graph-aware Q&A (LightRAG); 4 modes: hybrid (default), local, global, naive |
 
 ---
@@ -534,10 +534,7 @@ wiki-index                    # incremental — picks up new/changed pages only
 wiki-index --status           # see what's indexed vs. pending
 tail -f .lightrag/last-index.log   # watch progress
 
-# Full rebuild (local LLM, free):
-wiki-index --full
-
-# Full rebuild (Haiku, $10–30+):
+# Full rebuild (OpenCode Go; can exhaust the 5-hour usage limit):
 wiki-index --full --yes
 ```
 The post-commit hook runs `wiki-index` (incremental) automatically after commits touching `wiki/`.

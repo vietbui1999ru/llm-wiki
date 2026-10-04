@@ -113,7 +113,7 @@ git commit
     ┌─────────┴──────────────────────┐
     ▼                                ▼
 wiki-chat (local TUI)        wiki-mcp (MCP server)
-qwen2.5:3b synthesis         Haiku or qwen2.5:3b synthesis
+OpenCode Go synthesis        OpenCode Go synthesis
                                      │
                              OpenCode / Claude Code
 ```
@@ -128,7 +128,7 @@ qwen2.5:3b synthesis         Haiku or qwen2.5:3b synthesis
 |---|---|---|
 | [Claude Code](https://claude.ai/code) | LLM interface — runs wiki operations | Download from claude.ai |
 | [qmd](https://github.com/antiloger/qmd) | Hybrid search (BM25 + vector) — `post-commit` hook calls it | `cargo install qmd` or [binary release](https://github.com/antiloger/qmd/releases) |
-| [ollama](https://ollama.com) | Local LLM inference (graph index + TUI) | Download from ollama.com |
+| [ollama](https://ollama.com) | Local embeddings (`nomic-embed-text`) for the graph index, TUI and MCP server; no local LLM is used; to be replaced by llama.cpp later (OpenCode has no embeddings endpoint) | Download from ollama.com |
 | [uv](https://docs.astral.sh/uv/) | Python script runner (install.sh handles this) | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | [Node.js](https://nodejs.org) | Runs `docs-site/` generator + `pre-push` hook | `nvm install --lts` or distro package |
 | [zsh](https://www.zsh.org) | `post-commit` and `pre-push` hooks use `#!/bin/zsh` | `sudo apt install zsh` (or change hook shebang to `bash`) |
@@ -140,8 +140,8 @@ qwen2.5:3b synthesis         Haiku or qwen2.5:3b synthesis
 
 | Tool | Purpose |
 |---|---|
-| `ANTHROPIC_API_KEY` in `.env` | Claude Haiku for entity extraction (`wiki-index`) and OpenCode synthesis (`wiki-mcp`). Without it everything runs locally for free. |
-| `OPENROUTER_API_KEY` in `.env` | OpenRouter as alternative extraction backend for `wiki-index` / `wiki-mcp` (stub — not yet implemented; set `ANTHROPIC_API_KEY` or leave unset for local). |
+| `OPENCODE_GO_API_KEY_LIGHTRAG` in `.env` | OpenCode Go (OpenAI-compatible, default model `deepseek-v4.1-flash`) for entity extraction (`wiki-index`) and synthesis (`wiki-mcp`). Override with `OPENCODE_LIGHTRAG_MODEL` / `OPENCODE_LIGHTRAG_BASE_URL`. Without the key everything runs locally for free. |
+| `OPENROUTER_API_KEY` in `.env` | OpenRouter as alternative extraction backend for `wiki-index` / `wiki-mcp` (stub — not yet implemented; set `OPENCODE_GO_API_KEY_LIGHTRAG` or leave unset for local). |
 | [OpenCode](https://opencode.ai) | AFK agent orchestration; connects to `wiki-mcp` for in-session wiki queries |
 | GitHub PAT | Cross-vendor council via GitHub Models API |
 
@@ -157,22 +157,22 @@ cd ~/repos/llm-wiki
 bash claude-setup/scripts/install.sh
 ```
 
-`install.sh` handles: `uv` (if missing), copies `wiki-index`/`wiki-chat`/`wiki-mcp` to `~/.local/bin`, pulls `qwen2.5:3b` and `nomic-embed-text` via ollama, installs the `post-commit` and `pre-push` git hooks. **It does not install `qmd`, `node`, or `zsh`** — see Prerequisites above.
+`install.sh` handles: `uv` (if missing), copies `wiki-index`/`wiki-chat`/`wiki-mcp` to `~/.local/bin`, pulls the `nomic-embed-text` embedding model via ollama, installs the `post-commit` and `pre-push` git hooks. **It does not install `qmd`, `node`, or `zsh`** — see Prerequisites above.
 
 Make sure `~/.local/bin` is on your `$PATH`:
 ```bash
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
 ```
 
-### 2. Configure the Anthropic key (optional, but decide before step 3)
+### 2. Configure the OpenCode Go key (required for indexing and queries)
 
 ```bash
 cp .env.example .env
-# edit .env — paste ANTHROPIC_API_KEY=sk-ant-...
-# or leave unset to use qwen2.5:3b locally (free)
+# edit .env — set OPENCODE_GO_API_KEY_LIGHTRAG=...
+# or export it from your shell / secrets file (exported vars win over .env)
 ```
 
-Without a key: all tools use `qwen2.5:3b` locally. Free, but lower extraction quality.
+Without a key there is no LLM backend: `wiki-index`, `wiki-chat` queries and `wiki_query` exit with a clear error (`wiki-index --status` still works). A self-hosted llama.cpp backend is planned; the `LLAMACPP_BASE_URL` slot is reserved but not wired yet.
 
 ### 3. Build the graph index (one-time)
 
@@ -180,11 +180,11 @@ Without a key: all tools use `qwen2.5:3b` locally. Free, but lower extraction qu
 # Test the LLM backend first
 wiki-index --test
 
-# Then build (~30–60 min for ~150 pages with local qwen2.5:3b)
-wiki-index --full
+# Then build
+wiki-index --full --yes
 ```
 
-> **Cost warning:** `--full` with `ANTHROPIC_API_KEY` set costs **$10–30+** for ~150 pages. LightRAG runs 3 extraction phases per page (entity → relation → community), each with multiple LLM calls. Use `qwen2.5:3b` (unset API keys) for full rebuilds. If you want to use Haiku anyway, pass `--yes` to confirm: `wiki-index --full --yes`. Decide on step 2 first.
+> **Usage warning:** `--full` runs 3 extraction phases per page (entity → relation → community), each with multiple LLM calls, and can exhaust the OpenCode Go 5-hour/weekly usage limit ([limits](https://opencode.ai/docs/go/#usage-limits)). `--full` asks for `--yes` to confirm. After the first build, incremental runs only touch new/changed pages.
 
 After the initial build, the post-commit hook keeps the index current automatically — no manual re-runs needed after ingests. The indexer prepends Obsidian wikilink structure as extraction hints, reducing LLM token cost ~40–55% per page.
 
@@ -210,7 +210,7 @@ Add to `~/.config/opencode/opencode.json` under `"mcp"`:
 }
 ```
 
-With `ANTHROPIC_API_KEY` in `.env`, OpenCode queries use Claude Haiku for synthesis. Without it, qwen2.5:3b is used.
+With `OPENCODE_GO_API_KEY_LIGHTRAG` set, OpenCode queries use the OpenCode Go model for synthesis. Without it, `wiki_query` returns an error (`wiki_status` still works).
 
 ---
 
@@ -247,7 +247,7 @@ wiki-chat --mode local     # entity/concept-focused
 wiki-chat --mode global    # cross-concept big picture
 ```
 
-Graph-aware retrieval via LightRAG. Always uses qwen2.5:3b locally — no API cost.
+Graph-aware retrieval via LightRAG with OpenCode Go synthesis (counts against the plan's usage limits).
 
 Inside the TUI: `/mode local|global|hybrid|naive`, `/reindex`, `/status`, `q` to quit.
 
@@ -291,8 +291,8 @@ Three tools, different trade-offs:
 | Tool | When to use | Backend | Cost |
 |---|---|---|---|
 | `search the wiki for X` (Claude Code) | Quick lookup, in-session | qmd BM25+vector → Claude synthesis | API (Claude) |
-| `wiki-chat` | Deep exploration, standalone terminal | LightRAG graph → qwen2.5:3b | Free |
-| `wiki-mcp` (OpenCode) | In-session wiki queries without Claude API | LightRAG graph → Haiku or qwen2.5:3b | Optional |
+| `wiki-chat` | Deep exploration, standalone terminal | LightRAG graph → OpenCode Go model | OpenCode Go plan |
+| `wiki-mcp` (OpenCode) | In-session wiki queries without Claude API | LightRAG graph → OpenCode Go model | OpenCode Go plan |
 
 Index maintenance:
 
@@ -300,8 +300,7 @@ Index maintenance:
 wiki-index --test          # verify LLM backend
 wiki-index                 # incremental (new/changed pages only) — safe to run anytime
 wiki-index --status        # show manifest stats without indexing
-wiki-index --full          # wipe and rebuild — free with local LLM (no API key)
-wiki-index --full --yes    # rebuild with API key (skip cost confirmation; expect $10–30+)
+wiki-index --full --yes    # wipe and rebuild (asks for --yes; can exhaust the OpenCode Go 5-hour limit)
 ```
 
 The post-commit hook runs `wiki-index` (incremental) in the background automatically after every commit touching `wiki/`. Check progress:

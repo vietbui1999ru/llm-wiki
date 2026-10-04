@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.10"
 # dependencies = [
-#   "lightrag-hku",
+#   "lightrag-hku>=1.5.7,<1.6",   # tested on 1.5.7; chunker/constructor kwargs moved between releases
 #   "openai",
 #   "ollama",
 #   "numpy",
@@ -142,7 +142,7 @@ def wiki_chunking_func(
     on implicit connections — reduces extraction LLM calls by ~40-60%.
     """
     import re
-    from lightrag.operate import chunking_by_token_size
+    from lightrag.chunker import chunking_by_token_size
 
     fm    = _parse_frontmatter(content)
     links = list(dict.fromkeys(re.findall(r'\[\[([^\]|]+)', content)))  # dedup
@@ -182,7 +182,6 @@ def _build_rag() -> LightRAG:
         llm_model_func=_llm_func,
         llm_model_name=LLM_MODEL,
         llm_model_max_async=_llm_max_async,
-        max_extract_input_tokens=16384,
         # wiki_chunking_func prepends Obsidian wikilink graph as extraction hints,
         # telling the LLM which entities/relations are already known so it focuses
         # only on implicit connections → reduces extraction token cost ~40-60%.
@@ -191,7 +190,7 @@ def _build_rag() -> LightRAG:
         chunk_overlap_token_size=64,
         # top_k=20: wiki has dense cross-links; fewer candidates = less noise.
         top_k=20,
-        cosine_threshold=0.3,
+        cosine_better_than_threshold=0.3,
         embedding_func=EmbeddingFunc(
             embedding_dim=EMBED_DIM,
             max_token_size=8192,
@@ -233,6 +232,7 @@ async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
         return manifest
 
     print(f"Indexing {len(changed)} new/changed pages (of {len(pages)} total) · extraction: {LLM_MODEL} (opencode-go)")
+    failed = []
     for i, p in enumerate(changed, 1):
         rel = p.relative_to(WIKI_DIR)
         print(f"  [{i}/{len(changed)}] {rel}", flush=True)
@@ -241,10 +241,20 @@ async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
             ids=[str(rel)],
             file_paths=[str(rel)],
         )
+        # ainsert logs pipeline errors instead of raising; only record pages that did not fail,
+        # otherwise a failed page would be marked indexed and never retried.
+        doc = await rag.doc_status.get_by_id(str(rel))
+        status = getattr(doc.get("status"), "value", doc.get("status")) if doc else None
+        if status == "failed":
+            print(f"    FAILED: {doc.get('error_msg', 'see log above')}", flush=True)
+            failed.append(rel)
+            continue
         manifest[str(p)] = p.stat().st_mtime
         save_manifest(manifest)   # save after each page so partial runs resume
 
-    print(f"Done. {len(changed)} pages indexed.")
+    print(f"Done. {len(changed) - len(failed)} pages indexed, {len(failed)} failed.")
+    if failed:
+        raise SystemExit(1)
     return manifest
 
 

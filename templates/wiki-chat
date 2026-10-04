@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.10"
 # dependencies = [
-#   "lightrag-hku",
+#   "lightrag-hku>=1.5.7,<1.6",   # tested on 1.5.7; constructor kwargs moved between releases
 #   "ollama",
 #   "openai",
 #   "python-dotenv",
@@ -129,11 +129,10 @@ def _build_rag() -> LightRAG:
         llm_model_func=_llm_func,
         llm_model_name=LLM_MODEL,
         llm_model_max_async=_llm_async,
-        max_extract_input_tokens=16384,
         chunk_token_size=800,
         chunk_overlap_token_size=64,
         top_k=20,
-        cosine_threshold=0.3,
+        cosine_better_than_threshold=0.3,
         embedding_func=EmbeddingFunc(
             embedding_dim=EMBED_DIM,
             max_token_size=8192,
@@ -188,7 +187,8 @@ async def run(args: argparse.Namespace) -> None:
     try:
       while True:
         try:
-            raw = pt_prompt("→ ", history=hist).strip()
+            # prompt_toolkit's sync prompt() calls asyncio.run(); run it in a thread, not inside our loop
+            raw = (await asyncio.to_thread(pt_prompt, "→ ", history=hist)).strip()
         except (KeyboardInterrupt, EOFError):
             break
 

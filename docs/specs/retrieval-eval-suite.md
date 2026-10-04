@@ -126,6 +126,13 @@ Split ~70/30 dev/heldout. The held-out split is used only for final A/B decision
 4. **Pooled judgments:** after the first runs, show you every unlabeled page that appears in any system's top 10 for a query, so one system's blind spots do not become "misses". Report Hole@10 (share of top-10 hits no annotator has judged) per system.
 5. Versioning: golden set changes are reviewed like code; the page-existence lint (L0) runs on every change to the wiki and the golden set.
 
+**Amended 2026-10-05 (decision D4: fully synthetic, human spot-check).** The research flags synthetic-only query sets as risky (queries that paraphrase the source page, page-specific rare terms leaking into queries, and a same-model bias toward LLM-built indexes). Mitigations adopted, in place of the 60% human-authored rule:
+- Generate queries with a **different model family from the graph's extraction LLM** (extraction uses DeepSeek; generation should not), to reduce same-model favouritism toward LightRAG.
+- Keep the rare-term and lexical-overlap filters from step 1, and make them hard gates in the L0 golden-set lint.
+- You spot-check **at least 20% (about 24 queries)** per pass: reject or rewrite bad queries and grade pooled unlabeled hits (step 4). Pooled judgments matter *more* here because synthetic labels start with only the source page as relevant.
+- Treat **absolute scores as optimistic** (especially for lexical backends) and trust **differences between systems** more; every report carries this caveat. Keep the held-out split untouched by tuning.
+- As real failures are found in daily use, add them as hand-written queries (a growing regression set); this raises the human-authored share over time.
+
 ## 6. Metrics
 
 Computed per query, then averaged per category and overall. `k` values: 1, 3, 5, 10.
@@ -238,7 +245,7 @@ Effort and cost figures are my estimates.
 | **M0** | P0 indexer fix, `--verify`/`--reconcile`, L0 tests for it, one-off cleanup | section 11 acceptance; `--verify` clean on the real index | 0.5 day |
 | **M1** | `score.py` + metric unit tests; qmd runner; 30-query seed golden set; first qmd baseline | metrics match hand-computed examples; one command produces a qmd report with CIs | 0.5 day |
 | **M2** | LightRAG runner (index copy, `aquery_data`, page mapping); comparison table across systems | all 9 system/mode rows scored on the seed set; mapping verified on 10 queries by hand | 0.5-1 day |
-| **M3** | Golden set to full size: authoring, labeling, pooled-judgment pass, dev/held-out split | ~120 queries; golden lint passes; your 3-4 h of review done | mostly your time |
+| **M3** | Golden set to full size: synthetic generation (non-DeepSeek model), filtering, your spot-check of >=20% and pooled-judgment grading, dev/held-out split | ~120 queries; golden lint passes; spot-check reject rate recorded | about 1-1.5 h of your time (my estimate; less than the hand-authored plan) |
 | **M4** | Latency harness and protocol | p50/p95 cold and warm per stage, stored with metadata | 0.5 day |
 | **M5** | Baselines, gate, docs, wiki page, spec status updated | gate reproduces a known regression in a deliberate-break test | 0.5 day |
 
@@ -268,6 +275,17 @@ Effort and cost figures are my estimates.
 | D10 | Answer-quality layer | Defer to a later spec. |
 | D11 | Framework | Python `uv` scripts plus `pytest`. |
 | D12 | LightRAG reranker | Out of scope here; note it as a possible later improvement. |
+
+### Decisions recorded (2026-10-05)
+
+| ID | Decision | Choice |
+|---|---|---|
+| D1 | P0 indexer fix first, as its own PR | **Yes** |
+| D2 | Corpus scope | **`wiki/**` only**; `raw/` and meta pages as diagnostics |
+| D3 | Golden-set size and split | **~120 queries, 70/30 dev/held-out** |
+| D4 | Query authorship | **Fully synthetic with human spot-check** (differs from the recommendation; mitigations in 5.3) |
+
+D5-D12 stand at the proposed defaults above, pending the owner's objection.
 
 ## 16. Sources
 

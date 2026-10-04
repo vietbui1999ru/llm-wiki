@@ -263,7 +263,9 @@ def show_status(pages: list[Path], manifest: dict) -> None:
 async def test_llm_backend() -> None:
     print(f"Testing LLM backend: {LLM_MODEL}")
     try:
-        result = await _llm_func("Reply with the single word OK.", max_tokens=16)
+        # deepseek-v4.1-flash is a reasoning model: reasoning tokens count against max_tokens,
+        # so a tiny cap (16) can be fully spent on thinking and return empty content.
+        result = await _llm_func("Reply with the single word OK.", max_tokens=1024)
         # result may be a string or an async generator (streaming)
         if hasattr(result, "__aiter__"):
             text = "".join([chunk async for chunk in result])

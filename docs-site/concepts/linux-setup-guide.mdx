@@ -105,7 +105,7 @@ ollama serve &     # start daemon before install.sh runs
 Model pulled by `install.sh`:
 - `nomic-embed-text` — embeddings for qmd and LightRAG
 
-No local LLM is pulled: LightRAG extraction and synthesis use OpenCode Go. A self-hosted llama.cpp backend is planned (`LLAMACPP_BASE_URL` slot reserved, not wired yet).
+No local LLM is pulled: LightRAG extraction and synthesis use OpenCode Go. A self-hosted llama.cpp server is planned for the LLM (`LLAMACPP_BASE_URL` slot reserved, not wired yet) and later for embeddings, which stay on ollama until then (OpenCode has no embeddings endpoint).
 
 ---
 

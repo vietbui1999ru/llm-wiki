@@ -5,7 +5,7 @@ description: "The wiki uses a two-retrieval-path architecture: qmd for fast lexi
 
 # Local Wiki RAG: LightRAG Graph Stack
 
-The wiki uses a two-retrieval-path architecture: **qmd** for fast lexical+vector search inside Claude Code sessions, and **LightRAG** for graph-aware synthesis in the TUI and MCP server. qmd runs fully locally at zero cost. LightRAG retrieval (embeddings via ollama `nomic-embed-text` + graph traversal) is local, but extraction and synthesis call a hosted OpenCode Go model (OpenAI-compatible API); a self-hosted llama.cpp backend is planned and its slot is reserved but not wired.
+The wiki uses a two-retrieval-path architecture: **qmd** for fast lexical+vector search inside Claude Code sessions, and **LightRAG** for graph-aware synthesis in the TUI and MCP server. qmd runs fully locally at zero cost. LightRAG retrieval (embeddings via ollama `nomic-embed-text` + graph traversal) is local, but extraction and synthesis call a hosted OpenCode Go model (OpenAI-compatible API); a self-hosted llama.cpp server is planned for the LLM (slot reserved, not wired) and later for embeddings.
 
 ---
 
@@ -123,7 +123,7 @@ The wiki rule "one thing per page" (CLAUDE.md) makes each page a clean entity fo
 
 ### Hosted LLM, local embeddings
 
-Extraction and synthesis use OpenCode Go (billed against the plan's usage limits, not per page); embeddings stay local on ollama (`nomic-embed-text`) because OpenCode Go's model catalog has no embedding models. The earlier local-LLM path (qwen2.5 via ollama) was removed. A self-hosted llama.cpp server is the planned local replacement; its env slot (`LLAMACPP_BASE_URL`) is reserved but not wired.
+Extraction and synthesis use OpenCode Go (billed against the plan's usage limits, not per page); embeddings stay local on ollama (`nomic-embed-text`) because OpenCode has no embedding offering: probed 2026-10-04, neither the Go (36 models) nor the Zen (50 models) catalog lists an embedding model, and `POST /embeddings` returns 404 on both endpoints. The earlier local-LLM path (qwen2.5 via ollama) was removed. A self-hosted llama.cpp server is the planned replacement for the LLM (env slot `LLAMACPP_BASE_URL`, reserved but not wired) and for embeddings (not started). When embeddings move, rebuild the index if the embedding model or dimension changes (training data — verify: LightRAG vector stores are tied to the embedding dimension).
 
 ### Manifest-based incremental indexing
 

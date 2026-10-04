@@ -4,7 +4,7 @@ type: concept
 tags: [setup, tooling, workflow, claude-code, opencode, headroom, dotfiles]
 sources: []
 created: 2026-06-09
-updated: 2026-06-09
+updated: 2026-10-04
 ---
 
 # Linux Machine Setup Guide
@@ -57,6 +57,7 @@ uv tool install headroom-ai
 # 12. Set environment variables (edit values, then reload)
 cat >> ~/.zshrc << 'EOF'
 export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENCODE_GO_API_KEY_LIGHTRAG="..."  # optional: hosted wiki-index/wiki-mcp backend (OpenCode Go)
 export GITHUB_TOKEN="ghp_..."         # optional: council Voice B (GitHub Models)
 export PATH="$HOME/.local/bin:$PATH"
 source ~/repos/llm-wiki/templates/env-model-routing.sh  # opencode model routing
@@ -66,7 +67,7 @@ source ~/.zshrc
 # 13. First claude run — downloads all plugins; qmd CLI becomes available after this
 claude --version
 
-# 14. Build wiki LightRAG index (one-time; ~30-60 min; costs ~$0.50 via Claude Haiku)
+# 14. Build wiki LightRAG index (one-time; ~30-60 min with local qwen2.5:3b, free)
 wiki-index --full
 ```
 
@@ -159,7 +160,8 @@ cat ~/.config/opencode/opencode.json | head -5   # should show $schema line
 Add to `~/.zshrc`:
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."    # required: Claude Code + wiki-index + wiki-mcp
+export ANTHROPIC_API_KEY="sk-ant-..."    # required: Claude Code
+export OPENCODE_GO_API_KEY_LIGHTRAG="..." # optional: wiki-index + wiki-mcp hosted backend (OpenCode Go)
 export GITHUB_TOKEN="ghp_..."           # optional: council Voice B via GitHub Models
 export PATH="$HOME/.local/bin:$PATH"    # wiki-chat, wiki-index, wiki-mcp
 
@@ -173,7 +175,8 @@ Key uses by tool:
 
 | Key | Required by |
 |-----|------------|
-| `ANTHROPIC_API_KEY` | Claude Code, wiki-index (Haiku extraction), wiki-mcp synthesis |
+| `ANTHROPIC_API_KEY` | Claude Code |
+| `OPENCODE_GO_API_KEY_LIGHTRAG` (optional) | wiki-index extraction, wiki-mcp synthesis (OpenCode Go, OpenAI-compatible; unset → local ollama) |
 | `GITHUB_TOKEN` (models:read scope) | Pi council voice (openai/gpt-5.4 via GitHub Models endpoint) |
 
 ---
@@ -288,13 +291,13 @@ Plugin cache: `~/.claude/plugins/cache/` — downloaded fresh, not in dotfiles.
 wiki-index --full
 ```
 
-**Cost warning:** Uses Claude Haiku by default when `ANTHROPIC_API_KEY` is set. ~200 wiki pages costs ~$0.30–$0.80 *(claimed, unverified)*. To use local ollama instead (free, slower):
+**Usage warning:** Uses OpenCode Go when `OPENCODE_GO_API_KEY_LIGHTRAG` is set. A full build runs several LLM calls per page and can exhaust the plan's 5-hour usage limit ([limits](https://opencode.ai/docs/go/#usage-limits)). To use local ollama instead (free, slower):
 
 ```bash
-unset ANTHROPIC_API_KEY && wiki-index --full && export ANTHROPIC_API_KEY="sk-ant-..."
+env -u OPENCODE_GO_API_KEY_LIGHTRAG wiki-index --full
 ```
 
-**Time:** 30–60 min with Haiku; 2–4 hours with local qwen2.5:3b.
+**Time:** 2–4 hours with local qwen2.5:3b *(estimate)*; not measured with OpenCode Go.
 
 **Progress:**
 ```bash
@@ -346,7 +349,7 @@ ls ~/.claude/hooks/
 | `ollama serve` before `install.sh` | install.sh pulls models — needs daemon running |
 | `claude --version` before `qmd` CLI | qmd binary comes from Claude Code plugin, not npm |
 | `uv` (install.sh) before `headroom-ai` | `uv tool install` requires uv |
-| `ANTHROPIC_API_KEY` before `wiki-index --full` | falls back to local model without it |
+| `OPENCODE_GO_API_KEY_LIGHTRAG` (optional) before `wiki-index --full` | falls back to local model without it |
 | `$HOME/.local/bin` in PATH before `wiki-*` | install.sh copies binaries there |
 
 ---

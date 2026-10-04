@@ -292,7 +292,7 @@ Three tools, different trade-offs:
 |---|---|---|---|
 | `search the wiki for X` (Claude Code) | Quick lookup, in-session | qmd BM25+vector → Claude synthesis | API (Claude) |
 | `wiki-chat` | Deep exploration, standalone terminal | LightRAG graph → qwen2.5:3b | Free |
-| `wiki-mcp` (OpenCode) | In-session wiki queries without Claude API | LightRAG graph → Haiku or qwen2.5:3b | Optional |
+| `wiki-mcp` (OpenCode) | In-session wiki queries without Claude API | LightRAG graph → OpenCode Go model or qwen2.5:3b | Optional |
 
 Index maintenance:
 

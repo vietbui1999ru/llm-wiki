@@ -185,7 +185,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[syntheses/pi-orchestration-architecture]] — Pueue-dispatched pi workers, diff-review gate, status artifact, retry limit, two-mode review (interactive vs headless), human-commits-last
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern
 - [[syntheses/lean-agentic-workflow]] — Full stack: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes
-- [[syntheses/local-rag-wiki]] — two-path RAG stack: qmd (BM25+vector, Claude Code) + LightRAG graph (wiki-chat TUI + wiki-mcp MCP); qwen2.5:3b local or Haiku hybrid; manifest-based incremental indexing; post-commit automation
+- [[syntheses/local-rag-wiki]] — two-path RAG stack: qmd (BM25+vector, Claude Code) + LightRAG graph (wiki-chat TUI + wiki-mcp MCP); qwen2.5:3b local or OpenCode Go (OpenAI-compatible) hybrid; manifest-based incremental indexing; post-commit automation
 - [[syntheses/control-plane-expansion-plan]] — Gap analysis and bootstrap path: cockpit action registry, agent-control skills, commandr-omp-runner; Phase 0.5–3 roadmap
 - [[syntheses/desktop-control-plane]] — *(local-only)* Big-picture synthesis: 5-layer toolchain (Commandr bus + DiffViewer/Tauri UI + omp workers + SKILL.md packages); Mermaid architecture/workflow diagrams; action registry; evidence-first cockpit vision
 - [[syntheses/agent-diff-viewer]] *(partially-superseded)* — Localhost real-time diff viewer for Claude Code: original design; see [[entities/diffviewer]] for current state

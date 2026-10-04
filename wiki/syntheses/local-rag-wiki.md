@@ -4,12 +4,12 @@ type: synthesis
 tags: [rag, local-llm, ollama, lightrag, graph, mcp, wiki-chat, wiki-index, wiki-mcp]
 sources: ["summaries/agentic-search-vs-rag", "summaries/local-rag-elasticsearch"]
 created: 2026-05-11
-updated: 2026-05-12
+updated: 2026-10-04
 ---
 
 # Local Wiki RAG: LightRAG Graph Stack
 
-The wiki uses a two-retrieval-path architecture: **qmd** for fast lexical+vector search inside Claude Code sessions, and **LightRAG** for graph-aware synthesis in the TUI and MCP server. Both run locally at zero cost by default; LightRAG can optionally use Claude Haiku for higher-quality synthesis.
+The wiki uses a two-retrieval-path architecture: **qmd** for fast lexical+vector search inside Claude Code sessions, and **LightRAG** for graph-aware synthesis in the TUI and MCP server. Both run locally at zero cost by default; LightRAG can optionally use a hosted OpenCode Go model (OpenAI-compatible API) for extraction and synthesis.
 
 ---
 
@@ -30,10 +30,10 @@ wiki/ pages
 | Dimension | qmd | LightRAG |
 |---|---|---|
 | Retrieval type | BM25 + vector hybrid | entity/community graph traversal |
-| Synthesis | Claude Sonnet (in-session) | qwen2.5:3b local or Claude Haiku |
+| Synthesis | Claude Sonnet (in-session) | qwen2.5:3b local or OpenCode Go model |
 | Latency | ~1s | ~15–30s (LLM synthesis) |
 | Best for | In-session lookup, citation | Cross-concept questions, relationships |
-| Cost | API (synthesis) | Free local; optional Haiku for quality |
+| Cost | API (synthesis) | Free local; optional OpenCode Go (flat monthly plan with usage limits) |
 | Available in | Claude Code, OpenCode | Anywhere (TUI or MCP) |
 
 The agentic-search-vs-rag experiment validated the LightRAG path: graph search achieved 2× retrieval IoU with 99% fewer tokens vs flat RAG. See [[summaries/agentic-search-vs-rag]].
@@ -67,10 +67,10 @@ wiki-index --test       # verify LLM backend then exit
 ```
 
 **Extraction backend** (controlled by `.env`):
-- `ANTHROPIC_API_KEY` set → Claude Haiku (better entity/relation extraction)
+- `OPENCODE_GO_API_KEY_LIGHTRAG` set → OpenCode Go via its OpenAI-compatible endpoint (`https://opencode.ai/zen/go/v1`); default model `deepseek-v4.1-flash`, overridable with `OPENCODE_LIGHTRAG_MODEL` / `OPENCODE_LIGHTRAG_BASE_URL`. Extraction quality vs the local model is not benchmarked here.
 - unset → qwen2.5:3b via ollama (free — **recommended for full rebuilds**)
 
-**Cost warning:** LightRAG runs 3 extraction phases per page (entity → relation → community), each with multiple LLM calls. A full rebuild of ~150 pages with Haiku costs **$10–30**, not pennies. Use qwen2.5:3b for full rebuilds; Haiku is acceptable for incremental updates (1–3 new pages per ingest).
+**Usage warning:** LightRAG runs 3 extraction phases per page (entity → relation → community), each with multiple LLM calls. OpenCode Go enforces 5-hour, weekly and monthly dollar-denominated usage limits per model ([limits](https://opencode.ai/docs/go/#usage-limits)), so a full rebuild of ~150 pages can exhaust the 5-hour window. Use qwen2.5:3b for full rebuilds; OpenCode Go is suited to incremental updates (1–3 new pages per ingest).
 
 Incremental by default: a `manifest.json` tracks `{path: mtime}`. Only changed/new pages are re-extracted. The manifest is saved after each page so partial runs resume automatically.
 
@@ -82,7 +82,7 @@ Zero-cost wiki queries from Claude Code or OpenCode. Exposes two tools:
 - `wiki_query(question, mode="hybrid")` — graph-aware synthesis
 - `wiki_status()` — show index stats
 
-Synthesis backend: same hybrid logic as wiki-index (Haiku if key set, qwen2.5:3b otherwise). LightRAG graph is initialized once as a singleton; retrieval is always local (nomic-embed-text + graph traversal).
+Synthesis backend: same hybrid logic as wiki-index (OpenCode Go if `OPENCODE_GO_API_KEY_LIGHTRAG` set, qwen2.5:3b otherwise). LightRAG graph is initialized once as a singleton; retrieval is always local (nomic-embed-text + graph traversal).
 
 Wire into OpenCode (`~/.config/opencode/opencode.json`):
 ```json
@@ -126,7 +126,7 @@ The wiki rule "one thing per page" (CLAUDE.md) makes each page a clean entity fo
 
 ### qwen2.5:3b for local synthesis
 
-Better structured output for entity extraction than phi4-mini. Fits comfortably in M1 Pro 16GB and RTX 2060 6GB. For higher-quality extraction at index time: use `ANTHROPIC_API_KEY` — Haiku costs ~$0.001 per page at current pricing.
+Better structured output for entity extraction than phi4-mini. Fits comfortably in M1 Pro 16GB and RTX 2060 6GB. For hosted extraction at index time: set `OPENCODE_GO_API_KEY_LIGHTRAG` (billed against the OpenCode Go plan limits, not per page).
 
 ### Manifest-based incremental indexing
 
@@ -139,8 +139,8 @@ Building the full graph from scratch takes ~30–60 min for 150 pages with a loc
 | Metric | Value |
 |---|---|
 | Initial build (qwen2.5:3b local, ~150 pages) | ~30–60 min, free |
-| Initial build (Claude Haiku, ~150 pages) | faster, but $10–30 |
-| Incremental update (1–3 new pages, Haiku) | ~1–5 min, ~$0.07–0.60 |
+| Initial build (OpenCode Go, ~150 pages) | not measured; may hit the 5-hour usage limit |
+| Incremental update (1–3 new pages, OpenCode Go) | not measured; counts against plan limits |
 | Incremental update (1–3 new pages, local) | ~5–15 min, free |
 | Query latency (wiki-chat, local) | ~15–30s |
 | Retrieval quality vs flat RAG | 2× IoU, 99% fewer tokens |

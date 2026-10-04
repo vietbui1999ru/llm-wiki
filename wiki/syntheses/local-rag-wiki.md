@@ -156,3 +156,4 @@ Building the full graph from scratch is the expensive operation (3 extraction ph
 - [[concepts/reranking]] — post-retrieval filtering; not yet applied here
 - [[entities/qmd]] — BM25 + vector engine for the wiki-context skill path
 - [[concepts/wikilink-graph-extraction]] — Obsidian wikilink hints injected at chunk time to reduce LightRAG extraction cost ~40–55%
+- [[systems/wiki-indexing-pipeline]] — how both indexes are built and kept current, step by step, with the failure modes found in practice

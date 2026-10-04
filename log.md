@@ -960,3 +960,13 @@ Updated:
 - wiki/concepts/owasp-security-checklist.md — now the hub (intro, severity table, pointers); path kept so the 9 inbound wikilinks still resolve
 - index.md — hub entry reworded, 3 entries added
 Moved text is byte-identical (sliced by script; every non-heading content line verified present). Sources were distributed by topical affinity, not per-claim citation. Also carried onto this branch: 4 commits from PR #8 that the squash merge missed.
+
+## [2026-10-04] update | Document the wiki indexing pipeline
+Not an external-source ingest: first-party documentation of how the repo is indexed, written from the scripts, the LightRAG 1.5.7 source and the 2026-10-04 rebuild/diagnosis sessions. Created:
+- wiki/systems/wiki-indexing-pipeline.md — qmd (BM25 + vector) vs the LightRAG knowledge graph; triggers, chunking, extraction, embeddings, storage, incremental manifest, failure handling, gotchas
+
+Updated:
+- wiki/syntheses/local-rag-wiki.md — Related link to the new page
+- index.md — new systems entry
+
+Measured at write time: 179 pages indexed, 8,100 graph nodes, 11,369 edges, 165 MB (an earlier mid-rebuild figure of ~2,600 nodes was a partial snapshot and is superseded).

@@ -138,7 +138,8 @@
           "systems/dotfiles-agent-harness-layout",
           "systems/otel-council",
           "systems/scalability-reliability",
-          "systems/system-design-process"
+          "systems/system-design-process",
+          "systems/wiki-indexing-pipeline"
         ]
       },
       {

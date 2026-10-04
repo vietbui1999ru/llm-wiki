@@ -4,8 +4,10 @@ type: entity
 tags: [agent-tooling, diff-review, real-time, claude-code, opencode, pi, mobile, tauri, l5-ui]
 sources: ["DiffViewer README", "DiffViewer docs/PRD.md", "DiffViewer docs/ARCHITECTURE.md", "DiffViewer docs/MVP0-MOBILE-SPEC.md", "BuilderIOagent-native A framework for building agent-native applications..md", "BuilderIOskills Skills for coding agents.md"]
 created: 2026-06-17
-updated: 2026-06-19
+updated: 2026-10-04
 ---
+
+> **Status note (2026-10-04):** DiffViewer's Pi extension (`pi-diff-review`) is **disabled** in the dotfiles setup since 2026-09-18 while [[systems/agent-review]], a per-run Neovim review gate, is trialled against it. The consolidation decision was to keep DiffViewer's `pi-extension/` and not delete it until the trial's survivor is chosen.
 
 # DiffViewer
 

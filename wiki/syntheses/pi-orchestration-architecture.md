@@ -4,8 +4,10 @@ type: synthesis
 tags: [agent-harness, orchestration, pi-agent, opencode, pueue, diff-review, multi-agent, human-in-the-loop]
 sources: []
 created: 2026-06-05
-updated: 2026-06-05
+updated: 2026-10-04
 ---
+
+> **Stale as of 2026-10-04:** this design names `pi-diff-review` as the review gate. In the dotfiles setup that extension has been **disabled since 2026-09-18** in favour of the trial [[systems/agent-review]] (per-run review in Neovim); only one review gate may be active at a time. The orchestration design below is otherwise unchanged.
 
 # Pi Orchestration Architecture
 

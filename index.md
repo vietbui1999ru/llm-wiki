@@ -59,7 +59,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/sandcastle]] — Matt Pocock's TS lib for parallel agents in worktrees; branch strategy (head/merge-to-head/branch), token telemetry, provider abstraction
 - [[entities/dangeresque]] — Host-native CLI orchestrator; mandatory adversarial reviewer + human-merge gate; ToS-compliant (no container for CC)
 - [[entities/mnemory]] — Self-hosted MCP cross-session memory: Qdrant vector search + S3/MinIO artifact store; OSS alternative to Anthropic memory tool
-- [[entities/agentops]] — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
+- [[entities/agentops]] *(documented-not-adopted)* — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
 - [[entities/gemini-cli]] — Google's Gemini CLI: GEMINI.md + TOML commands + activate_skill; high parity with CC; hooks + subagents (experimental)
 - [[entities/opencode]] — Open-source Claude Code alternative; plugin system, compaction hooks, custom tools, headless `run`/`serve` modes, full HTTP API
 - [[entities/omp]] — oh-my-pi: batteries-included Pi fork; hashline/LSP/DAP/TTSR/eval kernels/Hindsight memory/Snapcompact/32 tools/40+ providers; see [[comparisons/our-stack-vs-omp]] for gap analysis

@@ -4,7 +4,7 @@
 # dependencies = [
 #   "lightrag-hku",
 #   "openai",
-#   "mcp",
+#   "mcp>=1.0,<2",   # 2.x removed the @app.list_tools()/@app.call_tool() decorators used below
 #   "ollama",
 #   "numpy",
 #   "python-dotenv",

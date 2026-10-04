@@ -937,3 +937,16 @@ Updated:
 - index.md — added 1 summary entry
 
 Epistemic note: single Reddit thread, self-reported hiring practices, no cross-source corroboration — tagged *(anecdotal, unverified)* throughout the page itself, not just in the index line.
+
+## [2026-10-04] update | LightRAG on OpenCode Go; agent-review + dotfiles layout pages
+Not an external-source ingest: first-party docs from ~/dotfiles, investigated by two read-only agents and cited by path. Created:
+- wiki/systems/agent-review.md — per-run Neovim review gate for Pi; flow, components, trial status (trial entry not registered), known limits
+- wiki/systems/dotfiles-agent-harness-layout.md — stow / materialized / sync-pushed provisioning, per-dot-folder config vs runtime, where agent definitions and blueprints live
+
+Updated:
+- wiki/entities/agentops.md — marked documented-not-adopted; clarified the dotfiles "AgentOps" was a separate, removed project
+- wiki/syntheses/local-rag-wiki.md, wiki/concepts/linux-setup-guide.md, wiki/concepts/wikilink-graph-extraction.md — LightRAG backend is OpenCode Go (no local LLM; embeddings stay on ollama; llama.cpp slot reserved)
+- wiki/syntheses/pi-orchestration-architecture.md, wiki/entities/diffviewer.md — status notes: pi-diff-review disabled since 2026-09-18 in favour of the agent-review trial
+- index.md — 2 new systems entries; agentops marked *(documented-not-adopted)*
+
+Contradiction flagged: pi-orchestration-architecture still named pi-diff-review as the review gate (now stale; note added at top).

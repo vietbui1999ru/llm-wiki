@@ -127,10 +127,12 @@
       {
         "group": "Systems",
         "pages": [
+          "systems/agent-review",
           "systems/ai-ml",
           "systems/architectural-patterns",
           "systems/data-modeling",
           "systems/distributed-systems",
+          "systems/dotfiles-agent-harness-layout",
           "systems/otel-council",
           "systems/scalability-reliability",
           "systems/system-design-process"

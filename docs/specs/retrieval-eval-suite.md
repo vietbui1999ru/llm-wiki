@@ -1,6 +1,6 @@
 # SPEC: Retrieval Evaluation Suite for the Wiki Indexes
 
-**Status:** Draft for review. Nothing in this spec is implemented. Written 2026-10-04.
+**Status:** Draft for review. Written 2026-10-04. **Progress (2026-10-05):** M0 is implemented and tested in PR #12 (open, not yet merged); nothing else in this spec is implemented.
 **Owner decision needed:** see section 15 (open decisions) before any code is written.
 
 ## 1. Purpose and non-goals
@@ -208,7 +208,7 @@ Reference points already observed (single runs, not benchmarks): reranked `qmd q
 **Specified fix** (a separate PR before any evaluation work):
 1. Pass a path-unique file name, e.g. `file_paths=[rel.replace("/", "__")]`, so the dedup key is unique per page. Doc id stays the relative path.
 2. For a page already present in `doc_status` (any status), call `await rag.adelete_by_doc_id(rel)` before inserting. (API signature `adelete_by_doc_id(doc_id, delete_llm_cache=False)`; must run with the pipeline idle, which our sequential loop satisfies.)
-3. Replace the failure check: after insert, require `doc_status[rel].status == "processed"` **and** `full_docs[rel].content == page_content(p)`; otherwise record as failed.
+3. Replace the failure check: after insert, require `doc_status[rel].status == "processed"` **and** the stored `full_docs` text equal to the page text **after LightRAG's own sanitising** (`sanitize_text_for_encoding`: strip, HTML-unescape, control characters); otherwise record as failed. *(Amended 2026-10-05: the first draft of this item compared raw text, which would have failed every real page; found by running `--verify` on the real index.)*
 4. Handle pages deleted from disk: delete their doc ids via `adelete_by_doc_id`, so stale entities leave the graph without a full rebuild.
 5. New `wiki-index --verify`: compares every page's stored `full_docs` content to the file on disk and lists mismatches, missing pages and stray `dup-*` or failed records; exit 1 if any. New `--reconcile`: fixes what `--verify` finds.
 6. One-off cleanup: purge the 12 `dup-*` records and the failed original OWASP record, then re-index the stale and missing pages (about 11 pages, minutes) instead of a 1.5-hour full rebuild.
@@ -242,7 +242,7 @@ Effort and cost figures are my estimates.
 
 | # | Deliverable | Acceptance | Rough effort |
 |---|---|---|---|
-| **M0** | P0 indexer fix, `--verify`/`--reconcile`, L0 tests for it, one-off cleanup | section 11 acceptance; `--verify` clean on the real index | 0.5 day |
+| **M0** | P0 indexer fix, `--verify`/`--reconcile`, L0 tests for it, one-off cleanup | section 11 acceptance; `--verify` clean on the real index | 0.5 day. **Status: code and 5 tests done in PR #12; a read-only `--verify` on the real index lists 22 problems (6 stale pages, 3 missing, OWASP hub failed, 12 stray `dup-*` records); the one-off cleanup (`--reconcile`) waits for #12 to merge.** |
 | **M1** | `score.py` + metric unit tests; qmd runner; 30-query seed golden set; first qmd baseline | metrics match hand-computed examples; one command produces a qmd report with CIs | 0.5 day |
 | **M2** | LightRAG runner (index copy, `aquery_data`, page mapping); comparison table across systems | all 9 system/mode rows scored on the seed set; mapping verified on 10 queries by hand | 0.5-1 day |
 | **M3** | Golden set to full size: synthetic generation (non-DeepSeek model), filtering, your spot-check of >=20% and pooled-judgment grading, dev/held-out split | ~120 queries; golden lint passes; spot-check reject rate recorded | about 1-1.5 h of your time (my estimate; less than the hand-authored plan) |

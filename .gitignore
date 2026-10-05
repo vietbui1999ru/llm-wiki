@@ -44,3 +44,7 @@ pending-sync.md
 docs-site/.mintlify/
 /tmp/mint-dev.log
 pi-headroom/node_modules/
+
+# Python bytecode and pytest caches
+__pycache__/
+.pytest_cache/

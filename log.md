@@ -970,3 +970,7 @@ Updated:
 - index.md — new systems entry
 
 Measured at write time: 179 pages indexed, 8,100 graph nodes, 11,369 edges, 165 MB (an earlier mid-rebuild figure of ~2,600 nodes was a partial snapshot and is superseded).
+
+## [2026-10-05] update | wiki-index: fix incremental re-indexing (M0 of the retrieval-eval spec)
+Bug found during research for docs/specs/retrieval-eval-suite.md: LightRAG treats a repeated file basename as a duplicate and silently drops the insert, so changed pages were never re-indexed, same-named pages in different directories collided, and the failed-page check missed it. Verified on the real index with the new `--verify`: 6 stale pages, 3 missing, the OWASP hub still failed, 12 stray dup-* records. Fixed in templates/wiki-index (path-unique file names, delete-then-insert for changed pages, removal of deleted pages, stored-text check after LightRAG's own sanitising, `--verify`/`--reconcile`) with tests in tests/indexer/ (5 tests, ~17 s, fake LLM + real ollama embeddings). The first version of the stored-text check compared raw text and would have failed every real page (LightRAG strips whitespace and unescapes HTML on insert); caught by running --verify on the real index and covered by a regression test.
+Updated: wiki/systems/wiki-indexing-pipeline.md, README.md. The real index is repaired separately after merge: back up, then `wiki-index --reconcile`.

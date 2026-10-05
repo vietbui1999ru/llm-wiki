@@ -4,7 +4,7 @@ type: concept
 tags: [indexing, rag, lightrag, qmd, embeddings, knowledge-graph, incremental, operations, opencode-go]
 sources: ["claude-setup/scripts/post-commit", "templates/wiki-index", "templates/wiki-mcp", "templates/wiki-chat", "LightRAG 1.5.7 source (lightrag/lightrag.py, lightrag/llm/openai.py)", "2026-10-04 rebuild and diagnosis sessions"]
 created: 2026-10-04
-updated: 2026-10-04
+updated: 2026-10-05
 ---
 
 # Wiki Indexing Pipeline: qmd and LightRAG
@@ -38,8 +38,10 @@ The `post-commit` hook runs after every commit: `qmd update` and `qmd embed` **s
 
 ## Keeping it correct
 
-- **Failed pages are not recorded.** LightRAG's `ainsert` logs pipeline errors instead of raising, so `wiki-index` checks the document status afterwards; a failed page stays out of the manifest, is retried next run, and the run exits 1.
-- **Deleted or moved pages linger.** Incremental runs never remove their entities. The 2026-10-04 audit found 67 of 209 manifest entries pointing at missing files; a `--full` rebuild cleared them. Back up `.lightrag/` first (`--full` wipes it before rebuilding).
+- **Same file name means duplicate.** LightRAG silently drops an insert whose file *basename* already exists (and logs a `dup-*` record). Before the fix this meant changed pages were never re-indexed and same-named pages in different directories collided (found 2026-10-05: 6 stale pages, 3 missing, 12 stray records). `wiki-index` now passes a path-unique name (`wiki__concepts__x.md`), replaces a changed page by deleting its old record before inserting, and removes pages deleted from disk on the next run.
+- **Failed or skipped pages are not recorded.** `ainsert` logs pipeline errors instead of raising, so after each insert `wiki-index` checks that the status is `processed` and that the stored text equals the page (compared after LightRAG's own sanitising: strip, HTML-unescape, control characters). A page that fails either check stays out of the manifest, is retried next run, and the run exits 1.
+- **`wiki-index --verify` / `--reconcile`.** `--verify` compares the index with the wiki on disk (missing, failed, stale and deleted-but-indexed pages, stray `dup-*` records) and exits 1 on any difference, without needing the LLM; `--reconcile` repairs them (re-index needs the LLM). Run `--verify` after any bulk change or restore.
+- **Full rebuilds drop dead entries.** The 2026-10-04 audit found 67 of 209 manifest entries pointing at missing files before a `--full` rebuild cleared them. Back up `.lightrag/` first (`--full` wipes it before rebuilding).
 - **No backend, no wipe.** With no LLM backend configured, `wiki-index` exits *before* `--full` would wipe the index.
 - **Full rebuilds are heavy.** Many LLM calls per page; on OpenCode Go they count against 5-hour, weekly and monthly usage limits, hence `--yes`. The 2026-10-04 rebuild of 175 pages took roughly 1.5 hours (estimate from the log).
 

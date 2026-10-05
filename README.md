@@ -300,6 +300,8 @@ Index maintenance:
 wiki-index --test          # verify LLM backend
 wiki-index                 # incremental (new/changed pages only) — safe to run anytime
 wiki-index --status        # show manifest stats without indexing
+wiki-index --verify        # compare the index with the wiki on disk; exit 1 on differences (no LLM needed)
+wiki-index --reconcile     # repair stale / missing / stray records that --verify reports
 wiki-index --full --yes    # wipe and rebuild (asks for --yes; can exhaust the OpenCode Go 5-hour limit)
 ```
 

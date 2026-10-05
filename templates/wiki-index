@@ -48,8 +48,9 @@ try:
     import ollama as _ollama
     from dotenv import load_dotenv
     from lightrag import LightRAG, QueryParam
+    from lightrag.base import DocStatus
     from lightrag.llm.openai import openai_complete_if_cache
-    from lightrag.utils import EmbeddingFunc
+    from lightrag.utils import EmbeddingFunc, sanitize_text_for_encoding
 except ImportError:
     print("Missing: pip install lightrag-hku python-dotenv")
     sys.exit(1)
@@ -227,6 +228,32 @@ def page_content(path: Path) -> str:
     return f"# Source: {rel}\n\n{path.read_text()}"
 
 
+def _file_name(rel: Path) -> str:
+    """LightRAG treats a repeated file *basename* as a duplicate and silently drops the insert,
+    so every page gets a path-unique name. The doc id stays the page's relative path."""
+    return str(rel).replace("/", "__")
+
+
+async def _index_one(rag: LightRAG, p: Path) -> str | None:
+    """(Re)index one page. Returns None on success, otherwise the reason it failed."""
+    rel = p.relative_to(WIKI_DIR)
+    doc_id, content = str(rel), page_content(p)
+    if await rag.doc_status.get_by_id(doc_id):  # changed page or earlier failure: replace, not re-insert
+        res = await rag.adelete_by_doc_id(doc_id)
+        if res.status not in ("success", "not_found"):
+            return f"could not remove the old version: {res.message}"
+    await rag.ainsert(content, ids=[doc_id], file_paths=[_file_name(rel)])
+    # ainsert logs pipeline errors instead of raising and silently skips duplicates: check what was stored.
+    doc = await rag.doc_status.get_by_id(doc_id)
+    status = getattr(doc.get("status"), "value", doc.get("status")) if doc else None
+    if status != "processed":
+        return (doc or {}).get("error_msg") or f"status {status}"
+    stored = await rag.full_docs.get_by_id(doc_id)
+    if not stored or stored.get("content") != sanitize_text_for_encoding(content):  # LightRAG sanitizes on insert
+        return "stored text does not match the page (the insert was skipped)"
+    return None
+
+
 async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
     changed = [
         p for p in pages
@@ -243,17 +270,9 @@ async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
     for i, p in enumerate(changed, 1):
         rel = p.relative_to(WIKI_DIR)
         print(f"  [{i}/{len(changed)}] {rel}", flush=True)
-        await rag.ainsert(
-            page_content(p),
-            ids=[str(rel)],
-            file_paths=[str(rel)],
-        )
-        # ainsert logs pipeline errors instead of raising; only record pages that did not fail,
-        # otherwise a failed page would be marked indexed and never retried.
-        doc = await rag.doc_status.get_by_id(str(rel))
-        status = getattr(doc.get("status"), "value", doc.get("status")) if doc else None
-        if status == "failed":
-            print(f"    FAILED: {doc.get('error_msg', 'see log above')}", flush=True)
+        reason = await _index_one(rag, p)
+        if reason:  # only record pages that really made it in, otherwise they are never retried
+            print(f"    FAILED: {reason}", flush=True)
             failed.append(rel)
             continue
         manifest[str(p)] = p.stat().st_mtime
@@ -263,6 +282,57 @@ async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
     if failed:
         raise SystemExit(1)
     return manifest
+
+
+async def remove_deleted_pages(rag: LightRAG, manifest: dict) -> None:
+    """Drop pages that no longer exist on disk from the index and the manifest."""
+    for path in [k for k in manifest if not Path(k).exists()]:
+        doc_id = str(Path(path).relative_to(WIKI_DIR))
+        res = await rag.adelete_by_doc_id(doc_id)
+        if res.status in ("success", "not_found"):
+            print(f"  removed deleted page: {doc_id}", flush=True)
+            del manifest[path]
+            save_manifest(manifest)
+        else:
+            print(f"  could not remove {doc_id}: {res.message}", flush=True)
+
+
+async def find_problems(rag: LightRAG, pages: list[Path], manifest: dict) -> list[tuple[str, str]]:
+    """Compare the index with the wiki on disk. Returns (doc id, problem) pairs."""
+    problems = []
+    for p in pages:
+        doc_id = str(p.relative_to(WIKI_DIR))
+        doc = await rag.doc_status.get_by_id(doc_id)
+        status = getattr(doc.get("status"), "value", doc.get("status")) if doc else None
+        if not doc:
+            problems.append((doc_id, "missing from the index"))
+        elif status != "processed":
+            problems.append((doc_id, f"status {status}"))
+        elif (await rag.full_docs.get_by_id(doc_id) or {}).get("content") != sanitize_text_for_encoding(page_content(p)):
+            problems.append((doc_id, "stored text is stale"))
+    problems += [(str(Path(k).relative_to(WIKI_DIR)), "deleted page still indexed")
+                 for k in manifest if not Path(k).exists()]
+    failed = await rag.doc_status.get_docs_by_statuses([DocStatus.FAILED])
+    problems += [(k, "stray rejected-duplicate record") for k in failed if k.startswith("dup-")]
+    return problems
+
+
+async def reconcile(rag: LightRAG, problems: list[tuple[str, str]], manifest: dict) -> None:
+    """Repair what find_problems() reported."""
+    for key, why in problems:
+        if why == "stray rejected-duplicate record":
+            await rag.doc_status.delete([key])
+        elif why == "deleted page still indexed":
+            await remove_deleted_pages(rag, manifest)
+        else:
+            p = WIKI_DIR / key
+            print(f"  reindexing {key} ({why})", flush=True)
+            if reason := await _index_one(rag, p):
+                print(f"    FAILED: {reason}", flush=True)
+            else:
+                manifest[str(p)] = p.stat().st_mtime
+                save_manifest(manifest)
+    await rag.doc_status.index_done_callback()
 
 
 def show_status(pages: list[Path], manifest: dict) -> None:
@@ -300,6 +370,8 @@ async def main() -> None:
     parser.add_argument("--status", action="store_true", help="show stats only")
     parser.add_argument("--test",   action="store_true", help="test LLM backend then exit")
     parser.add_argument("--yes",    action="store_true", help="skip cost confirmation for --full with API key")
+    parser.add_argument("--verify", action="store_true", help="compare the index with the wiki on disk; exit 1 on differences")
+    parser.add_argument("--reconcile", action="store_true", help="repair what --verify reports (re-indexes pages; needs the LLM)")
     args = parser.parse_args()
 
     pages = sorted(WIKI_PAGES.rglob("*.md"))
@@ -311,6 +383,23 @@ async def main() -> None:
     if args.test:
         await test_llm_backend()
         return
+
+    if args.verify or args.reconcile:
+        if args.reconcile and _llm_func is _no_backend:
+            print(_NO_BACKEND_MSG)
+            raise SystemExit(1)
+        rag, manifest = await make_rag(), load_manifest()
+        try:
+            problems = await find_problems(rag, pages, manifest)
+            for key, why in problems:
+                print(f"  {key}: {why}")
+            if args.reconcile and problems:
+                await reconcile(rag, problems, manifest)
+                problems = await find_problems(rag, pages, manifest)
+        finally:
+            await rag.finalize_storages()
+        print(f"{len(problems)} problem(s) remain." if problems else "Index matches the wiki.")
+        raise SystemExit(1 if problems else 0)
 
     if _llm_func is _no_backend:  # checked before --full wipes the existing index
         print(_NO_BACKEND_MSG)
@@ -330,6 +419,7 @@ async def main() -> None:
     rag      = await make_rag()
     manifest = {} if args.full else load_manifest()
     try:
+        await remove_deleted_pages(rag, manifest)
         await index_pages(rag, pages, manifest)
     finally:
         await rag.finalize_storages()

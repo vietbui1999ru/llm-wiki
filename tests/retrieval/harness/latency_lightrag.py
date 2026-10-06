@@ -7,9 +7,10 @@
 
 Spec: docs/specs/retrieval-eval-suite.md, section 9. Stages per call: keyword-extraction LLM (llm_ms), embedding
 (embed_ms, sum of call durations, calls may overlap) and graph plus vector lookup (lookup_ms, the remainder).
-naive uses no LLM. Graph modes are sampled as pairs: a cold call on a text unique to the mode, pass and run (the
-keyword prompt embeds the query, so no cache entry can exist) then a warm repeat that must hit the cache. Runs
-against a scratch copy of the eval index so neither the real index nor the eval copy's cache is touched.
+naive uses no LLM. Graph modes are sampled as pairs on the real query text: the scratch copy of the eval index has its
+query-time keyword-cache entries stripped, so the first call per (mode, query) is a genuine miss (cold) and its immediate
+repeat hits the cache (warm). Neither the real index nor the eval copy's cache is touched. (Suffixed variant texts, as
+used for qmd, were tried first and rejected: they make the extraction LLM return empty keywords, which is not cached.)
 Process cold start (imports, storage load, first query) is measured separately with --cold-start-runs.
 """
 import argparse
@@ -23,7 +24,6 @@ import shutil
 import subprocess
 import sys
 import time
-import zlib
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -33,26 +33,28 @@ import latency_qmd  # noqa: E402
 import run_lightrag  # noqa: E402
 
 SCRATCH = Path.home() / ".cache/llm-wiki/lightrag-eval-latency"
-MARKS = {"local": "?", "global": "!", "hybrid": "~", "mix": "."}
 COLD_START_KEYS = ("wall_ms", "import_ms", "init_ms", "first_naive_ms", "second_naive_ms")
 
 
-def variant(query, mode, p, salt):
-    """Query text no other mode, pass or run has used, so its keyword extraction cannot be cached."""
-    return f"{query} {MARKS[mode] * p} {salt}"
+def strip_keyword_entries(cache):
+    """Drop every query-time keyword-extraction entry ('<mode>:keywords:<hash>') from the LLM response cache, so
+    the next call per (mode, query) is a genuine miss. Index-time extraction and summary entries are kept."""
+    kept = {k: v for k, v in cache.items() if ":keywords:" not in k}
+    return kept, len(cache) - len(kept)
 
 
-def make_plan(queries, passes, seed, salt):
-    """Work items for {mode: passes}. naive: one plain call. Graph modes: a cold/warm pair on one fresh text."""
+def make_plan(queries, passes, seed):
+    """Work items for {mode: passes} on the real query text. naive: plain calls (any number of passes). Graph modes:
+    one cold/warm pair (cold = the stripped keyword cache misses, warm = the immediate repeat hits); a second pass
+    would already be warm, so it is refused."""
     plan = []
     for mode, n_passes in passes.items():
+        if mode != "naive" and n_passes != 1:
+            raise ValueError(f"{mode}: graph modes support one pass (a repeat pair would already be cached)")
         for q in queries:
             for p in range(1, n_passes + 1):
-                base = {"backend": mode, "id": q["id"], "pass": p}
-                if mode == "naive":
-                    plan.append({**base, "kind": "plain", "text": q["query"]})
-                else:
-                    plan.append({**base, "kind": "pair", "text": variant(q["query"], mode, p, salt)})
+                kind = "plain" if mode == "naive" else "pair"
+                plan.append({"backend": mode, "id": q["id"], "pass": p, "kind": kind, "text": q["query"]})
     random.Random(seed).shuffle(plan)
     return plan
 
@@ -83,7 +85,9 @@ def format_report(records):
     lines = latency_qmd.format_groups(flat)
     check = cache_check(flat)
     if check:
-        lines.append("\ncache check (cold samples must call the keyword LLM, warm samples must hit the cache):")
+        lines.append("\ncache check (cold samples must call the keyword LLM, warm samples should hit the cache). A warm "
+                     "sample that made an LLM call is a query whose keywords LightRAG did not cache (it does not cache "
+                     "an extraction that returned no low-level keywords), so that query pays the LLM on every call:")
         for mode, c in check.items():
             lines.append(f"  {mode}: cold samples that made no LLM call: {c['cold_hit']} of {c['cold_n']}; "
                          f"warm samples that made one: {c['warm_miss']} of {c['warm_n']}")
@@ -95,13 +99,19 @@ def summarize_cold_starts(probes):
     return {k: latency.summarize([p[k] for p in probes]) for k in COLD_START_KEYS} if probes else {}
 
 
-def prepare_scratch(index_hash):
-    """A throwaway copy of the eval index for latency runs; rebuilt only when the real index changed."""
-    stamp = SCRATCH / ".latency-source-hash"
-    if not (stamp.exists() and stamp.read_text() == index_hash):
-        shutil.rmtree(SCRATCH, ignore_errors=True)
-        shutil.copytree(run_lightrag.EVAL_COPY, SCRATCH)
-        stamp.write_text(index_hash)
+def prepare_scratch(index_hash, run):
+    """A throwaway copy of the eval index with the keyword cache stripped, rebuilt for every new run. Resuming the same
+    run keeps it, so pairs already measured stay cached and the pending ones are still genuine misses."""
+    stamp = SCRATCH / ".latency-stamp"
+    if stamp.exists() and stamp.read_text() == f"{index_hash}:{run}":
+        return 0
+    shutil.rmtree(SCRATCH, ignore_errors=True)
+    shutil.copytree(run_lightrag.EVAL_COPY, SCRATCH)
+    cache_path = SCRATCH / "kv_store_llm_response_cache.json"
+    kept, removed = strip_keyword_entries(json.loads(cache_path.read_text()))
+    cache_path.write_text(json.dumps(kept))
+    stamp.write_text(f"{index_hash}:{run}")
+    return removed
 
 
 async def measure(rag, counter, text, mode):
@@ -167,9 +177,9 @@ def run_cold_starts(n, query):
     return probes
 
 
-def metadata(args, passes, salt, index_hash):
+def metadata(args, passes, index_hash):
     return {"date": datetime.datetime.now(datetime.timezone.utc).isoformat(), "run": args.run, "passes": passes,
-            "seed": args.seed, "salt": salt, "machine": latency.machine_info(), "index_hash": index_hash,
+            "seed": args.seed, "machine": latency.machine_info(), "index_hash": index_hash,
             "lightrag_version": importlib.metadata.version("lightrag-hku"), "settings": run_lightrag.SETTINGS,
             "llm_model": os.environ.get("OPENCODE_LIGHTRAG_MODEL", "deepseek-v4.1-flash"),
             "embed_model": run_lightrag.SETTINGS["embed_model"], "note": "disk cache is warm after the first run"}
@@ -198,11 +208,10 @@ def main(argv=None):
     stem = out / f"latency-lightrag-{args.run}"
     samples_path, meta_path, cold_path = Path(f"{stem}.jsonl"), Path(f"{stem}.meta.json"), Path(f"{stem}.coldstart.json")
     index_hash = run_lightrag.sync_eval_copy()
-    prepare_scratch(index_hash)
-    salt = zlib.crc32(args.run.encode()) % 1000
+    stripped = prepare_scratch(index_hash, args.run)
     if not meta_path.exists():
-        meta_path.write_text(json.dumps(metadata(args, passes, salt, index_hash), indent=2))
-    todo = latency_qmd.pending(make_plan(queries, passes, args.seed, salt), latency_qmd.read_samples(samples_path))
+        meta_path.write_text(json.dumps({**metadata(args, passes, index_hash), "keyword_entries_stripped": stripped}, indent=2))
+    todo = latency_qmd.pending(make_plan(queries, passes, args.seed), latency_qmd.read_samples(samples_path))
 
     async def go():
         rag, counter = await run_lightrag.build_rag(SCRATCH, graph_modes=any(m != "naive" for m in passes))

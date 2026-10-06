@@ -1,33 +1,40 @@
 """LightRAG latency sampling: plan, stage split and cache check (spec section 9). The runs themselves are not unit-tested.
 
-Graph modes call the keyword-extraction LLM once per (mode, query) unless that exact text is cached, so a cold sample
-uses a text unique to the mode, pass and run (miss guaranteed) and its warm repeat hits the cache. naive uses no LLM.
+Graph modes call the keyword-extraction LLM once per (mode, query) unless that exact entry is cached. The runner works on
+a scratch copy of the index whose keyword-cache entries are stripped, so the first call per (mode, query) is a genuine
+miss on the real query text and its immediate repeat is a hit. (Suffixed variant texts, as used for qmd, make the LLM
+return empty low-level keywords, which LightRAG does not cache, so they were rejected.) naive uses no LLM.
 """
+import pytest
+
 import latency_lightrag
 
 QUERIES = [{"id": f"q-{i}", "query": f"query {i}"} for i in range(1, 5)]
 
 
-def test_variants_are_distinct_across_modes_passes_and_runs():
-    texts = {latency_lightrag.variant("agent harness", m, p, salt)
-             for m in ("local", "global", "hybrid", "mix") for p in (1, 2) for salt in (3, 4)}
-    assert len(texts) == 16 and all(t.startswith("agent harness") for t in texts)
+def test_strip_keyword_entries_removes_only_keyword_cache_entries():
+    cache = {"hybrid:keywords:aa": {"x": 1}, "mix:keywords:bb": {"x": 2}, "default:extract:cc": {"x": 3},
+             "default:summary:dd": {"x": 4}}
+    kept, removed = latency_lightrag.strip_keyword_entries(cache)
+    assert removed == 2 and set(kept) == {"default:extract:cc", "default:summary:dd"}
 
 
-def test_plan_gives_naive_plain_samples_and_graph_modes_pairs():
-    plan = latency_lightrag.make_plan(QUERIES, {"naive": 2, "local": 1, "mix": 1}, seed=1, salt=5)
+def test_plan_gives_naive_plain_samples_and_graph_modes_pairs_on_the_real_query_text():
+    plan = latency_lightrag.make_plan(QUERIES, {"naive": 2, "local": 1, "mix": 1}, seed=1)
     count = lambda m, k: sum(1 for s in plan if s["backend"] == m and s["kind"] == k)
     assert count("naive", "plain") == 8 and count("local", "pair") == 4 and count("mix", "pair") == 4
-    golden_texts = {q["query"] for q in QUERIES}
-    assert all(s["text"] in golden_texts for s in plan if s["kind"] == "plain")
-    pair_texts = [s["text"] for s in plan if s["kind"] == "pair"]
-    assert len(set(pair_texts)) == len(pair_texts) and not set(pair_texts) & golden_texts
+    assert {s["text"] for s in plan} == {q["query"] for q in QUERIES}
+
+
+def test_a_second_pass_for_a_graph_mode_is_refused_because_its_cache_would_already_be_warm():
+    with pytest.raises(ValueError, match="one pass"):
+        latency_lightrag.make_plan(QUERIES, {"local": 2}, seed=1)
 
 
 def test_plan_is_deterministic_for_a_seed():
-    args = (QUERIES, {"naive": 1, "local": 1}, 1, 5)
-    assert latency_lightrag.make_plan(*args) == latency_lightrag.make_plan(*args)
-    assert latency_lightrag.make_plan(*args) != latency_lightrag.make_plan(QUERIES, {"naive": 1, "local": 1}, 2, 5)
+    args = (QUERIES, {"naive": 1, "local": 1})
+    assert latency_lightrag.make_plan(*args, seed=1) == latency_lightrag.make_plan(*args, seed=1)
+    assert latency_lightrag.make_plan(*args, seed=1) != latency_lightrag.make_plan(*args, seed=2)
 
 
 def test_stage_split_attributes_llm_and_embedding_time_and_leaves_the_rest_to_lookup():

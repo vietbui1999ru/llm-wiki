@@ -100,11 +100,23 @@
         {
           "page": "wiki/concepts/memory-bank-pattern.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/agentic-memory-tool.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/entities/mnemory.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/summaries/cloudflare-agent-memory.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Memory bank is the best primary answer, but three other cross-session memory pages are valid supporting answers."
     },
     {
       "id": "q-008",
@@ -115,11 +127,23 @@
         {
           "page": "wiki/concepts/owasp-ai-agent-risks.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/indirect-prompt-injection.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/agentic-sandbox-controls.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/ai-specific-pitfalls.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Primary label right; a broad 'security dangers' query has several valid supporting pages."
     },
     {
       "id": "q-009",
@@ -130,11 +154,15 @@
         {
           "page": "wiki/concepts/rules-vs-hooks.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/agent-context-instructions.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Label correct; add the instructions page as support."
     },
     {
       "id": "q-010",
@@ -220,11 +248,15 @@
         {
           "page": "wiki/concepts/deep-modules.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/patterns/design-patterns-structural.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Deep modules is primary; the description also fits Facade, and principles.md cross-links deep modules (related only)."
     },
     {
       "id": "q-016",
@@ -235,11 +267,15 @@
         {
           "page": "wiki/concepts/slash-commands.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/ralph-loop.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Label correct; Ralph Loop is a strong supporting answer."
     },
     {
       "id": "q-017",
@@ -250,11 +286,19 @@
         {
           "page": "wiki/concepts/worktree-isolation.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/entities/sandcastle.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/branch-strategy-for-agents.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Primary right; two worktree-specific pages support it."
     },
     {
       "id": "q-018",
@@ -265,11 +309,19 @@
         {
           "page": "wiki/entities/pentagi.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/summaries/aws-security-agent.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/pentest-agent-design.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): PentAGI (self-hosted) is the best primary; two other autonomous-pentest pages support it."
     },
     {
       "id": "q-019",
@@ -280,11 +332,19 @@
         {
           "page": "wiki/patterns/code-quality.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/patterns/principles.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/patterns/refactoring.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Code-quality is primary; give the two sibling pages supporting credit."
     },
     {
       "id": "q-020",
@@ -295,11 +355,15 @@
         {
           "page": "wiki/patterns/concurrency.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/actor-model.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Read as programming concurrency, the label is right and actor-model supports it."
     },
     {
       "id": "q-021",
@@ -308,17 +372,21 @@
       "split": "dev",
       "relevant": [
         {
+          "page": "wiki/concepts/worker-coordination.md",
+          "grade": 2
+        },
+        {
           "page": "wiki/concepts/actor-model.md",
           "grade": 2
         },
         {
-          "page": "wiki/concepts/worker-coordination.md",
-          "grade": 2
+          "page": "wiki/patterns/concurrency.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Worker-coordination carries the bridge (Actor Mailbox pattern citing actor-model). Actor-model itself never mentions AI agents but is the theory half."
     },
     {
       "id": "q-022",
@@ -333,15 +401,23 @@
         {
           "page": "wiki/concepts/agent-harness.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/entities/agents-md-format.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/rules-vs-hooks.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Both labels are right and they cross-link each other; two supporting pages are missing."
     },
     {
       "id": "q-023",
-      "query": "how do agents recovering from drift connect with how their git changes get merged",
+      "query": "when an agent does not know how to merge its worktree branch, how does it look up the right strategy",
       "category": "relational",
       "split": "dev",
       "relevant": [
@@ -356,7 +432,7 @@
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): No developer would ask this. The real link is that self-correction routes an agent unsure about merge or branch strategy to the branch-strategy page."
     },
     {
       "id": "q-024",
@@ -371,15 +447,19 @@
         {
           "page": "wiki/concepts/agent-subagents.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/syntheses/agent-primitive-selection.md",
+          "grade": 2
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Good query; missing the synthesis page that answers it directly."
     },
     {
       "id": "q-025",
-      "query": "do multi-instance coding squads make long conversation attention problems worse",
+      "query": "does splitting work across parallel agent instances help with context rot in long sessions",
       "category": "relational",
       "split": "dev",
       "relevant": [
@@ -390,11 +470,15 @@
         {
           "page": "wiki/concepts/context-degradation.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/agent-subagents.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): Labels are right (agent-teams cites context-degradation as why each teammate has its own window), but the wording is unnatural."
     },
     {
       "id": "q-026",
@@ -426,6 +510,10 @@
           "grade": 2
         },
         {
+          "page": "wiki/systems/scalability-reliability.md",
+          "grade": 1
+        },
+        {
           "page": "wiki/patterns/api-design.md",
           "grade": 1
         },
@@ -438,13 +526,17 @@
           "grade": 1
         },
         {
+          "page": "wiki/systems/architectural-patterns.md",
+          "grade": 1
+        },
+        {
           "page": "wiki/patterns/principles.md",
           "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): principles.md is generic SOLID/DRY, not server-side, so it is weaker than the omitted scalability-reliability page."
     },
     {
       "id": "q-028",
@@ -457,6 +549,10 @@
           "grade": 2
         },
         {
+          "page": "wiki/concepts/owasp-ai-agent-risks.md",
+          "grade": 2
+        },
+        {
           "page": "wiki/concepts/ai-code-review.md",
           "grade": 1
         },
@@ -465,17 +561,17 @@
           "grade": 1
         },
         {
-          "page": "wiki/concepts/owasp-security-checklist.md",
+          "page": "wiki/concepts/verification-pipeline.md",
           "grade": 1
         },
         {
-          "page": "wiki/concepts/verification-pipeline.md",
+          "page": "wiki/concepts/multi-vendor-adversarial-review.md",
           "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): owasp-security-checklist is now a hub page with only a severity table plus links, so it is stale as a label. The AI content moved to owasp-ai-agent-risks."
     },
     {
       "id": "q-029",

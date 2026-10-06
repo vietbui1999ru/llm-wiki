@@ -46,7 +46,9 @@ def to_bench(runs):
         results.append({"id": qid, "backends": {
             m: {"top_files": ranked_pages(r["result"]), "latency_ms": r["ms"]} for m, r in modes.items()}})
         extras[qid] = {m: {**diagnostics(r["result"]), "kg_only_pages": kg_only_pages(r["result"]),
-                           "llm_calls": r["llm_calls"]} for m, r in modes.items()}
+                           "llm_calls": r["llm_calls"],
+                           "chunk_ids": [c["chunk_id"] for c in r["result"]["data"]["chunks"]]}
+                       for m, r in modes.items()}
     return {"results": results}, extras
 
 

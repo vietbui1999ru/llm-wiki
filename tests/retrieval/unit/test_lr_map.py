@@ -51,6 +51,7 @@ def test_to_bench_shapes_runs_for_the_shared_scorer_and_keeps_diagnostics_aside(
         "mix": {"top_files": ["wiki/b.md"], "latency_ms": 900}}}
     assert extras["q-1"]["mix"]["kg_only_pages"] == ["wiki/z.md"] and extras["q-1"]["mix"]["llm_calls"] == 1
     assert extras["q-1"]["naive"]["entities"] == 0
+    assert extras["q-1"]["naive"]["chunk_ids"] == ["wiki/a.md-chunk-000", "wiki/b.md-chunk-000"]  # kept for audit
 
 
 def test_a_failed_query_is_an_error_not_an_empty_ranking():

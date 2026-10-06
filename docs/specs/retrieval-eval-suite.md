@@ -1,7 +1,7 @@
 # SPEC: Retrieval Evaluation Suite for the Wiki Indexes
 
-**Status:** Draft for review. Written 2026-10-04. **Progress (2026-10-05):** M0 is implemented and tested in PR #12 (open, not yet merged); nothing else in this spec is implemented.
-**Owner decision needed:** see section 15 (open decisions) before any code is written.
+**Status:** Draft for review. Written 2026-10-04. **Progress (2026-10-06):** M0, M1 and M2 are implemented, tested and merged (PRs #12, #13, #14). Next is M3 (grow the golden set). Two implementation deviations from this text are recorded in 7.1 and 7.2, the state of the evidence is in 13.1, and the human spot-check required by D4 is still open.
+**Owner decisions:** D1-D12 are settled (section 15); the remaining open item is the human spot-check, see 5.3 (amended 2026-10-06).
 
 ## 1. Purpose and non-goals
 
@@ -11,7 +11,7 @@ Systems under test:
 
 | System | What it is | How it is queried here |
 |---|---|---|
-| **qmd** 2.8.3 | BM25 + vector hybrid, LLM query expansion, LLM reranking (models: embeddinggemma-300M, Qwen3-Reranker-0.6B, qmd-query-expansion-1.7B, run on Metal) | `qmd bench` backends `bm25`, `vector`, `hybrid`, `full` |
+| **qmd** 2.8.3 | BM25 + vector hybrid, LLM query expansion, LLM reranking (models: embeddinggemma-300M, Qwen3-Reranker-0.6B, qmd-query-expansion-1.7B, run on Metal) | qmd CLI, four backends named `bm25`, `vector`, `hybrid`, `full` (`search`, `vsearch`, `query --no-rerank`, `query`; originally `qmd bench`, see 7.1) |
 | **LightRAG** 1.5.7 | LLM-extracted knowledge graph + vector indexes (extraction LLM: deepseek-v4.1-flash via OpenCode Go; embeddings: ollama nomic-embed-text) | `aquery_data` in modes `naive`, `local`, `global`, `hybrid`, `mix` |
 
 **Non-goals (v1).**
@@ -55,7 +55,7 @@ qmd's `wiki` collection indexes the whole repo (720 files, including `raw/` sour
 - Page id = `chunk_id.rsplit("-chunk-", 1)[0]` (the exact wiki path). Do **not** use `file_path`: LightRAG flattens it to the basename.
 - Rank = order of first appearance of the page in `data.chunks`, deduplicated. Note: that order is a round-robin merge of entity-, relation- and vector-derived chunks, not a score sort (operate.py:5637-5678). Rank-sensitive metrics (MRR, nDCG) for graph modes are therefore "list-order" metrics; this must be stated wherever they are reported.
 - Pages reachable only through entities/relationships (via `source_id`/`file_path`) are reported as a separate diagnostic (`kg_only_pages`), not in the primary ranking.
-- Settings are recorded with every run and held fixed: `top_k=20`, `chunk_top_k` explicit (default proposal 10, matching k), `cosine_better_than_threshold=0.3`, reranker off (`rerank_model_func` is `None`, so `enable_rerank` only logs a warning).
+- Settings are recorded with every run and held fixed: `top_k=20`, `chunk_top_k=30` (**amended 2026-10-06**: the original proposal of 10 collapses to about 7 distinct pages after page-level de-duplication, which would cap Recall@10; with 30 a naive query yields about 23 pages and graph modes 17-21), `cosine_better_than_threshold=0.3`, reranker off (`rerank_model_func` is `None`, so `enable_rerank` only logs a warning).
 - Even in context-only mode the graph modes call the keyword-extraction LLM once per (mode, query); results are cached in `kv_store_llm_response_cache.json`. `naive` uses no LLM.
 - Always query a **copy** of `.lightrag/` so cache writes never touch the real index.
 
@@ -133,6 +133,8 @@ Split ~70/30 dev/heldout. The held-out split is used only for final A/B decision
 - Treat **absolute scores as optimistic** (especially for lexical backends) and trust **differences between systems** more; every report carries this caveat. Keep the held-out split untouched by tuning.
 - As real failures are found in daily use, add them as hand-written queries (a growing regression set); this raises the human-authored share over time.
 
+**Amended 2026-10-06 (what was actually done for the 30-query seed set; the human spot-check is still open).** The owner declined the human spot-check for now and asked for it to be done by the assistant. Done instead: (1) an independent Opus review agent read every labelled page and searched for unlabelled answers (no label wrong; 16 queries gained supporting pages or a corrected primary, 2 rewritten; every change is in the query's `notes`); (2) pooled judgments by the assistant: 335 pages appeared in some backend's top 10, 85% unlabelled (mostly generic hub pages that appear for unrelated queries), and the 94 consensus candidates (returned by 3 or more backends) for non-exact, non-null queries were read, giving 6 more grade-1 pages. About 190 pooled pages were not individually read. **Neither pass is a human judgement**: labels are agent-reviewed only, the D4 spot-check (at least 20%) remains required before the set is treated as reviewed, and every report keeps the optimism caveat. The leakage gates (rare term found in 1-2 pages; more than half of the query's word pairs copied verbatim from the primary page) are implemented as hard gates; they are exact-token based, so they also reject plain words that merely happen to be rare in this wiki (13 of 22 first-pass generated queries were rejected).
+
 ## 6. Metrics
 
 Computed per query, then averaged per category and overall. `k` values: 1, 3, 5, 10.
@@ -153,13 +155,14 @@ Primary headline: **nDCG@10 and Recall@5/10**. Our scorer is ~40 lines of Python
 ## 7. Runners
 
 ### 7.1 qmd runner
-- Generates a `qmd bench` fixture from the golden file: `{"collection": "wiki", "queries": [{"id","query","type","expected_files","expected_in_top_k": 10}]}` (extra fields are tolerated; only `queries` is validated). **Always set `"collection": "wiki"`**, otherwise bench searches all collections.
-- Runs `qmd bench fixture.json --json -c wiki` once; reads `top_files` per backend; discards qmd's own metrics; scores with section 6. Latency comes from `latency_ms`.
-- Caveats recorded in every report: bench's BM25 ANDs all terms, so long natural-language queries score about zero on `bm25` (a property of qmd, not a harness bug); expansion results are cached per (query, model), so later backends appear faster than a cold run (latency is measured separately in section 9).
-- Verify setup first: the collection exists and is indexed (`qmd ls wiki`). Bench now fails fast on an unknown/empty collection and warns on stderr when all backends score zero.
+- **Amended 2026-10-06 (implemented in PR #13): the runner calls the qmd CLI, not `qmd bench`.** `qmd bench` returns at most 10 files per query and has no option to change that. qmd's collection is the whole repo, so 6-7 of those 10 are `raw/` or meta pages; after the wiki/**-only filter of 3.2 only 1.3 to 3.7 pages were left and Recall@5 equalled Recall@10 for every backend (the first baseline was invalid for that reason). Each backend is now run as `qmd search` (bm25), `qmd vsearch` (vector), `qmd query --no-rerank` (hybrid) and `qmd query` (full), each with `-n 50 --json -c wiki`. On a probe query the CLI top-10 was identical to bench's for all four backends, so only the cap changes. Latency is now wall-clock per CLI process (includes start-up) and is not comparable to bench's `latency_ms` or to section 9.
+- `golden.qmd_fixture` (the bench fixture builder from the original design, `{"collection": "wiki", "queries": [...]}`; always pin `"collection": "wiki"`) is kept and tested but no longer used by the runner.
+- Reads the ranked file list per backend; scores with section 6. `run_qmd.py --rescore RESULTS.json` recomputes metrics from a saved run after a label change, without rerunning qmd.
+- Caveats recorded in every report: BM25 ANDs all terms, so long natural-language queries score about zero on `bm25` (a property of qmd, not a harness bug); expansion results are cached per (query, model), so later backends appear faster than a cold run (latency is measured separately in section 9).
+- Verify setup first: the collection exists and is indexed (`qmd ls wiki`). Every report prints the mean number of wiki pages kept per query after the filter; `@10` is only meaningful while that stays above 10 (hybrid and full average 9.0 at `-n 50` because `qmd query` returns fewer files, so their Recall@10 is slightly truncated; unresolved).
 
 ### 7.2 LightRAG runner
-- Python `uv` script (PEP 723). Copies `.lightrag/` to a temp dir, constructs `LightRAG` with the same parameters as `wiki-mcp`, and for each query and mode calls `await rag.aquery_data(q, QueryParam(mode=m, top_k=20, chunk_top_k=<recorded>))`.
+- Python `uv` script (PEP 723). Queries a **persistent copy** of `.lightrag/` at `~/.cache/llm-wiki/lightrag-eval` (implemented in PR #14: refreshed only when the SHA-256 of `manifest.json` changes, so the keyword-extraction cache survives reruns and the real index is never written), constructs `LightRAG` with the same parameters as `wiki-mcp`, and for each query and mode calls `await rag.aquery_data(q, QueryParam(mode=m, top_k=20, chunk_top_k=<recorded>))`.
 - Maps chunks to pages and ranks per section 3.3; records entities/relations count, context token estimate and wall-clock per call.
 - First run per (mode, query) pays one keyword-extraction LLM call; later runs are cache hits. Both are recorded.
 - A zero-LLM baseline equal to `naive` can be obtained from `rag.chunks_vdb.query(...)` directly (inferred equivalent; verify before relying on it).
@@ -172,7 +175,7 @@ One results JSON per run: run metadata (date, git sha, index hash, versions, mac
 - Always report n and a 95% bootstrap CI for every mean. Use a fixed seed.
 - Comparing two systems: per-query paired differences; paired permutation test (or paired t-test) plus a paired bootstrap CI on the mean difference. Avoid Wilcoxon and sign tests (the IR literature disagrees on bootstrap-vs-randomization, agrees these two are weak).
 - Binary Hit@k comparisons: McNemar.
-- Do not claim differences smaller than the minimum detectable effect (about 0.08 nDCG at n=100 with the held-out split excluded from tuning; derived, assumed sd 0.3; recompute from our observed sd once we have data).
+- Do not claim differences smaller than the minimum detectable effect (about 0.08 nDCG at n=100 with the held-out split excluded from tuning; derived, assumed sd 0.3; recompute from our observed sd once we have data). **Observed 2026-10-06 (n=28): about 0.17-0.19 nDCG@10 and Recall@10 for the designated paired comparisons** (`compare.py` computes 2.8 * sd of the paired differences / sqrt(n) and flags differences below it), so n=28 detects nothing smaller; the 0.08 target needs about 100 queries (M3).
 - Multiple comparisons: with 9 systems the report is exploratory; designate in advance the 2-3 comparisons that matter (e.g. `qmd full` vs `LightRAG mix`; `qmd hybrid` vs `LightRAG naive`) and treat the rest as descriptive.
 - Report per category as well as overall: an overall mean hides exactly the effect we want to see.
 
@@ -222,13 +225,16 @@ tests/retrieval/
   golden/golden.json              # canonical, reviewed
   baselines/<system>.json         # committed, per-query
   results/                        # gitignored
-  harness/
-    build_fixture.py              # golden.json -> qmd bench fixture
-    run_qmd.py                    # qmd bench --json -> ranked pages
-    run_lightrag.py               # aquery_data on an index copy
-    score.py                      # metrics, bootstrap, paired tests (stdlib + numpy)
-    latency.py
-    report.py                     # tables, per-category, CIs
+  harness/                        # as implemented (M1, M2); latency.py is M4
+    score.py                      # metrics, bootstrap, paired tests (stdlib only)
+    golden.py                     # load, lint, leakage gates, qmd bench fixture builder (unused by the runner)
+    seed.py, build_seed.py        # seed-set builder: candidates stage, assemble stage
+    run_qmd.py                    # qmd CLI (-n 50) -> ranked pages; report; --rescore
+    run_lightrag.py               # aquery_data on a persistent index copy (uv script)
+    lr_map.py                     # LightRAG chunk -> page mapping, diagnostics
+    verify_mapping.py             # cross-check the mapping against full_doc_id and files
+    compare.py                    # 9-system table, designated paired comparisons, Hole@10, MDE
+    latency.py                    # M4, not built
   unit/                           # L0 tests
 ```
 
@@ -242,12 +248,22 @@ Effort and cost figures are my estimates.
 
 | # | Deliverable | Acceptance | Rough effort |
 |---|---|---|---|
-| **M0** | P0 indexer fix, `--verify`/`--reconcile`, L0 tests for it, one-off cleanup | section 11 acceptance; `--verify` clean on the real index | 0.5 day. **Status: code and 5 tests done in PR #12; a read-only `--verify` on the real index lists 22 problems (6 stale pages, 3 missing, OWASP hub failed, 12 stray `dup-*` records); the one-off cleanup (`--reconcile`) waits for #12 to merge.** |
-| **M1** | `score.py` + metric unit tests; qmd runner; 30-query seed golden set; first qmd baseline | metrics match hand-computed examples; one command produces a qmd report with CIs | 0.5 day |
-| **M2** | LightRAG runner (index copy, `aquery_data`, page mapping); comparison table across systems | all 9 system/mode rows scored on the seed set; mapping verified on 10 queries by hand | 0.5-1 day |
+| **M0** | P0 indexer fix, `--verify`/`--reconcile`, L0 tests for it, one-off cleanup | section 11 acceptance; `--verify` clean on the real index | 0.5 day. **Status: done and merged (PR #12). Before the fix a read-only `--verify` listed 22 problems (6 stale pages, 3 missing, OWASP hub failed, 12 stray `dup-*` records); after `--reconcile` it reports "Index matches the wiki" (181 pages, 0 failed; 8,229 graph nodes, 11,532 edges).** |
+| **M1** | `score.py` + metric unit tests; qmd runner; 30-query seed golden set; first qmd baseline | metrics match hand-computed examples; one command produces a qmd report with CIs | 0.5 day. **Status: done and merged (PR #13)**: metrics tested against hand-computed examples; `run_qmd.py` produces the report with CIs. Deviation: qmd CLI instead of `qmd bench` (7.1). The seed set is agent-reviewed, not human-reviewed (5.3 amendment). |
+| **M2** | LightRAG runner (index copy, `aquery_data`, page mapping); comparison table across systems | all 9 system/mode rows scored on the seed set; mapping verified on 10 queries by hand | 0.5-1 day. **Status: done and merged (PR #14)**: all 9 rows scored (n=28 each). Mapping verification was automated rather than by hand: `verify_mapping.py` checked 1,260 returned chunk ids across 10 queries in all 5 modes against LightRAG's own `full_doc_id` and the files on disk, 0 mismatches. Deviation: `chunk_top_k=30` (3.3). |
 | **M3** | Golden set to full size: synthetic generation (non-DeepSeek model), filtering, your spot-check of >=20% and pooled-judgment grading, dev/held-out split | ~120 queries; golden lint passes; spot-check reject rate recorded | about 1-1.5 h of your time (my estimate; less than the hand-authored plan) |
 | **M4** | Latency harness and protocol | p50/p95 cold and warm per stage, stored with metadata | 0.5 day |
 | **M5** | Baselines, gate, docs, wiki page, spec status updated | gate reproduces a known regression in a deliberate-break test | 0.5 day |
+
+### 13.1 Evidence so far (2026-10-06, 30-query seed set, n=28 scored, provisional)
+
+nDCG@10 [95% CI] / Recall@10 (Hole@10 is 0.78-0.85 for every system): qmd bm25 0.232 [0.089, 0.389] / 0.228; qmd vector 0.689 [0.571, 0.799] / 0.807; qmd hybrid 0.653 [0.539, 0.767] / 0.704; qmd full 0.663 [0.560, 0.764] / 0.713; LightRAG naive 0.638 [0.518, 0.757] / 0.764; local 0.622 [0.511, 0.732] / 0.732; global 0.582 [0.453, 0.708] / 0.686; hybrid 0.566 [0.451, 0.685] / 0.700; mix 0.611 [0.504, 0.722] / 0.737.
+
+- The designated comparisons show no detectable difference: `qmd full` vs `LightRAG mix` nDCG@10 +0.051 [-0.084, +0.183], p=0.466; `qmd hybrid` vs `LightRAG naive` nDCG@10 +0.015 [-0.101, +0.130], p=0.811; both well below the observed MDE (about 0.17-0.19). Do not rank systems from this run.
+- The only clear signal is BM25 failing on natural-language queries (1.0 on the 6 exact queries, about 0 elsewhere).
+- No graph advantage is visible on the 6 relational queries (LightRAG local 0.64 vs qmd full 0.64), but n=6 cannot show one.
+- Hybrid and full still keep only 9.0 wiki pages per query on average, so their Recall@10 is slightly truncated (7.1).
+- Graph-mode MRR and nDCG are list-order metrics (3.3). Absolute scores are optimistic (synthetic queries) and labels are agent-reviewed only.
 
 ## 14. Risks
 

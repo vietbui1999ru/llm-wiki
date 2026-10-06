@@ -1,0 +1,501 @@
+{
+  "version": 1,
+  "queries": [
+    {
+      "id": "q-001",
+      "query": "BM25",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/bm25.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-002",
+      "query": "Compounding Knowledge Base",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/compounding-knowledge-base.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-003",
+      "query": "Council Pattern",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/council-pattern.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-004",
+      "query": "LSP as Agent Baseline",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/lsp-agent-baseline.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-005",
+      "query": "EGGROLL",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/eggroll.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-006",
+      "query": "Pydoll",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/pydoll.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-007",
+      "query": "how do i stop an ai assistant forgetting project state between chats",
+      "category": "paraphrase",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/memory-bank-pattern.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-008",
+      "query": "what security dangers come up when building or using autonomous coding agents",
+      "category": "paraphrase",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/owasp-ai-agent-risks.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-009",
+      "query": "written rules or automatic triggers for steering coding agents",
+      "category": "paraphrase",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/rules-vs-hooks.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-010",
+      "query": "tool that maps how functions call each other so agents skip reading whole repo",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/codegraphcontext.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-011",
+      "query": "framework that improves model prompts automatically instead of writing them by hand",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/dspy.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-012",
+      "query": "big plugin bundle to boost coding agent output with ready-made tools and rules",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/everything-claude-code.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-013",
+      "query": "coding mode where the agent makes me write parts myself to keep learning",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/spotme.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-014",
+      "query": "guide for building web user interfaces with component libraries and styling choices",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/patterns/frontend.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-015",
+      "query": "design idea of hiding lots of complexity behind a tiny public surface",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/deep-modules.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-016",
+      "query": "chat commands that keep an agent working until a goal is reached",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/slash-commands.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-017",
+      "query": "separate git copies so parallel coding agents do not clobber each other",
+      "category": "alias",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/worktree-isolation.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-018",
+      "query": "autonomous ai tool for ethical hacking of my own servers",
+      "category": "alias",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/entities/pentagi.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-019",
+      "query": "simple clean code habits for tidy readable code",
+      "category": "alias",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/patterns/code-quality.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-020",
+      "query": "how to keep tasks from clashing over shared state when they run in parallel",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/patterns/concurrency.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-021",
+      "query": "how does message-passing concurrency theory relate to splitting work among parallel ai agents",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/actor-model.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/worker-coordination.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-022",
+      "query": "how do project convention documents fit into the system wrapping a language model",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/agent-context-instructions.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/agent-harness.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-023",
+      "query": "how do agents recovering from drift connect with how their git changes get merged",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/agent-self-correction.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/branch-strategy-for-agents.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-024",
+      "query": "how do reusable prompt packages differ from separate agents with their own context",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/agent-skills.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/agent-subagents.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-025",
+      "query": "do multi-instance coding squads make long conversation attention problems worse",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/agent-teams.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/context-degradation.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-026",
+      "query": "how do automated build pipelines and operating system restrictions together keep autonomous coders safe",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/agentic-cicd.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/agentic-sandbox-controls.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-027",
+      "query": "best practices for designing reliable server-side software",
+      "category": "overview",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/patterns/backend.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/patterns/api-design.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/patterns/database.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/patterns/error-handling.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/patterns/principles.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-028",
+      "query": "how to guard against risks when ai writes my code",
+      "category": "overview",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/ai-specific-pitfalls.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/ai-code-review.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/indirect-prompt-injection.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/owasp-security-checklist.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/verification-pipeline.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-029",
+      "query": "best sourdough hydration ratio",
+      "category": "null",
+      "split": "heldout",
+      "relevant": [],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "off-topic, no wiki page covers it"
+    },
+    {
+      "id": "q-030",
+      "query": "how to replace a bicycle inner tube",
+      "category": "null",
+      "split": "dev",
+      "relevant": [],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "off-topic, no wiki page covers it"
+    }
+  ]
+}

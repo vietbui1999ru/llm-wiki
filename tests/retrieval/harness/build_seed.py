@@ -21,28 +21,36 @@ def _excerpt(text):
     return text.split("---", 2)[2].strip()[:EXCERPT_CHARS] if text.startswith("---") else text[:EXCERPT_CHARS]
 
 
-def make_candidates(pages, mix, seed_value):
-    free = set(seed.eligible(pages))
-    tasks = []
+def make_candidates(pages, mix, seed_value, exclude=None, start_id=1, per_category=False):
+    """Pick source pages per category. Default: a page is used at most once overall. per_category=True: at most
+    once per category (needed for sets larger than the page pool). exclude: {category: pages already primary}."""
+    base, exclude, used, tasks = set(seed.eligible(pages)), exclude or {}, {}, []
+
+    def scope(category):
+        return category if per_category else "all"
+
+    def free(category):
+        return base - used.get(scope(category), set()) - set(exclude.get(category, ()))
 
     def take(category, page_list, **extra):
-        free.difference_update(page_list)
+        used.setdefault(scope(category), set()).update(page_list)
         tasks.append({"category": category, "pages": list(page_list), **extra})
 
-    for p in seed.pick(free, mix["exact"], seed_value):
+    for p in seed.pick(free("exact"), mix["exact"], seed_value):
         take("exact", [p], query=pages[p]["title"])
     for _ in range(mix["relational"]):
-        pair = next(pr for pr in seed.link_pairs(pages) if pr[0] in free and pr[1] in free)
-        take("relational", pair)
+        ok = free("relational")
+        take("relational", next(pr for pr in seed.link_pairs(pages) if pr[0] in ok and pr[1] in ok))
     for _ in range(mix["overview"]):
-        hub = max(sorted(free), key=lambda p: len([link for link in pages[p]["links"] if link in free]))
-        take("overview", [hub] + [link for link in pages[hub]["links"] if link in free][:4])
+        ok = free("overview")
+        hub = max(sorted(ok), key=lambda p: len([link for link in pages[p]["links"] if link in ok]))
+        take("overview", [hub] + [link for link in pages[hub]["links"] if link in ok][:4])
     for category in ("paraphrase", "alias"):
-        for p in seed.pick(free, mix[category], seed_value + len(tasks)):
+        for p in seed.pick(free(category), mix[category], seed_value + len(tasks)):
             take(category, [p])
     order = {c: i for i, c in enumerate(MIX)}
     tasks.sort(key=lambda t: order[t["category"]])
-    for i, t in enumerate(tasks, 1):
+    for i, t in enumerate(tasks, start_id):
         t["id"] = f"q-{i:03d}"
     excerpts = {p: _excerpt(pages[p]["text"]) for t in tasks if t["category"] != "exact" for p in t["pages"]}
     return {"queries": tasks, "excerpts": excerpts}

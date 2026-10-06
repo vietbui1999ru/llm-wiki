@@ -620,6 +620,1566 @@
       "must_hit": false,
       "authored_by": "llm_filtered",
       "notes": "off-topic, no wiki page covers it"
+    },
+    {
+      "id": "q-031",
+      "query": "Domain Glossary (CONTEXT.md)",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/domain-glossary.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-032",
+      "query": "Dynamic Context Pruning (DCP)",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/dynamic-context-pruning.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-033",
+      "query": "Tool Design for Agents",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/tool-design-for-agents.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-034",
+      "query": "Verification Pipeline",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/verification-pipeline.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-035",
+      "query": "Web Fingerprinting",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/web-fingerprinting.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-036",
+      "query": "Agent-Native",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/agent-native.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-037",
+      "query": "OpenAI Codex",
+      "category": "exact",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/entities/codex.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-038",
+      "query": "DiffViewer",
+      "category": "exact",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/entities/diffviewer.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-039",
+      "query": "Gemini CLI",
+      "category": "exact",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/entities/gemini-cli.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-040",
+      "query": "Algorithmic Patterns",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/patterns/algorithmic.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-041",
+      "query": "Code Quality Heuristics",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/patterns/code-quality.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-042",
+      "query": "Frontend Patterns",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/patterns/frontend.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-043",
+      "query": "Software Design Principles",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/patterns/principles.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-044",
+      "query": "OTel Instrumentation for council.py",
+      "category": "exact",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/systems/otel-council.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "title"
+    },
+    {
+      "id": "q-045",
+      "query": "how can an agent notice it is off course and look up the right pattern",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/agent-self-correction.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-046",
+      "query": "reusable instruction files an agent loads only when a task needs them",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/agent-skills.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-047",
+      "query": "automating my notes app from shell scripts and agent tools",
+      "category": "paraphrase",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/cli-driven-vault-automation.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/entities/obsidian-cli.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/entities/obsidian-cli-rest-mcp.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): 'Notes app' = Obsidian; the CLI and its REST/MCP wrapper are real supporting answers."
+    },
+    {
+      "id": "q-048",
+      "query": "choosing what goes into the model input at each step",
+      "category": "paraphrase",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/context-engineering.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-049",
+      "query": "cut old messages from context mid session without changing the saved history",
+      "category": "paraphrase",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/dynamic-context-pruning.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/entities/opencode-dcp.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Concept page primary, plugin page supporting."
+    },
+    {
+      "id": "q-050",
+      "query": "steps to set up my coding agent environment on a new machine",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/linux-setup-guide.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/systems/dotfiles-agent-harness-layout.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Setup guide primary; dotfiles layout is a supporting answer."
+    },
+    {
+      "id": "q-051",
+      "query": "checklist for reviewing code against common web security holes",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/owasp-top-10-checklist.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/owasp-security-checklist.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): After the split the hub keeps only a severity table and links; the actual checklist is owasp-top-10-checklist, so the current single label misses the primary answer."
+    },
+    {
+      "id": "q-052",
+      "query": "notes on login sessions, cookies and other web security controls",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/owasp-web-security-reference.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/owasp-top-10-checklist.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Web reference covers session management, cookies, CSRF; Top-10 A07 supports."
+    },
+    {
+      "id": "q-053",
+      "query": "how to write tool descriptions that a model uses correctly",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/tool-design-for-agents.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/syntheses/minimal-coding-agent.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Tool-design primary; minimal-coding-agent synthesis supports."
+    },
+    {
+      "id": "q-054",
+      "query": "how do sites detect that a browser is really a bot",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/web-fingerprinting.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-055",
+      "query": "when parallel agents need each other's output before they finish",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/worker-coordination.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-056",
+      "query": "building apps where the agent and the user interface share one state",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/agent-native.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/summaries/builderio-agent-native.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Entity primary; source summary supports (summaries are already used as labels elsewhere)."
+    },
+    {
+      "id": "q-057",
+      "query": "turn any web page into clean text for a model",
+      "category": "paraphrase",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/entities/firecrawl.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/entities/ketch.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Firecrawl primary; ketch is a genuine second answer."
+    },
+    {
+      "id": "q-058",
+      "query": "vendor neutral way to collect traces and metrics",
+      "category": "paraphrase",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/entities/opentelemetry.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/llm-observability.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): OTel primary; LLM observability supports."
+    },
+    {
+      "id": "q-059",
+      "query": "lightweight open source terminal agent that ships with four tools and a very short system prompt",
+      "category": "paraphrase",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/entities/pi-agent.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/summaries/pi-building-in-world-of-slop.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): 'minimal ... coding agent' mirrors the title of syntheses/minimal-coding-agent (build-from-scratch walkthroughs, not a product), which will outrank pi-agent. Reword around Pi's own distinguishing facts (4 tools, few-line system prompt)."
+    },
+    {
+      "id": "q-060",
+      "query": "python library for browser control on sites that block bots",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/pydoll.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-061",
+      "query": "how to spot smells and lower complexity in my code",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/patterns/code-quality.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/patterns/refactoring.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Code-quality has smell taxonomy and cognitive complexity; refactoring supports."
+    },
+    {
+      "id": "q-063",
+      "query": "restructure code safely while keeping its output the same",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/patterns/refactoring.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-064",
+      "query": "how to pick a database type and design the schema",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/systems/data-modeling.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/patterns/database.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Data-modeling primary; database patterns supports the schema half."
+    },
+    {
+      "id": "q-066",
+      "query": "caching and replication to keep a system up under heavy traffic",
+      "category": "paraphrase",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/systems/scalability-reliability.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/patterns/database.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Scalability page covers caching; replication detail lives in database patterns."
+    },
+    {
+      "id": "q-067",
+      "query": "child agents that run in their own window and report back",
+      "category": "alias",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/agent-subagents.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-068",
+      "query": "agent that fixes its own failures then reverts if it cannot",
+      "category": "alias",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/self-healing-loop.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-069",
+      "query": "writing good project docs for users and contributors",
+      "category": "alias",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/software-documentation.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-070",
+      "query": "how the wiki gives agents what they need without a search each time",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/tiered-knowledge-delivery.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-071",
+      "query": "testing one small piece of code on its own",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/unit-testing.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-073",
+      "query": "service that pulls current library docs into the model",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/context7.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/entities/ketch.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Context7 primary; ketch supports."
+    },
+    {
+      "id": "q-074",
+      "query": "one small command line tool agents call to search code and docs",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/ketch.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-075",
+      "query": "plugin that keeps agent state when context is reset",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/lean-session.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-076",
+      "query": "local http api for my notes app so tools skip the shell",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/entities/obsidian-cli-rest-mcp.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-077",
+      "query": "terminal coding agent where i can control compaction with my own code",
+      "category": "alias",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/entities/opencode.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/comparisons/claude-code-vs-opencode-plugins.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): OpenCode label is correct (compaction hooks are its headline differentiator). The comparison page should be supporting; lean-session is only related (it is a plugin, not the agent)."
+    },
+    {
+      "id": "q-078",
+      "query": "proxy that shrinks command output before the model sees it",
+      "category": "alias",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/entities/rtk.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/entities/headroom.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): rtk primary; headroom is a close second answer."
+    },
+    {
+      "id": "q-079",
+      "query": "design patterns about control flow between objects",
+      "category": "alias",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/patterns/design-patterns-behavioral.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-080",
+      "query": "how to handle failures, retries and exceptions in code",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/patterns/error-handling.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-081",
+      "query": "react component and state management advice",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/patterns/frontend.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-082",
+      "query": "gate where a human reviews what the agent changed in the editor",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/systems/agent-review.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/syntheses/neovim-ai-operator-workflow.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/entities/diffviewer.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): agent-review primary; the Neovim operator workflow and DiffViewer are supporting review-gate pages."
+    },
+    {
+      "id": "q-083",
+      "query": "consistency and failure tradeoffs across many machines",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/systems/distributed-systems.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-084",
+      "query": "tracing the multi model council script with no extra dependencies",
+      "category": "alias",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/systems/otel-council.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/entities/opentelemetry.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): otel-council primary; OTel entity supports."
+    },
+    {
+      "id": "q-085",
+      "query": "how do memory tools and context shrinking work together in long agent runs",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/agentic-memory-tool.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/context-compression.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-086",
+      "query": "does reviewing generated code need to look for mistakes only models make",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/ai-code-review.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/ai-specific-pitfalls.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-087",
+      "query": "how does keyword search combine with adding context to chunks",
+      "category": "relational",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/bm25.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/contextual-retrieval.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-088",
+      "query": "how do pipeline checks and small isolated tests fit together",
+      "category": "relational",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/cicd-testing.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/unit-testing.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-089",
+      "query": "how do plugins in claude code compare with the open source alternative",
+      "category": "relational",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/comparisons/claude-code-vs-opencode-plugins.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/claude-code-plugins.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/entities/opencode.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Omitting the comparison page would penalise the best possible result."
+    },
+    {
+      "id": "q-090",
+      "query": "should scripts for notes automation follow the same rules as agent tool design",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/cli-driven-vault-automation.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/tool-design-for-agents.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/entities/obsidian-cli-rest-mcp.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Link exists (automation page cites tool-design), but the REST MCP page carries the actual argument."
+    },
+    {
+      "id": "q-091",
+      "query": "how does improving the engineering process relate to growing a knowledge base",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/compound-engineering.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/compounding-knowledge-base.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/summaries/compound-engineering.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Compounding KB has a 'Relationship to compound engineering' section."
+    },
+    {
+      "id": "q-092",
+      "query": "how does managing model input relate to the token limit",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/context-engineering.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/context-window.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-094",
+      "query": "do narrow interfaces help with naming and readability rules",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/deep-modules.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/patterns/code-quality.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/patterns/principles.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): code-quality cites deep-modules as complementary; principles links it even more directly."
+    },
+    {
+      "id": "q-095",
+      "query": "how do shared vocabulary files differ from general project docs",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/domain-glossary.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/software-documentation.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-096",
+      "query": "how does the pruning idea relate to the plugin that implements it",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/dynamic-context-pruning.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/entities/opencode-dcp.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-097",
+      "query": "how does failure budget thinking apply to agent security risks",
+      "category": "relational",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/error-budget.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/owasp-ai-agent-risks.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-098",
+      "query": "how does a random search training method scale to huge models with low memory cost",
+      "category": "relational",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/evolution-strategies.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/entities/eggroll.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-099",
+      "query": "how should an eval suite test a model product against instructions planted in documents it reads",
+      "category": "relational",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/llm-eval-pipeline.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/indirect-prompt-injection.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): No page says hidden-data attacks break automated evaluation (no judge-manipulation content); llm-eval-pipeline only uses injection examples as a red-team attack corpus. Reword to that real relationship."
+    },
+    {
+      "id": "q-100",
+      "query": "how do learned behavior patterns get injected at session start with pushed knowledge",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/instinct-clustering.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/tiered-knowledge-delivery.md",
+          "grade": 2
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-101",
+      "query": "how does growing an agent by conversation connect to turning notes into rules",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/knowledge-crystallization-cycle.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/nurture-first-development.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/summaries/nurture-first-agent-development.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): KCC is the engine of NFD."
+    },
+    {
+      "id": "q-102",
+      "query": "how does using a model as a judge relate to cross vendor review",
+      "category": "relational",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/llm-as-judge.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/multi-vendor-adversarial-review.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/preference-feedback-loop.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Pair correct and cross-linked."
+    },
+    {
+      "id": "q-104",
+      "query": "how do i organize agents, skills and context for ai engineering work",
+      "category": "overview",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/syntheses/agent-primitive-selection.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/systems/ai-ml.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/agent-skills.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/agent-subagents.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/agent-teams.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/context-engineering.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/context-degradation.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): ai-ml is an ML system design page with only a short pointer table to agent pages, so it is not the hub; agent-primitive-selection is the page that organizes these primitives."
+    },
+    {
+      "id": "q-105",
+      "query": "safeguards for letting agents run code unattended",
+      "category": "overview",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/agentic-sandbox-controls.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/agentic-cicd.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/indirect-prompt-injection.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/owasp-ai-agent-risks.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/self-healing-loop.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/summaries/cc-auto-mode.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/worktree-isolation.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Hub correct. The OWASP hub is now just a web severity table; owasp-ai-agent-risks is the relevant OWASP page."
+    },
+    {
+      "id": "q-106",
+      "query": "ways to check an agent's output with another model",
+      "category": "overview",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/multi-vendor-adversarial-review.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/council-pattern.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/llm-as-judge.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/entities/agentops.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/entities/karpathy-llm-council.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/preference-feedback-loop.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Hub correct; verification-pipeline is mostly build/visual checks and only partially about a second model."
+    },
+    {
+      "id": "q-107",
+      "query": "how to give coding agents project rules and conventions",
+      "category": "overview",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/concepts/agent-context-instructions.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/entities/agents-md-format.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/rules-vs-hooks.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/memory-bank-pattern.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/domain-glossary.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Hub correct. ai-code-review is about reviewing code and only tangentially uses instructions; swap it for domain-glossary."
+    },
+    {
+      "id": "q-108",
+      "query": "which design rules and patterns should guide how i structure code",
+      "category": "overview",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/patterns/principles.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/deep-modules.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/patterns/code-quality.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/patterns/design-patterns-behavioral.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/patterns/design-patterns-structural.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/patterns/design-patterns-creational.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/patterns/refactoring.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Hub correct; add the missing pattern family and refactoring."
+    },
+    {
+      "id": "q-109",
+      "query": "how are my coding agent tools configured across each machine",
+      "category": "overview",
+      "split": "heldout",
+      "relevant": [
+        {
+          "page": "wiki/systems/dotfiles-agent-harness-layout.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/linux-setup-guide.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/entities/codex.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/entities/opencode.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/entities/pi-agent.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": ""
+    },
+    {
+      "id": "q-110",
+      "query": "how do i hand out tasks to many coding agents running in parallel",
+      "category": "overview",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/shared-task-queue.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/worktree-isolation.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/worker-coordination.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/agent-teams.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/entities/sandcastle.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/syntheses/pi-orchestration-architecture.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): shared-task-queue is only defensible as hub for task distribution; narrow the query to that."
+    },
+    {
+      "id": "q-111",
+      "query": "how does a knowledge base grow and improve from agent use",
+      "category": "overview",
+      "split": "dev",
+      "relevant": [
+        {
+          "page": "wiki/concepts/compounding-knowledge-base.md",
+          "grade": 2
+        },
+        {
+          "page": "wiki/concepts/knowledge-crystallization-cycle.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/instinct-clustering.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/nurture-first-development.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/compound-engineering.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/summaries/llm-wiki-pattern.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/tiered-knowledge-delivery.md",
+          "grade": 1
+        }
+      ],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Wrong hub: tiered-knowledge-delivery says in 'Open question this doesn't answer' that it does not cover how experience becomes knowledge. compounding-knowledge-base is the growth page."
+    },
+    {
+      "id": "q-112",
+      "query": "how do i tune kafka consumer group rebalancing",
+      "category": "null",
+      "split": "dev",
+      "relevant": [],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "off-topic, no wiki page covers it"
+    },
+    {
+      "id": "q-113",
+      "query": "how do rust lifetimes and the borrow checker work",
+      "category": "null",
+      "split": "dev",
+      "relevant": [],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "off-topic, no wiki page covers it"
+    },
+    {
+      "id": "q-114",
+      "query": "configure kubernetes horizontal pod autoscaler based on cpu usage",
+      "category": "null",
+      "split": "dev",
+      "relevant": [],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "off-topic, no wiki page covers it"
+    },
+    {
+      "id": "q-115",
+      "query": "set up distributed data parallel training across multiple gpus in pytorch",
+      "category": "null",
+      "split": "dev",
+      "relevant": [],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "off-topic, no wiki page covers it"
+    },
+    {
+      "id": "q-116",
+      "query": "how to compile code to webassembly and run it in the browser",
+      "category": "null",
+      "split": "dev",
+      "relevant": [],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "off-topic, no wiki page covers it"
+    },
+    {
+      "id": "q-117",
+      "query": "how do i set up apollo federation across several graphql services",
+      "category": "null",
+      "split": "heldout",
+      "relevant": [],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): A page genuinely answers the N+1 half, so this is not a true null. Replace with a GraphQL topic the wiki lacks (graphql appears only in one passing mention)."
+    },
+    {
+      "id": "q-118",
+      "query": "terraform remote state locking with s3 and dynamodb",
+      "category": "null",
+      "split": "heldout",
+      "relevant": [],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "off-topic, no wiki page covers it"
+    },
+    {
+      "id": "q-119",
+      "query": "fine tune a model with lora adapters on a single gpu",
+      "category": "null",
+      "split": "heldout",
+      "relevant": [],
+      "must_hit": false,
+      "authored_by": "llm_filtered",
+      "notes": "off-topic, no wiki page covers it"
     }
   ]
 }

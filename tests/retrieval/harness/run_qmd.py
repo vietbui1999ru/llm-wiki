@@ -89,7 +89,8 @@ def collect(queries, runner, backends=tuple(BACKENDS)):
     return {"results": results}
 
 
-def format_report(rows):
+def format_report(rows, caveats=CAVEATS, requested=RESULTS):
+    """Headline tables per system and category. Other runners pass their own caveats and request size."""
     lines = []
     for metric in HEADLINE:
         lines.append(f"\n{metric}  (mean [95% CI], n)")
@@ -97,13 +98,13 @@ def format_report(rows):
             for name, g in groups.items():
                 cell = "n/a" if g["mean"] is None else f"{g['mean']:.3f} [{g['lo']:.3f}, {g['hi']:.3f}]"
                 lines.append(f"  {backend:<7} {name:<11} {cell}  n={g['n']}")
-    lines.append(f"\nWiki pages left after dropping non-wiki hits (up to {RESULTS} files requested per query; "
+    lines.append(f"\nWiki pages left after dropping non-wiki hits (up to {requested} files requested per query; "
                  "@10 is only meaningful if this stays well above 10):")
     for backend, rs in rows.items():
         kept = sum(len(r["ranked"]) for r in rs) / len(rs)
         non_wiki = sum(r["non_wiki_hits"] for r in rs) / len(rs)
-        lines.append(f"  {backend}: wiki pages kept per query {kept:.1f} of {RESULTS}, non-wiki hits {non_wiki:.1f}")
-    return "\n".join(lines) + "\n\n" + CAVEATS
+        lines.append(f"  {backend}: wiki pages kept per query {kept:.1f} of {requested}, non-wiki hits {non_wiki:.1f}")
+    return "\n".join(lines) + "\n\n" + caveats
 
 
 def main(argv=None):

@@ -80,6 +80,12 @@ def test_command_for_each_backend_asks_for_many_results_in_the_wiki_collection()
         assert cmd[cmd.index("-n") + 1] == str(run_qmd.RESULTS) and cmd[cmd.index("-c") + 1] == "wiki" and "--json" in cmd
 
 
+def test_format_report_accepts_other_systems_caveats_and_request_size():
+    rows = run_qmd.score_bench(bench(["qmd://wiki/wiki/concepts/a.md"]), GOLDEN)
+    text = run_qmd.format_report(rows, caveats="CUSTOM CAVEAT", requested=10)
+    assert "CUSTOM CAVEAT" in text and "optimistic" not in text and "of 10, non-wiki" in text
+
+
 def test_rescore_recomputes_metrics_from_saved_rankings_after_a_label_change():
     rows = run_qmd.score_bench(bench(["qmd://wiki/wiki/concepts/b.md", "qmd://wiki/wiki/concepts/a.md"]), GOLDEN)
     assert rows["bm25"][0]["metrics"]["mrr"] == 0.5

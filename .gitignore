@@ -48,3 +48,6 @@ pi-headroom/node_modules/
 # Python bytecode and pytest caches
 __pycache__/
 .pytest_cache/
+
+# Retrieval eval run output (only committed baselines live under tests/retrieval/baselines/)
+tests/retrieval/results/

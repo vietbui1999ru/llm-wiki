@@ -80,6 +80,16 @@ def test_command_for_each_backend_asks_for_many_results_in_the_wiki_collection()
         assert cmd[cmd.index("-n") + 1] == str(run_qmd.RESULTS) and cmd[cmd.index("-c") + 1] == "wiki" and "--json" in cmd
 
 
+def test_rescore_recomputes_metrics_from_saved_rankings_after_a_label_change():
+    rows = run_qmd.score_bench(bench(["qmd://wiki/wiki/concepts/b.md", "qmd://wiki/wiki/concepts/a.md"]), GOLDEN)
+    assert rows["bm25"][0]["metrics"]["mrr"] == 0.5
+    relabelled = {"queries": [{**GOLDEN["queries"][0], "relevant": [{"page": "wiki/concepts/b.md", "grade": 2}]},
+                              GOLDEN["queries"][1]]}
+    again = run_qmd.rescore(rows, relabelled)
+    assert again["bm25"][0]["metrics"]["mrr"] == 1.0
+    assert again["bm25"][0]["ranked"] == rows["bm25"][0]["ranked"] and again["bm25"][0]["latency_ms"] == 7
+
+
 def test_report_gives_per_category_n_and_ci():
     rows = run_qmd.score_bench(bench(["qmd://wiki/wiki/concepts/a.md"]), GOLDEN)
     out = run_qmd.report(rows, "ndcg@10")["bm25"]

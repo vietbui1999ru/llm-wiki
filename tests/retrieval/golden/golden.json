@@ -158,11 +158,15 @@
         {
           "page": "wiki/concepts/agent-context-instructions.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/entities/agents-md-format.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Label correct; add the instructions page as support."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Label correct; add the instructions page as support. | pooled judgment 2026-10-06 (assistant at user request, not human): added agents-md-format.md as grade 1 after reading page content"
     },
     {
       "id": "q-010",
@@ -359,11 +363,19 @@
         {
           "page": "wiki/concepts/actor-model.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/concepts/worker-coordination.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/worktree-isolation.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Read as programming concurrency, the label is right and actor-model supports it."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Read as programming concurrency, the label is right and actor-model supports it. | pooled judgment 2026-10-06 (assistant at user request, not human): added worker-coordination.md, worktree-isolation.md as grade 1 after reading page content"
     },
     {
       "id": "q-021",
@@ -382,11 +394,15 @@
         {
           "page": "wiki/patterns/concurrency.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/concepts/agent-teams.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Worker-coordination carries the bridge (Actor Mailbox pattern citing actor-model). Actor-model itself never mentions AI agents but is the theory half."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Worker-coordination carries the bridge (Actor Mailbox pattern citing actor-model). Actor-model itself never mentions AI agents but is the theory half. | pooled judgment 2026-10-06 (assistant at user request, not human): added agent-teams.md as grade 1 after reading page content"
     },
     {
       "id": "q-022",
@@ -409,11 +425,15 @@
         {
           "page": "wiki/concepts/rules-vs-hooks.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/concepts/domain-glossary.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Both labels are right and they cross-link each other; two supporting pages are missing."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Both labels are right and they cross-link each other; two supporting pages are missing. | pooled judgment 2026-10-06 (assistant at user request, not human): added domain-glossary.md as grade 1 after reading page content"
     },
     {
       "id": "q-023",
@@ -428,11 +448,15 @@
         {
           "page": "wiki/concepts/branch-strategy-for-agents.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/worktree-isolation.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): No developer would ask this. The real link is that self-correction routes an agent unsure about merge or branch strategy to the branch-strategy page."
+      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): No developer would ask this. The real link is that self-correction routes an agent unsure about merge or branch strategy to the branch-strategy page. | pooled judgment 2026-10-06 (assistant at user request, not human): added worktree-isolation.md as grade 1 after reading page content"
     },
     {
       "id": "q-024",
@@ -532,11 +556,15 @@
         {
           "page": "wiki/patterns/principles.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/systems/distributed-systems.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): principles.md is generic SOLID/DRY, not server-side, so it is weaker than the omitted scalability-reliability page."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): principles.md is generic SOLID/DRY, not server-side, so it is weaker than the omitted scalability-reliability page. | pooled judgment 2026-10-06 (assistant at user request, not human): added distributed-systems.md as grade 1 after reading page content"
     },
     {
       "id": "q-028",

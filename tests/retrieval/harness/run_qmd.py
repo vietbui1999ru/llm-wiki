@@ -49,6 +49,13 @@ def score_bench(bench, golden):
     return rows
 
 
+def rescore(rows, golden):
+    """Recompute metrics from saved rankings against the current labels; no qmd run needed."""
+    by_id = {q["id"]: q for q in golden["queries"]}
+    return {backend: [{**r, "metrics": score.score_query(r["ranked"], by_id[r["id"]]["relevant"])} for r in rs]
+            for backend, rs in rows.items()}
+
+
 def report(rows, metric):
     """Per-backend, per-category mean and 95% CI of one metric, plus an ALL row."""
     return {backend: score.summarize(r, metric) for backend, r in rows.items()}
@@ -104,12 +111,16 @@ def main(argv=None):
     ap.add_argument("--golden", default="tests/retrieval/golden/golden.json")
     ap.add_argument("--out-dir", default="tests/retrieval/results")
     ap.add_argument("--repo-root", default=".")
+    ap.add_argument("--rescore", metavar="RESULTS_JSON", help="re-score a saved run against the current labels")
     args = ap.parse_args(argv)
     gold = golden_mod.load(args.golden)
     problems = golden_mod.lint(gold, args.repo_root)
     if problems:
         sys.exit("golden set failed lint:\n" + "\n".join(problems))
     Path(args.out_dir).mkdir(parents=True, exist_ok=True)
+    if args.rescore:
+        print(format_report(rescore(json.loads(Path(args.rescore).read_text())["rows"], gold)))
+        return
     rows = score_bench(collect(gold["queries"], run_cli), gold)
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     (Path(args.out_dir) / f"qmd-{stamp}.json").write_text(json.dumps(

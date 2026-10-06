@@ -62,8 +62,10 @@ def _entry(qid, query, category, relevant, notes):
             "relevant": relevant, "must_hit": False, "authored_by": "llm_filtered", "notes": notes}
 
 
-def assemble(candidates, generated, null_queries):
-    """Merge generated queries into the golden schema. Hub page gets grade 2, its linked pages grade 1."""
+def assemble(candidates, generated, null_queries, existing=None):
+    """Merge generated queries into the golden schema. Hub page gets grade 2, its linked pages grade 1.
+    existing: golden entries to keep unchanged and append to; null ids are numbered after every known id."""
+    existing = list(existing or [])
     queries = []
     for t in candidates["queries"]:
         text = t["query"] if t["category"] == "exact" else generated[t["id"]]
@@ -72,9 +74,24 @@ def assemble(candidates, generated, null_queries):
             grades[0] = 2
         relevant = [{"page": p, "grade": g} for p, g in zip(t["pages"], grades)]
         queries.append(_entry(t["id"], text, t["category"], relevant, "title" if t["category"] == "exact" else ""))
-    for query in null_queries:
-        queries.append(_entry(f"q-{len(queries) + 1:03d}", query, "null", [], "off-topic, no wiki page covers it"))
-    return {"version": 1, "queries": queries}
+    next_id = max([int(q["id"].split("-")[1]) for q in existing + queries], default=0) + 1
+    for offset, query in enumerate(null_queries):
+        queries.append(_entry(f"q-{next_id + offset:03d}", query, "null", [], "off-topic, no wiki page covers it"))
+    return {"version": 1, "queries": existing + queries}
+
+
+def exclusions_from(gold):
+    """({category: grade-2 pages already used}, next free numeric id) for growing an existing golden set."""
+    exclude = {}
+    for q in gold["queries"]:
+        exclude.setdefault(q["category"], set()).update(r["page"] for r in q["relevant"] if r["grade"] == 2)
+    return exclude, max(int(q["id"].split("-")[1]) for q in gold["queries"]) + 1
+
+
+def parse_mix(text):
+    """'exact=14,paraphrase=22' -> {'exact': 14, 'paraphrase': 22, ...} with unnamed categories at 0."""
+    given = dict(item.split("=") for item in text.split(",") if item)
+    return {c: int(given.get(c, 0)) for c in MIX}
 
 
 def main(argv=None):
@@ -83,7 +100,11 @@ def main(argv=None):
     c = sub.add_parser("candidates", help="stage 1: pick pages and write generation tasks")
     c.add_argument("--out", required=True)
     c.add_argument("--seed", type=int, default=7)
+    c.add_argument("--mix", help="override the seed mix, e.g. exact=14,paraphrase=22,alias=18,relational=18,overview=10")
+    c.add_argument("--per-category", action="store_true", help="allow a page across categories, not within one")
+    c.add_argument("--existing", help="golden.json to grow: exclude its primary pages and continue its ids")
     a = sub.add_parser("assemble", help="stage 2: merge generated queries, lint, write golden.json")
+    a.add_argument("--existing", help="golden.json to append to (unchanged entries are kept)")
     a.add_argument("--candidates", required=True)
     a.add_argument("--generated", required=True, help='JSON {"generated": {id: query}, "null": [query, ...]}')
     a.add_argument("--out", default="tests/retrieval/golden/golden.json")
@@ -92,10 +113,14 @@ def main(argv=None):
     args = ap.parse_args(argv)
     pages = seed.read_wiki(args.repo_root)
     if args.stage == "candidates":
-        Path(args.out).write_text(json.dumps(make_candidates(pages, MIX, args.seed), indent=2))
+        exclude, start_id = exclusions_from(golden.load(args.existing)) if args.existing else ({}, 1)
+        mix = parse_mix(args.mix) if args.mix else MIX
+        cand = make_candidates(pages, mix, args.seed, exclude=exclude, start_id=start_id, per_category=args.per_category)
+        Path(args.out).write_text(json.dumps(cand, indent=2))
         return
     gen = json.loads(Path(args.generated).read_text())
-    gold = assemble(json.loads(Path(args.candidates).read_text()), gen["generated"], gen["null"])
+    existing = golden.load(args.existing)["queries"] if args.existing else None
+    gold = assemble(json.loads(Path(args.candidates).read_text()), gen["generated"], gen["null"], existing=existing)
     problems = golden.lint(gold, args.repo_root) + golden.lint_leakage(
         gold, {p: v["text"] for p, v in pages.items()})
     for problem in problems:

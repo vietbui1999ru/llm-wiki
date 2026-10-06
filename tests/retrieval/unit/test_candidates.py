@@ -40,6 +40,21 @@ def test_exclude_removes_pages_already_used_as_primary_in_that_category():
     assert {c["pages"][0] for c in cand["queries"]} == {"wiki/concepts/p6.md", "wiki/concepts/p7.md"}
 
 
+def test_exclusions_from_an_existing_set_are_the_grade_two_pages_per_category_and_the_next_id():
+    gold = {"queries": [
+        {"id": "q-001", "category": "exact", "relevant": [{"page": "wiki/a.md", "grade": 2}]},
+        {"id": "q-007", "category": "overview", "relevant": [{"page": "wiki/hub.md", "grade": 2},
+                                                             {"page": "wiki/kid.md", "grade": 1}]},
+        {"id": "q-008", "category": "null", "relevant": []}]}
+    exclude, next_id = build_seed.exclusions_from(gold)
+    assert exclude == {"exact": {"wiki/a.md"}, "overview": {"wiki/hub.md"}, "null": set()} and next_id == 9
+
+
+def test_parse_mix_fills_unnamed_categories_with_zero():
+    assert build_seed.parse_mix("exact=14,alias=3") == {"exact": 14, "paraphrase": 0, "alias": 3,
+                                                        "relational": 0, "overview": 0}
+
+
 def test_start_id_continues_numbering_after_an_existing_set():
     cand = build_seed.make_candidates(make_pages(), MIX, seed_value=1, start_id=31)
     assert cand["queries"][0]["id"] == "q-031" and cand["queries"][-1]["id"] == f"q-{30 + len(cand['queries']):03d}"

@@ -1,26 +1,30 @@
-"""Score `qmd bench` output against the golden set (stdlib only).
+"""Score qmd retrieval against the golden set (stdlib only).
 
-Spec: docs/specs/retrieval-eval-suite.md, sections 3.2, 3.4, 7.1. qmd's own precision/recall are
-discarded; only top_files and latency_ms are used, and scoring is done by score.py.
+Spec: docs/specs/retrieval-eval-suite.md, sections 3.2, 3.4, 7.1. Deviation from 7.1: instead of `qmd bench`
+(capped at 10 files per query, which leaves about 3 wiki pages after the wiki/**-only filter) each backend is
+called through the qmd CLI with a larger -n. Verified on a probe query: the CLI top-10 is identical to bench's
+for all four backends. Only the ranked file list is used; scoring is done by score.py.
 """
 import argparse
 import datetime
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import golden as golden_mod
 import score
 
 PREFIX = "qmd://wiki/"
+RESULTS = 50  # files requested per query; qmd's collection is the whole repo, so most hits are raw/ or meta
+BACKENDS = {"bm25": ["search"], "vector": ["vsearch"], "hybrid": ["query", "--no-rerank"], "full": ["query"]}
 HEADLINE = ("ndcg@10", "recall@5", "recall@10")
 CAVEATS = ("Caveats: synthetic queries make absolute scores optimistic, trust differences between systems; "
-           "bench bm25 ANDs all terms so long natural-language queries score near zero on bm25; "
-           "expansion is cached per (query, model) so later backends look faster than a cold run; "
-           "ranked lists are wiki/** only (raw/ and meta hits are dropped), and bench caps results at 10 files "
-           "BEFORE that filter, so @5 and @10 are effectively the same shortened list and qmd is handicapped "
-           "against systems that index wiki/** only; do not compare across systems until this is resolved.")
+           "bm25 ANDs all terms so long natural-language queries score near zero on bm25; "
+           "query expansion is cached per (query, model) so later backends can look faster than a cold run; "
+           "latency_ms is wall-clock per CLI process (includes qmd start-up), not comparable to qmd bench or "
+           "to the spec's latency protocol; ranked lists are wiki/** only (raw/ and meta hits are dropped).")
 
 
 def to_pages(top_files):
@@ -50,15 +54,32 @@ def report(rows, metric):
     return {backend: score.summarize(r, metric) for backend, r in rows.items()}
 
 
-def run_bench(fixture, out_dir):
-    """Write the fixture and run `qmd bench` once over the wiki collection; return its parsed JSON."""
-    fixture_path = Path(out_dir) / "qmd-fixture.json"
-    fixture_path.write_text(json.dumps(fixture, indent=2))
-    done = subprocess.run(["qmd", "bench", str(fixture_path), "--json", "-c", "wiki"],
-                          capture_output=True, text=True, check=True)
-    if done.stderr.strip():
-        print(done.stderr.strip(), file=sys.stderr)
-    return json.loads(done.stdout)
+def cli_top_files(stdout):
+    """Ranked file URIs from `qmd ... --json` output."""
+    return [r["file"] for r in json.loads(stdout)]
+
+
+def command(backend, query):
+    return ["qmd", BACKENDS[backend][0], query, *BACKENDS[backend][1:], "-n", str(RESULTS), "--json", "-c", "wiki"]
+
+
+def run_cli(backend, query):
+    """Run one backend through the qmd CLI; return (ranked files, wall-clock milliseconds)."""
+    start = time.monotonic()
+    done = subprocess.run(command(backend, query), capture_output=True, text=True, check=True)
+    return cli_top_files(done.stdout), round((time.monotonic() - start) * 1000)
+
+
+def collect(queries, runner, backends=tuple(BACKENDS)):
+    """Run every query on every backend. Output has the shape score_bench expects."""
+    results = []
+    for q in queries:
+        outs = {}
+        for backend in backends:
+            files, ms = runner(backend, q["query"])
+            outs[backend] = {"top_files": files, "latency_ms": ms}
+        results.append({"id": q["id"], "backends": outs})
+    return {"results": results}
 
 
 def format_report(rows):
@@ -69,11 +90,12 @@ def format_report(rows):
             for name, g in groups.items():
                 cell = "n/a" if g["mean"] is None else f"{g['mean']:.3f} [{g['lo']:.3f}, {g['hi']:.3f}]"
                 lines.append(f"  {backend:<7} {name:<11} {cell}  n={g['n']}")
-    lines.append("\nWiki pages left after dropping non-wiki hits (qmd bench returns at most 10 files per query):")
+    lines.append(f"\nWiki pages left after dropping non-wiki hits (up to {RESULTS} files requested per query; "
+                 "@10 is only meaningful if this stays well above 10):")
     for backend, rs in rows.items():
         kept = sum(len(r["ranked"]) for r in rs) / len(rs)
         non_wiki = sum(r["non_wiki_hits"] for r in rs) / len(rs)
-        lines.append(f"  {backend}: wiki pages kept per query {kept:.1f} of 10, non-wiki hits {non_wiki:.1f}")
+        lines.append(f"  {backend}: wiki pages kept per query {kept:.1f} of {RESULTS}, non-wiki hits {non_wiki:.1f}")
     return "\n".join(lines) + "\n\n" + CAVEATS
 
 
@@ -88,11 +110,11 @@ def main(argv=None):
     if problems:
         sys.exit("golden set failed lint:\n" + "\n".join(problems))
     Path(args.out_dir).mkdir(parents=True, exist_ok=True)
-    bench = run_bench(golden_mod.qmd_fixture(gold), args.out_dir)
-    rows = score_bench(bench, gold)
+    rows = score_bench(collect(gold["queries"], run_cli), gold)
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     (Path(args.out_dir) / f"qmd-{stamp}.json").write_text(json.dumps(
-        {"run": {"date": stamp, "golden": args.golden, "qmd": "qmd bench --json -c wiki"}, "rows": rows}, indent=2))
+        {"run": {"date": stamp, "golden": args.golden, "results_per_query": RESULTS, "backends": BACKENDS},
+         "rows": rows}, indent=2))
     print(format_report(rows))
 
 

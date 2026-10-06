@@ -50,7 +50,34 @@ def test_format_report_prints_headline_metrics_ci_n_and_caveats():
 def test_format_report_shows_how_many_wiki_pages_survive_the_filter():
     rows = run_qmd.score_bench(bench(["qmd://wiki/raw/x.md", "qmd://wiki/raw/y.md", "qmd://wiki/wiki/concepts/a.md"]), GOLDEN)
     text = run_qmd.format_report(rows)
-    assert "bm25: wiki pages kept per query 0.5 of 10, non-wiki hits 1.0" in text  # q-1 keeps 1 of 3, q-2 keeps 0
+    assert f"bm25: wiki pages kept per query 0.5 of {run_qmd.RESULTS}, non-wiki hits 1.0" in text  # q-1 keeps 1 of 3, q-2 keeps 0
+
+
+def test_cli_top_files_reads_the_file_field_in_rank_order():
+    out = '[{"file": "qmd://wiki/wiki/a.md", "score": 0.9}, {"file": "qmd://wiki/raw/b.md", "score": 0.5}]'
+    assert run_qmd.cli_top_files(out) == ["qmd://wiki/wiki/a.md", "qmd://wiki/raw/b.md"]
+
+
+def test_collect_builds_bench_shaped_output_so_scoring_is_unchanged():
+    calls = []
+
+    def runner(backend, query):
+        calls.append((backend, query))
+        return [f"qmd://wiki/wiki/{backend}.md"], 12
+
+    out = run_qmd.collect(GOLDEN["queries"], runner, backends=("bm25", "full"))
+    assert calls == [("bm25", "x"), ("full", "x"), ("bm25", "y"), ("full", "y")]
+    first = out["results"][0]
+    assert first["id"] == "q-1" and first["backends"]["full"] == {"top_files": ["qmd://wiki/wiki/full.md"], "latency_ms": 12}
+    assert run_qmd.score_bench(out, GOLDEN)["bm25"][1]["id"] == "q-2"
+
+
+def test_command_for_each_backend_asks_for_many_results_in_the_wiki_collection():
+    assert run_qmd.command("bm25", "q")[:3] == ["qmd", "search", "q"]
+    assert "--no-rerank" in run_qmd.command("hybrid", "q") and "--no-rerank" not in run_qmd.command("full", "q")
+    for backend in run_qmd.BACKENDS:
+        cmd = run_qmd.command(backend, "q")
+        assert cmd[cmd.index("-n") + 1] == str(run_qmd.RESULTS) and cmd[cmd.index("-c") + 1] == "wiki" and "--json" in cmd
 
 
 def test_report_gives_per_category_n_and_ci():

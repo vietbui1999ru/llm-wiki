@@ -18,7 +18,9 @@ HEADLINE = ("ndcg@10", "recall@5", "recall@10")
 CAVEATS = ("Caveats: synthetic queries make absolute scores optimistic, trust differences between systems; "
            "bench bm25 ANDs all terms so long natural-language queries score near zero on bm25; "
            "expansion is cached per (query, model) so later backends look faster than a cold run; "
-           "ranked lists are wiki/** only (raw/ and meta hits are dropped, see non_wiki_hits).")
+           "ranked lists are wiki/** only (raw/ and meta hits are dropped), and bench caps results at 10 files "
+           "BEFORE that filter, so @5 and @10 are effectively the same shortened list and qmd is handicapped "
+           "against systems that index wiki/** only; do not compare across systems until this is resolved.")
 
 
 def to_pages(top_files):
@@ -67,6 +69,11 @@ def format_report(rows):
             for name, g in groups.items():
                 cell = "n/a" if g["mean"] is None else f"{g['mean']:.3f} [{g['lo']:.3f}, {g['hi']:.3f}]"
                 lines.append(f"  {backend:<7} {name:<11} {cell}  n={g['n']}")
+    lines.append("\nWiki pages left after dropping non-wiki hits (qmd bench returns at most 10 files per query):")
+    for backend, rs in rows.items():
+        kept = sum(len(r["ranked"]) for r in rs) / len(rs)
+        non_wiki = sum(r["non_wiki_hits"] for r in rs) / len(rs)
+        lines.append(f"  {backend}: wiki pages kept per query {kept:.1f} of 10, non-wiki hits {non_wiki:.1f}")
     return "\n".join(lines) + "\n\n" + CAVEATS
 
 

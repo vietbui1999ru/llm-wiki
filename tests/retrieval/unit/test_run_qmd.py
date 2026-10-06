@@ -47,6 +47,12 @@ def test_format_report_prints_headline_metrics_ci_n_and_caveats():
     assert "n/a  n=0" in text and "optimistic" in text  # null category has no relevance mean; caveats always present
 
 
+def test_format_report_shows_how_many_wiki_pages_survive_the_filter():
+    rows = run_qmd.score_bench(bench(["qmd://wiki/raw/x.md", "qmd://wiki/raw/y.md", "qmd://wiki/wiki/concepts/a.md"]), GOLDEN)
+    text = run_qmd.format_report(rows)
+    assert "bm25: wiki pages kept per query 0.5 of 10, non-wiki hits 1.0" in text  # q-1 keeps 1 of 3, q-2 keeps 0
+
+
 def test_report_gives_per_category_n_and_ci():
     rows = run_qmd.score_bench(bench(["qmd://wiki/wiki/concepts/a.md"]), GOLDEN)
     out = run_qmd.report(rows, "ndcg@10")["bm25"]

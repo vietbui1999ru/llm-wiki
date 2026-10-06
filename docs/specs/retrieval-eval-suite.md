@@ -1,6 +1,6 @@
 # SPEC: Retrieval Evaluation Suite for the Wiki Indexes
 
-**Status:** Draft for review. Written 2026-10-04. **Progress (2026-10-06):** M0, M1 and M2 are implemented, tested and merged (PRs #12, #13, #14). Next is M3 (grow the golden set). Two implementation deviations from this text are recorded in 7.1 and 7.2, the state of the evidence is in 13.1, and the human spot-check required by D4 is still open.
+**Status:** Draft for review. Written 2026-10-04. **Progress (2026-10-06):** M0, M1, M2 and M3 are implemented, tested and merged (PRs #12, #13, #14, #15). Next is M4 (latency harness), then M5 (baselines and gate). Two implementation deviations from this text are recorded in 7.1 and 7.2, the state of the evidence is in 13.1, and the human spot-check required by D4 is still open (the golden set is 114 queries, agent-reviewed only).
 **Owner decisions:** D1-D12 are settled (section 15); the remaining open item is the human spot-check, see 5.3 (amended 2026-10-06).
 
 ## 1. Purpose and non-goals
@@ -119,6 +119,8 @@ Target ~120 queries (proposal). Rough mix, from the methodology research:
 
 Split ~70/30 dev/heldout. The held-out split is used only for final A/B decisions and reporting, never for tuning.
 
+**Achieved (M3, 2026-10-06): 114 queries**: paraphrase 28 (25%), alias 23 (20%), relational 23 (20%), exact 20 (18%), overview 10 (9%), null 10 (9%); 36 held out (32%), assigned by query id. Overview and null are slightly under the proposal (2 incoherent overview tasks were skipped). The no-reuse rule for source pages is applied per category rather than globally, because the 128 eligible pages cannot back 114 queries otherwise; 30 pages are the primary answer of more than one query, always in different categories, so per-query results are mildly correlated.
+
 ### 5.3 Authoring workflow
 1. **Candidate generation (me, scripted):** exact from titles/headings; alias from tags and known abbreviations; relational from wikilink pairs (note the chunker injects those links as hints, so relational results may look slightly optimistic); overview from hub pages; paraphrase via an LLM from extracted key facts. LLM-generated queries are filtered to drop any containing page-specific rare terms (terms occurring in at most 2 pages) and any with high lexical overlap with the source page.
 2. **Human authoring/editing (you):** at least 60% of final queries hand-written or hand-edited. Estimated human effort 3-4 hours, spread out (my estimate).
@@ -134,6 +136,8 @@ Split ~70/30 dev/heldout. The held-out split is used only for final A/B decision
 - As real failures are found in daily use, add them as hand-written queries (a growing regression set); this raises the human-authored share over time.
 
 **Amended 2026-10-06 (what was actually done for the 30-query seed set; the human spot-check is still open).** The owner declined the human spot-check for now and asked for it to be done by the assistant. Done instead: (1) an independent Opus review agent read every labelled page and searched for unlabelled answers (no label wrong; 16 queries gained supporting pages or a corrected primary, 2 rewritten; every change is in the query's `notes`); (2) pooled judgments by the assistant: 335 pages appeared in some backend's top 10, 85% unlabelled (mostly generic hub pages that appear for unrelated queries), and the 94 consensus candidates (returned by 3 or more backends) for non-exact, non-null queries were read, giving 6 more grade-1 pages. About 190 pooled pages were not individually read. **Neither pass is a human judgement**: labels are agent-reviewed only, the D4 spot-check (at least 20%) remains required before the set is treated as reviewed, and every report keeps the optimism caveat. The leakage gates (rare term found in 1-2 pages; more than half of the query's word pairs copied verbatim from the primary page) are implemented as hard gates; they are exact-token based, so they also reject plain words that merely happen to be rare in this wiki (13 of 22 first-pass generated queries were rejected).
+
+**M3 additions (2026-10-06, 84 new queries).** Generation by a Claude subagent (not the DeepSeek extraction model) with the gates as its own self-check loop; an independent Opus review of all 88 generated queries (52 kept, 30 relabelled, 4 rewritten, 2 dropped), the assistant dropped 2 more near-duplicates; then pooled judgments across all 9 systems: the 261 pages that at least 6 of the 9 systems returned in their top 10 and no label covered (104 queries) were graded by an Opus agent, giving 42 supporting pages (added at grade 1), none rated primary, and no null query contradicted. The assistant audited 11 of the agent's justifications against page content: 10 were accurate, 1 was factually wrong (q-002) without changing its grade. Pooled pages returned by fewer than 6 systems were not graded. Two caveats: (a) the labels have now been adjusted using the outputs of the systems being evaluated (that is what pooling is for, and no system parameter was tuned, but absolute scores are therefore not independent of the systems); (b) none of this is a human judgement, so the D4 spot-check of at least 20% remains required.
 
 ## 6. Metrics
 
@@ -175,7 +179,7 @@ One results JSON per run: run metadata (date, git sha, index hash, versions, mac
 - Always report n and a 95% bootstrap CI for every mean. Use a fixed seed.
 - Comparing two systems: per-query paired differences; paired permutation test (or paired t-test) plus a paired bootstrap CI on the mean difference. Avoid Wilcoxon and sign tests (the IR literature disagrees on bootstrap-vs-randomization, agrees these two are weak).
 - Binary Hit@k comparisons: McNemar.
-- Do not claim differences smaller than the minimum detectable effect (about 0.08 nDCG at n=100 with the held-out split excluded from tuning; derived, assumed sd 0.3; recompute from our observed sd once we have data). **Observed 2026-10-06 (n=28): about 0.17-0.19 nDCG@10 and Recall@10 for the designated paired comparisons** (`compare.py` computes 2.8 * sd of the paired differences / sqrt(n) and flags differences below it), so n=28 detects nothing smaller; the 0.08 target needs about 100 queries (M3).
+- Do not claim differences smaller than the minimum detectable effect (about 0.08 nDCG at n=100 with the held-out split excluded from tuning; derived, assumed sd 0.3; recompute from our observed sd once we have data). **Observed 2026-10-06 (n=28): about 0.17-0.19 nDCG@10 and Recall@10 for the designated paired comparisons** (`compare.py` computes 2.8 * sd of the paired differences / sqrt(n) and flags differences below it), so n=28 detects nothing smaller; the 0.08 target needs about 100 queries (M3). **Observed after M3 (n=104): about 0.088 to 0.097**, close to the target, and still none of the designated differences exceeds it.
 - Multiple comparisons: with 9 systems the report is exploratory; designate in advance the 2-3 comparisons that matter (e.g. `qmd full` vs `LightRAG mix`; `qmd hybrid` vs `LightRAG naive`) and treat the rest as descriptive.
 - Report per category as well as overall: an overall mean hides exactly the effect we want to see.
 
@@ -228,7 +232,7 @@ tests/retrieval/
   harness/                        # as implemented (M1, M2); latency.py is M4
     score.py                      # metrics, bootstrap, paired tests (stdlib only)
     golden.py                     # load, lint, leakage gates, qmd bench fixture builder (unused by the runner)
-    seed.py, build_seed.py        # seed-set builder: candidates stage, assemble stage
+    seed.py, build_seed.py        # set builder: candidates stage, assemble stage; grows an existing set (M3)
     run_qmd.py                    # qmd CLI (-n 50) -> ranked pages; report; --rescore
     run_lightrag.py               # aquery_data on a persistent index copy (uv script)
     lr_map.py                     # LightRAG chunk -> page mapping, diagnostics
@@ -251,19 +255,32 @@ Effort and cost figures are my estimates.
 | **M0** | P0 indexer fix, `--verify`/`--reconcile`, L0 tests for it, one-off cleanup | section 11 acceptance; `--verify` clean on the real index | 0.5 day. **Status: done and merged (PR #12). Before the fix a read-only `--verify` listed 22 problems (6 stale pages, 3 missing, OWASP hub failed, 12 stray `dup-*` records); after `--reconcile` it reports "Index matches the wiki" (181 pages, 0 failed; 8,229 graph nodes, 11,532 edges).** |
 | **M1** | `score.py` + metric unit tests; qmd runner; 30-query seed golden set; first qmd baseline | metrics match hand-computed examples; one command produces a qmd report with CIs | 0.5 day. **Status: done and merged (PR #13)**: metrics tested against hand-computed examples; `run_qmd.py` produces the report with CIs. Deviation: qmd CLI instead of `qmd bench` (7.1). The seed set is agent-reviewed, not human-reviewed (5.3 amendment). |
 | **M2** | LightRAG runner (index copy, `aquery_data`, page mapping); comparison table across systems | all 9 system/mode rows scored on the seed set; mapping verified on 10 queries by hand | 0.5-1 day. **Status: done and merged (PR #14)**: all 9 rows scored (n=28 each). Mapping verification was automated rather than by hand: `verify_mapping.py` checked 1,260 returned chunk ids across 10 queries in all 5 modes against LightRAG's own `full_doc_id` and the files on disk, 0 mismatches. Deviation: `chunk_top_k=30` (3.3). |
-| **M3** | Golden set to full size: synthetic generation (non-DeepSeek model), filtering, your spot-check of >=20% and pooled-judgment grading, dev/held-out split | ~120 queries; golden lint passes; spot-check reject rate recorded | about 1-1.5 h of your time (my estimate; less than the hand-authored plan) |
+| **M3** | Golden set to full size: synthetic generation (non-DeepSeek model), filtering, your spot-check of >=20% and pooled-judgment grading, dev/held-out split | ~120 queries; golden lint passes; spot-check reject rate recorded | about 1-1.5 h of your time (my estimate; less than the hand-authored plan). **Status: done and merged (PR #15), except the human part.** 114 queries (30 seed + 84 new); lint and leakage gates pass on the whole set; 8 hard-negative null queries added. The "spot-check" was an independent Opus agent review of the 88 generated queries (52 kept, 30 relabelled, 4 rewritten, 2 dropped by the reviewer: 7% rewritten or dropped; 9% counting 2 near-duplicates dropped afterwards), followed by pooled-judgment grading (5.3 amendment). No human spot-check was done, so the D4 requirement is still open. The 9-system comparison was rerun on the full set (13.1). |
 | **M4** | Latency harness and protocol | p50/p95 cold and warm per stage, stored with metadata | 0.5 day |
 | **M5** | Baselines, gate, docs, wiki page, spec status updated | gate reproduces a known regression in a deliberate-break test | 0.5 day |
 
-### 13.1 Evidence so far (2026-10-06, 30-query seed set, n=28 scored, provisional)
+### 13.1 Evidence so far (2026-10-06, 114-query set, n=104 scored with the 10 null queries excluded, provisional)
 
-nDCG@10 [95% CI] / Recall@10 (Hole@10 is 0.78-0.85 for every system): qmd bm25 0.232 [0.089, 0.389] / 0.228; qmd vector 0.689 [0.571, 0.799] / 0.807; qmd hybrid 0.653 [0.539, 0.767] / 0.704; qmd full 0.663 [0.560, 0.764] / 0.713; LightRAG naive 0.638 [0.518, 0.757] / 0.764; local 0.622 [0.511, 0.732] / 0.732; global 0.582 [0.453, 0.708] / 0.686; hybrid 0.566 [0.451, 0.685] / 0.700; mix 0.611 [0.504, 0.722] / 0.737.
+nDCG@10 [95% CI] / Recall@5 / Recall@10 / Hole@10:
 
-- The designated comparisons show no detectable difference: `qmd full` vs `LightRAG mix` nDCG@10 +0.051 [-0.084, +0.183], p=0.466; `qmd hybrid` vs `LightRAG naive` nDCG@10 +0.015 [-0.101, +0.130], p=0.811; both well below the observed MDE (about 0.17-0.19). Do not rank systems from this run.
-- The only clear signal is BM25 failing on natural-language queries (1.0 on the 6 exact queries, about 0 elsewhere).
-- No graph advantage is visible on the 6 relational queries (LightRAG local 0.64 vs qmd full 0.64), but n=6 cannot show one.
-- Hybrid and full still keep only 9.0 wiki pages per query on average, so their Recall@10 is slightly truncated (7.1).
-- Graph-mode MRR and nDCG are list-order metrics (3.3). Absolute scores are optimistic (synthetic queries) and labels are agent-reviewed only.
+| system | nDCG@10 | Recall@5 | Recall@10 | Hole@10 |
+|---|---|---|---|---|
+| qmd bm25 | 0.248 [0.177, 0.327] | 0.234 | 0.242 | 0.75 |
+| qmd vector | 0.679 [0.621, 0.739] | 0.672 | 0.769 | 0.81 |
+| qmd hybrid | 0.685 [0.628, 0.742] | 0.677 | 0.763 | 0.79 |
+| qmd full | 0.711 [0.658, 0.762] | 0.708 | 0.770 | 0.78 |
+| LightRAG naive | 0.690 [0.633, 0.749] | 0.724 | 0.808 | 0.82 |
+| LightRAG local | 0.647 [0.580, 0.713] | 0.657 | 0.739 | 0.83 |
+| LightRAG global | 0.658 [0.595, 0.720] | 0.672 | 0.763 | 0.82 |
+| LightRAG hybrid | 0.645 [0.582, 0.708] | 0.659 | 0.763 | 0.82 |
+| LightRAG mix | 0.665 [0.608, 0.721] | 0.696 | 0.794 | 0.83 |
+
+- **No designated comparison is significant.** `qmd full` vs `LightRAG mix`: nDCG@10 +0.046 [-0.014, +0.105], p=0.147; Recall@10 -0.024 [-0.085, +0.036], p=0.449. `qmd hybrid` vs `LightRAG naive`: nDCG@10 -0.005 [-0.066, +0.055], p=0.867; Recall@10 -0.045 [-0.109, +0.022], p=0.208. The observed MDE is 0.088 to 0.097, so the data do not support a winner. Do not rank the non-BM25 systems from this run.
+- The only firm result is BM25 failing on natural-language queries (about 0.92 on the 20 exact queries, 0.03 to 0.12 on every other category).
+- No graph mode beats flat retrieval on the 23 relational queries (nDCG@10: LightRAG naive 0.70, global 0.70, local 0.60, hybrid 0.66, mix 0.65; qmd full 0.70, vector 0.67).
+- Hole@10 is 0.75 to 0.83: about four in five returned top-10 pages have no label, mostly generic hub pages, so absolute scores remain sensitive to labelling.
+- Hybrid and full still keep fewer than 10 wiki pages per query on average, so their Recall@10 is slightly truncated (7.1). Graph-mode MRR and nDCG are list-order metrics (3.3). Absolute scores are optimistic (synthetic queries) and labels are agent-reviewed only.
+- History: the first look on the 30-query seed set (n=28) gave the same picture with a minimum detectable effect of about 0.18.
 
 ## 14. Risks
 

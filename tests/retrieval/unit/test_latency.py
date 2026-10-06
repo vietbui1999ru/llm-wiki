@@ -42,5 +42,18 @@ def test_stage_summaries_group_samples_per_stage_and_skip_missing_stages():
     assert out["expansion_ms"]["n"] == 2 and "rerank_ms" not in out
 
 
+def test_machine_info_reads_cpu_and_memory_through_an_injectable_sysctl():
+    fake = {"machdep.cpu.brand_string": "Apple M1 Pro", "hw.memsize": str(16 * 2**30)}
+    info = latency.machine_info(sysctl=lambda key: fake[key])
+    assert info["cpu"] == "Apple M1 Pro" and info["memory_gb"] == 16 and info["python"] and info["platform"]
+
+
+def test_machine_info_survives_a_missing_sysctl():
+    def broken(key):
+        raise OSError("no sysctl")
+    info = latency.machine_info(sysctl=broken)
+    assert info["cpu"] is None and info["memory_gb"] is None and info["python"]
+
+
 def test_small_sample_warning_tells_when_p95_is_not_trustworthy():
     assert "p95" in latency.small_sample_note(30) and latency.small_sample_note(250) == ""

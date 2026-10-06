@@ -10,11 +10,15 @@
         {
           "page": "wiki/concepts/bm25.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/contextual-retrieval.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added contextual-retrieval.md as grade 1"
     },
     {
       "id": "q-002",
@@ -25,11 +29,15 @@
         {
           "page": "wiki/concepts/compounding-knowledge-base.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/knowledge-crystallization-cycle.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added knowledge-crystallization-cycle.md as grade 1"
     },
     {
       "id": "q-003",
@@ -40,11 +48,23 @@
         {
           "page": "wiki/concepts/council-pattern.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/entities/karpathy-llm-council.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/entities/agentops.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/multi-vendor-adversarial-review.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added karpathy-llm-council.md, agentops.md, multi-vendor-adversarial-review.md as grade 1"
     },
     {
       "id": "q-004",
@@ -55,11 +75,15 @@
         {
           "page": "wiki/concepts/lsp-agent-baseline.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/syntheses/desktop-control-plane.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added desktop-control-plane.md as grade 1"
     },
     {
       "id": "q-005",
@@ -70,11 +94,15 @@
         {
           "page": "wiki/entities/eggroll.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/evolution-strategies.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added evolution-strategies.md as grade 1"
     },
     {
       "id": "q-006",
@@ -85,11 +113,15 @@
         {
           "page": "wiki/entities/pydoll.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/entities/firecrawl.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added firecrawl.md as grade 1"
     },
     {
       "id": "q-007",
@@ -371,11 +403,15 @@
         {
           "page": "wiki/concepts/worktree-isolation.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/concepts/shared-task-queue.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Read as programming concurrency, the label is right and actor-model supports it. | pooled judgment 2026-10-06 (assistant at user request, not human): added worker-coordination.md, worktree-isolation.md as grade 1 after reading page content"
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Read as programming concurrency, the label is right and actor-model supports it. | pooled judgment 2026-10-06 (assistant at user request, not human): added worker-coordination.md, worktree-isolation.md as grade 1 after reading page content | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added shared-task-queue.md as grade 1"
     },
     {
       "id": "q-021",
@@ -452,11 +488,15 @@
         {
           "page": "wiki/concepts/worktree-isolation.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/entities/sandcastle.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): No developer would ask this. The real link is that self-correction routes an agent unsure about merge or branch strategy to the branch-strategy page. | pooled judgment 2026-10-06 (assistant at user request, not human): added worktree-isolation.md as grade 1 after reading page content"
+      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): No developer would ask this. The real link is that self-correction routes an agent unsure about merge or branch strategy to the branch-strategy page. | pooled judgment 2026-10-06 (assistant at user request, not human): added worktree-isolation.md as grade 1 after reading page content | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added sandcastle.md as grade 1"
     },
     {
       "id": "q-024",
@@ -560,11 +600,15 @@
         {
           "page": "wiki/systems/distributed-systems.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/systems/system-design-process.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): principles.md is generic SOLID/DRY, not server-side, so it is weaker than the omitted scalability-reliability page. | pooled judgment 2026-10-06 (assistant at user request, not human): added distributed-systems.md as grade 1 after reading page content"
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): principles.md is generic SOLID/DRY, not server-side, so it is weaker than the omitted scalability-reliability page. | pooled judgment 2026-10-06 (assistant at user request, not human): added distributed-systems.md as grade 1 after reading page content | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added system-design-process.md as grade 1"
     },
     {
       "id": "q-028",
@@ -595,11 +639,15 @@
         {
           "page": "wiki/concepts/multi-vendor-adversarial-review.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/concepts/agentic-sandbox-controls.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): owasp-security-checklist is now a hub page with only a severity table plus links, so it is stale as a label. The AI content moved to owasp-ai-agent-risks."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): owasp-security-checklist is now a hub page with only a severity table plus links, so it is stale as a label. The AI content moved to owasp-ai-agent-risks. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added agentic-sandbox-controls.md as grade 1"
     },
     {
       "id": "q-029",
@@ -645,11 +693,15 @@
         {
           "page": "wiki/concepts/dynamic-context-pruning.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/entities/opencode-dcp.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added opencode-dcp.md as grade 1"
     },
     {
       "id": "q-033",
@@ -690,11 +742,19 @@
         {
           "page": "wiki/concepts/web-fingerprinting.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/entities/pydoll.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/webrtc-ip-leak.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added pydoll.md, webrtc-ip-leak.md as grade 1"
     },
     {
       "id": "q-036",
@@ -705,11 +765,19 @@
         {
           "page": "wiki/entities/agent-native.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/summaries/builderio-agent-native.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/syntheses/builderio-control-plane-integration.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added builderio-agent-native.md, builderio-control-plane-integration.md as grade 1"
     },
     {
       "id": "q-037",
@@ -735,11 +803,23 @@
         {
           "page": "wiki/entities/diffviewer.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/syntheses/builderio-control-plane-integration.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/syntheses/desktop-control-plane.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/syntheses/agent-diff-viewer.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added builderio-control-plane-integration.md, desktop-control-plane.md, agent-diff-viewer.md as grade 1"
     },
     {
       "id": "q-039",
@@ -750,11 +830,15 @@
         {
           "page": "wiki/entities/gemini-cli.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/comparisons/cc-to-cross-platform-migration.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added cc-to-cross-platform-migration.md as grade 1"
     },
     {
       "id": "q-040",
@@ -825,11 +909,15 @@
         {
           "page": "wiki/systems/otel-council.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/entities/opentelemetry.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "title"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added opentelemetry.md as grade 1"
     },
     {
       "id": "q-045",
@@ -912,11 +1000,15 @@
         {
           "page": "wiki/entities/opencode-dcp.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/concepts/agentic-memory-tool.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Concept page primary, plugin page supporting."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Concept page primary, plugin page supporting. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added agentic-memory-tool.md as grade 1"
     },
     {
       "id": "q-050",
@@ -950,11 +1042,19 @@
         {
           "page": "wiki/concepts/owasp-security-checklist.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/concepts/ai-code-review.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/owasp-web-security-reference.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): After the split the hub keeps only a severity table and links; the actual checklist is owasp-top-10-checklist, so the current single label misses the primary answer."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): After the split the hub keeps only a severity table and links; the actual checklist is owasp-top-10-checklist, so the current single label misses the primary answer. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added ai-code-review.md, owasp-web-security-reference.md as grade 1"
     },
     {
       "id": "q-052",
@@ -988,11 +1088,15 @@
         {
           "page": "wiki/syntheses/minimal-coding-agent.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/summaries/how-to-build-an-agent.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Tool-design primary; minimal-coding-agent synthesis supports."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Tool-design primary; minimal-coding-agent synthesis supports. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added how-to-build-an-agent.md as grade 1"
     },
     {
       "id": "q-054",
@@ -1003,11 +1107,19 @@
         {
           "page": "wiki/concepts/web-fingerprinting.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/summaries/amazon-scraping-2026.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/webrtc-ip-leak.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added amazon-scraping-2026.md, webrtc-ip-leak.md as grade 1"
     },
     {
       "id": "q-055",
@@ -1018,11 +1130,15 @@
         {
           "page": "wiki/concepts/worker-coordination.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/agent-teams.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added agent-teams.md as grade 1"
     },
     {
       "id": "q-056",
@@ -1075,11 +1191,15 @@
         {
           "page": "wiki/concepts/llm-observability.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/systems/otel-council.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): OTel primary; LLM observability supports."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): OTel primary; LLM observability supports. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added otel-council.md as grade 1"
     },
     {
       "id": "q-059",
@@ -1109,11 +1229,15 @@
         {
           "page": "wiki/entities/pydoll.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/entities/firecrawl.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added firecrawl.md as grade 1"
     },
     {
       "id": "q-061",
@@ -1181,11 +1305,15 @@
         {
           "page": "wiki/patterns/database.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/systems/system-design-process.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Scalability page covers caching; replication detail lives in database patterns."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Scalability page covers caching; replication detail lives in database patterns. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added system-design-process.md as grade 1"
     },
     {
       "id": "q-067",
@@ -1211,11 +1339,19 @@
         {
           "page": "wiki/concepts/self-healing-loop.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/error-budget.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/concepts/agentic-cicd.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added error-budget.md, agentic-cicd.md as grade 1"
     },
     {
       "id": "q-069",
@@ -1339,11 +1475,19 @@
         {
           "page": "wiki/comparisons/claude-code-vs-opencode-plugins.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/summaries/pi-building-in-world-of-slop.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/entities/lean-session.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): OpenCode label is correct (compaction hooks are its headline differentiator). The comparison page should be supporting; lean-session is only related (it is a plugin, not the agent)."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): OpenCode label is correct (compaction hooks are its headline differentiator). The comparison page should be supporting; lean-session is only related (it is a plugin, not the agent). | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added pi-building-in-world-of-slop.md, lean-session.md as grade 1"
     },
     {
       "id": "q-078",
@@ -1479,11 +1623,15 @@
         {
           "page": "wiki/concepts/context-compression.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/context-engineering.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added context-engineering.md as grade 1"
     },
     {
       "id": "q-086",
@@ -1605,11 +1753,15 @@
         {
           "page": "wiki/summaries/compound-engineering.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/concepts/knowledge-crystallization-cycle.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Compounding KB has a 'Relationship to compound engineering' section."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Compounding KB has a 'Relationship to compound engineering' section. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added knowledge-crystallization-cycle.md as grade 1"
     },
     {
       "id": "q-092",
@@ -1624,11 +1776,15 @@
         {
           "page": "wiki/concepts/context-window.md",
           "grade": 2
+        },
+        {
+          "page": "wiki/concepts/dynamic-context-pruning.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added dynamic-context-pruning.md as grade 1"
     },
     {
       "id": "q-094",
@@ -1846,11 +2002,19 @@
         {
           "page": "wiki/concepts/context-degradation.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/concepts/agent-context-instructions.md",
+          "grade": 1
+        },
+        {
+          "page": "wiki/summaries/copilot-agent-structure.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): ai-ml is an ML system design page with only a short pointer table to agent pages, so it is not the hub; agent-primitive-selection is the page that organizes these primitives."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): ai-ml is an ML system design page with only a short pointer table to agent pages, so it is not the hub; agent-primitive-selection is the page that organizes these primitives. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added agent-context-instructions.md, copilot-agent-structure.md as grade 1"
     },
     {
       "id": "q-105",
@@ -2095,11 +2259,15 @@
         {
           "page": "wiki/concepts/tiered-knowledge-delivery.md",
           "grade": 1
+        },
+        {
+          "page": "wiki/summaries/nurture-first-agent-development.md",
+          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Wrong hub: tiered-knowledge-delivery says in 'Open question this doesn't answer' that it does not cover how experience becomes knowledge. compounding-knowledge-base is the growth page."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Wrong hub: tiered-knowledge-delivery says in 'Open question this doesn't answer' that it does not cover how experience becomes knowledge. compounding-knowledge-base is the growth page. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added nurture-first-agent-development.md as grade 1"
     },
     {
       "id": "q-112",

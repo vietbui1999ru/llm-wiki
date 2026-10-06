@@ -46,6 +46,13 @@ def test_assemble_can_append_to_an_existing_set_and_numbers_nulls_after_it():
     assert gold["queries"][0] == existing[0] and gold["queries"][3]["category"] == "null"
 
 
+def test_skipped_tasks_are_dropped_before_assembling_and_unknown_skips_are_errors():
+    kept = build_seed.drop_skipped(CAND, {"q-004": "pages share no theme"})
+    assert [t["id"] for t in kept["queries"]] == ["q-001", "q-002", "q-003"]
+    with pytest.raises(KeyError):
+        build_seed.drop_skipped(CAND, {"q-999": "typo"})
+
+
 def test_a_missing_generated_query_is_an_error():
     with pytest.raises(KeyError):
         build_seed.assemble(CAND, {"q-002": "only one"}, [])

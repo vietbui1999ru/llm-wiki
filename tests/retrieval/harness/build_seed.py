@@ -80,6 +80,15 @@ def assemble(candidates, generated, null_queries, existing=None):
     return {"version": 1, "queries": existing + queries}
 
 
+def drop_skipped(candidates, skip):
+    """Remove tasks the generator declined (e.g. an overview hub whose pages share no theme). Unknown ids fail."""
+    known = {t["id"] for t in candidates["queries"]}
+    unknown = sorted(set(skip) - known)
+    if unknown:
+        raise KeyError(f"skip lists unknown task ids {unknown}")
+    return {**candidates, "queries": [t for t in candidates["queries"] if t["id"] not in skip]}
+
+
 def exclusions_from(gold):
     """({category: grade-2 pages already used}, next free numeric id) for growing an existing golden set."""
     exclude = {}
@@ -120,7 +129,8 @@ def main(argv=None):
         return
     gen = json.loads(Path(args.generated).read_text())
     existing = golden.load(args.existing)["queries"] if args.existing else None
-    gold = assemble(json.loads(Path(args.candidates).read_text()), gen["generated"], gen["null"], existing=existing)
+    candidates = drop_skipped(json.loads(Path(args.candidates).read_text()), gen.get("skip", {}))
+    gold = assemble(candidates, gen["generated"], gen["null"], existing=existing)
     problems = golden.lint(gold, args.repo_root) + golden.lint_leakage(
         gold, {p: v["text"] for p, v in pages.items()})
     for problem in problems:

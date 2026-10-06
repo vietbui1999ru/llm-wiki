@@ -38,6 +38,18 @@ def kg_only_pages(result):
     return sorted(cited - ranked)
 
 
+def to_bench(runs):
+    """runs: {query id: {mode: {result, ms, llm_calls}}}. Returns (bench-shaped dict for run_qmd.score_bench,
+    per-query per-mode extras: graph diagnostics, kg_only_pages, llm_calls)."""
+    results, extras = [], {}
+    for qid, modes in runs.items():
+        results.append({"id": qid, "backends": {
+            m: {"top_files": ranked_pages(r["result"]), "latency_ms": r["ms"]} for m, r in modes.items()}})
+        extras[qid] = {m: {**diagnostics(r["result"]), "kg_only_pages": kg_only_pages(r["result"]),
+                           "llm_calls": r["llm_calls"]} for m, r in modes.items()}
+    return {"results": results}, extras
+
+
 def diagnostics(result):
     data = _data(result)
     kw = result.get("metadata", {}).get("keywords", {})

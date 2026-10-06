@@ -41,6 +41,18 @@ def test_diagnostics_count_entities_relations_and_keywords():
     assert d == {"entities": 2, "relationships": 1, "chunks": 1, "ll_keywords": 2, "hl_keywords": 1}
 
 
+def test_to_bench_shapes_runs_for_the_shared_scorer_and_keeps_diagnostics_aside():
+    runs = {"q-1": {"naive": {"result": result([chunk("wiki/a.md"), chunk("wiki/b.md")]), "ms": 40, "llm_calls": 0},
+                    "mix": {"result": result([chunk("wiki/b.md")], entities=[{"source_id": "wiki/z.md-chunk-001"}]),
+                            "ms": 900, "llm_calls": 1}}}
+    bench, extras = lr_map.to_bench(runs)
+    assert bench["results"][0] == {"id": "q-1", "backends": {
+        "naive": {"top_files": ["wiki/a.md", "wiki/b.md"], "latency_ms": 40},
+        "mix": {"top_files": ["wiki/b.md"], "latency_ms": 900}}}
+    assert extras["q-1"]["mix"]["kg_only_pages"] == ["wiki/z.md"] and extras["q-1"]["mix"]["llm_calls"] == 1
+    assert extras["q-1"]["naive"]["entities"] == 0
+
+
 def test_a_failed_query_is_an_error_not_an_empty_ranking():
     import pytest
     with pytest.raises(RuntimeError, match="boom"):

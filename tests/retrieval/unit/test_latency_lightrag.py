@@ -39,6 +39,25 @@ def test_stage_split_never_reports_negative_lookup_time_when_calls_overlap():
     assert latency_lightrag.stage_split(total_ms=500, llm_ms=400, embed_ms=300, llm_calls=1)["lookup_ms"] == 0
 
 
+def test_report_shows_each_stage_per_mode_condition_and_the_cache_check():
+    records = [{"backend": "mix", "id": f"q-{i}", "pass": 1, "kind": "pair", "text": "t",
+                "cold": latency_lightrag.stage_split(2000 + i, 1500, 200, 1),
+                "warm": latency_lightrag.stage_split(400 + i, 0, 150, 0)} for i in range(3)]
+    records.append({"backend": "naive", "id": "q-1", "pass": 1, "kind": "plain", "text": "t",
+                    "plain": latency_lightrag.stage_split(300, 0, 120, 0)})
+    text = latency_lightrag.format_report(records)
+    assert "mix / cold" in text and "mix / warm" in text and "naive / plain" in text and "llm_ms" in text
+    assert "cold samples that made no LLM call: 0 of 3" in text and "warm samples that made one: 0 of 3" in text
+
+
+def test_cold_start_summary_reports_each_phase_over_the_probes():
+    probes = [{"wall_ms": 9000, "import_ms": 3000, "init_ms": 2000, "first_naive_ms": 900, "second_naive_ms": 300},
+              {"wall_ms": 8000, "import_ms": 2500, "init_ms": 1900, "first_naive_ms": 800, "second_naive_ms": 310}]
+    s = latency_lightrag.summarize_cold_starts(probes)
+    assert s["wall_ms"]["n"] == 2 and s["wall_ms"]["max"] == 9000 and s["first_naive_ms"]["p50"] == 850
+    assert latency_lightrag.summarize_cold_starts([]) == {}
+
+
 def test_cache_check_flags_cold_samples_without_an_llm_call_and_warm_samples_with_one():
     flat = [{"backend": "mix", "condition": "cold", "llm_calls": 1}, {"backend": "mix", "condition": "cold", "llm_calls": 0},
             {"backend": "mix", "condition": "warm", "llm_calls": 1}, {"backend": "mix", "condition": "warm", "llm_calls": 0},

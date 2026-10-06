@@ -14,7 +14,11 @@ Process cold start (imports, storage load, first query) is measured separately w
 """
 import random
 
+import latency
+import latency_qmd
+
 MARKS = {"local": "?", "global": "!", "hybrid": "~", "mix": "."}
+COLD_START_KEYS = ("wall_ms", "import_ms", "init_ms", "first_naive_ms", "second_naive_ms")
 
 
 def variant(query, mode, p, salt):
@@ -56,3 +60,20 @@ def cache_check(flat):
         if s["condition"] == "warm" and s["llm_calls"] > 0:
             c["warm_miss"] += 1
     return out
+
+
+def format_report(records):
+    flat = latency_qmd.flatten(records)
+    lines = latency_qmd.format_groups(flat)
+    check = cache_check(flat)
+    if check:
+        lines.append("\ncache check (cold samples must call the keyword LLM, warm samples must hit the cache):")
+        for mode, c in check.items():
+            lines.append(f"  {mode}: cold samples that made no LLM call: {c['cold_hit']} of {c['cold_n']}; "
+                         f"warm samples that made one: {c['warm_miss']} of {c['warm_n']}")
+    return "\n".join(lines)
+
+
+def summarize_cold_starts(probes):
+    """p50/p95/max per phase over fresh-process probes (import, storage load, first query, second query)."""
+    return {k: latency.summarize([p[k] for p in probes]) for k in COLD_START_KEYS} if probes else {}

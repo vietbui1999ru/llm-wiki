@@ -87,8 +87,8 @@ def pending(plan, done):
     return [s for s in plan if _key(s) not in finished]
 
 
-def format_report(records):
-    flat = flatten(records)
+def format_groups(flat):
+    """Per backend and condition: p50, p95 and max for every stage, plus a small-sample note. System-agnostic."""
     groups = defaultdict(list)
     for s in flat:
         groups[(s["backend"], s["condition"])].append(s)
@@ -101,6 +101,12 @@ def format_report(records):
         note = latency.small_sample_note(len(group))
         if note:
             lines.append(f"  note: {note}")
+    return lines
+
+
+def format_report(records):
+    flat = flatten(records)
+    lines = format_groups(flat)
     check = cache_check(flat)
     if check:
         lines.append("\ncache check (cold samples must miss the expansion cache, warm samples must hit it; vector and "

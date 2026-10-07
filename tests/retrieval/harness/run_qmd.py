@@ -14,6 +14,7 @@ import time
 from pathlib import Path
 
 import golden as golden_mod
+import provenance
 import score
 
 PREFIX = "qmd://wiki/"
@@ -47,6 +48,16 @@ def score_bench(bench, golden):
                 "metrics": score.score_query(ranked, q["relevant"]),
                 "latency_ms": out["latency_ms"], "non_wiki_hits": non_wiki})
     return rows
+
+
+def run_info(stamp, golden_path, repo_root):
+    """What this run ran on: settings plus content hashes of the wiki and the golden file (for the regression gate)."""
+    return {"date": stamp, "golden": golden_path, "results_per_query": RESULTS, "backends": BACKENDS,
+            "wiki_sha256": provenance.wiki_sha256(repo_root), "golden_sha256": provenance.file_sha256(golden_path)}
+
+
+def _qmd_version():
+    return subprocess.run(["qmd", "--version"], capture_output=True, text=True).stdout.strip()
 
 
 def rescore(rows, golden):
@@ -125,7 +136,7 @@ def main(argv=None):
     rows = score_bench(collect(gold["queries"], run_cli), gold)
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     (Path(args.out_dir) / f"qmd-{stamp}.json").write_text(json.dumps(
-        {"run": {"date": stamp, "golden": args.golden, "results_per_query": RESULTS, "backends": BACKENDS},
+        {"run": {**run_info(stamp, args.golden, args.repo_root), "qmd_version": _qmd_version()},
          "rows": rows}, indent=2))
     print(format_report(rows))
 

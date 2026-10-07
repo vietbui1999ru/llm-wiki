@@ -111,6 +111,15 @@ def test_a_changed_qmd_collection_is_noted_because_files_outside_wiki_can_shift_
     assert same == []
 
 
+def test_a_qmd_collection_that_changed_during_the_run_is_noted_as_mixed_results():
+    base = system_file({"a": [TOP] * 20}, qmd_collection_sha256="q1")
+    cur = run_file({"a": [TOP] * 20}, qmd_collection_sha256="q1", qmd_collection_changed_during_run=True)
+    notes = gate.check(base, cur, golden(20))["backends"][0]["notes"]
+    assert any("changed during the run" in n and "mix" in n for n in notes)
+    steady = run_file({"a": [TOP] * 20}, qmd_collection_sha256="q1", qmd_collection_changed_during_run=False)
+    assert gate.check(base, steady, golden(20))["backends"][0]["notes"] == []
+
+
 def test_labels_are_the_current_ones_for_both_sides():
     relabelled = {"queries": [{"id": "q0", "category": "exact", "must_hit": False,
                                "relevant": [{"page": "wiki/x.md", "grade": 2}]}]}

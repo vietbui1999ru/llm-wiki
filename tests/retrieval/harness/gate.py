@@ -49,6 +49,8 @@ def _notes(ctx, run):
         elif ctx["qmd_collection_sha256"] != run["qmd_collection_sha256"]:
             notes.append("qmd collection changed since the baseline (an indexed file was added or removed, possibly "
                          "outside wiki/): rankings can shift even though the wiki did not change")
+    if run.get("qmd_collection_changed_during_run"):
+        notes.append("qmd collection changed during the run: the results mix two index states, repeat the run")
     base_s, run_s = ctx.get("settings") or {}, run.get("settings") or {}
     changed = [f"{k} ({base_s.get(k)} -> {run_s.get(k)})" for k in sorted(set(base_s) | set(run_s))
                if base_s.get(k) != run_s.get(k)]

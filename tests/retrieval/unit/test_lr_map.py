@@ -62,6 +62,13 @@ def test_nothing_found_is_an_empty_ranking_not_an_error():
     assert lr_map.diagnostics(nothing) == {"entities": 0, "relationships": 0, "chunks": 0, "ll_keywords": 0, "hl_keywords": 0}
 
 
+def test_to_bench_handles_a_nothing_found_result_end_to_end():
+    nothing = {"status": "failure", "message": "No relevant document chunks found.", "data": {}, "metadata": {}}
+    bench, extras = lr_map.to_bench({"q-1": {"naive": {"result": nothing, "ms": 20, "llm_calls": 0}}})
+    assert bench["results"][0]["backends"]["naive"]["top_files"] == []
+    assert extras["q-1"]["naive"]["chunk_ids"] == [] and extras["q-1"]["naive"]["chunks"] == 0
+
+
 def test_a_failed_query_is_an_error_not_an_empty_ranking():
     import pytest
     with pytest.raises(RuntimeError, match="boom"):

@@ -13,7 +13,10 @@ def page_of(chunk_id):
 
 def _data(result):
     if result.get("status") != "success":
-        raise RuntimeError(f"aquery_data failed: {result.get('message', result)}")
+        message = str(result.get("message", result))
+        if message.startswith("No relevant"):  # nothing passed the thresholds: an empty result, not a failure
+            return {"entities": [], "relationships": [], "chunks": []}
+        raise RuntimeError(f"aquery_data failed: {message}")
     return result["data"]
 
 

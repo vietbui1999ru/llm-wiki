@@ -59,6 +59,48 @@ def test_queries_missing_from_the_baseline_are_excluded_and_counted():
     assert out["n"] == 10 and out["n_new"] == 5
 
 
+def system_file(rankings_by_backend, **context):
+    return {"context": context, "backends": {b: rows(r) for b, r in rankings_by_backend.items()}}
+
+
+def run_file(rankings_by_backend, **run):
+    return {"run": run, "rows": {b: rows(r) for b, r in rankings_by_backend.items()}}
+
+
+def test_check_passes_when_every_backend_is_ok_and_reports_warnings_without_failing():
+    base = system_file({"a": [TOP] * 20, "b": [TOP] * 20})
+    cur = run_file({"a": [TOP] * 20, "b": [MISS] + [TOP] * 19})   # b warns (delta -0.05, CI spans zero)
+    report = gate.check(base, cur, golden(20))
+    assert report["exit"] == 0 and [x["verdict"] for x in report["backends"]] == ["OK", "WARN"]
+    assert "GATE: PASS (1 warning)" in gate.format_report(report)
+
+
+def test_check_fails_the_gate_on_a_failing_or_missing_backend():
+    base = system_file({"a": [TOP] * 20, "b": [TOP] * 20})
+    failing = gate.check(base, run_file({"a": [TOP] * 20, "b": [MISS] * 20}), golden(20))
+    assert failing["exit"] == 1 and "GATE: FAIL" in gate.format_report(failing)
+    missing = gate.check(base, run_file({"a": [TOP] * 20}), golden(20))
+    assert missing["exit"] == 1 and missing["backends"][1]["verdict"] == "MISSING"
+    assert gate.check(base, run_file({"a": [TOP] * 20}), golden(20), backends=["a"])["exit"] == 0
+
+
+def test_a_rebuilt_lightrag_index_makes_a_failing_backend_report_only():
+    base = system_file({"naive": [TOP] * 20}, index_hash="old")
+    report = gate.check(base, run_file({"naive": [MISS] * 20}, index_hash="new"), golden(20))
+    only = report["backends"][0]
+    assert only["verdict"] == "FAIL" and only["report_only"] and report["exit"] == 0
+    assert any("index" in n and "re-baseline" in n for n in only["notes"])
+    assert "REPORT-ONLY" in gate.format_report(report)
+
+
+def test_provenance_differences_are_notes_not_verdicts():
+    base = system_file({"a": [TOP] * 20}, wiki_sha256="w1", settings={"top_k": 20, "cosine": 0.3})
+    cur = run_file({"a": [TOP] * 20}, wiki_sha256="w2", settings={"top_k": 20, "cosine": 0.9})
+    notes = gate.check(base, cur, golden(20))["backends"][0]["notes"]
+    assert any("wiki content changed" in n for n in notes) and any("cosine" in n and "top_k" not in n for n in notes)
+    assert gate.check(base, cur, golden(20))["exit"] == 0
+
+
 def test_labels_are_the_current_ones_for_both_sides():
     relabelled = {"queries": [{"id": "q0", "category": "exact", "must_hit": False,
                                "relevant": [{"page": "wiki/x.md", "grade": 2}]}]}

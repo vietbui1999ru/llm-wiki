@@ -33,6 +33,8 @@ A repeatable measurement of how well the two retrieval systems over this wiki ([
 - qmd caches query expansions by text, shared across backends, and rerank results too; a cache state you assume rather than control gives wrong "cold" numbers. qmd's cold expansion is bimodal (median 2.8 s, 23% above 8 s) for a reason not found.
 - LightRAG does not cache a keyword extraction that returns no low-level keywords, so a few queries pay the LLM on every call. When nothing passes the thresholds `aquery_data` returns `status: failure, "No relevant document chunks found."`, which is an empty result, not an error.
 - Labels adjusted by pooling the systems' own top results are not independent of those systems.
+- qmd's collection is the whole repo, so a file outside `wiki/` can shift its rankings (a spec added to the index during one run did, slightly: +0.013 to +0.018 nDCG@10 against the older baseline, every CI including zero). The gate therefore records a hash of qmd's indexed file list as well as of the wiki, and flags a collection that changed during a run.
+- The first deliberate-break run crashed the harness: with a strict similarity threshold LightRAG reports an empty result as `status: failure`, which the mapping had treated as an error.
 
 ## Related
 

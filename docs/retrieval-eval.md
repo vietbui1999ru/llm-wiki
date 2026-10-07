@@ -62,7 +62,8 @@ Per backend the gate prints OK, WARN or FAIL and exits 1 if any backend fails:
 - **REPORT-ONLY**: the LightRAG index hash differs from the baseline's. A rebuild changes the graph (extraction is non-deterministic), so it is a re-baseline event, not a regression.
 - The epsilon of 0.03 is a starting value that is not sourced from anywhere; the nDCG@10 difference between two identical LightRAG runs was at most 0.001.
 - Both sides are re-scored against the **current** labels, so editing a label never looks like a regression. Queries added to the golden set after the baseline are excluded and counted.
-- Notes below the table say when the wiki content or the settings differ from the baseline. They never change a verdict by themselves.
+- Notes below the table say when the wiki content, qmd's collection or the settings differ from the baseline, when the qmd collection changed during the run itself, or when the run recorded no hash to compare. They never change a verdict by themselves, but read them before trusting a PASS or a FAIL. qmd's collection is the whole repo, so adding a file outside `wiki/` (a spec, a doc) can shift qmd's rankings even though the wiki hash is unchanged; the gate records a hash of qmd's file list for that reason.
+- Run the suite from the checkout whose wiki the indexes were built from (normally the main checkout): the wiki hash is taken from the directory you run in, and a worktree with extra or changed pages will report "wiki content changed".
 
 To mark a query as one whose failure is never acceptable, set `"must_hit": true` on it in `golden.json`. None are marked yet; exact-title queries are a reasonable first set.
 

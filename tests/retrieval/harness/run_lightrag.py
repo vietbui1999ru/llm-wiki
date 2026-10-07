@@ -68,20 +68,26 @@ async def build_rag(work_dir, graph_modes):
         sys.exit("graph modes need OPENCODE_GO_API_KEY_LIGHTRAG (in ~/secrets/.env); use --modes naive for a zero-LLM run")
     model = os.environ.get("OPENCODE_LIGHTRAG_MODEL", "deepseek-v4.1-flash")
     url = os.environ.get("OPENCODE_LIGHTRAG_BASE_URL", "https://opencode.ai/zen/go/v1")
-    counter = {"llm_calls": 0}
+    # llm_ms and embed_ms are sums of call durations (calls may overlap), used by latency_lightrag.py for stage splits
+    counter = {"llm_calls": 0, "llm_ms": 0, "embed_ms": 0}
 
     async def llm(prompt, system_prompt=None, history_messages=None, **kw):
+        started = time.monotonic()
         counter["llm_calls"] += 1
         kw.setdefault("max_tokens", 4096)
         kw.setdefault("extra_body", {"thinking": {"type": "disabled"}})
         headers = {"User-Agent": "llm-wiki-lightrag/1.0", "x-opencode-session": f"retrieval-eval-{os.getpid()}"}
         out = await openai_complete_if_cache(model, prompt, system_prompt=system_prompt, base_url=url, api_key=key,
                                              history_messages=history_messages or [], extra_headers=headers, **kw)
-        return "".join([c async for c in out]) if hasattr(out, "__aiter__") else out
+        text = "".join([c async for c in out]) if hasattr(out, "__aiter__") else out
+        counter["llm_ms"] += round((time.monotonic() - started) * 1000)
+        return text
 
     async def embed(texts):
+        started = time.monotonic()
         resp = await asyncio.get_event_loop().run_in_executor(
             None, lambda: ollama.embed(model=SETTINGS["embed_model"], input=texts))
+        counter["embed_ms"] += round((time.monotonic() - started) * 1000)
         return np.array(resp.embeddings, dtype=np.float32)
 
     rag = LightRAG(working_dir=str(work_dir), llm_model_func=llm, llm_model_name=model, llm_model_max_async=4,

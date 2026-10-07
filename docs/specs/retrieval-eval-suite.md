@@ -1,6 +1,6 @@
 # SPEC: Retrieval Evaluation Suite for the Wiki Indexes
 
-**Status:** Draft for review. Written 2026-10-04. **Progress (2026-10-06):** M0, M1, M2 and M3 are implemented, tested and merged (PRs #12, #13, #14, #15). Next is M4 (latency harness), then M5 (baselines and gate). Two implementation deviations from this text are recorded in 7.1 and 7.2, the state of the evidence is in 13.1, and the human spot-check required by D4 is still open (the golden set is 114 queries, agent-reviewed only).
+**Status:** Draft for review. Written 2026-10-04. **Progress (2026-10-06):** M0, M1, M2 and M3 are implemented, tested and merged (PRs #12, #13, #14, #15); M4 (latency harness) is implemented and in review (9.1, 13.2). Next is M5 (baselines and gate). Two implementation deviations from this text are recorded in 7.1 and 7.2, the state of the evidence is in 13.1, and the human spot-check required by D4 is still open (the golden set is 114 queries, agent-reviewed only).
 **Owner decisions:** D1-D12 are settled (section 15); the remaining open item is the human spot-check, see 5.3 (amended 2026-10-06).
 
 ## 1. Purpose and non-goals
@@ -198,6 +198,16 @@ Measured separately from quality runs. Custom harness using `time.perf_counter` 
 
 Reference points already observed (single runs, not benchmarks): reranked `qmd query` about 20 s (expansion 3.0 s, embed 1.4 s, rerank of 38 chunks 14.5 s); `--no-rerank` about 2.4 s; `qmd search` 0.28 s; two LightRAG hybrid queries including answer generation 12.2 s and 6.5 s.
 
+### 9.1 As implemented (M4, 2026-10-06)
+
+Code: `latency.py` (stage parsing, percentiles, machine metadata), `latency_qmd.py`, `latency_lightrag.py` (uv script) and `latency_report.py` (cross-system table). Samples go to `tests/retrieval/results/latency-<system>-<run>.jsonl` with a `.meta.json` (machine, versions, index hash, settings, models); results are gitignored, only baselines are committed (M5). Runs resume from the JSONL file. Each run makes 5 unrecorded warm-up calls and shuffles its work items with a fixed seed.
+
+- **qmd is sampled through its CLI, one process per call** (as in 7.1). Start-up and model load are inside every sample, and an in-process or MCP-server (process-warm) path was not measured, so "warm" below means "caches hit", not "process warm". Stages come from qmd's stderr progress lines (expansion, embedding, rerank, 0.1 s resolution); `search` and `vsearch` print none, so only their totals exist. `other_ms` is the remainder (process start, model load outside a stage, lexical search, output).
+- **Cache control is a cold/warm pair on one text per LLM backend.** qmd caches query expansions by query text, shared across backends, so a text is cold only for whichever backend queried it first, and assuming a text is fresh or cached is unsafe (the first smoke run showed both mistakes). Cold samples therefore use a variant text unique to the backend, pass and run (trailing punctuation plus a run salt) and the warm sample is an immediate repeat. The report cross-checks the observed expansion time against the intended state.
+- **LightRAG is sampled in one warm process**, `aquery_data` only (no answer generation). Stages: keyword-extraction LLM (`llm_ms`), embedding (`embed_ms`, a sum of call durations, calls can overlap) and graph plus vector lookup (`lookup_ms`, the remainder). Cold means the keyword cache genuinely missed: the real query text on a scratch copy of the eval index whose query-time keyword-cache entries are stripped (rebuilt per run, kept when resuming the same run); warm is the immediate repeat. Suffixed variant texts, as used for qmd, were tried and rejected because they make the extraction LLM return empty low-level keywords, which LightRAG does not cache. Graph modes get one pass (a second pair would already be cached), `naive` two. Process cold start is measured separately in fresh processes (imports, storage load, first and second query, whole-process wall time).
+- **Findings not in the original protocol.** (1) qmd also caches **rerank results**: a repeated `full` query reranks in 2 ms against 14.9 s cold. (2) qmd's cold query expansion is **bimodal**: median 2.8 s, but 23% of cold expansions take more than 8 s (median 12.4 s), in every category, cause unknown; the expansion p95 is 13.4 s (`hybrid`) and 13.6 s (`full`), and this slow mode is the main driver of the gap between the cold p50 and p95 totals. (3) 12 of 312 cold qmd samples (all variants of 4 queries, q-050, q-081, q-092 and q-106) showed 0 ms expansion on texts nobody had queried; unexplained and not reproducible with a fresh salt; excluding them moves p50 and p95 by less than 0.5%. (4) LightRAG does not cache an extraction that returns no low-level keywords, so 2 to 4 of the 104 queries per graph mode paid the keyword LLM on every call even in the warm condition.
+- **Sample counts.** qmd: 208 per condition for `bm25`, `vector`, `hybrid`; 104 for `full` (below the 200 the spec asks for, because a `full` pair costs about 24 s). LightRAG: 208 for `naive`, 104 per condition for each graph mode. p95 and max for the 104-sample rows are indicative. Disk caches were warm; a cold disk was not measured. No other heavy job ran during sampling.
+
 ## 10. Regression gate
 
 - Commit `tests/retrieval/baselines/<system>.json` containing **per-query** metric values (not just means).
@@ -256,7 +266,7 @@ Effort and cost figures are my estimates.
 | **M1** | `score.py` + metric unit tests; qmd runner; 30-query seed golden set; first qmd baseline | metrics match hand-computed examples; one command produces a qmd report with CIs | 0.5 day. **Status: done and merged (PR #13)**: metrics tested against hand-computed examples; `run_qmd.py` produces the report with CIs. Deviation: qmd CLI instead of `qmd bench` (7.1). The seed set is agent-reviewed, not human-reviewed (5.3 amendment). |
 | **M2** | LightRAG runner (index copy, `aquery_data`, page mapping); comparison table across systems | all 9 system/mode rows scored on the seed set; mapping verified on 10 queries by hand | 0.5-1 day. **Status: done and merged (PR #14)**: all 9 rows scored (n=28 each). Mapping verification was automated rather than by hand: `verify_mapping.py` checked 1,260 returned chunk ids across 10 queries in all 5 modes against LightRAG's own `full_doc_id` and the files on disk, 0 mismatches. Deviation: `chunk_top_k=30` (3.3). |
 | **M3** | Golden set to full size: synthetic generation (non-DeepSeek model), filtering, your spot-check of >=20% and pooled-judgment grading, dev/held-out split | ~120 queries; golden lint passes; spot-check reject rate recorded | about 1-1.5 h of your time (my estimate; less than the hand-authored plan). **Status: done and merged (PR #15), except the human part.** 114 queries (30 seed + 84 new); lint and leakage gates pass on the whole set; 8 hard-negative null queries added. The "spot-check" was an independent Opus agent review of the 88 generated queries (52 kept, 30 relabelled, 4 rewritten, 2 dropped by the reviewer: 7% rewritten or dropped; 9% counting 2 near-duplicates dropped afterwards), followed by pooled-judgment grading (5.3 amendment). No human spot-check was done, so the D4 requirement is still open. The 9-system comparison was rerun on the full set (13.1). |
-| **M4** | Latency harness and protocol | p50/p95 cold and warm per stage, stored with metadata | 0.5 day |
+| **M4** | Latency harness and protocol | p50/p95 cold and warm per stage, stored with metadata | 0.5 day. **Status: implemented (see 9.1 and 13.2).** All systems sampled with per-stage p50/p95/max in cold and warm conditions, metadata stored with each run, a cache cross-check per run. Deviations: qmd per process rather than in-process; `full` has 104 samples per condition rather than 200. No gate yet (report-only, as the spec allows). |
 | **M5** | Baselines, gate, docs, wiki page, spec status updated | gate reproduces a known regression in a deliberate-break test | 0.5 day |
 
 ### 13.1 Evidence so far (2026-10-06, 114-query set, n=104 scored with the 10 null queries excluded, provisional)
@@ -281,6 +291,32 @@ nDCG@10 [95% CI] / Recall@5 / Recall@10 / Hole@10:
 - Hole@10 is 0.75 to 0.83: about four in five returned top-10 pages have no label, mostly generic hub pages, so absolute scores remain sensitive to labelling.
 - Hybrid and full still keep fewer than 10 wiki pages per query on average, so their Recall@10 is slightly truncated (7.1). Graph-mode MRR and nDCG are list-order metrics (3.3). Absolute scores are optimistic (synthetic queries) and labels are agent-reviewed only.
 - History: the first look on the 30-query seed set (n=28) gave the same picture with a minimum detectable effect of about 0.18.
+
+### 13.2 Latency (M4, 2026-10-06, 104 non-null queries, Apple M1 Pro 16 GB, qmd 2.8.3, lightrag-hku 1.5.7)
+
+Total wall-clock per call, milliseconds. **The two systems are not like for like**: a qmd sample is a whole CLI process (start-up and model load included), a LightRAG sample is one `aquery_data` call in an already running process, and LightRAG's keyword step is a remote LLM call.
+
+| system | backend | condition | n | p50 | p95 | max |
+|---|---|---|---|---|---|---|
+| qmd | bm25 | plain | 208 | 320 | 362 | 373 |
+| qmd | vector | cold | 208 | 5374 | 16370 | 22387 |
+| qmd | vector | warm | 208 | 2760 | 3318 | 8598 |
+| qmd | hybrid | cold | 208 | 5238 | 19411 | 22067 |
+| qmd | hybrid | warm | 208 | 2767 | 6739 | 8931 |
+| qmd | full | cold | 104 | 20866 | 32846 | 35353 |
+| qmd | full | warm | 104 | 2934 | 5353 | 7641 |
+| LightRAG | naive | plain | 208 | 34 | 53 | 189 |
+| LightRAG | local | cold / warm | 104 | 1998 / 83 | 2673 / 152 | 23743 / 1779 |
+| LightRAG | global | cold / warm | 104 | 2020 / 89 | 2534 / 132 | 15675 / 1909 |
+| LightRAG | hybrid | cold / warm | 104 | 2040 / 120 | 2710 / 194 | 3605 / 2043 |
+| LightRAG | mix | cold / warm | 104 | 2037 / 119 | 2762 / 182 | 3895 / 2198 |
+
+Stages (p50 / p95, ms). qmd `full` cold: expansion 2800 / 13640, embedding 1450 / 1800, rerank 14900 / 16185, other 1275 / 3480. qmd `hybrid` cold: expansion 2700 / 13400, embedding 1450 / 1900, other 1144 / 4602. qmd warm (cache hits): expansion about 0, rerank about 2, embedding 1700 to 1800. LightRAG `mix` cold: keyword LLM 1708 / 2467, embedding 78 / 225, lookup 215 / 257; warm: LLM 0, embedding 60 / 93, lookup 54 / 91. LightRAG process cold start (5 fresh processes): wall 2922 p50 / 3634 max, imports 148, storage load 1923, first `naive` query 170, second 51.
+
+- A novel qmd query costs about 5 s without rerank and about 21 s with it (p95 about 19 s and 33 s); the rerank stage is stable (14.9 s) while the expansion stage is bimodal (9.1 findings). Repeating a query costs about 3 s whichever backend, because qmd caches both the expansion and the rerank.
+- In a running process LightRAG answers a `naive` query in about 35 ms and a cached graph-mode query in about 0.1 s; a novel graph-mode query costs about 2 s, almost all of it the keyword LLM (1.7 s p50) with occasional stalls (up to 23.7 s). Process start-up adds about 3 s once.
+- Retrieval quality showed no detectable difference between the qmd and LightRAG backends (13.1), so latency is the measurable difference between them, with the like-for-like caveat above: qmd's CLI path pays model load on every call, which an MCP-server (process-warm) qmd would not.
+- Latency is report-only; no gate is defined yet (M5).
 
 ## 14. Risks
 

@@ -137,6 +137,7 @@
           "systems/distributed-systems",
           "systems/dotfiles-agent-harness-layout",
           "systems/otel-council",
+          "systems/retrieval-eval-suite",
           "systems/scalability-reliability",
           "systems/system-design-process",
           "systems/wiki-indexing-pipeline"

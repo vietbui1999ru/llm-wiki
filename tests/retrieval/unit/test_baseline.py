@@ -48,6 +48,14 @@ def test_dumps_round_trips_and_writes_one_line_per_query_row():
     assert sum(1 for line in text.splitlines() if line.strip().startswith('{"id"')) == 2  # two query rows, one line each
 
 
+def test_context_carries_the_qmd_collection_hash_when_the_run_recorded_one(tmp_path):
+    g = tmp_path / "golden.json"
+    g.write_text("{}")
+    with_hash = {"run": {**RESULTS["run"], "wiki_sha256": "w" * 64, "golden_sha256": "g" * 64, "qmd_collection_sha256": "q" * 64}}
+    assert baseline.make_context(with_hash, g, tmp_path, "x.json")["qmd_collection_sha256"] == "q" * 64
+    assert baseline.make_context(RESULTS, g, tmp_path, "x.json")["qmd_collection_sha256"] is None
+
+
 def test_context_prefers_hashes_recorded_by_the_run_itself(tmp_path):
     results = {"run": {**RESULTS["run"], "wiki_sha256": "w" * 64, "golden_sha256": "g" * 64}, "rows": {}}
     g = tmp_path / "golden.json"

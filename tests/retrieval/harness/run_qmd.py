@@ -50,10 +50,14 @@ def score_bench(bench, golden):
     return rows
 
 
-def run_info(stamp, golden_path, repo_root):
-    """What this run ran on: settings plus content hashes of the wiki and the golden file (for the regression gate)."""
+def run_info(stamp, golden_path, repo_root, qmd_listing=None):
+    """What this run ran on: settings plus content hashes of the wiki, the golden file and qmd's wiki collection
+    (the collection is the whole repo, so files outside wiki/ can change rankings). For the regression gate."""
+    if qmd_listing is None:
+        qmd_listing = subprocess.run(["qmd", "ls", "wiki"], capture_output=True, text=True, check=True).stdout
     return {"date": stamp, "golden": golden_path, "results_per_query": RESULTS, "backends": BACKENDS,
-            "wiki_sha256": provenance.wiki_sha256(repo_root), "golden_sha256": provenance.file_sha256(golden_path)}
+            "wiki_sha256": provenance.wiki_sha256(repo_root), "golden_sha256": provenance.file_sha256(golden_path),
+            "qmd_collection_sha256": provenance.qmd_collection_sha256(qmd_listing)}
 
 
 def _qmd_version():

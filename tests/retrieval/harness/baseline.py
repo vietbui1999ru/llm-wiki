@@ -29,6 +29,7 @@ def make_context(results, golden_path, repo_root, source):
     recorded = "wiki_sha256" in run and "golden_sha256" in run
     return {"source_run": source, "created": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "index_hash": run.get("index_hash"), "settings": run.get("settings"),
+            "qmd_collection_sha256": run.get("qmd_collection_sha256"),
             "golden_sha256": run.get("golden_sha256") or provenance.file_sha256(golden_path),
             "wiki_sha256": run.get("wiki_sha256") or provenance.wiki_sha256(repo_root),
             "provenance": "recorded by the run" if recorded else

@@ -12,6 +12,14 @@ def file_sha256(path):
     return digest.hexdigest()
 
 
+def qmd_collection_sha256(listing):
+    """SHA-256 over the sorted set of paths in `qmd ls wiki` output. qmd's collection is the whole repo (raw/, docs/,
+    meta pages), so a file outside wiki/ can shift its rankings; wiki_sha256 cannot see that. Sizes and dates are
+    ignored: only adding or removing an indexed file changes the hash."""
+    paths = sorted(line.split("qmd://", 1)[1].strip() for line in listing.splitlines() if "qmd://" in line)
+    return hashlib.sha256("\n".join(paths).encode()).hexdigest()
+
+
 def wiki_sha256(repo_root):
     """SHA-256 over every wiki/**/*.md (sorted repo-relative path and bytes), so a rename also changes it."""
     root = Path(repo_root)

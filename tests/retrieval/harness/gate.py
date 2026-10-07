@@ -43,6 +43,12 @@ def _notes(ctx, run):
         notes.append("the run recorded no wiki hash, so wiki changes cannot be ruled out")
     elif ctx.get("wiki_sha256") and ctx["wiki_sha256"] != run["wiki_sha256"]:
         notes.append("wiki content changed since the baseline: differences may reflect content, not retrieval")
+    if ctx.get("qmd_collection_sha256"):
+        if not run.get("qmd_collection_sha256"):
+            notes.append("the run recorded no qmd collection hash, so index changes outside wiki/ cannot be ruled out")
+        elif ctx["qmd_collection_sha256"] != run["qmd_collection_sha256"]:
+            notes.append("qmd collection changed since the baseline (an indexed file was added or removed, possibly "
+                         "outside wiki/): rankings can shift even though the wiki did not change")
     base_s, run_s = ctx.get("settings") or {}, run.get("settings") or {}
     changed = [f"{k} ({base_s.get(k)} -> {run_s.get(k)})" for k in sorted(set(base_s) | set(run_s))
                if base_s.get(k) != run_s.get(k)]

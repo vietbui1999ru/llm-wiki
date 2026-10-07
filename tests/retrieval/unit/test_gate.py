@@ -101,6 +101,16 @@ def test_provenance_differences_are_notes_not_verdicts():
     assert gate.check(base, cur, golden(20))["exit"] == 0
 
 
+def test_a_changed_qmd_collection_is_noted_because_files_outside_wiki_can_shift_rankings():
+    base = system_file({"a": [TOP] * 20}, qmd_collection_sha256="q1")
+    changed = gate.check(base, run_file({"a": [TOP] * 20}, qmd_collection_sha256="q2"), golden(20))["backends"][0]["notes"]
+    assert any("qmd collection changed" in n and "outside wiki" in n for n in changed)
+    unrecorded = gate.check(base, run_file({"a": [TOP] * 20}), golden(20))["backends"][0]["notes"]
+    assert any("no qmd collection hash" in n for n in unrecorded)
+    same = gate.check(base, run_file({"a": [TOP] * 20}, qmd_collection_sha256="q1"), golden(20))["backends"][0]["notes"]
+    assert same == []
+
+
 def test_labels_are_the_current_ones_for_both_sides():
     relabelled = {"queries": [{"id": "q0", "category": "exact", "must_hit": False,
                                "relevant": [{"page": "wiki/x.md", "grade": 2}]}]}

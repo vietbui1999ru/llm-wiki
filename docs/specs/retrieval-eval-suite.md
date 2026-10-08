@@ -1,6 +1,6 @@
 # SPEC: Retrieval Evaluation Suite for the Wiki Indexes
 
-**Status:** Draft for review. Written 2026-10-04. **Progress (2026-10-06):** M0, M1, M2 and M3 are implemented, tested and merged (PRs #12, #13, #14, #15); M4 (latency harness) is implemented and in review (9.1, 13.2). Next is M5 (baselines and gate). Two implementation deviations from this text are recorded in 7.1 and 7.2, the state of the evidence is in 13.1, and the human spot-check required by D4 is still open (the golden set is 114 queries, agent-reviewed only).
+**Status:** Draft for review. Written 2026-10-04. **Progress (2026-10-06):** M0, M1, M2 and M3 are implemented, tested and merged (PRs #12, #13, #14, #15); M4 (latency harness) was merged in PR #16; M5 (baselines, gate, docs, wiki page) is implemented and in review (10.1, 13.3), so all six milestones are implemented. What remains is the human spot-check and a re-baseline after M5 merges. Two implementation deviations from this text are recorded in 7.1 and 7.2, the state of the evidence is in 13.1, and the human spot-check required by D4 is still open (the golden set is 114 queries, agent-reviewed only).
 **Owner decisions:** D1-D12 are settled (section 15); the remaining open item is the human spot-check, see 5.3 (amended 2026-10-06).
 
 ## 1. Purpose and non-goals
@@ -218,6 +218,18 @@ Code: `latency.py` (stage parsing, percentiles, machine metadata), `latency_qmd.
 - LightRAG: queries are cached after the first run. A **rebuild changes the graph** (extraction is non-deterministic), so a rebuild is a *re-baseline event*, compared report-only. Preserving `kv_store_llm_response_cache.json` across rebuilds may make a rebuild replay cached extraction output (inference from the LightRAG README; verify before relying on it).
 - Run on demand and before merging changes to chunking, extraction prompts, models, retrieval parameters or the golden set. Not on every commit (the index is local and slow to rebuild).
 
+### 10.1 As implemented (M5, 2026-10-07)
+
+Code: `gate.py`, `baseline.py` and `provenance.py`; operator guide `docs/retrieval-eval.md`. Baselines are committed as `tests/retrieval/baselines/qmd.json` (4 backends, 456 query rows) and `lightrag.json` (5 modes, 570 rows): per query the top-10 pages and ndcg@10, recall@5, recall@10 and hit@3, scored against the current labels, plus a context block (source run, index hash, settings, SHA-256 of the golden file, of `wiki/**` and, for qmd, of the file list of qmd's collection). Both baselines were built from runs that recorded that provenance themselves.
+
+- **Verdicts follow the rule above.** WARN when the mean nDCG@10 delta is below -0.03, FAIL when additionally the paired bootstrap 95% CI lies entirely below 0 (epsilon 0.03 is still an unsourced starting value). A backend missing from the run fails (the gate fails closed); `--backends` checks a subset on purpose.
+- **Both sides are re-scored against the current labels**, so editing a label never looks like a regression; queries added to the golden set after the baseline are excluded and counted.
+- **Must-hit floor, as implemented:** a `must_hit` query that was in the top 3 at baseline and is not now. A query the system already missed at baseline is not blamed. No query is marked `must_hit` yet (a decision for the owner; exact-title queries are a reasonable first set), so the floor is covered by unit tests but has not been exercised on real data.
+- **LightRAG rebuild:** if the index hash differs from the baseline's the verdicts are report-only and the exit code ignores them.
+- **Provenance notes never change a verdict** but should be read first: wiki content changed, qmd collection changed (qmd's collection is the whole repo, so a file outside `wiki/` can shift rankings; found when a spec pulled into the main checkout during a run did), qmd collection changed during the run, settings differ, or the run recorded no hash.
+- **Noise floor.** Two identical LightRAG runs differed by at most 0.001 nDCG@10 (a few queries re-extract keywords on every call). For qmd the noise was not separated from an index change: a fresh run after the spec was added to the index was +0.013 to +0.018 against the older baseline, every CI including zero. Epsilon is above both.
+- Latency is not gated (9.1).
+
 ## 11. Prerequisite P0: fix the incremental indexing bug
 
 **Problem (verified 2026-10-04).** LightRAG's enqueue treats the same basename as a duplicate (pipeline.py:1183, "same basename always treated as duplicate") and also rejects identical content under another filename. `wiki-index` passes `file_paths=[relative path]`, which LightRAG flattens to the basename. Consequences: (a) changed pages are never re-indexed (the new insert is rejected, the manifest records the new mtime anyway); (b) distinct pages sharing a basename, one per directory, collide and the loser is dropped; (c) my failed-page check looks up the page by its doc id, finds the older successful record and reports success.
@@ -239,7 +251,7 @@ tests/retrieval/
   golden/golden.json              # canonical, reviewed
   baselines/<system>.json         # committed, per-query
   results/                        # gitignored
-  harness/                        # as implemented (M1, M2); latency.py is M4
+  harness/                        # as implemented (M1 to M5)
     score.py                      # metrics, bootstrap, paired tests (stdlib only)
     golden.py                     # load, lint, leakage gates, qmd bench fixture builder (unused by the runner)
     seed.py, build_seed.py        # set builder: candidates stage, assemble stage; grows an existing set (M3)
@@ -248,7 +260,9 @@ tests/retrieval/
     lr_map.py                     # LightRAG chunk -> page mapping, diagnostics
     verify_mapping.py             # cross-check the mapping against full_doc_id and files
     compare.py                    # 9-system table, designated paired comparisons, Hole@10, MDE
-    latency.py                    # M4, not built
+    latency.py, latency_qmd.py, latency_lightrag.py, latency_report.py   # M4
+    gate.py, baseline.py          # M5: regression gate and baseline builder
+    provenance.py                 # content hashes of the wiki, the golden file and qmd's collection
   unit/                           # L0 tests
 ```
 
@@ -267,7 +281,7 @@ Effort and cost figures are my estimates.
 | **M2** | LightRAG runner (index copy, `aquery_data`, page mapping); comparison table across systems | all 9 system/mode rows scored on the seed set; mapping verified on 10 queries by hand | 0.5-1 day. **Status: done and merged (PR #14)**: all 9 rows scored (n=28 each). Mapping verification was automated rather than by hand: `verify_mapping.py` checked 1,260 returned chunk ids across 10 queries in all 5 modes against LightRAG's own `full_doc_id` and the files on disk, 0 mismatches. Deviation: `chunk_top_k=30` (3.3). |
 | **M3** | Golden set to full size: synthetic generation (non-DeepSeek model), filtering, your spot-check of >=20% and pooled-judgment grading, dev/held-out split | ~120 queries; golden lint passes; spot-check reject rate recorded | about 1-1.5 h of your time (my estimate; less than the hand-authored plan). **Status: done and merged (PR #15), except the human part.** 114 queries (30 seed + 84 new); lint and leakage gates pass on the whole set; 8 hard-negative null queries added. The "spot-check" was an independent Opus agent review of the 88 generated queries (52 kept, 30 relabelled, 4 rewritten, 2 dropped by the reviewer: 7% rewritten or dropped; 9% counting 2 near-duplicates dropped afterwards), followed by pooled-judgment grading (5.3 amendment). No human spot-check was done, so the D4 requirement is still open. The 9-system comparison was rerun on the full set (13.1). |
 | **M4** | Latency harness and protocol | p50/p95 cold and warm per stage, stored with metadata | 0.5 day. **Status: implemented (see 9.1 and 13.2).** All systems sampled with per-stage p50/p95/max in cold and warm conditions, metadata stored with each run, a cache cross-check per run. Deviations: qmd per process rather than in-process; `full` has 104 samples per condition rather than 200. No gate yet (report-only, as the spec allows). |
-| **M5** | Baselines, gate, docs, wiki page, spec status updated | gate reproduces a known regression in a deliberate-break test | 0.5 day |
+| **M5** | Baselines, gate, docs, wiki page, spec status updated | gate reproduces a known regression in a deliberate-break test | 0.5 day. **Status: implemented (see 10.1 and 13.3).** Committed baselines, the gate, the operator guide (`docs/retrieval-eval.md`) and the wiki page (`wiki/systems/retrieval-eval-suite.md`) exist. Deliberate-break test passed on real data for LightRAG: an unmodified run gates PASS, the same retrieval with `cosine_better_than_threshold` raised from 0.3 to 0.9 gates FAIL. The qmd path is covered by a fresh-run control and unit tests, not by a real qmd break; no `must_hit` queries are designated yet. |
 
 ### 13.1 Evidence so far (2026-10-06, 114-query set, n=104 scored with the 10 null queries excluded, provisional)
 
@@ -317,6 +331,22 @@ Stages (p50 / p95, ms). qmd `full` cold: expansion 2800 / 13640, embedding 1450 
 - In a running process LightRAG answers a `naive` query in about 35 ms and a cached graph-mode query in about 0.1 s; a novel graph-mode query costs about 2 s, almost all of it the keyword LLM (1.7 s p50) with occasional stalls (up to 23.7 s). Process start-up adds about 3 s once.
 - Retrieval quality showed no detectable difference between the qmd and LightRAG backends (13.1), so latency is the measurable difference between them, with the like-for-like caveat above: qmd's CLI path pays model load on every call, which an MCP-server (process-warm) qmd would not.
 - Latency is report-only; no gate is defined yet (M5).
+
+### 13.3 Gate check (M5, 2026-10-07)
+
+nDCG@10 delta against the committed baseline, 104 non-null queries, mean [95% CI of the paired difference]:
+
+| run | backend | delta | verdict |
+|---|---|---|---|
+| fresh LightRAG run, unmodified | naive, hybrid, mix | +0.000 | OK |
+| fresh LightRAG run, unmodified | local, global | -0.001 [-0.002, +0.000], [-0.003, +0.000] | OK |
+| LightRAG naive, `cosine_better_than_threshold` 0.9 (deliberate break) | naive | -0.690 [-0.749, -0.633] | FAIL, exit 1 |
+| fresh qmd run (qmd index had gained one doc outside `wiki/`) | bm25 | +0.000 | OK |
+| fresh qmd run | vector, hybrid, full | +0.013, +0.014, +0.018 (every CI includes 0) | OK |
+
+The unmodified runs exit 0, the broken run exits 1 and names the cause in its notes (`cosine_better_than_threshold (0.3 -> 0.9)`). The break also found a bug: with a strict threshold LightRAG's `aquery_data` returns `status: failure` with "No relevant document chunks found." for queries where nothing passes, and the mapping layer raised on it; that is a legitimate empty result and is now scored as one.
+
+The baselines were then rebuilt from the fresh runs, which record their own provenance. The wiki hash stored in them was taken before the last edit of the new wiki page, so the first gate run after M5 merges will carry a "wiki content changed" note; qmd will also have indexed the new docs by then, so re-baseline once after merging.
 
 ## 14. Risks
 

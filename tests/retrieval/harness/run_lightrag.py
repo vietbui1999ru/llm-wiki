@@ -23,6 +23,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import golden as golden_mod  # noqa: E402
 import lr_map  # noqa: E402
+import provenance  # noqa: E402
 import run_qmd  # noqa: E402
 
 WIKI_DIR = Path.home() / "repos/llm-wiki"
@@ -38,6 +39,19 @@ CAVEATS = ("Caveats: synthetic queries make absolute scores optimistic, trust di
            "pages reachable only through entities or relations are in extras.kg_only_pages, not in the ranking; "
            "latency_ms is one aquery_data call (cache hits skip the keyword LLM call, see llm_calls); "
            "the index chunker injects wikilinks as hints, so relational queries may look slightly optimistic.")
+
+
+def parse_settings(items, base):
+    """Apply 'key=value' overrides to the numeric settings (for controlled experiments such as a deliberate break).
+    Returns a new dict; unknown, non-numeric or malformed overrides raise ValueError."""
+    out = dict(base)
+    for item in items:
+        key, sep, value = item.partition("=")
+        if not sep or key not in base or isinstance(base[key], bool) or not isinstance(base[key], (int, float)):
+            raise ValueError(f"cannot override {item!r}: use key=value with one of "
+                             f"{sorted(k for k, v in base.items() if isinstance(v, (int, float)))}")
+        out[key] = type(base[key])(value)
+    return out
 
 
 def sync_eval_copy(real=REAL_INDEX, copy=EVAL_COPY):
@@ -124,7 +138,10 @@ def main(argv=None):
     ap.add_argument("--repo-root", default=".")
     ap.add_argument("--modes", default=",".join(MODES), help="comma list of: " + ", ".join(MODES))
     ap.add_argument("--limit", type=int, help="only the first N golden queries (smoke runs)")
+    ap.add_argument("--set", action="append", default=[], metavar="KEY=VALUE",
+                    help="override a numeric setting, e.g. cosine_better_than_threshold=0.9 (recorded in the results)")
     args = ap.parse_args(argv)
+    SETTINGS.update(parse_settings(args.set, SETTINGS))
     modes = [m for m in args.modes.split(",") if m]
     bad = sorted(set(modes) - set(MODES))
     if bad:
@@ -148,7 +165,9 @@ def main(argv=None):
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     Path(args.out_dir).mkdir(parents=True, exist_ok=True)
     (Path(args.out_dir) / f"lightrag-{stamp}.json").write_text(json.dumps(
-        {"run": {"date": stamp, "golden": args.golden, "index_hash": index_hash, "modes": modes, "settings": SETTINGS},
+        {"run": {"date": stamp, "golden": args.golden, "index_hash": index_hash, "modes": modes, "settings": SETTINGS,
+                 "wiki_sha256": provenance.wiki_sha256(args.repo_root),
+                 "golden_sha256": provenance.file_sha256(args.golden)},
          "rows": rows, "extras": extras}, indent=2))
     print(run_qmd.format_report(rows, caveats=CAVEATS, requested=SETTINGS["chunk_top_k"]))
 

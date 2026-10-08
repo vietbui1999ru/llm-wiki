@@ -14,6 +14,7 @@ import time
 from pathlib import Path
 
 import golden as golden_mod
+import provenance
 import score
 
 PREFIX = "qmd://wiki/"
@@ -47,6 +48,24 @@ def score_bench(bench, golden):
                 "metrics": score.score_query(ranked, q["relevant"]),
                 "latency_ms": out["latency_ms"], "non_wiki_hits": non_wiki})
     return rows
+
+
+def run_info(stamp, golden_path, repo_root, qmd_listing=None):
+    """What this run ran on: settings plus content hashes of the wiki, the golden file and qmd's wiki collection
+    (the collection is the whole repo, so files outside wiki/ can change rankings). For the regression gate."""
+    if qmd_listing is None:
+        qmd_listing = _qmd_listing()
+    return {"date": stamp, "golden": golden_path, "results_per_query": RESULTS, "backends": BACKENDS,
+            "wiki_sha256": provenance.wiki_sha256(repo_root), "golden_sha256": provenance.file_sha256(golden_path),
+            "qmd_collection_sha256": provenance.qmd_collection_sha256(qmd_listing)}
+
+
+def _qmd_listing():
+    return subprocess.run(["qmd", "ls", "wiki"], capture_output=True, text=True, check=True).stdout
+
+
+def _qmd_version():
+    return subprocess.run(["qmd", "--version"], capture_output=True, text=True).stdout.strip()
 
 
 def rescore(rows, golden):
@@ -122,11 +141,16 @@ def main(argv=None):
     if args.rescore:
         print(format_report(rescore(json.loads(Path(args.rescore).read_text())["rows"], gold)))
         return
+    listing_before = _qmd_listing()  # the collection can change during a 45-minute run (a pull into the main checkout)
     rows = score_bench(collect(gold["queries"], run_cli), gold)
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    info = run_info(stamp, args.golden, args.repo_root, qmd_listing=listing_before)
+    info["qmd_collection_changed_during_run"] = (provenance.qmd_collection_sha256(_qmd_listing())
+                                                 != info["qmd_collection_sha256"])
+    if info["qmd_collection_changed_during_run"]:
+        print("WARNING: the qmd collection changed during this run; results mix two index states", file=sys.stderr)
     (Path(args.out_dir) / f"qmd-{stamp}.json").write_text(json.dumps(
-        {"run": {"date": stamp, "golden": args.golden, "results_per_query": RESULTS, "backends": BACKENDS},
-         "rows": rows}, indent=2))
+        {"run": {**info, "qmd_version": _qmd_version()}, "rows": rows}, indent=2))
     print(format_report(rows))
 
 

@@ -16,7 +16,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added contextual-retrieval.md as grade 1"
     },
@@ -35,7 +35,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added knowledge-crystallization-cycle.md as grade 1"
     },
@@ -62,7 +62,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added karpathy-llm-council.md, agentops.md, multi-vendor-adversarial-review.md as grade 1"
     },
@@ -81,7 +81,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added desktop-control-plane.md as grade 1"
     },
@@ -100,7 +100,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added evolution-strategies.md as grade 1"
     },
@@ -119,7 +119,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added firecrawl.md as grade 1"
     },
@@ -680,7 +680,7 @@
           "grade": 2
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title"
     },
@@ -699,7 +699,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added opencode-dcp.md as grade 1"
     },
@@ -714,7 +714,7 @@
           "grade": 2
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title"
     },
@@ -729,7 +729,7 @@
           "grade": 2
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title"
     },
@@ -752,7 +752,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added pydoll.md, webrtc-ip-leak.md as grade 1"
     },
@@ -775,7 +775,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added builderio-agent-native.md, builderio-control-plane-integration.md as grade 1"
     },
@@ -790,7 +790,7 @@
           "grade": 2
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title"
     },
@@ -817,7 +817,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added builderio-control-plane-integration.md, desktop-control-plane.md, agent-diff-viewer.md as grade 1"
     },
@@ -836,7 +836,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added cc-to-cross-platform-migration.md as grade 1"
     },
@@ -851,7 +851,7 @@
           "grade": 2
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title"
     },
@@ -866,7 +866,7 @@
           "grade": 2
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title"
     },
@@ -881,7 +881,7 @@
           "grade": 2
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title"
     },
@@ -896,7 +896,7 @@
           "grade": 2
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title"
     },
@@ -915,7 +915,7 @@
           "grade": 1
         }
       ],
-      "must_hit": false,
+      "must_hit": true,
       "authored_by": "llm_filtered",
       "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added opentelemetry.md as grade 1"
     },

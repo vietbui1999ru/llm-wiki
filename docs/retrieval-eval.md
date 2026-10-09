@@ -65,7 +65,7 @@ Per backend the gate prints OK, WARN or FAIL and exits 1 if any backend fails:
 - Notes below the table say when the wiki content, qmd's collection or the settings differ from the baseline, when the qmd collection changed during the run itself, or when the run recorded no hash to compare. They never change a verdict by themselves, but read them before trusting a PASS or a FAIL. qmd's collection is the whole repo, so adding a file outside `wiki/` (a spec, a doc) can shift qmd's rankings even though the wiki hash is unchanged; the gate records a hash of qmd's file list for that reason.
 - Run the suite from the checkout whose wiki the indexes were built from (normally the main checkout): the wiki hash is taken from the directory you run in, and a worktree with extra or changed pages will report "wiki content changed".
 
-To mark a query as one whose failure is never acceptable, set `"must_hit": true` on it in `golden.json`. None are marked yet; exact-title queries are a reasonable first set.
+To mark a query as one whose failure is never acceptable, set `"must_hit": true` on it in `golden.json`. The 20 exact-title queries are marked (18 of them are in the top 3 for all nine systems at baseline; q-031 is missing only from qmd bm25 and q-037 only from LightRAG global, hybrid and mix, which the gate does not blame because they were already outside the top 3). To mark every query of a category in one go: `jq '.queries |= map(if .category == "exact" then .must_hit = true else . end)' tests/retrieval/golden/golden.json`, written to a temp file and moved over the original.
 
 ### Re-baselining
 

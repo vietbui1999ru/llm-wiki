@@ -35,6 +35,31 @@ def test_changed_manifest_refreshes_the_copy(tmp_path):
     assert not (copy / "stale.json").exists()
 
 
+def test_a_refresh_keeps_the_query_time_keyword_cache_but_takes_everything_else_from_the_real_index(tmp_path):
+    # keyword extraction depends on the query text and mode, not on the index, so those entries stay valid after a rebuild
+    import json
+    real, copy = make_index(tmp_path / "real"), tmp_path / "copy"
+    (real / "kv_store_llm_response_cache.json").write_text(json.dumps({"default:extract:new": {"v": "from real"}}))
+    run_lightrag.sync_eval_copy(real, copy)
+    (copy / "kv_store_llm_response_cache.json").write_text(json.dumps(
+        {"default:extract:old": {"v": "stale"}, "mix:keywords:aa": {"v": "kept"}, "local:keywords:bb": {"v": "kept too"}}))
+    (real / "manifest.json").write_text("v2")
+    run_lightrag.sync_eval_copy(real, copy)
+    cache = json.loads((copy / "kv_store_llm_response_cache.json").read_text())
+    assert set(cache) == {"default:extract:new", "mix:keywords:aa", "local:keywords:bb"}
+
+
+def test_a_refresh_works_when_there_is_no_previous_copy_or_no_cache_file(tmp_path):
+    real = make_index(tmp_path / "real")
+    run_lightrag.sync_eval_copy(real, tmp_path / "fresh")
+    assert (tmp_path / "fresh" / "vdb_chunks.json").exists()
+    copy = tmp_path / "copy"
+    run_lightrag.sync_eval_copy(real, copy)
+    (real / "manifest.json").write_text("v2")
+    run_lightrag.sync_eval_copy(real, copy)  # neither side has a cache file: nothing to carry over, no crash
+    assert (copy / "vdb_chunks.json").exists()
+
+
 def test_the_real_index_is_never_used_as_the_copy(tmp_path):
     real = make_index(tmp_path / "real")
     with pytest.raises(AssertionError):

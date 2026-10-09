@@ -227,7 +227,7 @@ Code: `gate.py`, `baseline.py` and `provenance.py`; operator guide `docs/retriev
 - **Must-hit floor, as implemented:** a `must_hit` query that was in the top 3 at baseline and is not now. A query the system already missed at baseline is not blamed. The 20 exact-title queries are marked `must_hit` (2026-10-08, the owner's decision; at baseline 18 of them are in the top 3 for all nine systems, q-031 is missing only from qmd bm25 and q-037 only from LightRAG global, hybrid and mix, which are therefore not blamed). On the deliberately broken LightRAG run the floor listed all 20 as having left the top 3, the first time it fired on real data.
 - **LightRAG rebuild:** if the index hash differs from the baseline's the verdicts are report-only and the exit code ignores them.
 - **Provenance notes never change a verdict** but should be read first: wiki content changed, qmd collection changed (qmd's collection is the whole repo, so a file outside `wiki/` can shift rankings; found when a spec pulled into the main checkout during a run did), qmd collection changed during the run, settings differ, or the run recorded no hash.
-- **Noise floor.** Two identical LightRAG runs differed by at most 0.001 nDCG@10 (a few queries re-extract keywords on every call). For qmd the noise was not separated from an index change: a fresh run after the spec was added to the index was +0.013 to +0.018 against the older baseline, every CI including zero. Epsilon is above both.
+- **Noise floor.** Two identical LightRAG runs differed by at most 0.001 nDCG@10 (a few queries re-extract keywords on every call). For qmd the noise was not separated from index changes, and a later event showed that small corpus changes move `full` by more than epsilon: +0.018 after the spec was added to the index (2026-10-07, CI including zero), then -0.039 [-0.072, -0.008] after three more documents were added or grown (2026-10-09, 13.4). Epsilon 0.03 sits inside that swing for qmd `full`; for LightRAG it is far above the 0.001 to 0.003 observed.
 - Latency is not gated (9.1).
 
 ## 11. Prerequisite P0: fix the incremental indexing bug
@@ -346,7 +346,25 @@ nDCG@10 delta against the committed baseline, 104 non-null queries, mean [95% CI
 
 The unmodified runs exit 0, the broken run exits 1 and names the cause in its notes (`cosine_better_than_threshold (0.3 -> 0.9)`). The break also found a bug: with a strict threshold LightRAG's `aquery_data` returns `status: failure` with "No relevant document chunks found." for queries where nothing passes, and the mapping layer raised on it; that is a legitimate empty result and is now scored as one.
 
-The baselines were then rebuilt from the fresh runs, which record their own provenance. The wiki hash stored in them was taken before the last edit of the new wiki page, so the first gate run after M5 merges will carry a "wiki content changed" note; qmd will also have indexed the new docs by then, so re-baseline once after merging.
+The baselines were then rebuilt from the fresh runs, which record their own provenance. The wiki hash stored in them was taken before the last edit of the new wiki page, so the first gate run after M5 merges will carry a "wiki content changed" note; qmd will also have indexed the new docs by then, so re-baseline once after merging (done 2026-10-09, see 13.4).
+
+### 13.4 Post-merge re-baseline (2026-10-09)
+
+**Preparation.** After the M5 and `must_hit` PRs merged, qmd's index was behind the checkout (a `git pull` does not run the post-commit hook): `qmd update` and `qmd embed` added 5 documents (94 chunks); qmd now lists 724 files. The LightRAG index lacked exactly one page (`wiki/systems/retrieval-eval-suite.md`, 181 of 182 indexed); with a backup taken first, the incremental `wiki-index` added it (graph 8,229 nodes / 11,532 edges to 8,271 / 11,584) and `--verify` then reported a match. The eval-copy refresh now carries over the query-time keyword cache, because keyword extraction depends on the query text and mode, not on the index: the LightRAG rerun needed 6 LLM calls instead of about 456.
+
+**Gate of the fresh runs against the 2026-10-07 baselines** (nDCG@10 delta, 104 queries):
+
+| system | backend | delta [95% CI] | verdict |
+|---|---|---|---|
+| LightRAG | naive, local, global, hybrid, mix | -0.002, -0.002, -0.003, -0.001, -0.002 (CIs touch 0) | OK, report-only (index rebuilt) |
+| qmd | bm25 | +0.000 | OK |
+| qmd | vector | -0.015 [-0.042, +0.012] | OK |
+| qmd | hybrid | -0.017 [-0.039, +0.007] | OK |
+| qmd | full | -0.039 [-0.072, -0.008] | **FAIL**; must-hit q-033 "Tool Design for Agents" and q-037 "OpenAI Codex" left the top 3 |
+
+**What the failure is.** A real shift caused by a changed corpus, not a code or configuration change. The new wiki page itself is in the top 10 of only 2 of 114 queries, yet 92 of 114 `full` top-10 lists changed, and the two must-hit targets fell from rank 1 to ranks 4 and 5 behind other wiki pages. Together with the +0.018 of 2026-10-07 this means qmd `full` swings by about 0.04 under small index changes, more than epsilon. The mechanism was not isolated (a plausible candidate is that new chunks change the fused candidate set the reranker sees; not verified). qmd is deterministic for a fixed index, but not stable across index changes.
+
+**Decision taken, and its cost.** The baselines were rebuilt from the fresh runs (a re-baseline is the deliberate act the gate asks for). The new qmd baseline therefore records q-033 and q-037 as outside the top 3 for `full`, so the must-hit floor no longer protects them there; the loss is recorded here and in the re-baseline PR description, not hidden. **The owner accepted the qmd `full` shift on 2026-10-09**, including the loss of the must-hit protection for q-033 and q-037 on that backend. Still open and not decided: raise epsilon or use a wider test for qmd `full`, keep the corpus fixed while evaluating, or investigate the reranker candidate effect (both stay marked `must_hit`: q-033 is still protected on the other eight systems, q-037 on the five systems that rank it in the top 3 in the new baselines, namely qmd bm25, vector and hybrid and LightRAG naive and local). The deliberate-break check was repeated on the current index: the broken LightRAG naive run gates FAIL (-0.688 [-0.746, -0.630], exit 1) against the new baseline, and each new baseline passes against its own source run with no notes.
 
 ## 14. Risks
 

@@ -60,8 +60,18 @@ def sync_eval_copy(real=REAL_INDEX, copy=EVAL_COPY):
     index_hash = hashlib.sha256((real / "manifest.json").read_bytes()).hexdigest()
     stamp = copy / ".source-hash"
     if not (stamp.exists() and stamp.read_text() == index_hash):
+        # query-time keyword extraction depends on the query text and mode, not on the index, so those cache entries
+        # survive a refresh (delete the copy to force re-extraction if the keyword model or prompt changes)
+        cache_name = "kv_store_llm_response_cache.json"
+        old_cache = copy / cache_name
+        keywords = ({k: v for k, v in json.loads(old_cache.read_text()).items() if ":keywords:" in k}
+                    if old_cache.exists() else {})
         shutil.rmtree(copy, ignore_errors=True)
         shutil.copytree(real, copy)
+        if keywords:
+            new_cache = copy / cache_name
+            merged = json.loads(new_cache.read_text()) if new_cache.exists() else {}
+            new_cache.write_text(json.dumps({**merged, **keywords}))
         stamp.write_text(index_hash)
     return index_hash
 

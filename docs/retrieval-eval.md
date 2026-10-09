@@ -69,14 +69,18 @@ To mark a query as one whose failure is never acceptable, set `"must_hit": true`
 
 ### Re-baselining
 
-Re-baseline deliberately, in its own commit, when the change is intended (new golden set, rebuilt LightRAG index, new models) or the wiki changed enough to move the numbers:
+Re-baseline deliberately, in its own commit, when the change is intended (new golden set, rebuilt LightRAG index, new models) or the wiki changed enough to move the numbers. First bring both indexes up to date with the checkout, because a `git pull` does not run the post-commit hook:
 
 ```
+qmd update && qmd embed                       # qmd's collection (the whole repo)
+wiki-index --verify                           # LightRAG: lists pages missing from the index; wiki-index fixes them
 uv run python tests/retrieval/harness/run_qmd.py
 uv run python tests/retrieval/harness/baseline.py --results tests/retrieval/results/qmd-RUN.json --system qmd --out tests/retrieval/baselines/qmd.json
 ```
 
-and likewise for `--system lightrag`. The baseline records the run, the index hash, the settings and SHA-256 hashes of the wiki and the golden file.
+and likewise `run_lightrag.py` and `--system lightrag`. `wiki-index` needs `OPENCODE_GO_API_KEY_LIGHTRAG` in its environment (it does not read `~/secrets/.env` itself); back up `.lightrag/` before running it. When the LightRAG eval copy is refreshed it keeps its query-time keyword cache, so the rerun costs few LLM calls. The baseline records the run, the index hash, the settings and SHA-256 hashes of the wiki, the golden file and qmd's file list.
+
+**Before accepting a re-baseline, gate the fresh run against the old baseline first and read the result.** A FAIL there is a real shift in the numbers; rebuilding the baseline accepts it (including losing the must-hit protection for any query that already fell out of the top 3). Expect qmd `full` to be the most sensitive backend: it moved +0.018 and then -0.039 nDCG@10 when a handful of documents were added to the index (spec 13.4).
 
 ### Checking that the gate still catches regressions
 

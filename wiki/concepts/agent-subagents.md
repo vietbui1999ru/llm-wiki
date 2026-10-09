@@ -6,8 +6,9 @@ sources:
   - "Create custom subagents.md"
   - "Orchestrate teams of Claude Code sessions.md"
   - "Simple Pi Subagents.md"
+  - "How I use Claude Code subagents to make my Claude Pro limits last longer.md"
 created: 2026-04-26
-updated: 2026-05-27
+updated: 2026-10-09
 ---
 
 # Agent Subagents
@@ -23,7 +24,7 @@ A subagent is a named, configurable Claude instance that runs in its own context
 | Context | Shared | Own window | Own window per teammate |
 | Communication | — | Report to parent only | Direct teammate-to-teammate |
 | Best for | Iterative, shared context | Focused isolated tasks | Complex parallel work requiring coordination |
-| Token cost | Low | Medium | High |
+| Token cost | Grows with every request (the whole conversation is resent) | Own small context, discarded on return; main stays small | About 7x tokens in plan mode per the Claude Code docs |
 
 ## Subagent File Format
 
@@ -35,9 +36,10 @@ name: code-reviewer              # required; lowercase, hyphens
 description: Reviews code for quality and security. Use proactively after code changes.  # required
 tools: Read, Grep, Glob, Bash    # allowlist; omit = inherits all
 disallowedTools: Write, Edit     # denylist; applied before tools
-model: sonnet                    # sonnet | opus | haiku | full model ID | inherit (default)
-permissionMode: default          # default | acceptEdits | auto | dontAsk | bypassPermissions | plan
+model: sonnet                    # sonnet | opus | haiku | fable | full model ID | inherit (default)
+permissionMode: default          # default | acceptEdits | auto | dontAsk | bypassPermissions | plan | manual
 maxTurns: 20                     # optional cap
+omitClaudeMd: false              # true = do not load the CLAUDE.md hierarchy into this agent (fewer tokens per spawn)
 skills:                          # preload skill content at startup
   - api-conventions
   - error-handling-patterns
@@ -102,7 +104,7 @@ Higher priority wins when names conflict.
 
 **Background**: `run this in the background` or Ctrl+B — concurrent execution. Pre-approves permissions upfront; auto-denies anything not pre-approved.
 
-**Resume**: subagents retain full conversation history when resumed via `SendMessage`. (Requires `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`.)
+**Resume**: subagents retain full conversation history when resumed via `SendMessage` with the agent's ID or name as `to`. This does not require agent teams (an earlier version of this page said it needed `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`; the docs say otherwise, checked 2026-10-09). Built-in Explore and Plan are one-shot and cannot be resumed; a subagent stopped by the user does not auto-resume.
 
 ## Fork Mode
 
@@ -128,7 +130,13 @@ Match model capability to task type — cheaper models for mechanical work, stro
 
 Source: Pi Subagents extension practice (Amos Blomqvist).
 
-**Depth limiting via spawn allowlist**: each subagent's frontmatter `agents` field lists which sub-agent types it can spawn. Default cap: 3 layers (Master → Worker → Scout/Researcher). Workers can spawn Scouts/Researchers but not other Workers. Implementation: no hard technical cap — `agents:` field enforces it declaratively.
+**Model precedence (Claude Code)**: per-invocation `model` parameter, then the agent's frontmatter `model`, then `CLAUDE_CODE_SUBAGENT_MODEL`, then the main conversation model. The environment variable only fills gaps and does not change built-in Explore and Plan unless `CLAUDE_CODE_SUBAGENT_MODEL_FORCE=1`. The cost reasoning behind tiering, including why the context lever usually outweighs the price lever, is in [[concepts/subagent-cost-model]]; a measured example is [[summaries/claude-code-subagents-pro-limits]].
+
+**Depth limiting**: two separate mechanisms, from two harnesses.
+- *Claude Code:* a subagent can spawn subagents by default, up to 3 layers below the main conversation. `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH` sets the limit (1 turns nesting off); at the limit the Agent tool is withheld. Concurrency defaults to 20 (`CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`). The `Agent(type, ...)` form in `tools` restricts which types an agent may spawn. Verified against the docs 2026-10-09.
+- *Pi subagents extension:* a frontmatter `agents` field lists spawnable types, giving a Master → Worker → Scout/Researcher layering where Workers cannot spawn Workers. This is declarative convention, not a hard cap.
+
+**What a custom subagent starts with**: its own system prompt, environment details, the delegation prompt, the CLAUDE.md hierarchy, a git status snapshot, preloaded `skills`, and the roster of sibling agents. It does not see the parent's conversation, invoked skills or files read. Built-in Explore and Plan skip CLAUDE.md and git status; a custom agent opts out with `omitClaudeMd: true`. A large CLAUDE.md is therefore paid on every spawn. See [[concepts/subagent-cost-model]].
 
 **Non-interactive limitation**: subagents cannot ask the user questions. Anything requiring clarification mid-execution must be handled by the orchestrator or designed to avoid requiring it.
 
@@ -143,6 +151,7 @@ Source: Pi Subagents extension practice (Amos Blomqvist).
 
 ## Related Pages
 
+- [[concepts/subagent-cost-model]] — why delegation saves cost, price table, break-even rule
 - [[concepts/agent-teams]] — when teammates need to coordinate with each other
 - [[concepts/agent-skills]] — skills and how to preload them into subagents
 - [[concepts/agent-harness]] — harness components; subagents as delegation primitive

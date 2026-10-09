@@ -2,9 +2,9 @@
 title: "Model Tier Routing"
 type: concept
 tags: [agent-orchestration, model-selection, cost, agent-subagents]
-sources: []
+sources: ["How I use Claude Code subagents to make my Claude Pro limits last longer.md"]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-10-09
 ---
 
 # Model Tier Routing
@@ -56,25 +56,27 @@ Always set the `model` parameter explicitly on the `Agent` tool. Never let it de
 model: "opus" | "sonnet" | "haiku"
 ```
 
-Translate a chosen tier into a `subagent_type`:
+Translate a chosen tier into a subagent by setting `model` explicitly on the spawn. No custom agent roster is installed in this setup, so use the harness's built-in roles with an explicit tier:
 
-| Tier | subagent_type | Use when |
+| Tier | Built-in role | Use when |
 |---|---|---|
-| Haiku | `code-writer-fast` | Boilerplate, rote edits |
-| Haiku | `explore` | Read-only exploration, no writes |
-| Sonnet | `code-writer` | Standard implementation, multi-file features |
-| Opus | `design-explorer` | Brainstorm, open-ended ideation |
-| Opus | `architecture-reviewer` | Holistic review, pre-implementation validation |
-| Opus | `Explore` | Codebase research across files |
-| Opus | `Plan` | Implementation planning |
-| Opus | `security-auditor` | Security analysis, threat modeling |
+| Haiku | `Explore` | Read-only exploration, searches, no writes |
+| Sonnet | general-purpose | Standard implementation, multi-file features, review |
+| Opus | `Plan` or general-purpose | Architecture, security analysis, hard multi-system reasoning |
+
+An earlier version of this page mapped tiers to named agents (`code-writer`, `code-writer-fast`, `design-explorer`, `architecture-reviewer`, `security-auditor`). None of those exist here; they came from the wshobson plugin roster. Define a custom agent only when a repeated job justifies its own prompt and tool limits, and then follow [[concepts/subagent-cost-model]].
+
+**Precedence when several settings name a model** (Claude Code, checked 2026-10-09): per-invocation `model` parameter, then agent frontmatter `model`, then `CLAUDE_CODE_SUBAGENT_MODEL`, then the main model. The environment variable fills gaps only.
 
 ## Why a tier discipline pays off
 
-The wshobson finding: Opus achieves ~65% fewer tokens on complex tasks, often offsetting its higher per-token rate — so escalating a genuinely hard task can be *cheaper*, not just better. The inverse holds for trivial work: routing boilerplate to Opus burns budget for no quality gain. The discipline is bidirectional.
+Price ratios are narrower than the old mental model. As of 2026-10-09 Opus 5.5 is $4 / $20 per million tokens against Sonnet 5.5 at $2 / $10, about 2x, and cache reads are $0.20 against $0.10. Haiku 5.5 is about 20x cheaper than Sonnet on input. Most session tokens are cache reads, so the larger saving usually comes from keeping the main context small, not from the cheaper model; see [[concepts/subagent-cost-model]] and [[summaries/claude-code-subagents-pro-limits]].
+
+Escalating a genuinely hard task can still be cheaper than correction loops on a weaker model. A figure of "~65% fewer tokens for Opus on complex tasks" circulates from the wshobson plugin, but this page has no captured source for it, so treat it as unverified. The inverse holds for trivial work: routing boilerplate to Opus burns budget for no quality gain. The discipline is bidirectional.
 
 ## Related Pages
 
 - [[syntheses/agent-primitive-selection]] — the broader decision tree for skill vs subagent vs team, of which tier routing is one axis
 - [[concepts/agent-subagents]] — subagent frontmatter and the `model` field
+- [[concepts/subagent-cost-model]] — why delegation saves cost; price table; break-even rule
 - [[concepts/agent-self-correction]] — the "unsure which model tier" deviation trigger points here

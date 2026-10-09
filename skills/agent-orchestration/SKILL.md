@@ -17,9 +17,9 @@ Concise decision aid for this repo.
 ## Repo defaults
 
 - Load `$wiki-context` before technical design
-- Use `agent-delegator` for routing
-- Use `architecture-reviewer` before major structure changes
-- Use `code-reviewer` after non-trivial implementation
+- No custom agent roster is installed. Route with the harness's built-in roles and an explicit `model` per [[concepts/model-tier-routing]]
+- Review architecture before major structure changes and non-trivial implementation after it, in the main session; use a dedicated review only for risky changes
+- Keep small, fully known edits in the main session: a handoff that costs as much as the edit is not a saving ([[concepts/subagent-cost-model]])
 - Use `$council` for architecture and security tradeoffs
 
 ## Stop conditions

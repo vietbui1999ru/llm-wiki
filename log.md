@@ -978,3 +978,18 @@ Updated: wiki/systems/wiki-indexing-pipeline.md, README.md. The real index is re
 ## [2026-10-07] update | retrieval eval suite: gate, baselines, docs and wiki page (M5 of the spec)
 The retrieval evaluation suite (docs/specs/retrieval-eval-suite.md, PRs #12 to #16 and the M5 PR) is complete: 114-query golden set (agent-reviewed, the human spot-check is still open), nine systems scored, latency measured, and now a regression gate with committed per-query baselines (tests/retrieval/baselines/). Measured here: no detectable qmd-vs-LightRAG difference (minimum detectable effect about 0.09 at n=104), BM25 fails on natural language, qmd and LightRAG latencies are not like for like. Deliberate-break check: an unmodified LightRAG run gates PASS, the same retrieval with cosine_better_than_threshold 0.9 gates FAIL (nDCG@10 delta -0.690). The break also exposed that LightRAG reports an empty result as status failure, now scored as empty.
 Added: wiki/systems/retrieval-eval-suite.md, docs/retrieval-eval.md. Updated: index.md, docs/specs/retrieval-eval-suite.md.
+
+## [2026-10-09] ingest | How I use Claude Code subagents to make my Claude Pro limits last longer
+Source: raw/How I use Claude Code subagents to make my Claude Pro limits last longer.md (one developer's Opus + Sonnet/Haiku subagent setup on the Pro plan, with measured cost per PR). Claims checked against Anthropic docs (sub-agents, model-config, settings-reference, statusline, costs, pricing, release notes).
+Created:
+- wiki/summaries/claude-code-subagents-pro-limits.md — setup, rules, measured result with caveats, claim-by-claim docs verification
+- wiki/concepts/subagent-cost-model.md — context lever vs price lever, price table (2026-10-09), worked example, break-even rule, model/effort precedence, measurement
+Updated (stale claims corrected against the docs):
+- wiki/concepts/agent-subagents.md — SendMessage resume no longer needs the agent-teams flag; spawn depth default 3 and concurrency 20 (Claude Code) separated from the Pi convention; added omitClaudeMd, permissionMode manual, model fable; model precedence; what a subagent starts with; cost row
+- wiki/concepts/model-tier-routing.md — removed the tier-to-agent table naming agents that are not installed; added built-in roles, precedence, current price ratios; marked the 65% fewer tokens figure as unsourced
+- wiki/syntheses/agent-primitive-selection.md — same agent-name and 65% caveats
+- skills/agent-orchestration/SKILL.md — removed agent-delegator, architecture-reviewer, code-reviewer defaults (not installed); added the break-even rule
+- claude-setup/templates/subagent.md — omitClaudeMd, manual, fable
+- claude-setup/rules/applied-ai.md (Tier-0) — CLAUDE_CODE_SUBAGENT_MODEL line corrected (fills gaps, does not override; the saving is mostly context)
+- index.md — two entries
+Contradictions noted: agent-subagents.md said resume needs CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 (docs: no) and no hard depth cap (docs: default 3, CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH). Still stale, not edited here: agent-delegator / architecture-reviewer / code-reviewer mentions in docs/architecture.md, claude-setup/README.md, scripts/sync-agents.py.

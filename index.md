@@ -28,6 +28,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/sparc-cursor-cline-rules]] — SPARC framework: 5 principles, 5 workflow phases, Memory Bank integration; mostly a structured AGENTS.md template
 - [[summaries/claude-code-permissions-settings]] — CC settings schema: permissions.allow/ask/deny/defaultMode, bypassPermissions, sandbox.enabled (Bash-only), filesystem+network rules; corrects old allowedTools schema
 - [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules, background agents, parity gaps vs CC
+- [[summaries/claude-code-subagents-pro-limits]] — Opus main + Sonnet/Haiku subagents on Claude Pro: setup, break-even rules, measured cost per PR (about 40% lower), docs verification, caveats
 - [[summaries/cursor-cloud-agents]] — Cursor Cloud Agents: microVM isolation, GitHub/GitLab workflow, remote desktop control, cross-agent support
 - [[summaries/cc-auto-mode]] — CC auto mode: 2-stage classifier, threat model, 17% FNR on overeager actions, deny-and-continue
 - [[summaries/aws-security-agent]] — AWS managed pen test service: target/accessible/out-of-scope domain split, credential injection patterns, IAM role scoping, out-of-scope URL hierarchy, launch checklist
@@ -115,7 +116,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/agent-skills]] — Skill meta-tool: SKILL.md schema, three-tier loading, isMeta dual-message execution, supply chain risk, composition patterns, grill-* antipatterns, when NOT to use skills
 - [[concepts/agent-subagents]] — Subagents: own context window, YAML frontmatter format, all fields, scopes, invocation patterns, fork mode
 - [[concepts/agent-teams]] — Agent teams: lead+teammates+task list+mailbox; when to use vs subagents; quality gate hooks; best practices
-- [[concepts/model-tier-routing]] — Haiku/Sonnet/Opus selection table; escalate/downgrade criteria; explicit `model` param on spawns; tier→subagent_type mapping; missing-model fallback (same-provider closest-tier before cross-provider); authoritative pull target for the routing rule
+- [[concepts/model-tier-routing]] — Haiku/Sonnet/Opus selection table; escalate/downgrade criteria; explicit `model` param on spawns; tier→built-in role mapping; model precedence; missing-model fallback (same-provider closest-tier before cross-provider); authoritative pull target for the routing rule
+- [[concepts/subagent-cost-model]] — Why subagents cut cost: context lever vs price lever, 2026-10-09 price table, worked example, when delegation does not pay, model/effort precedence, how to measure
 - [[concepts/model-task-routing]] — OpenCode Go concrete model ID → task mapping; per-model profiles (DeepSeek V4 Pro/Flash, Kimi K2.6); thinking budget suffixes; benchmark tracking table; Go fallback chain
 - [[concepts/worker-coordination]] — Partial result passing between parallel workers: contract-first, pipeline, filesystem blackboard, actor mailbox; decision table; failure modes
 - [[concepts/wikilink-graph-extraction]] — Reducing LightRAG indexing cost by injecting Obsidian wikilink structure as extraction hints; ~40-55% token reduction; chunking_func hook; future direct graph injection path

@@ -98,6 +98,7 @@
           "concepts/shared-task-queue",
           "concepts/slash-commands",
           "concepts/software-documentation",
+          "concepts/subagent-cost-model",
           "concepts/tiered-knowledge-delivery",
           "concepts/tool-design-for-agents",
           "concepts/unit-testing",

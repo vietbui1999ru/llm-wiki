@@ -20,7 +20,7 @@ Do NOT load raw-log.md or individual mistakes/*.md at startup — use qmd for lo
 
 ### Citing model names
 - Verify any model name exists in a major provider catalog before adding to routing tables (2026-05-06)
-- Single Reddit commenter ≠ evidence of existence — write `(reported, unverified in public catalogs)`
+- Single Reddit commenter ≠ evidence of existence — write `(reported, unverified in public catalogs)` only after checking the provider's release notes or model page; the model list in your own context can lag them (2026-10-09)
 
 ### index.md consistency
 - After updating a page's core claim: grep for all cross-references and check each for stale descriptions (2026-05-06)

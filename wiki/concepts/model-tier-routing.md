@@ -2,9 +2,9 @@
 title: "Model Tier Routing"
 type: concept
 tags: [agent-orchestration, model-selection, cost, agent-subagents]
-sources: []
+sources: ["How I use Claude Code subagents to make my Claude Pro limits last longer.md"]
 created: 2026-06-12
-updated: 2026-06-12
+updated: 2026-10-09
 ---
 
 # Model Tier Routing
@@ -73,8 +73,15 @@ Translate a chosen tier into a `subagent_type`:
 
 The wshobson finding: Opus achieves ~65% fewer tokens on complex tasks, often offsetting its higher per-token rate — so escalating a genuinely hard task can be *cheaper*, not just better. The inverse holds for trivial work: routing boilerplate to Opus burns budget for no quality gain. The discipline is bidirectional.
 
+## Worked example: a standing split by role
+
+One practitioner's setup ([[summaries/claude-code-subagents-pro-limits]], self-reported, single author) fixes the tier per *role* instead of classifying each task: the main session stays on Opus at medium effort and makes the decisions; a Sonnet `implementer` writes and tests the code; Haiku subagents do the read-only scoping before planning and the commit, push and PR at the end (`scoper`, `shipper`); an Opus `reviewer` runs only on request or for risky changes. It agrees with the table above (Haiku for read-only and mechanical work, Sonnet for implementation, Opus for decisions) and differs in one default: the orchestrating session itself is on Opus, where this page makes Sonnet the default tier and reserves Opus for named task types. Small changes stay in the main session because writing a handoff and reviewing a diff cost tokens too.
+
+His reported finding adds to the "wshobson finding" above: the saving did not come mainly from cheaper per-token prices. Pricing the subagents' tokens at Opus rates raised the cost of his ten sessions by only about 5% (cache reads cost the same on Opus 5.5 and Sonnet 5.5 when he measured), and the saving came from keeping the main session's context small by moving the edit-and-test loop into subagents (claimed, unverified; see the summary for the method and its limits).
+
 ## Related Pages
 
+- [[summaries/claude-code-subagents-pro-limits]]: the role-based split above, with its measurement method and caveats
 - [[syntheses/agent-primitive-selection]] — the broader decision tree for skill vs subagent vs team, of which tier routing is one axis
 - [[concepts/agent-subagents]] — subagent frontmatter and the `model` field
 - [[concepts/agent-self-correction]] — the "unsure which model tier" deviation trigger points here

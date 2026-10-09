@@ -6,8 +6,9 @@ sources:
   - "Create custom subagents.md"
   - "Orchestrate teams of Claude Code sessions.md"
   - "Simple Pi Subagents.md"
+  - "How I use Claude Code subagents to make my Claude Pro limits last longer.md"
 created: 2026-04-26
-updated: 2026-05-27
+updated: 2026-10-09
 ---
 
 # Agent Subagents
@@ -134,6 +135,17 @@ Source: Pi Subagents extension practice (Amos Blomqvist).
 
 **Exploration offloading pattern**: delegate read-only exploration to Haiku-class subagents *before* context bloat occurs (not as a reaction to bloat). The master agent keeps its context window clean for execution, not exploration.
 
+## Practice: role-specialised subagents
+
+A worked setup from [[summaries/claude-code-subagents-pro-limits]] (self-reported, one author) specialises each subagent by role and constrains it by frontmatter:
+
+- **`scoper`** (Haiku): read-only, plan permission mode, 12-turn cap, every claim in its report cites a file. Runs before planning an unfamiliar task; the parent spot-checks the files it names because a small model can be wrong.
+- **`implementer`** (Sonnet): the only agent with edit tools. It starts with an empty context, so the parent's handoff carries the plan, acceptance criteria, files, decisions taken and commands to run. It must report back when the plan and the code disagree instead of redesigning.
+- **`shipper`** (Haiku): git and PR steps only, 10-turn cap; stops on anything unexpected (unrelated file, default branch, missing changelog) and never edits files, force-pushes or merges.
+- **`reviewer`** (Opus): off by default, because the parent already reviews every diff and a second Opus pass costs almost as much as the code; used on request or for security, concurrency, migration and public-API changes.
+
+Two habits worth noting: fixes go back to the **same** implementer through `SendMessage` so it keeps its context (see Resume above), and small changes are made in the main session because writing a handoff and reviewing a diff cost tokens too. The author's cost claim is that the saving comes mainly from keeping the main session's context small (the edit-and-test loop's output stays in the subagent), not from the cheaper model price (claimed, unverified).
+
 ## When to Use Subagents (not main conversation)
 
 - Task produces verbose output (test runs, log analysis, doc fetches)
@@ -149,3 +161,5 @@ Source: Pi Subagents extension practice (Amos Blomqvist).
 - [[concepts/context-compression]] — why context isolation matters
 - [[concepts/context-degradation]] — context-distraction failure mode; exploration offloading as proactive fix
 - [[syntheses/agent-primitive-selection]] — decision tree for choosing between skills, subagents, and teams
+- [[concepts/model-tier-routing]] — which model tier each subagent role gets
+- [[summaries/claude-code-subagents-pro-limits]] — a role-specialised setup (scoper, implementer, reviewer, shipper) with its measured cost claims

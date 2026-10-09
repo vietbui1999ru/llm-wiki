@@ -4,8 +4,9 @@ type: summary
 tags: [claude, usage-limits, context-window, token-optimization, rate-limits]
 sources:
   - "How do usage and length limits work?.md"
+  - "How I use Claude Code subagents to make my Claude Pro limits last longer.md"
 created: 2026-05-01
-updated: 2026-05-01
+updated: 2026-10-09
 ---
 
 # Claude Usage and Length Limits
@@ -57,8 +58,13 @@ The tools/connectors insight is the most actionable: each enabled tool adds toke
 | Usage limit | Wait for reset, upgrade plan, buy extra usage |
 | Length limit | Start new conversation, or use Projects for RAG access to prior context |
 
+## Claude Code in practice: context size vs. model price
+
+The support article lists the active model as a usage factor. A practitioner's measurements on the flat-fee Pro plan ([[summaries/claude-code-subagents-pro-limits]], self-reported, one author, claimed and unverified) add a refinement rather than a contradiction: in long Claude Code sessions most tokens are cache reads that were priced the same on Opus 5.5 and Sonnet 5.5, so moving work to a cheaper model saved little by itself. What cut usage was keeping the main session's context small by running the edit-and-test loop in subagents, since every request re-sends the whole conversation. This is the same mechanism as the tools-and-connectors point above: anything that enlarges every request is paid on every turn.
+
 ## Related Pages
 
+- [[summaries/claude-code-subagents-pro-limits]] — measured effect of delegating to subagents on a Pro plan
 - [[concepts/context-window]] — architecture-level explanation; API vs. product limit distinction
 - [[concepts/context-compression]] — strategies when context fills up
 - [[concepts/context-engineering]] — discipline of curating what's in context

@@ -5,8 +5,10 @@ tags: [patterns, software-engineering, solid, dry, yagni, kiss]
 sources:
   - "The SOLID Principles of Object-Oriented Programming Explained in Plain English.md"
   - "What Is Clean Code? A Guide to Principles and Best Practices.md"
+  - "bliki Yagni.md"
+  - "YAGNI (You Aren't Gonna Need It).md"
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-10-10
 ---
 
 # Software Design Principles
@@ -189,16 +191,27 @@ def calculate_laptop_price(quantity, price): return quantity * price
 
 ## YAGNI — You Aren't Gonna Need It
 
-**Definition:** Do not add functionality until it is required.
+**Definition:** Do not add a capability, or the abstraction that supports it, until it is required. Fowler's term for the unneeded code is a *presumptive feature*. Source: [[summaries/yagni-fowler-and-laws]].
 
-**Rationale:** Speculative code adds complexity, needs maintenance, and is often wrong about what will actually be needed.
+**Rationale — four costs of building early:**
+- **Build:** effort on something that may never be used. Of features built after careful up-front analysis at Microsoft, only about a third improved their target metric (Kohavi, cited by Fowler), so a presumptive feature is more likely unneeded than needed.
+- **Delay:** the work you did not do instead; the needed feature ships later.
+- **Carry:** the extra complexity slows every feature built until it is used or removed.
+- **Repair:** the right feature built wrong, because you know more later.
+
+**Test:** imagine the refactoring needed to add the capability later. If it looks cheap, defer it.
 
 **Anti-patterns to catch:**
 - A `strategy` parameter added "in case we need to swap algorithms later"
 - Abstract base classes created before there is a second implementor
 - Configuration flags for behavior that has no current user
+- An abstraction that makes the code for the current requirement harder to follow: presumed unjustified
 
-**When to ignore:** When a known requirement is arriving in the next sprint and the upfront cost of extensibility is small.
+**Scope limit — what YAGNI does not cover:** effort that keeps code easy to change. Refactoring, tests, verification and continuous delivery are not violations; they are what make deferring safe, and without them YAGNI turns harmful. It is also no reason to skip error handling the current requirement needs.
+
+**When it does not apply:** when the future-minded choice adds no complexity and costs almost nothing now (a lookup table for messages instead of inline literals). A requirement merely arriving soon is not enough: cost of delay and carry still apply.
+
+**For coding agents (inference, not from the sources):** models tend to over-build: extra parameters, flags, helper layers, "while I'm here" generality. The rule that works is to ask before adding anything the request did not name, and to mention a likely future need in one line instead of building it. Our always-loaded form is in `shared/research-tool-routing.md` (Pi and Claude) and `shared/AGENTS.md` (OpenCode, Codex).
 
 ---
 

@@ -58,7 +58,7 @@ uv run python tests/retrieval/harness/gate.py --baseline tests/retrieval/baselin
 Per backend the gate prints OK, WARN or FAIL and exits 1 if any backend fails:
 
 - **WARN**: the mean nDCG@10 delta against the baseline is below -0.03.
-- **FAIL**: additionally the paired bootstrap 95% CI of the delta lies entirely below 0; or a query marked `must_hit` that was in the top 3 at baseline no longer is; or a backend is missing from the run (the gate fails closed; use `--backends a,b` to check a subset on purpose).
+- **FAIL**: additionally the paired bootstrap 95% CI of the delta lies entirely below 0; or a query marked `must_hit` that was in the top 3 at baseline no longer is (the top 5 for qmd `full`, whose rankings reshuffle under small corpus changes); or a backend is missing from the run (the gate fails closed; use `--backends a,b` to check a subset on purpose).
 - **REPORT-ONLY**: the LightRAG index hash differs from the baseline's. A rebuild changes the graph (extraction is non-deterministic), so it is a re-baseline event, not a regression.
 - The epsilon of 0.03 is a starting value that is not sourced from anywhere; the nDCG@10 difference between two identical LightRAG runs was at most 0.001.
 - Both sides are re-scored against the **current** labels, so editing a label never looks like a regression. Queries added to the golden set after the baseline are excluded and counted.

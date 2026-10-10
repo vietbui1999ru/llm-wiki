@@ -17,7 +17,7 @@ A repeatable measurement of how well the two retrieval systems over this wiki ([
 - **Golden set:** 114 synthetic queries (paraphrase 25%, alias 20%, relational 20%, exact 18%, overview 9%, null 9%) with graded relevant pages and a 70/30 dev/held-out split. Queries were written by a Claude model, not the DeepSeek model that built the graph, and pass hard gates against leaking page-specific wording.
 - **Metrics:** nDCG@10 (headline) and Recall@5/10 per query, averaged per category with 95% bootstrap CIs; paired permutation tests and the minimum detectable effect for system comparisons ([[concepts/rag-evaluation]] covers the split between retrieval metrics and answer-quality judging; answer quality is deliberately out of scope here).
 - **Nine systems:** qmd bm25, vector, hybrid, full; LightRAG naive, local, global, hybrid, mix.
-- **Gate:** committed per-query baselines; warn when the mean nDCG@10 falls more than 0.03, fail when the paired CI of the drop excludes zero or a `must_hit` query leaves the top 3; a rebuilt LightRAG index is report-only because extraction is non-deterministic.
+- **Gate:** committed per-query baselines; warn when the mean nDCG@10 falls more than 0.03, fail when the paired CI of the drop excludes zero or a `must_hit` query leaves the top 3 (the top 5 for qmd `full`, whose reranked rankings flip around rank 3 under small corpus changes); a rebuilt LightRAG index is report-only because extraction is non-deterministic.
 
 ## What it found (measured here, 2026-10-06, 104 non-null queries)
 

@@ -2,13 +2,18 @@
 
 Spec: docs/specs/retrieval-eval-suite.md, section 10. Per system backend: warn when the mean nDCG@10 delta against the
 baseline is below -epsilon; fail when additionally the paired bootstrap 95% CI of the delta lies entirely below 0; fail
-when a must_hit query that was in the top 3 at baseline is not any more. Baseline and current rankings are both
-re-scored against the CURRENT golden labels, so editing a label never shows up as a regression. Queries added to the
-golden set since the baseline are excluded from the comparison and counted.
+when a must_hit query that was in the top K at baseline is not any more (K is 3, or 5 for the reranked qmd `full`
+backend). Baseline and current rankings are both re-scored against the CURRENT golden labels, so editing a label never
+shows up as a regression. Queries added to the golden set since the baseline are excluded from the comparison and counted.
 """
 import score
 
 EPSILON = 0.03  # initial value, not sourced (spec 10); revisit with observed variance
+DEFAULT_MUST_HIT_K = 3
+# qmd `full` reshuffles most of its top-10 lists under small corpus changes (spec 13.4 to 13.6), so a must-hit target
+# sitting at rank 2 to 4 flips in and out of the top 3 without any change in retrieval. Held to the top 5 instead.
+MUST_HIT_K = {"full": 5}
+SUPPORTED_K = (1, 3, 5, 10)  # the depths score.score_query computes hit@k for
 
 
 def _metrics(rows, golden):
@@ -16,8 +21,10 @@ def _metrics(rows, golden):
     return {r["id"]: score.score_query(r["ranked"], by_id[r["id"]]["relevant"]) for r in rows if r["id"] in by_id}
 
 
-def compare_backend(baseline_rows, current_rows, golden, epsilon=EPSILON):
+def compare_backend(baseline_rows, current_rows, golden, epsilon=EPSILON, must_hit_k=DEFAULT_MUST_HIT_K):
     """Verdict OK / WARN / FAIL (ERROR when no query is comparable) for one backend, with the evidence."""
+    if must_hit_k not in SUPPORTED_K:
+        raise ValueError(f"must_hit_k must be one of {SUPPORTED_K}, got {must_hit_k}")
     base, cur = _metrics(baseline_rows, golden), _metrics(current_rows, golden)
     common = [i for i in cur if i in base]
     pairs = [(cur[i]["ndcg@10"], base[i]["ndcg@10"]) for i in common]
@@ -27,7 +34,8 @@ def compare_backend(baseline_rows, current_rows, golden, epsilon=EPSILON):
         return {**out, "verdict": "ERROR"}
     out["delta"], out["lo"], out["hi"] = score.paired_bootstrap_ci([p[0] for p in pairs], [p[1] for p in pairs])
     must = {q["id"] for q in golden["queries"] if q.get("must_hit")}
-    out["must_hit_lost"] = [i for i in common if i in must and base[i]["hit@3"] == 1 and cur[i]["hit@3"] == 0]
+    hit = f"hit@{must_hit_k}"
+    out["must_hit_lost"] = [i for i in common if i in must and base[i][hit] == 1 and cur[i][hit] == 0]
     dropped = out["delta"] < -epsilon
     out["verdict"] = "FAIL" if out["must_hit_lost"] or (dropped and out["hi"] < 0) else "WARN" if dropped else "OK"
     return out
@@ -70,8 +78,9 @@ def check(baseline, results, golden, epsilon=EPSILON, backends=None):
         if name not in results["rows"]:
             out.append({"backend": name, "verdict": "MISSING", "report_only": False, "notes": notes})
             continue
-        r = compare_backend(baseline["backends"][name], results["rows"][name], golden, epsilon)
-        out.append({"backend": name, **r, "report_only": rebuilt, "notes": notes})
+        depth = MUST_HIT_K.get(name, DEFAULT_MUST_HIT_K)
+        r = compare_backend(baseline["backends"][name], results["rows"][name], golden, epsilon, must_hit_k=depth)
+        out.append({"backend": name, **r, "must_hit_depth": depth, "report_only": rebuilt, "notes": notes})
     bad = any(e["verdict"] in ("FAIL", "ERROR", "MISSING") and not e["report_only"] for e in out)
     return {"backends": out, "exit": 1 if bad else 0}
 
@@ -87,7 +96,7 @@ def format_report(report):
         delta = "n/a" if e["delta"] is None else f"{e['delta']:+.3f}"
         lines.append(f"{e['backend']:<9}{verdict:<22}{e['n']:>4}  {delta:>8}  {ci:<20}  {e['n_new']}")
         if e["must_hit_lost"]:
-            lines.append(f"{'':<9}must-hit queries that left the top 3: {', '.join(e['must_hit_lost'])}")
+            lines.append(f"{'':<9}must-hit queries that left the top {e['must_hit_depth']}: {', '.join(e['must_hit_lost'])}")
     for note in dict.fromkeys(n for e in report["backends"] for n in e["notes"]):
         lines.append(f"note: {note}")
     warnings = sum(e["verdict"] == "WARN" for e in report["backends"])

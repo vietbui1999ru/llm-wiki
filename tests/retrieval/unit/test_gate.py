@@ -1,14 +1,18 @@
 """Regression gate logic (spec: docs/specs/retrieval-eval-suite.md, section 10).
 
 Warn when the mean nDCG@10 delta vs the baseline is below -epsilon; fail when additionally the paired bootstrap 95% CI of
-the delta lies entirely below 0. Must-hit floor: a must_hit query that was in the top 3 at baseline and no longer is, fails.
+the delta lies entirely below 0. Must-hit floor: a must_hit query that was in the top 3 at baseline and no longer is, fails;
+for the reranked qmd `full` backend, whose rankings reshuffle under small corpus changes (spec 13.4 to 13.6), the depth is 5.
 Both sides are re-scored against the current labels, so a label edit never looks like a regression.
 """
+import pytest
+
 import gate
 
 TOP = ["wiki/a.md"]                      # target at rank 1: nDCG 1.0
 SECOND = ["wiki/x.md", "wiki/a.md"]      # rank 2: nDCG 0.631
-FOURTH = ["wiki/x.md", "wiki/y.md", "wiki/z.md", "wiki/a.md"]   # rank 4: out of the top 3
+FOURTH = ["wiki/x.md", "wiki/y.md", "wiki/z.md", "wiki/a.md"]   # rank 4: out of the top 3, inside the top 5
+SIXTH = ["wiki/x.md", "wiki/y.md", "wiki/z.md", "wiki/u.md", "wiki/v.md", "wiki/a.md"]   # rank 6: outside the top 5
 MISS = ["wiki/x.md"]
 
 
@@ -52,6 +56,41 @@ def test_a_must_hit_query_that_was_already_outside_the_top_3_at_baseline_is_not_
     out = gate.compare_backend(rows([FOURTH] + [TOP] * 19), rows([MISS] + [TOP] * 19), golden(20, must_hit={"q0"}),
                                epsilon=0.5)
     assert out["must_hit_lost"] == [] and out["verdict"] == "OK"
+
+
+def test_a_deeper_must_hit_depth_tolerates_slipping_from_rank_1_to_4_but_not_out_of_the_top_5():
+    g, base = golden(20, must_hit={"q0"}), rows([TOP] * 20)
+    inside = gate.compare_backend(base, rows([FOURTH] + [TOP] * 19), g, epsilon=0.5, must_hit_k=5)
+    outside = gate.compare_backend(base, rows([SIXTH] + [TOP] * 19), g, epsilon=0.5, must_hit_k=5)
+    assert inside["must_hit_lost"] == [] and inside["verdict"] == "OK"
+    assert outside["must_hit_lost"] == ["q0"] and outside["verdict"] == "FAIL"
+
+
+def test_a_must_hit_query_outside_the_top_5_at_baseline_is_not_blamed_at_depth_5():
+    out = gate.compare_backend(rows([SIXTH] + [TOP] * 19), rows([MISS] + [TOP] * 19), golden(20, must_hit={"q0"}),
+                               epsilon=0.5, must_hit_k=5)
+    assert out["must_hit_lost"] == []
+
+
+def test_a_depth_the_scorer_does_not_compute_is_refused():
+    with pytest.raises(ValueError, match="must_hit_k"):
+        gate.compare_backend(rows([TOP]), rows([TOP]), golden(1), must_hit_k=4)
+
+
+def test_check_holds_the_reranked_full_backend_to_depth_5_and_every_other_backend_to_depth_3():
+    base = system_file({"full": [TOP] * 20, "hybrid": [TOP] * 20})
+    cur = run_file({"full": [FOURTH] + [TOP] * 19, "hybrid": [FOURTH] + [TOP] * 19})
+    report = gate.check(base, cur, golden(20, must_hit={"q0"}), epsilon=0.5)
+    by = {e["backend"]: e for e in report["backends"]}
+    assert by["full"]["verdict"] == "OK" and by["full"]["must_hit_depth"] == 5
+    assert by["hybrid"]["verdict"] == "FAIL" and by["hybrid"]["must_hit_depth"] == 3 and report["exit"] == 1
+
+
+def test_the_report_names_the_depth_each_backend_was_held_to():
+    base = system_file({"full": [TOP] * 20, "hybrid": [TOP] * 20})
+    cur = run_file({"full": [SIXTH] + [TOP] * 19, "hybrid": [FOURTH] + [TOP] * 19})
+    text = gate.format_report(gate.check(base, cur, golden(20, must_hit={"q0"}), epsilon=0.5))
+    assert "left the top 5: q0" in text and "left the top 3: q0" in text
 
 
 def test_queries_missing_from_the_baseline_are_excluded_and_counted():

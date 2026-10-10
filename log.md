@@ -993,3 +993,13 @@ Updated (stale claims corrected against the docs):
 - claude-setup/rules/applied-ai.md (Tier-0) — CLAUDE_CODE_SUBAGENT_MODEL line corrected (fills gaps, does not override; the saving is mostly context)
 - index.md — two entries
 Contradictions noted: agent-subagents.md said resume needs CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 (docs: no) and no hard depth cap (docs: default 3, CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH). Still stale, not edited here: agent-delegator / architecture-reviewer / code-reviewer mentions in docs/architecture.md, claude-setup/README.md, scripts/sync-agents.py.
+
+## [2026-10-10] ingest | YAGNI (bliki Yagni.md, YAGNI (You Aren't Gonna Need It).md)
+Sources: Fowler's bliki entry and the Laws of Software Engineering YAGNI entry, both in raw/ since 2026-10-04 and not yet ingested. Prompted by the question whether our models follow YAGNI: it was written down only for OpenCode and Codex (shared/AGENTS.md, one line), not for Claude or Pi.
+Created:
+- wiki/summaries/yagni-fowler-and-laws.md — the four costs (build, delay, carry, repair), the Kohavi two-in-three figure, the scope limit, the imagine-the-refactoring test
+Updated:
+- wiki/patterns/principles.md — YAGNI section rewritten: four costs, test, scope limit (refactoring, tests and verification are not violations), when it does not apply, an agent-guidance paragraph marked as inference
+- index.md — summary entry; principles entry reworded
+Contradictions noted: the old YAGNI section said to ignore it when a requirement is arriving next sprint; Fowler's cost-of-delay and cost-of-carry argument says a soon-arriving feature still costs, so only a choice that adds no complexity is exempt. Corrected.
+Dotfiles side (separate PR): shared/research-tool-routing.md gains a scoped YAGNI section (reaches Pi via AGENTS.md and Claude via rules/tool-routing.md); shared/AGENTS.md line aligned. Tier-0 check: neither applied-ai.md nor global-prevention-rules.md cites the principles page, so nothing to resync.

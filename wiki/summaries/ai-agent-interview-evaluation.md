@@ -4,8 +4,10 @@ type: summary
 tags: [ai-coding-agents, interviews, evaluation, agent-skills, agent-subagents, hiring]
 sources: ["raw/What are interviewers actually looking for in a \"use an AI agent live\" coding interview?.md"]
 created: 2026-09-11
-updated: 2026-09-11
+updated: 2026-09-16
 ---
+
+**Update 2026-09-16**: [[summaries/hellointerview-ai-coding-interviews]] and [[summaries/vibe-coding-interview-checklists]] — two independent sources — converge on the same four evaluation axes and several of the same named failure modes as this thread. See their Connections sections for the specific overlaps. This does not make any single unverified claim below more true, but the *taxonomy* (scoping/control/verification/communication) is now corroborated across three unrelated raw sources, not just this one thread.
 
 # What Do "Use an AI Agent Live" Coding Interviews Evaluate?
 
@@ -59,6 +61,8 @@ Instead of scoring the single session, DrCaret2 says the interview is used to lo
 
 ## Connections
 
+- [[summaries/hellointerview-ai-coding-interviews]] — independent source built from actual Meta/Shopify/LinkedIn/Canva/Uber interviewer debriefs; converges on the same four axes (scoping, control, verification, communication) stated almost verbatim
+- [[summaries/vibe-coding-interview-checklists]] — independent tactical checklist (CRATE prompt framework, 30-second review checklist, named failure archetypes); one-shot-mega-prompt anti-pattern corroborates this thread's red flag independently
 - [[entities/ai-coding-agents]] — the class of tools (Claude Code, Cursor, etc.) candidates choose from
 - [[concepts/ai-code-review]] — the reviewing discipline interviewers are testing for when they watch for "blind acceptance"
 - [[concepts/ai-specific-pitfalls]] — the "looks right" failure mode is exactly the plausible-and-wrong moment ItaySela identifies as the real signal

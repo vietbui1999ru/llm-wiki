@@ -213,7 +213,7 @@ Code: `latency.py` (stage parsing, percentiles, machine metadata), `latency_qmd.
 - Commit `tests/retrieval/baselines/<system>.json` containing **per-query** metric values (not just means).
 - **Warn** when the mean nDCG@10 delta vs baseline is below -epsilon.
 - **Fail** when additionally the paired-bootstrap 95% CI of the delta lies entirely below 0 and the point estimate is below -epsilon. Initial epsilon 0.03 (my choice, not sourced; revisit with observed variance).
-- **Must-hit floor:** any `must_hit` query that leaves the top 3 fails, regardless of averages.
+- **Must-hit floor:** any `must_hit` query that leaves the top 3 fails, regardless of averages (amended 2026-10-11: the top 5 for the reranked qmd `full` backend, see 10.1 and 13.6).
 - qmd is deterministic given the index; re-baseline only deliberately.
 - LightRAG: queries are cached after the first run. A **rebuild changes the graph** (extraction is non-deterministic), so a rebuild is a *re-baseline event*, compared report-only. Preserving `kv_store_llm_response_cache.json` across rebuilds may make a rebuild replay cached extraction output (inference from the LightRAG README; verify before relying on it).
 - Run on demand and before merging changes to chunking, extraction prompts, models, retrieval parameters or the golden set. Not on every commit (the index is local and slow to rebuild).
@@ -224,7 +224,7 @@ Code: `gate.py`, `baseline.py` and `provenance.py`; operator guide `docs/retriev
 
 - **Verdicts follow the rule above.** WARN when the mean nDCG@10 delta is below -0.03, FAIL when additionally the paired bootstrap 95% CI lies entirely below 0 (epsilon 0.03 is still an unsourced starting value). A backend missing from the run fails (the gate fails closed); `--backends` checks a subset on purpose.
 - **Both sides are re-scored against the current labels**, so editing a label never looks like a regression; queries added to the golden set after the baseline are excluded and counted.
-- **Must-hit floor, as implemented:** a `must_hit` query that was in the top 3 at baseline and is not now. A query the system already missed at baseline is not blamed. The 20 exact-title queries are marked `must_hit` (2026-10-08, the owner's decision; at baseline 18 of them are in the top 3 for all nine systems, q-031 is missing only from qmd bm25 and q-037 only from LightRAG global, hybrid and mix, which are therefore not blamed). On the deliberately broken LightRAG run the floor listed all 20 as having left the top 3, the first time it fired on real data.
+- **Must-hit floor, as implemented:** a `must_hit` query that was in the top 3 at baseline and is not now. A query the system already missed at baseline is not blamed. **Depth (amended 2026-10-11):** the top 3 for every backend except qmd `full`, which is held to the top 5 (`MUST_HIT_K` in `gate.py`), because its rankings reshuffle under small corpus changes and a target at rank 2 to 4 flips in and out of the top 3 with no change in retrieval (13.6). The 20 exact-title queries are marked `must_hit` (2026-10-08, the owner's decision; at baseline 18 of them are in the top 3 for all nine systems, q-031 is missing only from qmd bm25 and q-037 only from LightRAG global, hybrid and mix, which are therefore not blamed). On the deliberately broken LightRAG run the floor listed all 20 as having left the top 3, the first time it fired on real data.
 - **LightRAG rebuild:** if the index hash differs from the baseline's the verdicts are report-only and the exit code ignores them.
 - **Provenance notes never change a verdict** but should be read first: wiki content changed, qmd collection changed (qmd's collection is the whole repo, so a file outside `wiki/` can shift rankings; found when a spec pulled into the main checkout during a run did), qmd collection changed during the run, settings differ, or the run recorded no hash.
 - **Noise floor.** Two identical LightRAG runs differed by at most 0.001 nDCG@10 (a few queries re-extract keywords on every call). For qmd the noise was not separated from index changes, and a later event showed that small corpus changes move `full` by more than epsilon: +0.018 after the spec was added to the index (2026-10-07, CI including zero), then -0.039 [-0.072, -0.008] after three more documents were added or grown (2026-10-09, 13.4). Epsilon 0.03 sits inside that swing for qmd `full`, which then moved back by +0.027 [-0.006, +0.063] when two more pages arrived (2026-10-09, 13.5); for LightRAG the shifts were 0.000 to 0.016 across two index updates (13.4, 13.5), below epsilon.
@@ -381,6 +381,24 @@ The baselines were then rebuilt from the fresh runs, which record their own prov
 | qmd | full | +0.027 [-0.006, +0.063] | OK |
 
 **What it adds to 13.4.** qmd `full` moved by -0.039 after one batch of document changes and by +0.027 after the next, and 96 of 114 of its top-10 lists changed again; the two must-hit targets that had slid in 13.4 recovered (q-033 "Tool Design for Agents" from rank 4 to 2, q-037 "OpenAI Codex" from rank 5 to 1). So the 13.4 shift does not look like a lasting quality loss; it looks like the instability of `full` under small corpus changes, in both directions (two observations, not a proof); the mechanism is still not isolated. Rebuilding the baselines from these runs therefore restores the must-hit protection of those two queries on `full`. All recorded hashes of the new baselines (wiki, golden file, qmd collection, LightRAG index) equal the state at the time of writing, each baseline passes against its own run with no notes, and the deliberate break on the current index still fails (LightRAG naive, `cosine_better_than_threshold` 0.9: -0.685 [-0.742, -0.624], exit 1).
+
+### 13.6 Gate run after #7, and the must-hit depth change (2026-10-10 and 2026-10-11)
+
+**Run.** After PR #7 merged and the main checkout was pulled, `qmd update` and `qmd embed` took in 2 new and 3 updated documents; `wiki-index --verify` listed 5 pages (2 stale, 3 missing: #7's two interview summaries and the YAGNI summary from #24, which the index had never received), which were indexed after a backup. The LightRAG evaluation needed 5 LLM calls. The qmd collection did not change during the run. Against the committed baselines of 13.5 (nDCG@10 delta, 104 queries):
+
+| system | backend | delta [95% CI] | verdict |
+|---|---|---|---|
+| LightRAG | naive, local, global, hybrid, mix | -0.002, -0.005, +0.002, -0.004, -0.004 | OK, report-only (index changed) |
+| qmd | bm25 | -0.004 | OK |
+| qmd | vector | -0.000 | OK |
+| qmd | hybrid | +0.004 | OK |
+| qmd | full | +0.006 [-0.016, +0.032] | **FAIL** by the must-hit floor only |
+
+**The failure.** The must-hit query q-033 ("Tool Design for Agents") moved from rank 2 to rank 4 on `full`, one place out of the top 3, while the average for `full` rose. On the other backends it did not move (bm25 1, vector 2, hybrid 2). None of the pages merged since the baseline is in `full`'s top 10 for q-033; an existing page (`pentest-agent-design`) moved ahead of it. 98 of 114 `full` top-10 lists changed, the third time in a row (92 in 13.4, 96 in 13.5). So the rule fired on a target sitting on the rank-3 boundary of a backend whose ordering flips under small corpus changes, not on a change in retrieval.
+
+**The change (option 3, chosen by the owner).** The must-hit floor is held to the top 5 for `full` and stays at the top 3 for every other backend (`MUST_HIT_K` in `gate.py`; `compare_backend` takes `must_hit_k`, the report names the depth used). A per-backend depth was chosen over a rule that needs two consecutive failing runs because it is stateless (no history file between runs) and needs no change to the baselines, which already store each query's top-10 pages. Checked: the same qmd run now gates PASS with identical numbers, a copy of it with q-033's target pushed to rank 8 on `full` gates FAIL with "left the top 5: q-033" (exit 1) although the mean moves the other way, and 139 unit tests pass.
+
+**What it costs.** Protection on `full` is weaker: a must-hit target can now drop from rank 1 to rank 5 without failing the gate on that rule alone (the nDCG check still applies). The mechanism behind `full`'s reshuffling is still not isolated, so the depth is a mitigation for noise, not a fix for its cause. The baselines were not rebuilt; they are still the ones of 13.5, so the next gate run will keep printing the wiki and qmd-collection notes until they are.
 
 ## 14. Risks
 

@@ -6,9 +6,10 @@ description: |
   # required
 tools: Read, Grep, Glob, Bash    # allowlist; omit = inherits all from parent
 disallowedTools: Write, Edit     # denylist; applied before tools; remove field if unused
-model: sonnet                    # sonnet | opus | haiku | full model ID | inherit (default)
-permissionMode: default          # default | acceptEdits | auto | dontAsk | bypassPermissions | plan
+model: sonnet                    # sonnet | opus | haiku | fable | full model ID | inherit (default)
+permissionMode: default          # default | acceptEdits | auto | dontAsk | bypassPermissions | plan | manual
 maxTurns: 30                     # optional; cap agentic turns before stopping
+omitClaudeMd: false              # optional; true = skip the CLAUDE.md hierarchy (fewer tokens per spawn)
 skills:                          # optional; preload full skill content at startup
   - skill-name                   # subagents don't inherit parent skills; list explicitly
 mcpServers:                      # optional; scope MCP servers to this subagent only

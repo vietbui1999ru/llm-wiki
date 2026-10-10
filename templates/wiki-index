@@ -2,8 +2,8 @@
 # /// script
 # requires-python = ">=3.10"
 # dependencies = [
-#   "lightrag-hku",
-#   "anthropic",
+#   "lightrag-hku>=1.5.7,<1.6",   # tested on 1.5.7; chunker/constructor kwargs moved between releases
+#   "openai",
 #   "ollama",
 #   "numpy",
 #   "python-dotenv",
@@ -13,23 +13,27 @@
 
 Usage:
   wiki-index            index new/changed pages (incremental)
-  wiki-index --full     wipe and rebuild from scratch  *** see cost warning below ***
+  wiki-index --full     wipe and rebuild from scratch  *** see usage note below ***
   wiki-index --status   show manifest stats without indexing
 
-Extraction backend (priority order, set env var in .env):
-  ANTHROPIC_API_KEY=sk-ant-...  → Claude Haiku (best quality)
-  OPENROUTER_API_KEY=sk-or-...  → OpenRouter (not yet implemented — stub only)
-  unset                         → qwen2.5:7b via ollama (fully local, FREE — recommended for --full)
+Extraction backend (first one configured wins; set env vars in secrets/.env):
+  LLAMACPP_BASE_URL=...             → self-hosted llama.cpp (RESERVED — not wired yet, errors if set)
+  OPENCODE_GO_API_KEY_LIGHTRAG=...  → OpenCode Go (OpenAI-compatible, flat monthly plan)
+      OPENCODE_LIGHTRAG_MODEL       model id (default deepseek-v4.1-flash)
+      OPENCODE_LIGHTRAG_BASE_URL    default https://opencode.ai/zen/go/v1
+      OPENCODE_LIGHTRAG_DISABLE_THINKING  default 1: send thinking={"type":"disabled"}; set 0 to omit
+  OPENROUTER_API_KEY=sk-or-...      → OpenRouter (not yet implemented — stub only)
+  none configured                   → indexing/--test exit with an error; --status still works
 
-COST WARNING — --full with Anthropic API:
+USAGE NOTE — --full with OpenCode Go:
   LightRAG runs 3 extraction phases per page (entity → relation → community),
-  each with multiple LLM calls. At ~150 pages, expect $10–30 with Claude Haiku.
-  Use qwen2.5:7b (ollama, free) for full rebuilds. Reserve Haiku for incremental
-  updates where per-page cost (~$0.07–0.20) is acceptable.
+  each with multiple LLM calls. Go plans cap usage at 5-hour / weekly / monthly
+  dollar limits per model, so a --full rebuild can exhaust the 5-hour window.
+  Limits: https://opencode.ai/docs/go/#usage-limits
 
 Requires:
   uv run --script wiki-index   (deps declared inline above)
-  ollama running with qwen2.5:7b + nomic-embed-text
+  ollama running with nomic-embed-text (embeddings only; no local LLM is used)
 """
 from __future__ import annotations
 
@@ -44,9 +48,9 @@ try:
     import ollama as _ollama
     from dotenv import load_dotenv
     from lightrag import LightRAG, QueryParam
-    from lightrag.llm.ollama import ollama_model_complete
-    from lightrag.llm.anthropic import anthropic_complete_if_cache
-    from lightrag.utils import EmbeddingFunc
+    from lightrag.base import DocStatus
+    from lightrag.llm.openai import openai_complete_if_cache
+    from lightrag.utils import EmbeddingFunc, sanitize_text_for_encoding
 except ImportError:
     print("Missing: pip install lightrag-hku python-dotenv")
     sys.exit(1)
@@ -59,34 +63,60 @@ MANIFEST    = WORK_DIR / "manifest.json"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 
-_API_KEY          = os.environ.get("ANTHROPIC_API_KEY", "")
+_API_KEY          = os.environ.get("OPENCODE_GO_API_KEY_LIGHTRAG", "")
+_OPENCODE_URL     = os.environ.get("OPENCODE_LIGHTRAG_BASE_URL", "https://opencode.ai/zen/go/v1")
+_OPENCODE_MODEL   = os.environ.get("OPENCODE_LIGHTRAG_MODEL", "deepseek-v4.1-flash")
 _OPENROUTER_KEY   = os.environ.get("OPENROUTER_API_KEY", "")
+# deepseek-v4.1-flash reasons by default and spends the whole max_tokens budget on thinking for
+# extraction prompts (empty content, finish_reason=length). Send thinking={"type":"disabled"}
+# (probed: 2774 -> 185 completion tokens on a sample prompt). Set to 0 for models that reject it.
+_DISABLE_THINKING = os.environ.get("OPENCODE_LIGHTRAG_DISABLE_THINKING", "1") == "1"
 
-async def _anthropic_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
+# OpenCode Go asks clients to identify themselves and send a stable session id
+# (https://opencode.ai/docs/go/#where-can-i-use-it) so routing/prompt caching work.
+_OPENCODE_HEADERS = {"User-Agent": "llm-wiki-lightrag/1.0", "x-opencode-session": f"wiki-index-{os.getpid()}"}
+
+async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
     kwargs.setdefault("max_tokens", 4096)
-    result = await anthropic_complete_if_cache(
-        "claude-haiku-4-5-20251001", prompt,
+    if _DISABLE_THINKING:
+        kwargs.setdefault("extra_body", {"thinking": {"type": "disabled"}})
+    result = await openai_complete_if_cache(
+        _OPENCODE_MODEL, prompt,
         system_prompt=system_prompt,
         history_messages=history_messages or [],
+        base_url=_OPENCODE_URL,
         api_key=_API_KEY,
+        extra_headers=_OPENCODE_HEADERS,  # per-request; LightRAG overwrites client-level default_headers
         **kwargs,
     )
     if hasattr(result, "__aiter__"):
         return "".join([chunk async for chunk in result])
     return result
 
-if _API_KEY:
-    LLM_MODEL      = "claude-haiku-4-5-20251001"
-    _llm_func      = _anthropic_llm
+_NO_BACKEND_MSG = "No LLM backend configured. Set OPENCODE_GO_API_KEY_LIGHTRAG (in ~/secrets/.env)."
+
+async def _no_backend(*args, **kwargs):
+    raise RuntimeError(_NO_BACKEND_MSG)
+
+# Selection: local llama.cpp slot (reserved) -> OpenCode Go -> none.
+_LOCAL_LLM_URL = os.environ.get("LLAMACPP_BASE_URL", "")  # empty = no local backend
+
+if _LOCAL_LLM_URL:
+    # TODO: self-hosted llama.cpp (llama-server exposes an OpenAI-compatible /v1 API).
+    # Slot is intentionally left empty until an instance exists.
+    raise NotImplementedError("llama.cpp backend not wired yet. Unset LLAMACPP_BASE_URL.")
+elif _API_KEY:
+    LLM_MODEL      = _OPENCODE_MODEL
+    _llm_func      = _opencode_llm
     _llm_max_async = 4
 elif _OPENROUTER_KEY:
     # TODO: wire up OpenRouter backend via lightrag.llm.openai.openai_complete_if_cache
-    # base_url="https://openrouter.ai/api/v1", model e.g. "anthropic/claude-haiku-4-5"
-    raise NotImplementedError("OpenRouter backend not yet implemented. Set ANTHROPIC_API_KEY or leave unset for local.")
+    # base_url="https://openrouter.ai/api/v1"
+    raise NotImplementedError("OpenRouter backend not yet implemented. Set OPENCODE_GO_API_KEY_LIGHTRAG.")
 else:
-    LLM_MODEL      = "qwen2.5:7b"
-    _llm_func      = ollama_model_complete
-    _llm_max_async = 2
+    LLM_MODEL      = "none"
+    _llm_func      = _no_backend
+    _llm_max_async = 1
 
 
 def _parse_frontmatter(content: str) -> dict:
@@ -120,7 +150,7 @@ def wiki_chunking_func(
     on implicit connections — reduces extraction LLM calls by ~40-60%.
     """
     import re
-    from lightrag.operate import chunking_by_token_size
+    from lightrag.chunker import chunking_by_token_size
 
     fm    = _parse_frontmatter(content)
     links = list(dict.fromkeys(re.findall(r'\[\[([^\]|]+)', content)))  # dedup
@@ -160,7 +190,6 @@ def _build_rag() -> LightRAG:
         llm_model_func=_llm_func,
         llm_model_name=LLM_MODEL,
         llm_model_max_async=_llm_max_async,
-        max_extract_input_tokens=16384,
         # wiki_chunking_func prepends Obsidian wikilink graph as extraction hints,
         # telling the LLM which entities/relations are already known so it focuses
         # only on implicit connections → reduces extraction token cost ~40-60%.
@@ -169,7 +198,7 @@ def _build_rag() -> LightRAG:
         chunk_overlap_token_size=64,
         # top_k=20: wiki has dense cross-links; fewer candidates = less noise.
         top_k=20,
-        cosine_threshold=0.3,
+        cosine_better_than_threshold=0.3,
         embedding_func=EmbeddingFunc(
             embedding_dim=EMBED_DIM,
             max_token_size=8192,
@@ -199,6 +228,32 @@ def page_content(path: Path) -> str:
     return f"# Source: {rel}\n\n{path.read_text()}"
 
 
+def _file_name(rel: Path) -> str:
+    """LightRAG treats a repeated file *basename* as a duplicate and silently drops the insert,
+    so every page gets a path-unique name. The doc id stays the page's relative path."""
+    return str(rel).replace("/", "__")
+
+
+async def _index_one(rag: LightRAG, p: Path) -> str | None:
+    """(Re)index one page. Returns None on success, otherwise the reason it failed."""
+    rel = p.relative_to(WIKI_DIR)
+    doc_id, content = str(rel), page_content(p)
+    if await rag.doc_status.get_by_id(doc_id):  # changed page or earlier failure: replace, not re-insert
+        res = await rag.adelete_by_doc_id(doc_id)
+        if res.status not in ("success", "not_found"):
+            return f"could not remove the old version: {res.message}"
+    await rag.ainsert(content, ids=[doc_id], file_paths=[_file_name(rel)])
+    # ainsert logs pipeline errors instead of raising and silently skips duplicates: check what was stored.
+    doc = await rag.doc_status.get_by_id(doc_id)
+    status = getattr(doc.get("status"), "value", doc.get("status")) if doc else None
+    if status != "processed":
+        return (doc or {}).get("error_msg") or f"status {status}"
+    stored = await rag.full_docs.get_by_id(doc_id)
+    if not stored or stored.get("content") != sanitize_text_for_encoding(content):  # LightRAG sanitizes on insert
+        return "stored text does not match the page (the insert was skipped)"
+    return None
+
+
 async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
     changed = [
         p for p in pages
@@ -210,21 +265,74 @@ async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
         print("Index up to date — no changes detected.")
         return manifest
 
-    backend = "anthropic" if _API_KEY else "ollama"
-    print(f"Indexing {len(changed)} new/changed pages (of {len(pages)} total) · extraction: {LLM_MODEL} ({backend})")
+    print(f"Indexing {len(changed)} new/changed pages (of {len(pages)} total) · extraction: {LLM_MODEL} (opencode-go)")
+    failed = []
     for i, p in enumerate(changed, 1):
         rel = p.relative_to(WIKI_DIR)
         print(f"  [{i}/{len(changed)}] {rel}", flush=True)
-        await rag.ainsert(
-            page_content(p),
-            ids=[str(rel)],
-            file_paths=[str(rel)],
-        )
+        reason = await _index_one(rag, p)
+        if reason:  # only record pages that really made it in, otherwise they are never retried
+            print(f"    FAILED: {reason}", flush=True)
+            failed.append(rel)
+            continue
         manifest[str(p)] = p.stat().st_mtime
         save_manifest(manifest)   # save after each page so partial runs resume
 
-    print(f"Done. {len(changed)} pages indexed.")
+    print(f"Done. {len(changed) - len(failed)} pages indexed, {len(failed)} failed.")
+    if failed:
+        raise SystemExit(1)
     return manifest
+
+
+async def remove_deleted_pages(rag: LightRAG, manifest: dict) -> None:
+    """Drop pages that no longer exist on disk from the index and the manifest."""
+    for path in [k for k in manifest if not Path(k).exists()]:
+        doc_id = str(Path(path).relative_to(WIKI_DIR))
+        res = await rag.adelete_by_doc_id(doc_id)
+        if res.status in ("success", "not_found"):
+            print(f"  removed deleted page: {doc_id}", flush=True)
+            del manifest[path]
+            save_manifest(manifest)
+        else:
+            print(f"  could not remove {doc_id}: {res.message}", flush=True)
+
+
+async def find_problems(rag: LightRAG, pages: list[Path], manifest: dict) -> list[tuple[str, str]]:
+    """Compare the index with the wiki on disk. Returns (doc id, problem) pairs."""
+    problems = []
+    for p in pages:
+        doc_id = str(p.relative_to(WIKI_DIR))
+        doc = await rag.doc_status.get_by_id(doc_id)
+        status = getattr(doc.get("status"), "value", doc.get("status")) if doc else None
+        if not doc:
+            problems.append((doc_id, "missing from the index"))
+        elif status != "processed":
+            problems.append((doc_id, f"status {status}"))
+        elif (await rag.full_docs.get_by_id(doc_id) or {}).get("content") != sanitize_text_for_encoding(page_content(p)):
+            problems.append((doc_id, "stored text is stale"))
+    problems += [(str(Path(k).relative_to(WIKI_DIR)), "deleted page still indexed")
+                 for k in manifest if not Path(k).exists()]
+    failed = await rag.doc_status.get_docs_by_statuses([DocStatus.FAILED])
+    problems += [(k, "stray rejected-duplicate record") for k in failed if k.startswith("dup-")]
+    return problems
+
+
+async def reconcile(rag: LightRAG, problems: list[tuple[str, str]], manifest: dict) -> None:
+    """Repair what find_problems() reported."""
+    for key, why in problems:
+        if why == "stray rejected-duplicate record":
+            await rag.doc_status.delete([key])
+        elif why == "deleted page still indexed":
+            await remove_deleted_pages(rag, manifest)
+        else:
+            p = WIKI_DIR / key
+            print(f"  reindexing {key} ({why})", flush=True)
+            if reason := await _index_one(rag, p):
+                print(f"    FAILED: {reason}", flush=True)
+            else:
+                manifest[str(p)] = p.stat().st_mtime
+                save_manifest(manifest)
+    await rag.doc_status.index_done_callback()
 
 
 def show_status(pages: list[Path], manifest: dict) -> None:
@@ -240,10 +348,11 @@ def show_status(pages: list[Path], manifest: dict) -> None:
 
 
 async def test_llm_backend() -> None:
-    backend = "anthropic" if _API_KEY else "ollama"
-    print(f"Testing LLM backend: {LLM_MODEL} ({backend})")
+    print(f"Testing LLM backend: {LLM_MODEL}")
     try:
-        result = await _llm_func("Reply with the single word OK.", max_tokens=16)
+        # deepseek-v4.1-flash is a reasoning model: reasoning tokens count against max_tokens,
+        # so a tiny cap (16) can be fully spent on thinking and return empty content.
+        result = await _llm_func("Reply with the single word OK.", max_tokens=1024)
         # result may be a string or an async generator (streaming)
         if hasattr(result, "__aiter__"):
             text = "".join([chunk async for chunk in result])
@@ -261,6 +370,8 @@ async def main() -> None:
     parser.add_argument("--status", action="store_true", help="show stats only")
     parser.add_argument("--test",   action="store_true", help="test LLM backend then exit")
     parser.add_argument("--yes",    action="store_true", help="skip cost confirmation for --full with API key")
+    parser.add_argument("--verify", action="store_true", help="compare the index with the wiki on disk; exit 1 on differences")
+    parser.add_argument("--reconcile", action="store_true", help="repair what --verify reports (re-indexes pages; needs the LLM)")
     args = parser.parse_args()
 
     pages = sorted(WIKI_PAGES.rglob("*.md"))
@@ -273,11 +384,30 @@ async def main() -> None:
         await test_llm_backend()
         return
 
-    if args.full and (_API_KEY or _OPENROUTER_KEY) and not args.yes:
-        backend = "Anthropic Haiku" if _API_KEY else "OpenRouter"
-        print(f"WARNING: --full with {backend} backend on {len(pages)} pages.")
-        print(f"  LightRAG runs 3 extraction phases per page → expect $10–30+ in API costs.")
-        print(f"  Use qwen2.5:7b (unset API keys) for free full rebuilds.")
+    if args.verify or args.reconcile:
+        if args.reconcile and _llm_func is _no_backend:
+            print(_NO_BACKEND_MSG)
+            raise SystemExit(1)
+        rag, manifest = await make_rag(), load_manifest()
+        try:
+            problems = await find_problems(rag, pages, manifest)
+            for key, why in problems:
+                print(f"  {key}: {why}")
+            if args.reconcile and problems:
+                await reconcile(rag, problems, manifest)
+                problems = await find_problems(rag, pages, manifest)
+        finally:
+            await rag.finalize_storages()
+        print(f"{len(problems)} problem(s) remain." if problems else "Index matches the wiki.")
+        raise SystemExit(1 if problems else 0)
+
+    if _llm_func is _no_backend:  # checked before --full wipes the existing index
+        print(_NO_BACKEND_MSG)
+        raise SystemExit(1)
+
+    if args.full and not args.yes:
+        print(f"WARNING: --full with OpenCode Go ({_OPENCODE_MODEL}) on {len(pages)} pages.")
+        print(f"  LightRAG runs 3 extraction phases per page → may exhaust the 5-hour/weekly usage limit.")
         print(f"  Pass --yes to confirm and proceed.")
         raise SystemExit(1)
 
@@ -289,6 +419,7 @@ async def main() -> None:
     rag      = await make_rag()
     manifest = {} if args.full else load_manifest()
     try:
+        await remove_deleted_pages(rag, manifest)
         await index_pages(rag, pages, manifest)
     finally:
         await rag.finalize_storages()

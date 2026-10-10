@@ -22,6 +22,6 @@ Parse every block (delimited by `---`) where `status: pending`. For each, surfac
 > Pending:
 > - `[[wikilink]]` in `tier0_file` (changed: `wiki_page`)
 >
-> Run `/sync-tier0` to review and patch. ~2 min per entry.
+> Review the cited rule and its changed wiki page manually; update the tracked rule source only when the drift is intentional.
 
 **Override:** user says "skip tier0 sync" or "ignore drift" → silent skip for this session.

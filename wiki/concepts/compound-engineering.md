@@ -22,10 +22,10 @@ In ordinary codebases, features add complexity and future work slows down. In a 
 Every meaningful agent session should produce at least one of:
 
 | Artifact | Examples |
-|---|---|
+| --- | --- |
 | Knowledge | wiki page, ADR, glossary entry, synthesis, product insight |
 | Guardrail | regression test, lint rule, hook, eval, approval gate, security checklist |
-| Capability | skill, subagent, script, workflow, reusable prompt, Graphify/qmd query pattern |
+| Capability | skill, subagent, script, workflow, reusable prompt, qmd query pattern |
 
 If no durable artifact exists, the session helped once. If a durable artifact exists, the session compounds.
 
@@ -61,7 +61,6 @@ The synthesis:
 - `qmd` retrieves prior learnings just in time.
 - `mistakes/` converts agent failures into future rules.
 - `AGENTS.md` / `CLAUDE.md` codify current taste and process.
-- Graphify is a local architecture graph for codebase questions when graph context helps.
 
 ## Related
 

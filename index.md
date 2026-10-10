@@ -28,6 +28,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/sparc-cursor-cline-rules]] — SPARC framework: 5 principles, 5 workflow phases, Memory Bank integration; mostly a structured AGENTS.md template
 - [[summaries/claude-code-permissions-settings]] — CC settings schema: permissions.allow/ask/deny/defaultMode, bypassPermissions, sandbox.enabled (Bash-only), filesystem+network rules; corrects old allowedTools schema
 - [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules, background agents, parity gaps vs CC
+- [[summaries/claude-code-subagents-pro-limits]] — Opus main + Sonnet/Haiku subagents on Claude Pro: setup, break-even rules, measured cost per PR (about 40% lower), docs verification, caveats
+- [[summaries/yagni-fowler-and-laws]] — YAGNI per Fowler's bliki and Laws of Software Engineering: four costs of presumptive features, the scope limit (refactoring and tests are not YAGNI violations), imagine-the-refactoring test
 - [[summaries/cursor-cloud-agents]] — Cursor Cloud Agents: microVM isolation, GitHub/GitLab workflow, remote desktop control, cross-agent support
 - [[summaries/cc-auto-mode]] — CC auto mode: 2-stage classifier, threat model, 17% FNR on overeager actions, deny-and-continue
 - [[summaries/aws-security-agent]] — AWS managed pen test service: target/accessible/out-of-scope domain split, credential injection patterns, IAM role scoping, out-of-scope URL hierarchy, launch checklist
@@ -61,7 +63,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/sandcastle]] — Matt Pocock's TS lib for parallel agents in worktrees; branch strategy (head/merge-to-head/branch), token telemetry, provider abstraction
 - [[entities/dangeresque]] — Host-native CLI orchestrator; mandatory adversarial reviewer + human-merge gate; ToS-compliant (no container for CC)
 - [[entities/mnemory]] — Self-hosted MCP cross-session memory: Qdrant vector search + S3/MinIO artifact store; OSS alternative to Anthropic memory tool
-- [[entities/agentops]] — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
+- [[entities/agentops]] *(documented-not-adopted)* — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
 - [[entities/gemini-cli]] — Google's Gemini CLI: GEMINI.md + TOML commands + activate_skill; high parity with CC; hooks + subagents (experimental)
 - [[entities/opencode]] — Open-source Claude Code alternative; plugin system, compaction hooks, custom tools, headless `run`/`serve` modes, full HTTP API
 - [[entities/omp]] — oh-my-pi: batteries-included Pi fork; hashline/LSP/DAP/TTSR/eval kernels/Hindsight memory/Snapcompact/32 tools/40+ providers; see [[comparisons/our-stack-vs-omp]] for gap analysis
@@ -117,12 +119,16 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/agent-skills]] — Skill meta-tool: SKILL.md schema, three-tier loading, isMeta dual-message execution, supply chain risk, composition patterns, grill-* antipatterns, when NOT to use skills
 - [[concepts/agent-subagents]] — Subagents: own context window, YAML frontmatter format, all fields, scopes, invocation patterns, fork mode
 - [[concepts/agent-teams]] — Agent teams: lead+teammates+task list+mailbox; when to use vs subagents; quality gate hooks; best practices
-- [[concepts/model-tier-routing]] — Haiku/Sonnet/Opus selection table; escalate/downgrade criteria; explicit `model` param on spawns; tier→subagent_type mapping; missing-model fallback (same-provider closest-tier before cross-provider); authoritative pull target for the routing rule
+- [[concepts/model-tier-routing]] — Haiku/Sonnet/Opus selection table; escalate/downgrade criteria; explicit `model` param on spawns; tier→built-in role mapping; model precedence; missing-model fallback (same-provider closest-tier before cross-provider); authoritative pull target for the routing rule
+- [[concepts/subagent-cost-model]] — Why subagents cut cost: context lever vs price lever, 2026-10-09 price table, worked example, when delegation does not pay, model/effort precedence, how to measure
 - [[concepts/model-task-routing]] — OpenCode Go concrete model ID → task mapping; per-model profiles (DeepSeek V4 Pro/Flash, Kimi K2.6); thinking budget suffixes; benchmark tracking table; Go fallback chain
 - [[concepts/worker-coordination]] — Partial result passing between parallel workers: contract-first, pipeline, filesystem blackboard, actor mailbox; decision table; failure modes
 - [[concepts/wikilink-graph-extraction]] — Reducing LightRAG indexing cost by injecting Obsidian wikilink structure as extraction hints; ~40-55% token reduction; chunking_func hook; future direct graph injection path
 - [[concepts/verification-pipeline]] — Four-tier quality ladder: typecheck → visual verification → screenshot gate → design critique; origin failures; protocol rules
-- [[concepts/owasp-security-checklist]] — OWASP Top 10 checklist + AI-specific extensions: tool least-privilege, memory security, DoW, slopsquatting, test fabrication, CI/CD confused deputy, rules file injection; severity classification table
+- [[concepts/owasp-security-checklist]] — hub for the OWASP pages (split 2026-10-04): severity classification table and pointers to the three pages below
+- [[concepts/owasp-top-10-checklist]] — OWASP Top 10 (A01-A10) review checklist
+- [[concepts/owasp-ai-agent-risks]] — AI-specific extensions: indirect prompt injection, sandbox controls, tool least-privilege, memory security, DoW, slopsquatting, test fabrication, CI/CD confused deputy, rules file injection
+- [[concepts/owasp-web-security-reference]] — stack-agnostic stubs: session management, CSRF, DOM XSS, IDOR, transaction authorization, third-party scripts, deserialization, DoS
 - [[concepts/pentest-agent-design]] — Blueprint for Next.js + ECS Fargate + Neon pen test agent: supervisor + recon/web/db specialists, two-phase (black-box HTTP + gray-box AWS), safety constraints (scope lock, rate cap, read-only), findings.json + report.md output, wiki ingest pipeline
 - [[concepts/domain-glossary]] — CONTEXT.md pattern: shared language between dev and agent; token efficiency, consistent naming, reduced context distraction
 - [[concepts/deep-modules]] — Ousterhout's deep vs shallow modules; narrow interface, wide implementation; test boundary design; why AI produces shallow codebases by default
@@ -151,7 +157,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/cli-driven-vault-automation]] — Wrapper-script + cron patterns over the Obsidian CLI; doctor/health-check convention, "Obsidian must be running" guard, small-stable-verb-set instinct shared with MCP Code Mode
 
 ## Patterns
-- [[patterns/principles]] — SOLID (SRP/OCP/LSP/ISP/DIP), DRY, YAGNI, KISS, Law of Demeter, SoC, composition over inheritance; per-principle violation patterns and decision table
+- [[patterns/principles]] — SOLID (SRP/OCP/LSP/ISP/DIP), DRY, YAGNI, KISS, Law of Demeter, SoC, composition over inheritance; per-principle violation patterns and decision table; YAGNI section expanded with the four costs, scope limit and agent guidance
 - [[patterns/code-quality]] — naming conventions, function discipline (size/SRP/params/abstraction), cognitive complexity, comment discipline, magic numbers, code smell taxonomy (structural + AI-specific)
 - [[patterns/design-patterns-creational]] — All 5 GoF creational patterns: Factory Method, Abstract Factory, Builder, Prototype, Singleton; intent, triggers, anti-patterns, TypeScript sketches, comparison table
 - [[patterns/design-patterns-structural]] — All 7 GoF structural patterns: Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy; intent, triggers, TypeScript sketches, anti-patterns, Adapter/Facade/Proxy confusion table
@@ -171,6 +177,10 @@ Catalog of all pages. Updated on every ingest operation.
 - [[systems/system-design-process]] — requirements clarification framework (functional/non-functional), capacity estimation (QPS/storage/bandwidth), component decomposition, data flow mapping, API contract-first, tradeoff articulation, common design mistakes
 - [[systems/scalability-reliability]] — caching strategies (cache-aside/write-through/write-behind; layer placement; invalidation), database sharding (shard key selection, failure modes), rate limiting algorithms (token bucket/leaky bucket/sliding window), load balancing (L4 vs L7, sticky sessions), observability (RED/USE methods, structured logs, distributed tracing), SLO/SLA/availability numbers
 - [[systems/data-modeling]] — relational/document/wide-column/graph/time-series decision criteria, normalization (1NF-3NF) vs denormalization (when to break rules), schema evolution (expand-contract, versioned events), event sourcing as data model, polyglot persistence tradeoffs, access-pattern-driven design
+- [[systems/wiki-indexing-pipeline]] — how the wiki is indexed: qmd (BM25 + vector hybrid) vs the LightRAG LLM-extracted knowledge graph; post-commit triggers, wikilink-hinted chunking (800/64), extraction, local ollama embeddings, mtime manifest, failed-page handling, gotchas (long `sources:` stalls, reasoning-model thinking, required OpenCode session header, LightRAG API pin)
+- [[systems/retrieval-eval-suite]] — how retrieval over the wiki is measured: 114 synthetic golden queries, nine systems (qmd bm25/vector/hybrid/full, LightRAG naive/local/global/hybrid/mix), page-level nDCG@10 and Recall with CIs, committed baselines and a regression gate; first results show no detectable qmd-vs-LightRAG difference (minimum detectable effect about 0.09), labels agent-reviewed only; latency per stage and why qmd and LightRAG numbers are not like for like
+- [[systems/agent-review]] — per-run human review gate for Pi inside Neovim (diffview + gitsigns): snapshot/pending/decision record flow, `:AgentReview` commands, trial vs DiffViewer `pi-diff-review` (trial not yet registered), known limits
+- [[systems/dotfiles-agent-harness-layout]] — dotfiles provisioning (stow / materialized / sync-pushed), what each of `~/.claude` `~/.codex` `~/.pi` `~/.config/opencode` `~/.agents` manages vs runtime state, where agent definitions and blueprints live
 - [[systems/ai-ml]] — 9-step ML system design process, metrics (offline/online, counter metrics), data labeling strategies, feature stores (training-serving consistency), model selection heuristic, batch vs real-time serving, edge inference (quantization/pruning/distillation), A/B/shadow/canary deployment, monitoring (covariate vs concept drift); AI agent patterns → wiki/concepts/
 - [[systems/otel-council]] — OTel instrumentation for council.py: three span types (session/voice/chairman), zero-dependency JSONL file output, GenAI semantic convention attributes, jq trace queries
 
@@ -187,7 +197,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[syntheses/pi-orchestration-architecture]] — Pueue-dispatched pi workers, diff-review gate, status artifact, retry limit, two-mode review (interactive vs headless), human-commits-last
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern
 - [[syntheses/lean-agentic-workflow]] — Full stack: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes
-- [[syntheses/local-rag-wiki]] — two-path RAG stack: qmd (BM25+vector, Claude Code) + LightRAG graph (wiki-chat TUI + wiki-mcp MCP); qwen2.5:3b local or Haiku hybrid; manifest-based incremental indexing; post-commit automation
+- [[syntheses/local-rag-wiki]] — two-path RAG stack: qmd (BM25+vector, Claude Code) + LightRAG graph (wiki-chat TUI + wiki-mcp MCP); OpenCode Go (OpenAI-compatible) LLM backend with local ollama embeddings (llama.cpp slot reserved); manifest-based incremental indexing; post-commit automation
 - [[syntheses/control-plane-expansion-plan]] — Gap analysis and bootstrap path: cockpit action registry, agent-control skills, commandr-omp-runner; Phase 0.5–3 roadmap
 - [[syntheses/desktop-control-plane]] — *(local-only)* Big-picture synthesis: 5-layer toolchain (Commandr bus + DiffViewer/Tauri UI + omp workers + SKILL.md packages); Mermaid architecture/workflow diagrams; action registry; evidence-first cockpit vision
 - [[syntheses/agent-diff-viewer]] *(partially-superseded)* — Localhost real-time diff viewer for Claude Code: original design; see [[entities/diffviewer]] for current state

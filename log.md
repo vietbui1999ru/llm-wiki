@@ -948,3 +948,69 @@ Updated:
 - index.md — added 2 summary entries, updated Reddit thread's entry to flag corroboration
 
 Epistemic note: these are prep-guide/blog sources (Hello Interview: aggregated candidate+interviewer interviews; dev.to: single-author, unverified against real grading). Corroboration here is about the *taxonomy converging across independently-authored sources*, not about any individual unverified claim becoming more true — per citation discipline in `mistakes/global-prevention-rules.md`.
+
+## [2026-10-04] update | LightRAG on OpenCode Go; agent-review + dotfiles layout pages
+Not an external-source ingest: first-party docs from ~/dotfiles, investigated by two read-only agents and cited by path. Created:
+- wiki/systems/agent-review.md — per-run Neovim review gate for Pi; flow, components, trial status (trial entry not registered), known limits
+- wiki/systems/dotfiles-agent-harness-layout.md — stow / materialized / sync-pushed provisioning, per-dot-folder config vs runtime, where agent definitions and blueprints live
+
+Updated:
+- wiki/entities/agentops.md — marked documented-not-adopted; clarified the dotfiles "AgentOps" was a separate, removed project
+- wiki/syntheses/local-rag-wiki.md, wiki/concepts/linux-setup-guide.md, wiki/concepts/wikilink-graph-extraction.md — LightRAG backend is OpenCode Go (no local LLM; embeddings stay on ollama; llama.cpp slot reserved)
+- wiki/syntheses/pi-orchestration-architecture.md, wiki/entities/diffviewer.md — status notes: pi-diff-review disabled since 2026-09-18 in favour of the agent-review trial
+- index.md — 2 new systems entries; agentops marked *(documented-not-adopted)*
+
+Contradiction flagged: pi-orchestration-architecture still named pi-diff-review as the review gate (now stale; note added at top).
+
+## [2026-10-04] update | Split concepts/owasp-security-checklist into a hub + 3 pages
+LightRAG extraction of the single page failed deterministically (chunk worker timeouts, 3 attempts, 2 models). Diagnosis with throwaway-home experiments: the page body is fine (all sections and the whole page index in 16-28 s); the 31-filename `sources:` frontmatter line is what stalls chunk 0. Split by topic so each page carries a short sources list. Created:
+- wiki/concepts/owasp-top-10-checklist.md (A01-A10, 14 sources)
+- wiki/concepts/owasp-ai-agent-risks.md (AI-specific risks, 6 sources)
+- wiki/concepts/owasp-web-security-reference.md (stack-agnostic stubs, 11 sources)
+Updated:
+- wiki/concepts/owasp-security-checklist.md — now the hub (intro, severity table, pointers); path kept so the 9 inbound wikilinks still resolve
+- index.md — hub entry reworded, 3 entries added
+Moved text is byte-identical (sliced by script; every non-heading content line verified present). Sources were distributed by topical affinity, not per-claim citation. Also carried onto this branch: 4 commits from PR #8 that the squash merge missed.
+
+## [2026-10-04] update | Document the wiki indexing pipeline
+Not an external-source ingest: first-party documentation of how the repo is indexed, written from the scripts, the LightRAG 1.5.7 source and the 2026-10-04 rebuild/diagnosis sessions. Created:
+- wiki/systems/wiki-indexing-pipeline.md — qmd (BM25 + vector) vs the LightRAG knowledge graph; triggers, chunking, extraction, embeddings, storage, incremental manifest, failure handling, gotchas
+
+Updated:
+- wiki/syntheses/local-rag-wiki.md — Related link to the new page
+- index.md — new systems entry
+
+Measured at write time: 179 pages indexed, 8,100 graph nodes, 11,369 edges, 165 MB (an earlier mid-rebuild figure of ~2,600 nodes was a partial snapshot and is superseded).
+
+## [2026-10-05] update | wiki-index: fix incremental re-indexing (M0 of the retrieval-eval spec)
+Bug found during research for docs/specs/retrieval-eval-suite.md: LightRAG treats a repeated file basename as a duplicate and silently drops the insert, so changed pages were never re-indexed, same-named pages in different directories collided, and the failed-page check missed it. Verified on the real index with the new `--verify`: 6 stale pages, 3 missing, the OWASP hub still failed, 12 stray dup-* records. Fixed in templates/wiki-index (path-unique file names, delete-then-insert for changed pages, removal of deleted pages, stored-text check after LightRAG's own sanitising, `--verify`/`--reconcile`) with tests in tests/indexer/ (5 tests, ~17 s, fake LLM + real ollama embeddings). The first version of the stored-text check compared raw text and would have failed every real page (LightRAG strips whitespace and unescapes HTML on insert); caught by running --verify on the real index and covered by a regression test.
+Updated: wiki/systems/wiki-indexing-pipeline.md, README.md. The real index is repaired separately after merge: back up, then `wiki-index --reconcile`.
+
+## [2026-10-07] update | retrieval eval suite: gate, baselines, docs and wiki page (M5 of the spec)
+The retrieval evaluation suite (docs/specs/retrieval-eval-suite.md, PRs #12 to #16 and the M5 PR) is complete: 114-query golden set (agent-reviewed, the human spot-check is still open), nine systems scored, latency measured, and now a regression gate with committed per-query baselines (tests/retrieval/baselines/). Measured here: no detectable qmd-vs-LightRAG difference (minimum detectable effect about 0.09 at n=104), BM25 fails on natural language, qmd and LightRAG latencies are not like for like. Deliberate-break check: an unmodified LightRAG run gates PASS, the same retrieval with cosine_better_than_threshold 0.9 gates FAIL (nDCG@10 delta -0.690). The break also exposed that LightRAG reports an empty result as status failure, now scored as empty.
+Added: wiki/systems/retrieval-eval-suite.md, docs/retrieval-eval.md. Updated: index.md, docs/specs/retrieval-eval-suite.md.
+
+## [2026-10-09] ingest | How I use Claude Code subagents to make my Claude Pro limits last longer
+Source: raw/How I use Claude Code subagents to make my Claude Pro limits last longer.md (one developer's Opus + Sonnet/Haiku subagent setup on the Pro plan, with measured cost per PR). Claims checked against Anthropic docs (sub-agents, model-config, settings-reference, statusline, costs, pricing, release notes).
+Created:
+- wiki/summaries/claude-code-subagents-pro-limits.md — setup, rules, measured result with caveats, claim-by-claim docs verification
+- wiki/concepts/subagent-cost-model.md — context lever vs price lever, price table (2026-10-09), worked example, break-even rule, model/effort precedence, measurement
+Updated (stale claims corrected against the docs):
+- wiki/concepts/agent-subagents.md — SendMessage resume no longer needs the agent-teams flag; spawn depth default 3 and concurrency 20 (Claude Code) separated from the Pi convention; added omitClaudeMd, permissionMode manual, model fable; model precedence; what a subagent starts with; cost row
+- wiki/concepts/model-tier-routing.md — removed the tier-to-agent table naming agents that are not installed; added built-in roles, precedence, current price ratios; marked the 65% fewer tokens figure as unsourced
+- wiki/syntheses/agent-primitive-selection.md — same agent-name and 65% caveats
+- skills/agent-orchestration/SKILL.md — removed agent-delegator, architecture-reviewer, code-reviewer defaults (not installed); added the break-even rule
+- claude-setup/templates/subagent.md — omitClaudeMd, manual, fable
+- claude-setup/rules/applied-ai.md (Tier-0) — CLAUDE_CODE_SUBAGENT_MODEL line corrected (fills gaps, does not override; the saving is mostly context)
+- index.md — two entries
+Contradictions noted: agent-subagents.md said resume needs CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 (docs: no) and no hard depth cap (docs: default 3, CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH). Still stale, not edited here: agent-delegator / architecture-reviewer / code-reviewer mentions in docs/architecture.md, claude-setup/README.md, scripts/sync-agents.py.
+
+## [2026-10-10] ingest | YAGNI (bliki Yagni.md, YAGNI (You Aren't Gonna Need It).md)
+Sources: Fowler's bliki entry and the Laws of Software Engineering YAGNI entry, both in raw/ since 2026-10-04 and not yet ingested. Prompted by the question whether our models follow YAGNI: it was written down only for OpenCode and Codex (shared/AGENTS.md, one line), not for Claude or Pi.
+Created:
+- wiki/summaries/yagni-fowler-and-laws.md — the four costs (build, delay, carry, repair), the Kohavi two-in-three figure, the scope limit, the imagine-the-refactoring test
+Updated:
+- wiki/patterns/principles.md — YAGNI section rewritten: four costs, test, scope limit (refactoring, tests and verification are not violations), when it does not apply, an agent-guidance paragraph marked as inference
+- index.md — summary entry; principles entry reworded
+Contradictions noted: the old YAGNI section said to ignore it when a requirement is arriving next sprint; Fowler's cost-of-delay and cost-of-carry argument says a soon-arriving feature still costs, so only a choice that adds no complexity is exempt. Corrected.
+Dotfiles side (separate PR): shared/research-tool-routing.md gains a scoped YAGNI section (reaches Pi via AGENTS.md and Claude via rules/tool-routing.md); shared/AGENTS.md line aligned. Tier-0 check: neither applied-ai.md nor global-prevention-rules.md cites the principles page, so nothing to resync.

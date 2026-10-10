@@ -1,6 +1,6 @@
 ---
 name: capture-mistake
-description: Invoke immediately after Claude self-corrects a mistake — wrong flag, wrong skill, wrong tool, incorrect answer, bad assumption. Writes a structured entry to mistakes/ and updates global-prevention-rules.md if the pattern is novel. Token cost: 0 (writes files, no context injection).
+description: Invoke immediately after Claude self-corrects a mistake — wrong flag, wrong skill, wrong tool, incorrect answer, bad assumption. Writes a structured entry to mistakes/ and updates global-prevention-rules.md if the pattern is novel. Also distills raw-log.md and mistakes/*.md into updated prevention rules when the log grows large. Token cost: 0 (writes files, no context injection).
 allowed-tools: "Bash,Read,Write,Edit"
 ---
 
@@ -66,3 +66,25 @@ If the rule is already covered: skip. Don't duplicate.
 ## Step 4: Confirm
 
 Print: `Mistake captured: mistakes/YYYY-MM-DD-<slug>.md` + whether global-prevention-rules.md was updated.
+
+## Distillation (folded in from synthesize-mistakes)
+
+Run the distillation pass when `raw-log.md` exceeds ~100 entries, at the end of
+a major project phase, or when the user asks to update prevention rules.
+
+1. Read `mistakes/raw-log.md`, all structured `mistakes/YYYY-MM-DD-*.md`
+   entries, and the current `global-prevention-rules.md`.
+2. From `raw-log.md`, keep only repeated failures (same command failing
+   repeatedly, error messages recurring across entries); skip one-offs,
+   network errors, and permission problems on system paths.
+3. Merge rules from existing prevention rules, structured entries, and
+   raw-log patterns; deduplicate and generalize (one rule covers many
+   instances). Hard limit: 30 rule lines, one bullet per rule, bold domain
+   prefix.
+4. Promote each `severity: high` entry to a feedback memory under
+   `~/.claude/projects/.../memory/` (rule first, then **Why:** and
+   **How to apply:**), with a pointer in MEMORY.md.
+5. Archive: `mv mistakes/raw-log.md mistakes/raw-log-$(date +%Y-%m-%d).md`
+   then `touch mistakes/raw-log.md`.
+6. Append a line to `log.md`:
+   `## [YYYY-MM-DD] capture-mistake distillation | N entries → M rules`.

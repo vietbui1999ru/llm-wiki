@@ -11,9 +11,6 @@
 *.sqlite-wal
 ~/.cache/qmd/
 
-# Graphify local graph cache. Rebuild manually with `graphify update .` or `/graphify .`.
-graphify-out/
-
 # macOS
 .DS_Store
 
@@ -40,8 +37,17 @@ pending-sync.md
 .mcp.json
 .obsidian
 .claude
+.agents/
+.pi/
 .claude/pre-digest/
 .playwright-mcp/
 docs-site/.mintlify/
 /tmp/mint-dev.log
 pi-headroom/node_modules/
+
+# Python bytecode and pytest caches
+__pycache__/
+.pytest_cache/
+
+# Retrieval eval run output (only committed baselines live under tests/retrieval/baselines/)
+tests/retrieval/results/

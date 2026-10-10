@@ -84,7 +84,8 @@ How to apply: When generating [TYPE] outputs, [trigger condition].
 ─────────────────────────────
 Scope:
   (wiki) Store in ~/repos/llm-wiki/memory/ — applies only to llm-wiki sessions
-  (global) Store in ~/.claude/rules/quality.md — applies across all projects
+  (global) Store in ~/.claude/memory/feedback_YYYY-MM-DD.md, then promote it to
+           the tracked core rule source only after human review
   (skip) Discard this rule
 
 Which scope? [wiki/global/skip]
@@ -117,7 +118,7 @@ Add or update pointer in `~/repos/llm-wiki/memory/MEMORY.md`:
 
 ### Global scope
 
-Append to `~/.claude/rules/quality.md`:
+Create `~/.claude/memory/feedback_YYYY-MM-DD.md`:
 ```markdown
 ## [DIMENSION] on [TYPE] — extracted YYYY-MM-DD
 Rule: [text]
@@ -125,10 +126,8 @@ Rule: [text]
 **How to apply:** [trigger]
 ```
 
-Then run:
-```bash
-~/dotfiles/scripts/sync-agent-rules.sh 2>/dev/null || true
-```
+Do not edit generated or linked rule files from a live session. Promote the
+feedback into the tracked core rule source only after human review.
 
 ### Skip
 

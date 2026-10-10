@@ -108,7 +108,7 @@ wiki-chat --mode global# cross-concept, community-level questions
 ```
 Inside `wiki-chat`: `/mode local|global|hybrid|naive` to switch, `/reindex` to rebuild after ingests, `/status` for index stats, `q` to quit.
 
-> First time: run `wiki-index --full` to build the graph. Takes ~30–60 min for ~150 pages with local `qwen2.5:3b` (free). **With `ANTHROPIC_API_KEY` set, expect $10–30+** — LightRAG runs 3 extraction phases per page. Use local LLM for full builds; unset `ANTHROPIC_API_KEY` or pass `--yes` to confirm API cost.
+> First time: set `OPENCODE_GO_API_KEY_LIGHTRAG`, then run `wiki-index --full --yes` to build the graph. **Expect heavy usage against the OpenCode Go 5-hour/weekly limits** — LightRAG runs 3 extraction phases per page. There is no local LLM backend yet (a self-hosted llama.cpp slot is reserved); without the key, indexing exits with an error.
 
 **Read a specific page:**
 ```bash
@@ -132,7 +132,7 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 | `pre-digest`          | `/pre-digest`                  | Runs gemma4:e4b locally to pre-process a source file into a digest before full ingest   |
 | `agent-orchestration` | Auto (agent/multi-step work)   | Multi-agent coordination patterns, subagent design, harness systems                     |
 | `security-patterns`   | Auto (security review)         | OWASP checklist + AI-specific threats (indirect prompt injection, agentic sandbox)      |
-| `wiki-index`          | `wiki-index` in terminal       | Build/update LightRAG graph index; incremental by default; `--full` wipes+rebuilds; `--yes` bypasses $10–30+ cost confirmation when API key is set |
+| `wiki-index`          | `wiki-index` in terminal       | Build/update LightRAG graph index; incremental by default; `--full` wipes+rebuilds; `--yes` confirms a `--full` rebuild (can exhaust the OpenCode Go 5-hour limit) |
 | `wiki-chat`           | `wiki-chat` in terminal        | Interactive graph-aware Q&A (LightRAG); 4 modes: hybrid (default), local, global, naive |
 
 ---
@@ -143,11 +143,7 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 | -------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | `docs-writer`                    | Auto (after code-writer; or "document this" / "write docs") | Write/update structured markdown docs to `docs/`; follows Diátaxis (tutorial/how-to/reference/explanation) | "document the new auth module"                 |
 | `/grill-me`                      | `/grill-me`                                                 | Stress-test a plan before starting                                                                         | "I want to add auth — /grill-me"               |
-| `/grill-with-docs`               | `/grill-with-docs`                                          | Like grill-me but also builds `CONTEXT.md` + ADRs                                                          | New project or module with unclear terminology |
-| `/tdd`                           | `/tdd`                                                      | Build features or fix bugs with red-green-refactor                                                         | "Add user profile API — /tdd"                  |
 | `/zoom-out`                      | `/zoom-out`                                                 | Need the big picture of unfamiliar code                                                                    | "I don't understand this middleware"           |
-| `/to-prd`                        | `/to-prd`                                                   | Synthesize a conversation into a GitHub issue (PRD)                                                        | After a grill session, capture as issue        |
-| `/to-issues`                     | `/to-issues`                                                | Break a PRD into independently-grabbable vertical slices                                                   | After /to-prd, decompose into tickets          |
 | `/improve-codebase-architecture` | `/improve-codebase-architecture`                            | Find shallow modules, refactor opportunities                                                               | "Codebase feels messy"                         |
 | `feature-dev:feature-dev`        | Auto (guided feature dev)                                   | Codebase analysis → architect → implement                                                                  | Complex feature with exploration phase         |
 | `/setup-matt-pocock-skills`      | `/setup-matt-pocock-skills`                                 | First-time per-repo setup: issue tracker, triage labels, CONTEXT.md                                        | Run once per new repo                          |
@@ -155,11 +151,8 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 **New project setup order:**
 ```
 /setup-matt-pocock-skills  → configure repo
-/grill-with-docs           → plan the change, build CONTEXT.md
-/to-prd                    → capture as issue
-/to-issues                 → break into tickets
-/tdd                       → implement each ticket
-/diagnose                  → when something breaks
+/grill-me                  → plan the change
+                           → implement with TDD, debug with systematic-debugging
 ```
 
 ---
@@ -176,7 +169,6 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 | `/review`                 | `/review`                               | Review a pull request (alias)                                                                    |
 | `/security-review`        | `/security-review`                      | Full OWASP + AI-specific security audit; structured threat report                                |
 | `/verify-spec`            | `/verify-spec`                          | After implementation: agent pass verifies each AC (pass/fail/partial), then generates test stubs for failing ACs |
-| `/capture-slop`           | `/capture-slop`                         | After code review or bug post-mortem: record a recurring AI failure pattern to the slop register |
 
 ---
 
@@ -184,10 +176,9 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 
 | Skill                              | Invoke                  | When to use                                                    |
 | ---------------------------------- | ----------------------- | -------------------------------------------------------------- |
-| `/diagnose`                        | `/diagnose`             | Hard bugs, flaky tests, performance regressions — 6-phase loop |
 | `superpowers:systematic-debugging` | Auto (bug/test failure) | Disciplined root-cause analysis before fixing                  |
 
-`/diagnose` phases: build feedback loop → reproduce → hypothesize → instrument → fix → cleanup.
+Debugging runs through `superpowers:systematic-debugging`: reproduce → hypothesize → instrument → fix → cleanup.
 
 ---
 
@@ -199,9 +190,7 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 | `/capture-mistake`     | Auto (after Claude self-corrects) | Files the mistake immediately to `mistakes/`                                |
 | `/synthesize-mistakes` | `/synthesize-mistakes`            | Distill `raw-log.md` + structured entries into `global-prevention-rules.md` |
 
-The mistakes pipeline: `capture-mistake` → individual `mistakes/YYYY-MM-DD-*.md` → `synthesize-mistakes` → `global-prevention-rules.md` → loaded every session.
-
-The slop pipeline: `capture-slop` → `mistakes/slop-register.md` (or `.claude/slop-register.md` per-project) → auto-loaded at session start when entries exist → applied as hard constraints on code generation.
+The mistakes pipeline: `capture-mistake` → individual `mistakes/YYYY-MM-DD-*.md` → capture-mistake distillation pass → `global-prevention-rules.md` → loaded every session.
 
 ---
 
@@ -432,16 +421,15 @@ Override: say "add linting" to re-run setup even if linting:disabled.
 
 ### "I want to build a new feature"
 ```
-1. /grill-with-docs  → plan it, build CONTEXT.md
-2. /to-prd           → capture as GitHub issue
-3. /to-issues        → break into vertical slices
-4. For each slice: /tdd → implement with red-green-refactor
-5. When done: superpowers:finishing-a-development-branch triggers automatically
+1. /grill-me         → plan it, nail down scope and acceptance criteria
+2. Capture the plan   → superpowers:writing-plans
+3. Implement          → TDD (superpowers:test-driven-development), red-green-refactor
+4. When done: superpowers:finishing-a-development-branch triggers automatically
 ```
 
 ### "I have a bug I can't figure out"
 ```
-/diagnose
+superpowers:systematic-debugging
 → Phase 1: build a fast feedback loop (test, curl, CLI invocation)
 → Phase 2–6: reproduce → hypothesize → instrument → fix → cleanup
 ```
@@ -458,16 +446,11 @@ After any code/plan/design response:
 ```
 Spec-first (prevent slop at source):
 1. /grill-me       → nail down scope + acceptance criteria before any code
-2. /to-prd         → capture as spec (GitHub issue or local PRD file)
-3. Implement       → /tdd or AI-assisted generation against the spec
+2. Capture the spec → superpowers:writing-plans (GitHub issue or local spec file)
+3. Implement       → TDD or AI-assisted generation against the spec
 4. /verify-spec    → agent pass: each AC gets PASS/FAIL/PARTIAL in ~minutes
                      → test stubs generated for failing ACs
-5. /tdd            → drive stubs to green (hard gate)
-
-Slop register (capture patterns to prevent recurrence):
-- After code review or /diagnose reveals a recurring AI failure:
-  /capture-slop → writes to mistakes/slop-register.md (or .claude/slop-register.md)
-- Register auto-loads at session start → applied as hard constraints
+5. TDD             → drive stubs to green (hard gate)
 ```
 
 ### "I want to learn by doing (not just copy)"
@@ -555,10 +538,7 @@ wiki-index                    # incremental — picks up new/changed pages only
 wiki-index --status           # see what's indexed vs. pending
 tail -f .lightrag/last-index.log   # watch progress
 
-# Full rebuild (local LLM, free):
-wiki-index --full
-
-# Full rebuild (Haiku, $10–30+):
+# Full rebuild (OpenCode Go; can exhaust the 5-hour usage limit):
 wiki-index --full --yes
 ```
 The post-commit hook runs `wiki-index` (incremental) automatically after commits touching `wiki/`.
@@ -585,7 +565,7 @@ New pages that were ingested this session are queued automatically on next run.
 Claude auto-invokes /capture-mistake after any self-correction
 → Files to mistakes/YYYY-MM-DD-<topic>.md
 
-Periodically: /synthesize-mistakes
+Periodically: capture-mistake distillation pass
 → Distills all structured entries into global-prevention-rules.md
 → Rules loaded every session from that point on
 ```

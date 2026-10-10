@@ -2,9 +2,9 @@
 title: "Agent Primitive Selection"
 type: synthesis
 tags: [agent-engineering, orchestration, skills, subagents, teams, model-routing]
-sources: ["Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md"]
+sources: ["Claude runaway... tried Kimi 2.6 and Deepseek v4 (5y fullstack dev).md", "How I use Claude Code subagents to make my Claude Pro limits last longer.md"]
 created: 2026-04-26
-updated: 2026-05-04
+updated: 2026-10-09
 ---
 
 # Agent Primitive Selection
@@ -53,7 +53,9 @@ Do parallel workers need each other's PARTIAL results mid-task?
 | **Sonnet** | Implementation, review, debugging, deployment   | code-writer, code-reviewer, backend-debug-tester         |
 | **Haiku**  | Fast, repetitive, low-judgment                  | cmd-executor, code-writer-fast, session-report-generator |
 
-**Rule**: Security and architectural decisions go to Opus. Per wshobson benchmarks, Opus achieves 65% fewer tokens on complex tasks — the higher rate is often offset by not needing correction loops.
+The example agent names above come from the wshobson plugin roster. They are not installed in this setup (no custom roster; use built-in roles with an explicit `model`, see [[concepts/model-tier-routing]]). The same applies to the agent names in "Common Workflow Patterns" below: read them as roles, not installed agents.
+
+**Rule**: Security and architectural decisions go to Opus. The claim that Opus uses ~65% fewer tokens on complex tasks (wshobson) has no captured source here and is unverified; the underlying point, that a stronger model can avoid correction loops, stands. Price ratios have also narrowed (Opus 5.5 about 2x Sonnet 5.5 as of 2026-10-09), and the larger saving usually comes from keeping the main context small: [[concepts/subagent-cost-model]].
 
 **Harness > model — scope**: this holds in the mid-capability band (Sonnet-class models with structure vs without). At the frontier (Opus on a novel architectural decision), no harness closes the gap. Harness wins for: long-horizon AFK loops, parallel work, verification gates, repeatability. Model wins for: one-shot architectural judgment, novel domain reasoning, security threat modeling — tasks where a single inference's quality is the bottleneck. Note: DeepSeek max-reasoning unlock is a *model parameter* win, not a harness win.
 
@@ -134,6 +136,7 @@ See [[concepts/multi-vendor-adversarial-review]] for when each level is appropri
 
 - [[concepts/agent-skills]] — skill architecture, loading levels, SKILL.md structure
 - [[concepts/agent-subagents]] — full frontmatter reference, invocation patterns
+- [[concepts/subagent-cost-model]] — cost mechanics and break-even rule for delegating
 - [[concepts/agent-teams]] — team architecture, quality gate hooks, known limitations
 - [[concepts/agent-harness]] — harness components; primitives as building blocks
 - [[concepts/verification-pipeline]] — verification requirements for each tier of work

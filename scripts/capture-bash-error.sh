@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # PostToolUse hook: captures unresolved Bash failures to mistakes/raw-log.md
-# Only logs exit code != 0. Signal/noise filtering happens in synthesize-mistakes skill.
+# Only logs exit code != 0. Signal/noise filtering happens in capture-mistake distillation.
 
 set -euo pipefail
 

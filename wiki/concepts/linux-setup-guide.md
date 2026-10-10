@@ -4,7 +4,7 @@ type: concept
 tags: [setup, tooling, workflow, claude-code, opencode, headroom, dotfiles]
 sources: []
 created: 2026-06-09
-updated: 2026-06-09
+updated: 2026-10-04
 ---
 
 # Linux Machine Setup Guide
@@ -25,7 +25,7 @@ sudo apt-get update && sudo apt-get install -y git curl zsh jq stow build-essent
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
 source ~/.nvm/nvm.sh && nvm install --lts && nvm use --lts
 
-# 3. ollama (local models)
+# 3. ollama (local embeddings)
 curl -fsSL https://ollama.com/install.sh | sh
 
 # 4. Clone repos — llm-wiki FIRST (dotfiles symlinks point here)
@@ -57,6 +57,7 @@ uv tool install headroom-ai
 # 12. Set environment variables (edit values, then reload)
 cat >> ~/.zshrc << 'EOF'
 export ANTHROPIC_API_KEY="sk-ant-..."
+export OPENCODE_GO_API_KEY_LIGHTRAG="..."  # required for wiki-index/wiki-chat/wiki-mcp (OpenCode Go)
 export GITHUB_TOKEN="ghp_..."         # optional: council Voice B (GitHub Models)
 export PATH="$HOME/.local/bin:$PATH"
 source ~/repos/llm-wiki/templates/env-model-routing.sh  # opencode model routing
@@ -66,8 +67,8 @@ source ~/.zshrc
 # 13. First claude run — downloads all plugins; qmd CLI becomes available after this
 claude --version
 
-# 14. Build wiki LightRAG index (one-time; ~30-60 min; costs ~$0.50 via Claude Haiku)
-wiki-index --full
+# 14. Build wiki LightRAG index (one-time; needs OPENCODE_GO_API_KEY_LIGHTRAG; can hit OpenCode Go usage limits)
+wiki-index --full --yes
 ```
 
 ---
@@ -98,16 +99,17 @@ nvm install --lts && nvm use --lts
 node --version    # must be >= 18
 ```
 
-### ollama (local models)
+### ollama (local embeddings)
 
 ```bash
 curl -fsSL https://ollama.com/install.sh | sh
 ollama serve &     # start daemon before install.sh runs
 ```
 
-Models pulled by `install.sh`:
+Model pulled by `install.sh`:
 - `nomic-embed-text` — embeddings for qmd and LightRAG
-- `qwen2.5:3b` — local LLM fallback for wiki-mcp synthesis
+
+No local LLM is pulled: LightRAG extraction and synthesis use OpenCode Go. A self-hosted llama.cpp server is planned for the LLM (`LLAMACPP_BASE_URL` slot reserved, not wired yet) and later for embeddings, which stay on ollama until then (OpenCode has no embeddings endpoint).
 
 ---
 
@@ -159,7 +161,8 @@ cat ~/.config/opencode/opencode.json | head -5   # should show $schema line
 Add to `~/.zshrc`:
 
 ```bash
-export ANTHROPIC_API_KEY="sk-ant-..."    # required: Claude Code + wiki-index + wiki-mcp
+export ANTHROPIC_API_KEY="sk-ant-..."    # required: Claude Code
+export OPENCODE_GO_API_KEY_LIGHTRAG="..." # required: wiki-index + wiki-chat + wiki-mcp backend (OpenCode Go)
 export GITHUB_TOKEN="ghp_..."           # optional: council Voice B via GitHub Models
 export PATH="$HOME/.local/bin:$PATH"    # wiki-chat, wiki-index, wiki-mcp
 
@@ -173,7 +176,8 @@ Key uses by tool:
 
 | Key | Required by |
 |-----|------------|
-| `ANTHROPIC_API_KEY` | Claude Code, wiki-index (Haiku extraction), wiki-mcp synthesis |
+| `ANTHROPIC_API_KEY` | Claude Code |
+| `OPENCODE_GO_API_KEY_LIGHTRAG` | wiki-index extraction, wiki-chat and wiki-mcp synthesis (OpenCode Go, OpenAI-compatible; unset → no backend, error) |
 | `GITHUB_TOKEN` (models:read scope) | Pi council voice (openai/gpt-5.4 via GitHub Models endpoint) |
 
 ---
@@ -234,7 +238,7 @@ What it does:
 1. Installs `uv` (Python package manager via curl)
 2. Copies `wiki-chat`, `wiki-index`, `wiki-mcp` → `~/.local/bin/`
 3. Installs post-commit git hook (auto-runs qmd indexing after wiki commits)
-4. Pulls ollama models: `nomic-embed-text`, `qwen2.5:3b`
+4. Pulls the ollama embedding model: `nomic-embed-text`
 
 Exits 1 if `ollama` not found — start `ollama serve` first.
 
@@ -285,16 +289,13 @@ Plugin cache: `~/.claude/plugins/cache/` — downloaded fresh, not in dotfiles.
 ## Step 6: Build wiki LightRAG index (one-time)
 
 ```bash
-wiki-index --full
+wiki-index --test          # verify the OpenCode Go key first
+wiki-index --full --yes
 ```
 
-**Cost warning:** Uses Claude Haiku by default when `ANTHROPIC_API_KEY` is set. ~200 wiki pages costs ~$0.30–$0.80 *(claimed, unverified)*. To use local ollama instead (free, slower):
+**Usage warning:** Requires `OPENCODE_GO_API_KEY_LIGHTRAG`; without it `wiki-index` exits with an error before touching the index. A full build runs several LLM calls per page and can exhaust the plan's 5-hour usage limit ([limits](https://opencode.ai/docs/go/#usage-limits)), hence `--yes`.
 
-```bash
-unset ANTHROPIC_API_KEY && wiki-index --full && export ANTHROPIC_API_KEY="sk-ant-..."
-```
-
-**Time:** 30–60 min with Haiku; 2–4 hours with local qwen2.5:3b.
+**Time:** not measured with OpenCode Go.
 
 **Progress:**
 ```bash
@@ -346,7 +347,7 @@ ls ~/.claude/hooks/
 | `ollama serve` before `install.sh` | install.sh pulls models — needs daemon running |
 | `claude --version` before `qmd` CLI | qmd binary comes from Claude Code plugin, not npm |
 | `uv` (install.sh) before `headroom-ai` | `uv tool install` requires uv |
-| `ANTHROPIC_API_KEY` before `wiki-index --full` | falls back to local model without it |
+| `OPENCODE_GO_API_KEY_LIGHTRAG` before `wiki-index --full` | no local fallback: `wiki-index` exits with an error without it |
 | `$HOME/.local/bin` in PATH before `wiki-*` | install.sh copies binaries there |
 
 ---

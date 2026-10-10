@@ -18,7 +18,7 @@ Use tags sparingly — only when the fragment would be worth recalling in a futu
 ## Crystallization Suggestion Trigger
 
 When 3+ `[INSIGHT]` or `[PATTERN]` tags accumulate in one session:
-> "Crystallization candidate: [X]. Suggest wiki ingest or synthesize-mistakes to formalize?"
+> "Crystallization candidate: [X]. Suggest wiki ingest or capture-mistake distillation to formalize?"
 
 Do not suggest for `[ERROR]` — the `capture-mistake` hook handles those automatically.
 

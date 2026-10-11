@@ -77,20 +77,35 @@ def test_a_depth_the_scorer_does_not_compute_is_refused():
         gate.compare_backend(rows([TOP]), rows([TOP]), golden(1), must_hit_k=4)
 
 
-def test_check_holds_the_reranked_full_backend_to_depth_5_and_every_other_backend_to_depth_3():
+def test_the_reranked_full_backend_reports_must_hit_losses_but_they_do_not_fail_it():
+    base, cur = system_file({"full": [TOP] * 20}), run_file({"full": [SIXTH] + [TOP] * 19})
+    report = gate.check(base, cur, golden(20, must_hit={"q0"}), epsilon=0.5)
+    full = report["backends"][0]
+    assert full["must_hit_lost"] == ["q0"] and full["must_hit_enforced"] is False
+    assert full["verdict"] == "OK" and report["exit"] == 0
+
+
+def test_every_other_backend_still_fails_on_a_must_hit_loss():
     base = system_file({"full": [TOP] * 20, "hybrid": [TOP] * 20})
     cur = run_file({"full": [FOURTH] + [TOP] * 19, "hybrid": [FOURTH] + [TOP] * 19})
     report = gate.check(base, cur, golden(20, must_hit={"q0"}), epsilon=0.5)
     by = {e["backend"]: e for e in report["backends"]}
-    assert by["full"]["verdict"] == "OK" and by["full"]["must_hit_depth"] == 5
-    assert by["hybrid"]["verdict"] == "FAIL" and by["hybrid"]["must_hit_depth"] == 3 and report["exit"] == 1
+    assert by["hybrid"]["verdict"] == "FAIL" and by["hybrid"]["must_hit_enforced"] is True and report["exit"] == 1
+    assert by["full"]["verdict"] == "OK"
 
 
-def test_the_report_names_the_depth_each_backend_was_held_to():
+def test_the_nDCG_verdict_still_applies_to_the_reranked_backend():
+    base, cur = system_file({"full": [TOP] * 20}), run_file({"full": [MISS] * 20})
+    report = gate.check(base, cur, golden(20), epsilon=0.03)
+    assert report["backends"][0]["verdict"] == "FAIL" and report["exit"] == 1
+
+
+def test_the_report_labels_a_must_hit_loss_on_full_as_informational_and_others_as_failures():
     base = system_file({"full": [TOP] * 20, "hybrid": [TOP] * 20})
-    cur = run_file({"full": [SIXTH] + [TOP] * 19, "hybrid": [FOURTH] + [TOP] * 19})
+    cur = run_file({"full": [FOURTH] + [TOP] * 19, "hybrid": [FOURTH] + [TOP] * 19})
     text = gate.format_report(gate.check(base, cur, golden(20, must_hit={"q0"}), epsilon=0.5))
-    assert "left the top 5: q0" in text and "left the top 3: q0" in text
+    assert "left the top 3 (informational, does not fail this backend): q0" in text
+    assert "must-hit queries that left the top 3: q0" in text
 
 
 def test_queries_missing_from_the_baseline_are_excluded_and_counted():

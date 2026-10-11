@@ -1027,3 +1027,7 @@ Updated:
 - index.md — three entries, principles entry reworded
 Not ingested: two newer YAGNI captures in raw/ (2026-10-10: "YAGNI You Ain't Gonna Need It.md", "You Aren't Going to Need It (YAGNI) Principle Explained.md").
 Tier-0 check: neither applied-ai.md nor global-prevention-rules.md cites the updated pages.
+
+## [2026-10-11] experiment | Laya as a reranker over qmd hybrid on the retrieval golden set
+Pre-registered test (docs/experiments/laya-rerank/): zero-shot Laya 0.4.2 P(true) reranking of fresh qmd hybrid candidates, 104 scored queries, suite scorer and gate. Primary: nDCG@10 0.651 vs hybrid 0.681 (diff -0.030, CI [-0.074, +0.014], below the MDE of 0.064, so not distinguishable); vs qmd full 0.713 (diff -0.062, CI [-0.104, -0.021], significantly worse). Gate against the committed baseline: FAIL on the must-hit floor (q-037, q-038 lost from the top 3), not on the nDCG delta. Fresh hybrid and full reproduced the baseline (gate OK). Exploratory: P(true) AUC 0.755 vs qmd rank 0.799; RRF fusion +0.014, not significant. Candidate pool averages 9.2 wiki pages per query. Untested: multilingual checkpoint, longer page text, label override, fine-tuning.
+Updated: wiki/entities/laya.md (tested-here section), index.md. Created: docs/experiments/laya-rerank/.

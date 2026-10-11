@@ -7,13 +7,15 @@ sources:
   - "What Is Clean Code? A Guide to Principles and Best Practices.md"
   - "bliki Yagni.md"
   - "YAGNI (You Aren't Gonna Need It).md"
+  - "The Rule of Three in Computer Programming.md"
+  - "Rule of three (computer programming).md"
 created: 2026-05-06
-updated: 2026-10-10
+updated: 2026-10-11
 ---
 
 # Software Design Principles
 
-Reference for SOLID, DRY, YAGNI, KISS, Law of Demeter, separation of concerns, and composition over inheritance. Each principle is stated, justified, and illustrated with a canonical violation and its fix.
+Reference for SOLID, DRY, Rule of Three, YAGNI, KISS, Law of Demeter, separation of concerns, and composition over inheritance. Each principle is stated, justified, and illustrated with a canonical violation and its fix.
 
 Agent guidance: apply these when writing new classes/functions, and check against them during code review. Violation of multiple principles in one place is a refactor signal.
 
@@ -215,6 +217,22 @@ def calculate_laptop_price(quantity, price): return quantity * price
 
 ---
 
+## Rule of Three — when to apply DRY
+
+**Definition:** Two similar pieces of code do not need refactoring; extract on the third ("three strikes and you refactor"). Popularised by Fowler in *Refactoring* (1999), attributed to Don Roberts. Source: [[summaries/rule-of-three]].
+
+**Rationale:** DRY says duplication is costly; YAGNI says abstraction ahead of need is costly. The rule is the timing that balances them. Two examples are too few to show what the copies really share, so extracting early risks the wrong abstraction (Sandi Metz, "The Wrong Abstraction", 2016), which is worse than the duplication and has to be undone later. By the third copy, maintaining copies costs more than refactoring plus the risk of a bad design.
+
+**Anti-patterns to catch:**
+- Extracting a helper from the first copy, or abstracting a second copy by adding flags and parameters until both callers fit
+- Leaving a fourth copy because "we already have three and it still works"
+
+**Scope limit:** a rule of thumb, not a measured result; the sources give no evidence for three over two or four. The DRY qualifier still holds: look-alike code that encodes different rules stays separate even at three copies.
+
+**For coding agents (inference, not from the sources):** the first time similar code appears, write it inline; the second time, copy but flag it; extract on the third. This also guards against the opposite failure, where a model reimplements an existing utility instead of reusing it, which is a copy that should have been a call.
+
+---
+
 ## KISS — Keep It Simple, Stupid
 
 **Definition:** Prefer the simplest solution that satisfies the requirement.
@@ -292,7 +310,7 @@ total = order.getCart().getItems().calculateTotal()
 | Using inheritance | LSP — is the subtype truly substitutable? |
 | Designing an interface | ISP — is every method needed by every implementor? |
 | Constructing dependencies inside a class | DIP — can you inject instead? |
-| Tempted to copy-paste logic | DRY — extract a named abstraction |
+| Tempted to copy-paste logic | DRY — extract a named abstraction; Rule of Three: copying once is fine, extract on the third |
 | Adding "future-proof" flexibility | YAGNI — do you have a concrete requirement? |
 | Solution is growing complex | KISS — what is the simplest path? |
 | Calling a method on a return value | LoD — expose what callers need directly |

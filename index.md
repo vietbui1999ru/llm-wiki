@@ -30,6 +30,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules, background agents, parity gaps vs CC
 - [[summaries/claude-code-subagents-pro-limits]] — Opus main + Sonnet/Haiku subagents on Claude Pro: setup, break-even rules, measured cost per PR (about 40% lower), docs verification, caveats
 - [[summaries/yagni-fowler-and-laws]] — YAGNI per Fowler's bliki and Laws of Software Engineering: four costs of presumptive features, the scope limit (refactoring and tests are not YAGNI violations), imagine-the-refactoring test
+- [[summaries/rule-of-three]] — Rule of Three ("three strikes and you refactor", Fowler/Don Roberts): extract on the third copy because two examples risk the wrong abstraction (Sandi Metz); a rule of thumb with no measured evidence for the number
+- [[summaries/laya]] — Laya README + HF model card: open non-autoregressive encoder decision model (choice/score/noul), RLCD proper-scoring-rule training, router across 3 checkpoints; Jev comparison with author-measured vs third-party provenance *(claimed, unverified)*; honest limits (near chance zero-shot, negation, 20+ options)
 - [[summaries/cursor-cloud-agents]] — Cursor Cloud Agents: microVM isolation, GitHub/GitLab workflow, remote desktop control, cross-agent support
 - [[summaries/cc-auto-mode]] — CC auto mode: 2-stage classifier, threat model, 17% FNR on overeager actions, deny-and-continue
 - [[summaries/aws-security-agent]] — AWS managed pen test service: target/accessible/out-of-scope domain split, credential injection patterns, IAM role scoping, out-of-scope URL hierarchy, launch checklist
@@ -48,6 +50,7 @@ Catalog of all pages. Updated on every ingest operation.
 ## Entities
 - [[entities/rtk]] — Rust CLI proxy that filters/compresses command output before it hits LLM context; PreToolUse hook across 15 agents; 4 strategies (filter/group/truncate/dedup); 60-90% token savings *(claimed, unverified — self-reported estimates)*
 - [[entities/context7]] — Live library doc fetching (MCP + ctx7 CLI); per-platform: CC/Opencode/Codex/Pi/OMP
+- [[entities/laya]] — Open-source (Apache 2.0, claimed) calibrated decision model; one encoder forward pass, ~33 ms *(author-measured)*; Jev-compatible `/v1/systemone` server; needs fine-tuning, weak on 20+ options and negation
 - [[entities/ponytail]] — Cross-agent coding skill/plugin that reduces AI overbuild via a minimality ladder; adapters for Claude Code, Codex, OpenCode, Gemini, Pi, Copilot CLI, and more
 - [[entities/agent-native]] — Builder.io framework for agent-native apps: shared actions, SQL-backed state, rich UI + agent surfaces, MCP/A2A compatibility
 - [[entities/headroom]] — Context compression proxy/library/MCP for AI agents; ContentRouter (JSON/AST/prose), CacheAligner, CCR reversible compression, cross-agent memory, `headroom learn` failure mining
@@ -157,7 +160,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/cli-driven-vault-automation]] — Wrapper-script + cron patterns over the Obsidian CLI; doctor/health-check convention, "Obsidian must be running" guard, small-stable-verb-set instinct shared with MCP Code Mode
 
 ## Patterns
-- [[patterns/principles]] — SOLID (SRP/OCP/LSP/ISP/DIP), DRY, YAGNI, KISS, Law of Demeter, SoC, composition over inheritance; per-principle violation patterns and decision table; YAGNI section expanded with the four costs, scope limit and agent guidance
+- [[patterns/principles]] — SOLID (SRP/OCP/LSP/ISP/DIP), DRY, Rule of Three (timing for DRY), YAGNI, KISS, Law of Demeter, SoC, composition over inheritance; per-principle violation patterns and decision table; YAGNI section expanded with the four costs, scope limit and agent guidance
 - [[patterns/code-quality]] — naming conventions, function discipline (size/SRP/params/abstraction), cognitive complexity, comment discipline, magic numbers, code smell taxonomy (structural + AI-specific)
 - [[patterns/design-patterns-creational]] — All 5 GoF creational patterns: Factory Method, Abstract Factory, Builder, Prototype, Singleton; intent, triggers, anti-patterns, TypeScript sketches, comparison table
 - [[patterns/design-patterns-structural]] — All 7 GoF structural patterns: Adapter, Bridge, Composite, Decorator, Facade, Flyweight, Proxy; intent, triggers, TypeScript sketches, anti-patterns, Adapter/Facade/Proxy confusion table

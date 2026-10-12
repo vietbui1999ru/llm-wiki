@@ -60,6 +60,7 @@ Pre-registered in the addendum to `prereg.md` before any variant score existed: 
 - **V2:** more page text did not help, so truncation at 1,500 characters was not what limited the original. Its p=0.038 does not clear the corrected threshold, so treat its drop as small and not established.
 - **V3:** the label override lowered mean P(true) from 0.687 to 0.638 but made the ordering worse, so the compression toward "true" seen in the first run is not something this workaround repairs. Its p=0.010 passes the corrected threshold, in the wrong direction.
 - Multiplicity: four Laya configurations have now been scored against the same 104 queries. None is a win, so selection bias does not matter here, but a future win on this set would need the same correction.
+- Version check: the first run used Laya 0.4.2 (scratch venv) and the variants 0.4.6 (the installed tool). Re-scoring the original configuration under 0.4.6 gave bit-identical P(true) for all 1,044 pairs (`version_check.py`, `data/scores_auto_v046.jsonl`), so the version difference does not affect any comparison.
 - Still untested: fine-tuning on relevance labels. Temperature fitting was excluded on purpose (it cannot change the ordering within a query).
 - This also closes the "not tested" list below for the multilingual checkpoint, longer text and the label override.
 

@@ -44,11 +44,30 @@ Paired differences (first minus second):
 - Headroom exists but Laya does not capture it: an oracle ordering of the same pool reaches nDCG@10 0.839 against hybrid's 0.681.
 - The pool is small: 9.2 wiki pages per query on average (qmd's collection is the whole repo, so most of the 50 requested files are not wiki pages). K=20 and K=50 are therefore the same as the whole pool, and K=10 differs little. A reranker can only reorder what the retriever returned.
 
+## Follow-up (2026-10-12): the three untested variants, also no improvement
+
+Pre-registered in the addendum to `prereg.md` before any variant score existed: three zero-shot variants over the same pool, one comparison each against hybrid, with the improvement bar set at p < 0.0167 (0.05 / 3) and a requirement to match `full` and lose no must-hit query to count as adoptable.
+
+| Variant | nDCG@10 | vs hybrid (95% CI, p) | vs `full` | must-hit queries lost | RRF nDCG@10 |
+|---|---|---|---|---|---|
+| original (English, 1,500 chars, 512-token window) | 0.651 | -0.030 [-0.074, +0.014], p=0.194 | -0.062, p=0.006 | q-037, q-038 | 0.695 |
+| V1 multilingual checkpoint | 0.507 | -0.174 [-0.223, -0.125], p<0.001 | -0.206, p<0.001 | q-002, q-006, q-036, q-039, q-042 | 0.629 |
+| V2 longer text (3,500 chars, `max_len=1024`) | 0.629 | -0.052 [-0.100, -0.006], p=0.038 | -0.083, p=0.001 | q-038 | 0.693 |
+| V3 `noul` labels A/B | 0.622 | -0.059 [-0.103, -0.014], p=0.010 | -0.091, p<0.001 | q-037, q-038 | 0.680 |
+
+- **No variant beat hybrid, let alone `full`, and every variant fails the must-hit floor.** The rule's outcome is "no improvement" for all three. Hybrid is 0.681 and `full` 0.713; no variant's RRF fusion beat hybrid either (best 0.695, the original).
+- **V1:** clearly worse, as the README predicts for English text on the multilingual checkpoint (it is "weaker on English"). The default routing to the English checkpoint was the right choice.
+- **V2:** more page text did not help, so truncation at 1,500 characters was not what limited the original. Its p=0.038 does not clear the corrected threshold, so treat its drop as small and not established.
+- **V3:** the label override lowered mean P(true) from 0.687 to 0.638 but made the ordering worse, so the compression toward "true" seen in the first run is not something this workaround repairs. Its p=0.010 passes the corrected threshold, in the wrong direction.
+- Multiplicity: four Laya configurations have now been scored against the same 104 queries. None is a win, so selection bias does not matter here, but a future win on this set would need the same correction.
+- Still untested: fine-tuning on relevance labels. Temperature fitting was excluded on purpose (it cannot change the ordering within a query).
+- This also closes the "not tested" list below for the multilingual checkpoint, longer text and the label override.
+
 ## Limits of this test
 
 - 104 scored queries; the minimum detectable effect is about 0.06. A small real gain or loss is invisible. The primary comparison is "not distinguishable, point estimate negative", not "proven worse"; only the comparison with `full` is significant.
 - Labels are agent-reviewed and the queries synthetic (suite decision D4), so absolute scores are optimistic.
-- Only the default zero-shot configuration was run. Not tested: the multilingual checkpoint, longer page text (long pages are truncated at 1,500 characters), a `noul` label override, temperature fitting, fine-tuning. Fine-tuning on this golden set would leak the test labels, and there is no other labelled relevance data.
+- Only zero-shot configurations were run (the default, plus the three variants above). Not tested: fine-tuning, which on this golden set would leak the test labels, and there is no other labelled relevance data. Temperature fitting was excluded because it cannot reorder candidates within a query.
 - Latency was not measured in this run. An earlier micro-benchmark on this machine gave about 16 ms per passage batched on CPU, but that was a different task.
 - qmd `full` already includes a reranker, so the realistic baseline to beat is `full`, not `hybrid`.
 
@@ -61,6 +80,7 @@ Paired differences (first minus second):
 | `laya_score.py` | Laya P(true) for each (query, candidate page) |
 | `evaluate.py` | metrics, paired statistics, regression gate against the committed baseline |
 | `extra.py` | exploratory diagnostics: oracle headroom, AUC, RRF |
-| `data/pool.jsonl`, `data/scores_auto.jsonl` | raw qmd rankings and Laya scores for the run |
+| `data/pool.jsonl` | raw qmd `hybrid` and `full` rankings for the run |
+| `data/scores_auto.jsonl`, `scores_multilingual.jsonl`, `scores_long.jsonl`, `scores_labels.jsonl` | raw Laya scores: the original run and variants V1 to V3 |
 
-The scripts are kept as run: paths point at this worktree and the job's scratch directory, and Laya was installed in a scratch venv (`uv venv --python 3.12`, `uv pip install laya`, with a scratch `HF_HOME` because the local Hugging Face token had expired). Adjust the paths to re-run.
+The scripts are kept as run: paths point at this worktree and the job's scratch directory, and the first run used a scratch Laya venv (`uv venv --python 3.12`, `uv pip install laya`, with a scratch `HF_HOME` because the local Hugging Face token had expired). The three variants used the installed tool (`uv tool install --python 3.12 laya`, interpreter at `~/.local/share/uv/tools/laya/bin/python`). The scorer takes optional `chars=`, `max_len=` and `labels=AB` arguments; run `evaluate.py data/pool.jsonl auto=data/scores_auto.jsonl multilingual=... long=... labels=...` from this directory. Adjust the paths to re-run.

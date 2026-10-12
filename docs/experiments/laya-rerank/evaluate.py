@@ -57,8 +57,8 @@ for name, rows in systems.items():
         cells.append(f"{m} {s['mean']:.3f} [{s['lo']:.3f},{s['hi']:.3f}]")
     print(f"  {name:<30} " + "  ".join(cells) + f"  n={s['n']}")
 
-primary = next((n for n in systems if n.endswith("laya K=20")), None)
-if primary:
+primaries = [n for n in systems if n.endswith("laya K=20")]  # one per scores file given (first run: auto; variants: others)
+for primary in primaries:
     print(f"\nPre-registered comparisons on nDCG@10 (first minus second) for '{primary}':")
     for other in ("fresh hybrid", "fresh full", "committed baseline hybrid", "committed baseline full"):
         c = compare.compare(systems[primary], systems[other], "ndcg@10")
@@ -72,9 +72,7 @@ if primary:
 
 print("\nGate (committed baseline vs current; both re-scored on current labels; wiki hash differs, so content drift is possible)")
 for tag, cur, base in (("fresh hybrid", "fresh hybrid", "hybrid"), ("fresh full", "fresh full", "full"),
-                       (f"{primary}", primary, "hybrid")):
-    if cur is None:
-        continue
-    g = gate.compare_backend(baseline[base], systems[cur], gold, must_hit_enforced=(base != "full"))
+                       *((n, n, "hybrid") for n in primaries)):
+    g =gate.compare_backend(baseline[base], systems[cur], gold, must_hit_enforced=(base != "full"))
     print(f"  {tag:<28} vs baseline {base:<7} {g['verdict']:<5} n={g['n']} delta={g['delta']:+.3f} "
           f"CI [{g['lo']:+.3f},{g['hi']:+.3f}] must_hit_lost={g['must_hit_lost']}")

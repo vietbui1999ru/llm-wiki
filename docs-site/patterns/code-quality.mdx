@@ -231,7 +231,7 @@ Code smells are patterns that indicate deeper problems. They are not bugs — th
 | Long method | Function does too much; scrolls past one screen | Extract methods |
 | Large class | Class has too many fields and methods | Split by responsibility (SRP) |
 | Long parameter list | 4+ parameters to a function | Introduce parameter object |
-| Duplicate code | Same logic in 2+ places | Extract to shared function (DRY) |
+| Duplicate code | Same logic in 2+ places | Extract to shared function (DRY); at two copies wait, extract on the third (Rule Of Three) |
 | Dead code | Unreachable code, unused variables/functions | Delete it |
 | Feature envy | Method uses another class's data more than its own | Move method to that class |
 

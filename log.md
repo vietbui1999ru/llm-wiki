@@ -1014,3 +1014,16 @@ Updated:
 - index.md — summary entry; principles entry reworded
 Contradictions noted: the old YAGNI section said to ignore it when a requirement is arriving next sprint; Fowler's cost-of-delay and cost-of-carry argument says a soon-arriving feature still costs, so only a choice that adds no complexity is exempt. Corrected.
 Dotfiles side (separate PR): shared/research-tool-routing.md gains a scoped YAGNI section (reaches Pi via AGENTS.md and Claude via rules/tool-routing.md); shared/AGENTS.md line aligned. Tier-0 check: neither applied-ai.md nor global-prevention-rules.md cites the principles page, so nothing to resync.
+
+## [2026-10-11] ingest | Rule of Three (2 sources) and Laya (README + HF model card)
+Sources: raw/ files "The Rule of Three in Computer Programming.md", "Rule of three (computer programming).md" (blog + Wikipedia); "NandhaKishorMlaya Non-autoregressive System 1 decision engine....md" (GitHub README, v0.4.1) and "Hugging Face.md" (model card, v0.3.20). Pre-ingest comprehension review skipped at user request. "Jev" is TypeSafe Jev, the proprietary API Laya benchmarks against and mimics, not an alias.
+Created:
+- wiki/summaries/rule-of-three.md
+- wiki/summaries/laya.md — every figure tagged author-measured vs third-party; Jev numbers never measured by the author; internal inconsistencies noted (45 vs 48 of 51 languages, 6-8x vs 6-7x, Jev ECE 0.246 vs 0.144)
+- wiki/entities/laya.md
+Updated:
+- wiki/patterns/principles.md — new Rule of Three section between YAGNI and KISS, decision-table row, frontmatter sources
+- wiki/patterns/code-quality.md — duplicate-code smell row links the rule
+- index.md — three entries, principles entry reworded
+Not ingested: two newer YAGNI captures in raw/ (2026-10-10: "YAGNI You Ain't Gonna Need It.md", "You Aren't Going to Need It (YAGNI) Principle Explained.md").
+Tier-0 check: neither applied-ai.md nor global-prevention-rules.md cites the updated pages.

@@ -191,6 +191,7 @@
           "entities/headroom",
           "entities/karpathy-llm-council",
           "entities/ketch",
+          "entities/laya",
           "entities/lean-session",
           "entities/mnemory",
           "entities/obsidian-claude-code-mcp",

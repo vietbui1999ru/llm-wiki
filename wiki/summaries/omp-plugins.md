@@ -4,6 +4,7 @@ type: summary
 tags: [omp, pi, plugin, extension, hook, custom-tool, mcp, marketplace]
 sources: ["omp.sh/docs/plugins (ingested 2026-06-18)"]
 created: 2026-06-18
+updated: 2026-06-18
 ---
 
 # omp Plugin System

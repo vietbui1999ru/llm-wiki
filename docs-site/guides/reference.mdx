@@ -141,7 +141,6 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 
 | Skill                            | Invoke                                                      | When to use                                                                                                | Example                                        |
 | -------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `docs-writer`                    | Auto (after code-writer; or "document this" / "write docs") | Write/update structured markdown docs to `docs/`; follows Diátaxis (tutorial/how-to/reference/explanation) | "document the new auth module"                 |
 | `/grill-me`                      | `/grill-me`                                                 | Stress-test a plan before starting                                                                         | "I want to add auth — /grill-me"               |
 | `/zoom-out`                      | `/zoom-out`                                                 | Need the big picture of unfamiliar code                                                                    | "I don't understand this middleware"           |
 | `/improve-codebase-architecture` | `/improve-codebase-architecture`                            | Find shallow modules, refactor opportunities                                                               | "Codebase feels messy"                         |
@@ -504,7 +503,7 @@ After bulk ingests: wiki-index (incremental) or wiki-index --full (rebuild)
 ### "I want to document a new feature or module"
 ```
 Say: "document this" / "write docs" / "update the docs"
-→ docs-writer agent invoked
+→ the main session writes them (there is no dedicated docs agent or skill)
 → outputs structured markdown to project's docs/ folder
 → 4 Diátaxis types: tutorial (learning-oriented), how-to (goal-oriented),
   reference (information-oriented), explanation (understanding-oriented)

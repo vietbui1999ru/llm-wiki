@@ -316,60 +316,44 @@ flowchart TD
 
 ## Chart 7 — Agent Fleet
 
+Roster as of 2026-10-14, checked against `~/dotfiles/claude/.claude/agents/` (only `scout` and `worker` exist) and the global rules `model-routing.md` and `plan-handoff.md`. An earlier version of this chart showed a larger fleet (`agent-delegator`, `code-writer`, `code-reviewer`, `architecture-reviewer`, `security-auditor` and others); none of those are installed. Define a custom agent only when a repeated job justifies its own prompt and tool limits.
+
 ```mermaid
 graph TD
     USER[User task]
+    ORCH["Orchestrator: main session<br>Opus, effort high<br>decisions, root cause, review gate"]
 
-    DELEGATOR[agent-delegator\norchestrator]
-
-    subgraph IMPL["Implementation"]
-        CW[code-writer\nSonnet]
-        CWF[code-writer-fast\nHaiku — boilerplate]
+    subgraph CUSTOM["Custom subagents (Haiku 5.5, effort medium)"]
+        SCOUT["scout<br>read-only recon before planning"]
+        WORKER["worker<br>bounded, fully specified edits"]
     end
 
-    subgraph REVIEW["Review / QA"]
-        CR[code-reviewer\nSonnet]
-        AR[architecture-reviewer\nOpus]
-        DC[design-critic\nSonnet]
-        SA[security-auditor\nOpus]
+    subgraph BUILTIN["Built-in roles (pass an explicit model)"]
+        EX["Explore<br>read-only search"]
+        PLAN["Plan<br>design the approach"]
+        GP["general-purpose"]
     end
 
-    subgraph DEBUG["Debug / Test"]
-        BDT[backend-debug-tester]
-        FDT[frontend-debug-tester]
-        VV[visual-verifier\nPlaywright]
+    subgraph IMPL["Implementation: Pi via pueue"]
+        PI_IMPL["pi --model explicit-model<br>approved file-backed plans:<br>multi-file features, migrations, refactors"]
     end
 
-    subgraph EXPLORE["Explore / Plan"]
-        DE[design-explorer\nOpus]
-        PLAN[Plan agent\nOpus]
-        EX[Explore agent\nHaiku — read-only]
+    subgraph GATE["Review gate: stays in Claude"]
+        REVIEW["agent-review, post-run-verifier, pi-lens"]
     end
 
-    subgraph OPS["Ops / Docs"]
-        PPD[production-platform-devops]
-        DW[docs-writer]
-        PHM[project-health-monitor]
-        SSR[session-report-generator]
+    subgraph COUNCIL["Council (subprocess, not fleet)"]
+        PI_SUB["pi -p --model openai-codex/gpt-5.3-codex<br>--no-session<br>Codex peer review: advisory only<br>reads stdout, not .agents/ bus"]
     end
 
-    subgraph COUNCIL["Council (subprocess — not fleet)"]
-        PI_SUB["pi -p --model openai-codex/gpt-5.3-codex<br>--no-session<br>Codex peer review — advisory only<br>reads stdout, not .agents/ bus"]
-    end
-
-    USER --> DELEGATOR
-    DELEGATOR --> IMPL & REVIEW & DEBUG & EXPLORE & OPS
-
-    CW -.->|triggers| CR
-    CW -.->|triggers| PHM
-    PHM -.->|reports bugs to| BDT & FDT
-    DE -.->|feeds requirements to| CW
-    AR -.->|validates before| CW
-
-    DELEGATOR -.->|arch/security/irreversible| PI_SUB
+    USER --> ORCH
+    ORCH --> CUSTOM & BUILTIN
+    ORCH -->|approved plan| PI_IMPL
+    PI_IMPL -->|commits reviewed| REVIEW
+    ORCH -.->|arch/security/irreversible| PI_SUB
 ```
 
-**Pi is not in the agent fleet.** It is a thin subprocess called via Bash when a Codex second opinion is needed. It does not share the Claude Code hooks system, `.agents/` coordination bus, or skill invocation contract.
+**Pi runs outside Claude Code's subagent system**, in two roles: implementation dispatched through `pueue` after a plan is approved, and the advisory council subprocess. In both it is a separate process and does not share Claude Code's hooks or skill-invocation contract.
 
 ---
 

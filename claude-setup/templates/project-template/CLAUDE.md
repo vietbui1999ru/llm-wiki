@@ -18,7 +18,7 @@
 
 ## Agents
 <!-- Which agent tier to prefer for this project. -->
-<!-- Route to code-writer for features, backend-debug-tester for bugs. -->
+<!-- Route reconnaissance to scout and bounded, fully specified edits to worker; larger features go to Pi per the global plan-handoff rule. -->
 
 ## Rules
 <!-- Project-specific overrides to global rules. -->

@@ -2,7 +2,9 @@
 title: "omp Research: snapcompact + RPC mode"
 type: research
 tags: [omp, snapcompact, rpc, context-compression, bus-communication, runner-agnostic]
+sources: []        # no raw/ capture recorded; analysis of the omp source and docs
 created: 2026-06-19
+updated: 2026-06-19
 ---
 
 # omp Research: snapcompact + RPC mode

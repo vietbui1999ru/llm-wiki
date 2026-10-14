@@ -40,7 +40,7 @@ flowchart TD
     end
 
     subgraph MERGE["Orchestrator: integrate"]
-        REVIEW["code-reviewer agent<br>per completed task"]
+        REVIEW["review step<br>per completed task"]
         COUNCIL_GATE{"design-risk?"}
         COUNCIL_RUN["pi -p peer review<br>--model openai-codex/gpt-5.3-codex<br>--no-session"]
         MERGE_WT["merge worktrees<br>into main branch"]
@@ -179,7 +179,7 @@ flowchart TD
     end
 
     subgraph MERGE_FLOW["Back on Machine A — integrate"]
-        PR_REVIEW["review PRs<br>code-reviewer agent"]
+        PR_REVIEW["review PRs<br>/code-review"]
         HUMAN_GATE{"human merge<br>approval"}
         SHIP[merge to main]
         WIKI_UPDATE["ingest learnings<br>back to wiki"]

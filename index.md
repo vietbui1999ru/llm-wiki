@@ -21,18 +21,14 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/agentic-search-vs-rag]] — Experiment: graph/agentic search vs flat RAG; 99% fewer tokens, 2× IoU; RAG only wins on dependency recall; validates LightRAG for wiki
 - [[summaries/local-rag-elasticsearch]] — Local RAG with Elasticsearch + LocalAI: retrieval 14ms, LLM dominates (16s); model size/speed trade-offs; stack patterns
 - [[summaries/ai-agent-technical-debt]] — Using AI agents for systematic debt reduction: two modes, agentic safety model, Copilot cloud agent workflow, metrics
-- [[summaries/copilot-agent-structure]] — Copilot customization taxonomy: 5 artifact types (instructions/prompts/agents/skills/MCPs), file placement in .github/, custom agents vs portable skills, repo setup
 - [[summaries/amazon-scraping-2026]] — DIY vs. managed API for Amazon scraping; detection mechanisms, legal context, data available
 - [[summaries/autoresearch-karpathy]] — Karpathy's autonomous ML experiment loop: agent modifies train.py, 5-min runs, val_bpb metric, program.md as control layer
 - [[summaries/claude-usage-limits]] — Usage vs. length limits; 200K product context window vs 1M API; shared budget across all surfaces; tools/connectors token-expensive per request
-- [[summaries/sparc-cursor-cline-rules]] — SPARC framework: 5 principles, 5 workflow phases, Memory Bank integration; mostly a structured AGENTS.md template
 - [[summaries/claude-code-permissions-settings]] — CC settings schema: permissions.allow/ask/deny/defaultMode, bypassPermissions, sandbox.enabled (Bash-only), filesystem+network rules; corrects old allowedTools schema
-- [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules, background agents, parity gaps vs CC
 - [[summaries/claude-code-subagents-pro-limits]] — Opus main + Sonnet/Haiku subagents on Claude Pro: setup, break-even rules, measured cost per PR (about 40% lower), docs verification, caveats
 - [[summaries/yagni-fowler-and-laws]] — YAGNI per Fowler's bliki and Laws of Software Engineering: four costs of presumptive features, the scope limit (refactoring and tests are not YAGNI violations), imagine-the-refactoring test
 - [[summaries/rule-of-three]] — Rule of Three ("three strikes and you refactor", Fowler/Don Roberts): extract on the third copy because two examples risk the wrong abstraction (Sandi Metz); a rule of thumb with no measured evidence for the number
 - [[summaries/laya]] — Laya README + HF model card: open non-autoregressive encoder decision model (choice/score/noul), RLCD proper-scoring-rule training, router across 3 checkpoints; Jev comparison with author-measured vs third-party provenance *(claimed, unverified)*; honest limits (near chance zero-shot, negation, 20+ options)
-- [[summaries/cursor-cloud-agents]] — Cursor Cloud Agents: microVM isolation, GitHub/GitLab workflow, remote desktop control, cross-agent support
 - [[summaries/cc-auto-mode]] — CC auto mode: 2-stage classifier, threat model, 17% FNR on overeager actions, deny-and-continue
 - [[summaries/aws-security-agent]] — AWS managed pen test service: target/accessible/out-of-scope domain split, credential injection patterns, IAM role scoping, out-of-scope URL hierarchy, launch checklist
 - [[summaries/hamel-evals-skills]] — Claude Code plugin (`hamelsmu/evals-skills`): 7 skills including eval-audit, write-judge-prompt, validate-evaluator, evaluate-rag
@@ -43,9 +39,6 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/hn-junior-devs-and-ai]] — HN community: AI amplifies existing ability; juniors lack evaluation frame; repetition/debugging gap; agentic tools harmful for beginners; 7 actionable heuristics
 - [[summaries/cc-linting-debugging-reddit]] — r/ClaudeCode community: Stop hook for file-modifying linters (file-state conflict); PostToolUse read-only only; noslop quality gates; layered shellcheck/biome/pre-commit setup; gdb/Replay MCP/JetBrains debugger
 - [[concepts/llm-serialization-formats]] — Schema-first formats (ONTO, TOON) cutting LLM input overhead 40–60% via schema-once design; covers format comparison, tradeoffs, and caveats on synthetic benchmarks
-- [[summaries/ai-agent-interview-evaluation]] — r/ExperiencedDevs thread on "use an AI agent live" coding interviews: no industry-standard rubric; plausible-and-wrong output as the real signal moment; convergent axes (scoping, critical review, tests, post-hoc explainability); contested plan-mode/subagent/rules-file prep *(anecdotal, unverified — now corroborated by 2 independent sources below)*
-- [[summaries/hellointerview-ai-coding-interviews]] — Hello Interview prep guide built from real Meta/Shopify/LinkedIn/Canva/Uber interviewer debriefs; 4 evaluation axes (approach/control/verification/communication) with per-axis failure examples; live scored practice mode
-- [[summaries/vibe-coding-interview-checklists]] — dev.to tactical guide: CRATE prompt framework, 30-second agent-specific review checklist, 7-format taxonomy, 5 named failure archetypes *(single-author blog, unverified against real outcomes)*
 
 ## Entities
 - [[entities/rtk]] — Rust CLI proxy that filters/compresses command output before it hits LLM context; PreToolUse hook across 15 agents; 4 strategies (filter/group/truncate/dedup); 60-90% token savings *(claimed, unverified — self-reported estimates)*

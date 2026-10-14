@@ -57,7 +57,7 @@ GitHub-specific implementation of the agentic task model:
 
 **Iteration:** Leave review comments → Copilot updates the PR based on feedback. Repeat until correct, then approve and merge.
 
-**Custom instructions:** `.github/copilot-instructions.md` encodes team standards. See [[summaries/copilot-agent-structure]] for full customization file structure.
+**Custom instructions:** `.github/copilot-instructions.md` encodes team standards.
 
 ## Key insight
 

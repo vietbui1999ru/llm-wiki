@@ -56,7 +56,7 @@ Built-in command — runs in-project, no custom agent needed. Analyzes for SQL i
 
 GitHub Actions integration: `anthropics/claude-code-security-review` automatically reviews every PR on open. Posts inline PR comments with findings and recommended fixes. Configurable filtering rules to reduce false positives and per-vulnerability-type sensitivity.
 
-Recommendation: wire `/security-review` into project hook template (pre-commit on significant changes). Use `security-auditor` subagent (Opus tier) for pre-deploy audits or when code-reviewer escalates.
+Recommendation: wire `/security-review` into project hook template (pre-commit on significant changes). For pre-deploy audits, or when a review escalates, run a read-only security-review pass on an Opus-tier model (define a custom subagent only if the job repeats; none is installed here, see [[concepts/model-tier-routing]]).
 
 ## Continuous improvement
 

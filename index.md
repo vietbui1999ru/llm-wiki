@@ -58,7 +58,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/agentshield]] — Security scanner for CC configs: 5 scan categories (secrets/permissions/hooks/MCP/agents), 102 rules, 3-agent Opus red-team pipeline
 - [[entities/docling]] — IBM open-source document parser; PDF/DOCX/PPTX → structured Markdown/JSON for RAG; layout-aware, table-preserving, MCP-integrated
 - [[entities/eggroll]] — Low-rank ES optimizer from Oxford; 100× GPU speedup over naïve ES; trains non-differentiable (int8) architectures; companion to EGG model
-- [[entities/qmd]] *(stub)* — Local hybrid markdown search engine (BM25 + vector); CLI + MCP server
+- [[entities/qmd]] — Local hybrid markdown search engine (BM25 + vector + optional query expansion and reranking); CLI + MCP server; v2.8.3 here; modes, collections, measured nDCG@10 (hybrid 0.681, full 0.713) and gotchas
 - [[entities/ai-coding-agents]] — The class of AI coding tools (Claude Code, Codex, OpenCode, etc.): capability spectrum, safety model, use cases
 - [[entities/pydoll]] — Async Python CDP-native browser automation library with fingerprint evasion and WebRTC leak protection
 - [[entities/firecrawl]] — Managed web scraping/crawling service for LLM consumption; 14-tool MCP server; vs. Pydoll/Playwright comparison

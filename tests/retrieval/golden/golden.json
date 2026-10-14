@@ -2006,15 +2006,11 @@
         {
           "page": "wiki/concepts/agent-context-instructions.md",
           "grade": 1
-        },
-        {
-          "page": "wiki/summaries/copilot-agent-structure.md",
-          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): ai-ml is an ML system design page with only a short pointer table to agent pages, so it is not the hub; agent-primitive-selection is the page that organizes these primitives. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added agent-context-instructions.md, copilot-agent-structure.md as grade 1"
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): ai-ml is an ML system design page with only a short pointer table to agent pages, so it is not the hub; agent-primitive-selection is the page that organizes these primitives. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added agent-context-instructions.md, copilot-agent-structure.md as grade 1 | 2026-10-14: removed the copilot-agent-structure.md label because that page was deleted from the wiki"
     },
     {
       "id": "q-105",

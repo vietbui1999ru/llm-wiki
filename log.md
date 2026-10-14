@@ -1044,3 +1044,10 @@ Fixed:
 - wiki/entities/qmd.md: was a 25-line stub with an outdated "valuable past ~100 pages" claim; rewritten from the qmd 2.8.3 CLI, the eval suite and the indexing page. Stub marker removed from index.md.
 - Kept as stubs on purpose: concepts/github-issue-handoff (single-source proposal with open questions) and entities/obsidian-claude-code-mcp (not installed or tested).
 Not verified here: model names, prices and versions on about 35 pages (needs vendor-doc checks; out of scope for this pass).
+
+## [2026-10-14] prune | removed 7 pages (interview prep and other vendors' rule systems)
+Owner-approved from the audit candidate list (kept: the 5 web-scraping pages, which are tied to the retrieval golden set). Deleted: summaries/ai-agent-interview-evaluation, hellointerview-ai-coding-interviews, vibe-coding-interview-checklists, sparc-cursor-cline-rules, cursor-cloud-agents, cursor-rules-background-agents, copilot-agent-structure. Their raw sources in raw/ are untouched.
+Link fixes: removed the pointer to copilot-agent-structure in summaries/ai-agent-technical-debt and to cursor-rules-background-agents in comparisons/cc-to-cross-platform-migration; removed the 7 index.md entries.
+Golden set: dropped the single copilot-agent-structure grade-1 label on q-104 (overview, not its only relevant page; no must-hit query affected). Lint clean, 141 retrieval unit tests pass. The committed baselines still list the deleted pages in some saved top-10 lists; the gate re-scores against current labels, so no re-baseline is needed, but the golden file hash differs from the baseline's recorded one (the gate prints a note).
+Follow-up for the operator: the LightRAG graph may still hold entities from these pages; run `wiki-index --verify` and then `wiki-index --reconcile` (back up .lightrag/ first, needs OPENCODE_GO_API_KEY_LIGHTRAG). qmd drops them on the next `qmd update`.
+Result: 183 pages, all indexed, no orphans.

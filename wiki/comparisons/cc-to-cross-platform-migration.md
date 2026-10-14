@@ -174,7 +174,6 @@ Project-local `.zed/` adapter. Writes ECC-managed files under `.zed/`, flattened
 - [[entities/gemini-cli]] — Gemini CLI GEMINI.md + @-imports + migration mapping table
 - [[entities/opencode]] — OpenCode commands, rules, agents
 - [[entities/codex]] — Codex TOML agents + native skills
-- [[summaries/cursor-rules-background-agents]] — Cursor .cursor/rules + background agents
 - [[entities/everything-claude-code]] — ECC cross-harness parity table (source for Cursor/Copilot/Zed data)
 - [[entities/agents-md-format]] — AGENTS.md cross-tool compatibility table
 - [[entities/everything-claude-code]] — ECC entity with full cross-harness matrix

@@ -4,12 +4,26 @@ type: synthesis
 tags: [agent-engineering, workflow, orchestration, council, dangeresque, lean-session]
 sources: ["Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md", "Full Walkthrough Workflow for AI Coding — Matt Pocock.md", "karpathyllm-council LLM Council works together to answer your hardest questions.md", "Plugins for Opencode.md"]
 created: 2026-05-06
-updated: 2026-05-27
+updated: 2026-10-15
 ---
 
 # Lean Agentic Coding Workflow
 
 A working synthesis of the workflow that emerged from ingesting and critiquing the agent engineering landscape. Not a framework — a set of composable, independently adoptable pieces. The AGENTS.md template encodes this workflow; this page explains why each piece exists.
+
+## Status on this machine (checked 2026-10-15)
+
+This page records the workflow as designed from the May 2026 sources. Not every tool on it was ever installed here. Checked against the machine:
+
+| Piece below | Today |
+|---|---|
+| `/grill` (grill-me) | Installed, and now ends by writing a lint-clean `SPEC.md` and stopping for human approval: see [[syntheses/spec-conformance-and-review-loop-options]] |
+| `/prd`, `/issues` skills | Not installed (removed in the skills consolidation). The approved `SPEC.md`, with a verify command per acceptance criterion, plays the PRD role |
+| Dangeresque, SandCastle | Not installed (on neither `PATH`): *(documented-not-adopted)*. The unattended loop is Pi dispatched through pueue with the human `agent-review` gate: [[syntheses/pi-orchestration-architecture]] |
+| lean-session (OpenCode plugin) | Installed (`lean-session.js` in the OpenCode plugins folder) |
+| `/verify` and council | `verify-spec` now runs `ac-run check` and `floor-guard`. The council engine is Commandr's `bin/council` (linked at `~/.local/bin/council`); council mode was not tested end to end |
+
+Read the rest of the page as the design rationale; the table above is the installed reality. The adopted loop is described in [[syntheses/spec-conformance-and-review-loop-options]].
 
 ---
 

@@ -9,7 +9,7 @@ updated: 2026-10-15
 
 # Spec Conformance and Review Loop Options
 
-Viet's working consensus: `grill-me` is the best part of the workflow, but testing, spec conformance and review loops are thin across the rest of the cycle. This page records the current model as inventoried on 2026-10-15, the verified gaps, and three refactor options. It began as a decision aid. Option 1 was then built (see "Built" below); Options 2 and 3 remain unadopted. The build is on a branch and is not live until the dotfiles PR merges and the post-merge steps are run.
+Viet's working consensus: `grill-me` is the best part of the workflow, but testing, spec conformance and review loops are thin across the rest of the cycle. This page records the current model as inventoried on 2026-10-15, the verified gaps, and three refactor options. It began as a decision aid. Option 1 was then built (see "Built" below); Options 2 and 3 remain unadopted. The build is live: both PRs were merged on 2026-10-15 and the post-merge steps (symlink retarget, bootstrap, rule sync) were run and verified.
 
 ## Current model (inventoried from ~/dotfiles and ~/.claude)
 
@@ -99,9 +99,9 @@ Also worth doing regardless: a small routing eval for the grill-me and verify-sp
 
 ## Built: Option 1 plus baseline classification (2026-10-15)
 
-Option 1 was narrowed by two adversarial grill rounds, built tests-first, and hardened by three fresh-context review cycles. It lives in the dotfiles repo (draft PR vietbui1999ru/dotfiles#83, branch `feat/spec-loop`); this repo only moves the two skill sources.
+Option 1 was narrowed by two adversarial grill rounds, built tests-first, and hardened by three fresh-context review cycles. It lives in the dotfiles repo (PR vietbui1999ru/dotfiles#83, merged); this repo only moved the two skill sources (PR #36, merged).
 
-What shipped on the branch:
+What shipped:
 
 - `scripts/ac-run` (`lint`, `approve`, `check`) and `scripts/floor-guard`, Python standard library only. About 490 lines of scripts and 640 of tests, against a target of 350 and 200; the review rounds account for most of the growth.
 - `grill-me` ends by writing a lint-clean `SPEC.md` (acceptance criteria each with a verify command, `branch:` in the frontmatter) and stops. `verify-spec` runs `ac-run check` and `floor-guard` first, reads code only for manual ACs, and caps the fix loop at 3. Both now live in dotfiles `shared/skills` so Codex, OpenCode and Pi see them through `~/.agents/skills` (the old locations here hold `MOVED.md`).
@@ -117,12 +117,20 @@ What the evidence says:
 - 31 tests pass; 12 automated build ACs pass from the build's own `SPEC.md`.
 - Cycle 2 of the review found a regression in the first fix, and showed that regression tests written after a fix had never been seen failing. The repair was redone tests-first, with three checks confirmed red before any fix. Cycle 3 killed 26 of 28 mutants; the two survivors are an equivalent mutant and a memory-only change.
 - Running `floor-guard` on its own branch found a false positive no test had caught (`xit(` matching `sys.exit(`).
-- Local models (non-gating): `gemma4:e4b` wrote a lint-clean spec on the first try once its reasoning text was hidden; `qwen2.5:3b` did not, even after one repair turn using only the lint messages. No harness is configured to use ollama, so end-to-end local-model use is untested.
+- Local models (non-gating): `gemma4:e4b` wrote a lint-clean spec on the first try once its reasoning text was hidden (`--think=false --hidethinking`); `qwen2.5:3b` did not, even after one repair turn using only the lint messages. No harness is configured to use ollama, so end-to-end local-model use is untested.
 - Untestable today for every provider: whether a model actually stops after the spec or runs the checks before claiming done.
 
 Two deliberate departures from the agreed spec text: rule 3 now says a run asked to write a spec stops at a draft while a run asked to implement an approved spec proceeds (the implementation run is itself a pueue dispatch), and `verify-spec` allows one test edit, replacing the placeholder body of a stub written for the spec.
 
-Still open from the original decision aid: the Option 2 pilot repo, whether `/judge` stays a manual gate, and a routing eval for the two skill descriptions.
+### Scope decisions (owner, 2026-10-15)
+
+- **Frontier providers only.** The loop is for Claude Code, Codex and OpenCode. Pi runs it when it dispatches to their models.
+- **Local models are not a target.** A local model (ollama on this machine) would be used for dispatches only if it can do the job, and the owner expects the cheap hosted models (Haiku 5.5, the OpenCode Go models) to be both cheaper and better. No harness is wired to ollama. The smoke result above is informational: the grammar is workable for a 4B-class model (`gemma4:e4b`) and not for a 3B one (`qwen2.5:3b`).
+- **Mutation testing is deferred** to its own session after the refactor and clean-ups. Until then the baseline classification only catches acceptance criteria that were already true before the change, not weak assertions.
+
+### Still open
+
+The Option 2 pilot repo (the first real use of the loop on a code feature has not happened yet: no approval record has ever been written), whether `/judge` stays a manual gate, and a routing eval for the two skill descriptions.
 
 ## Open questions for Viet
 

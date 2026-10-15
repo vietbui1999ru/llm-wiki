@@ -1071,3 +1071,6 @@ Updated syntheses/spec-conformance-and-review-loop-options with a "Built" sectio
 - systems/wiki-indexing-pipeline: auto-indexing only fires for commits in the main checkout, not worktree commits or merged PRs.
 - wiki-index: `--verify` found 7 stale or missing pages (183 of 188 indexed); `--reconcile` brought it to 188 of 188. `.lightrag/` backed up first.
 - Dotfiles-side fixes (separate PRs): relaxed mode single-sourced in the grill-me skill, council location corrected, scout and worker availability stated accurately.
+
+## [2026-10-15] update | Laya as a skill router assessed, not built
+entities/laya: new section. Zero-shot Laya is unreliable here (earlier rerank test) and there are no labels to tune on: 64 Skill-tool invocations across 235 Claude transcripts and 19 distinct skills (counts only, content not read). Staged plan recorded: qmd shortlist, then a small model for ambiguity, then Laya only once labelled pairs exist and it beats the first two. Dotfiles draft PR #86 proposes removing the skill cap; it is still open, so the cap (`skills 36/22`) is live. The 36 counts user-level skills only; plugin skills add more.

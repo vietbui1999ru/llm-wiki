@@ -59,8 +59,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/pydoll]] — Async Python CDP-native browser automation library with fingerprint evasion and WebRTC leak protection
 - [[entities/firecrawl]] — Managed web scraping/crawling service for LLM consumption; 14-tool MCP server; CLI-first use across Claude/Codex/OpenCode/Pi; vs. Pydoll/Playwright comparison
 - [[entities/ketch]] — Stateless Go CLI unifying web search/scrape/crawl, OSS code search, and Context7 library docs behind one agent-facing binary; config-driven backend swap
-- [[entities/sandcastle]] — Matt Pocock's TS lib for parallel agents in worktrees; branch strategy (head/merge-to-head/branch), token telemetry, provider abstraction
-- [[entities/dangeresque]] — Host-native CLI orchestrator; mandatory adversarial reviewer + human-merge gate; ToS-compliant (no container for CC)
+- [[entities/sandcastle]] *(documented-not-adopted)* — Matt Pocock's TS lib for parallel agents in worktrees; branch strategy (head/merge-to-head/branch), token telemetry, provider abstraction
+- [[entities/dangeresque]] *(documented-not-adopted)* — Host-native CLI orchestrator; mandatory adversarial reviewer + human-merge gate; ToS-compliant (no container for CC)
 - [[entities/mnemory]] — Self-hosted MCP cross-session memory: Qdrant vector search + S3/MinIO artifact store; OSS alternative to Anthropic memory tool
 - [[entities/agentops]] *(documented-not-adopted)* — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
 - [[entities/gemini-cli]] — Google's Gemini CLI: GEMINI.md + TOML commands + activate_skill; high parity with CC; hooks + subagents (experimental)
@@ -191,13 +191,13 @@ Catalog of all pages. Updated on every ingest operation.
 - [[comparisons/cc-to-cross-platform-migration]] — Full migration matrix: CC rules/skills/subagents/hooks/plugins → Gemini/OpenCode/Codex/Cursor/Copilot/Zed; parity rating per layer; hook event counts; DRY adapter pattern
 
 ## Syntheses
-- [[syntheses/spec-conformance-and-review-loop-options]] — Current dotfiles workflow vs lifecycle gaps (spec, test strength, review loops, operate); three refactor options (Harvest / Spec spine / Gated pipeline) with recommendation; Option 1 built on a branch 2026-10-15 (ac-run, floor-guard, grill-me/verify-spec moved to dotfiles; 3 review cycles, honour-system approval), not live until the dotfiles PR merges
+- [[syntheses/spec-conformance-and-review-loop-options]] — Current dotfiles workflow vs lifecycle gaps (spec, test strength, review loops, operate); three refactor options (Harvest / Spec spine / Gated pipeline) with recommendation; Option 1 built and live since 2026-10-15 (ac-run, floor-guard, grill-me/verify-spec moved to dotfiles; 3 review cycles, honour-system approval); scope: frontier providers only, mutation testing deferred
 - [[syntheses/minimal-coding-agent]] — Cross-source thesis from Ball (Go) + Eric (Python): the coding-agent core is LLM+loop+3 tools with no secret; the one real axis is native-API vs prompt-parsed tool protocol (two layers of one idea); leverage lives in the surrounding "elbow grease"
 - [[syntheses/builderio-control-plane-integration]] — Concrete Builder.io integration plan for Commandr + DiffViewer: shared action vocabulary, visual plan/recap artifacts, SPEC-safe bus mapping, Mermaid workflows, implementation slices
 - [[syntheses/neovim-ai-operator-workflow]] — Neovim as human operator cockpit for AI agents: Mason LSP/DAP lane, diffview auto-refresh, selection context, CodeCompanion/Avante/MCPHub/claudecode.nvim roles
 - [[syntheses/pi-orchestration-architecture]] — Pueue-dispatched pi workers, diff-review gate, status artifact, retry limit, two-mode review (interactive vs headless), human-commits-last
 - [[syntheses/agent-primitive-selection]] — Decision tree for skill vs subagent vs team; model tier routing; multi-vendor adversarial review pattern
-- [[syntheses/lean-agentic-workflow]] — Full stack: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes
+- [[syntheses/lean-agentic-workflow]] — Design rationale: grill→PRD→slices→AFK→verify; council, dangeresque, lean-session plugin, model routing, failure modes. Has a 2026-10-15 table of what is actually installed (dangeresque, `/prd`, `/issues` are not)
 - [[syntheses/local-rag-wiki]] — two-path RAG stack: qmd (BM25+vector, Claude Code) + LightRAG graph (wiki-chat TUI + wiki-mcp MCP); OpenCode Go (OpenAI-compatible) LLM backend with local ollama embeddings (llama.cpp slot reserved); manifest-based incremental indexing; post-commit automation
 - [[syntheses/control-plane-expansion-plan]] — Gap analysis and bootstrap path: cockpit action registry, agent-control skills, commandr-omp-runner; Phase 0.5–3 roadmap
 - [[syntheses/desktop-control-plane]] — *(local-only)* Big-picture synthesis: 5-layer toolchain (Commandr bus + DiffViewer/Tauri UI + omp workers + SKILL.md packages); Mermaid architecture/workflow diagrams; action registry; evidence-first cockpit vision

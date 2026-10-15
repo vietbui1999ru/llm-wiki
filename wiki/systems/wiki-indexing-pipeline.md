@@ -24,7 +24,7 @@ qmd's own embedding and rerank models are downloaded by `qmd pull`; I have not v
 
 ## When indexing runs
 
-The `post-commit` hook runs after every commit: `qmd update` and `qmd embed` **synchronously** (incremental, seconds), then `wiki-index` **in the background** (incremental; progress in `.lightrag/last-index.log`). `wiki-index --full --yes` is the manual full rebuild.
+The `post-commit` hook runs after a commit **in the main checkout** (see the gotcha below for what it misses): `qmd update` and `qmd embed` **synchronously** (incremental, seconds), then `wiki-index` **in the background** (incremental; progress in `.lightrag/last-index.log`). `wiki-index --full --yes` is the manual full rebuild.
 
 ## LightRAG pipeline, step by step
 
@@ -47,6 +47,7 @@ The `post-commit` hook runs after every commit: `qmd update` and `qmd embed` **s
 
 ## Gotchas found in practice
 
+- **Auto-indexing misses worktree commits and merged PRs.** The hook only runs `wiki-index` when the repo root has a `.lightrag` folder, so a commit made from a linked worktree (where agent sessions work) never triggers it; and a PR merged on GitHub then pulled with `git pull --ff-only` fires `post-merge`, not `post-commit`, so it never triggers either. Found 2026-10-15: 7 pages from three merged PRs were missing or stale in the index (`wiki-index --status` showed 183 of 188 indexed) until `--verify` and `--reconcile` ran; afterwards 188 of 188. The hook also sources `<repo>/.env`, not `~/secrets/.env`, so a hook run from a shell that never loaded the secrets file cannot call the extraction model. After pulling merged wiki changes, run `wiki-index --verify`, then `--reconcile` if it reports anything.
 - **A long `sources:` frontmatter line can stall a page.** One page with 31 source filenames timed out on chunk 0 every time (3 attempts, 2 models) while the same text indexed in 28 s with `sources` emptied, and each section indexed alone. Fix: keep `sources` short; the page was split into a hub plus three topical pages (see [[concepts/owasp-security-checklist]]).
 - **Reasoning models eat `max_tokens`.** With `deepseek-v4.1-flash`'s default thinking, extraction prompts spent the whole 4096 budget on reasoning and returned empty content. Sending `thinking: {"type": "disabled"}` cut a sample prompt from 2774 to 185 completion tokens. `OPENCODE_LIGHTRAG_DISABLE_THINKING=0` opts out for models that reject the field.
 - **OpenCode requires an `x-opencode-session` header** (HTTP 400 `MissingSessionID` without it). The scripts send it per request via `extra_headers`, because LightRAG overwrites client-level `default_headers`.

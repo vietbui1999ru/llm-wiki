@@ -1063,3 +1063,11 @@ Contradictions/drift noted, not edited: syntheses/lean-agentic-workflow names to
 
 ## [2026-10-15] update | spec loop built (Option 1 of the spec-conformance options)
 Updated syntheses/spec-conformance-and-review-loop-options with a "Built" section and the index entry. The implementation is in the dotfiles repo (draft PR dotfiles#83, branch feat/spec-loop): scripts ac-run and floor-guard, grill-me and verify-spec rewritten and moved to dotfiles shared/skills, one spec-loop rule block. This repo's change moves the two skill sources (MOVED.md stubs replace SKILL.md) and must merge only after the Claude symlinks in ~/.claude/skills are retargeted, or Claude loses both skills. Evidence: 31 tests, three fresh-context review cycles (26 of 28 mutants killed in the last), local-model smoke (gemma4:e4b clean, qwen2.5:3b failing). Not live until the dotfiles PR merges and the post-merge steps are run by the user.
+
+## [2026-10-15] update | drift fixes after the spec loop went live; Firecrawl cleanup recorded; wiki-index brought in sync
+- syntheses/lean-agentic-workflow: added a table of what is actually installed (dangeresque, sandcastle, /prd and /issues are not; lean-session is). Earlier log claim that lean-session was missing was wrong: `lean-session.js` is in the OpenCode plugins folder. index.md marks dangeresque and sandcastle documented-not-adopted.
+- syntheses/spec-conformance-and-review-loop-options: now live; added the owner's scope decisions (frontier providers only; local models not a target; mutation testing deferred to its own session).
+- systems/dotfiles-agent-harness-layout and entities/firecrawl: Codex fixed by a `dev` permission profile; Firecrawl skills trimmed 34 to 15; `firecrawl init` now runs per agent; bootstrap no longer overwrites the CLI's skill.
+- systems/wiki-indexing-pipeline: auto-indexing only fires for commits in the main checkout, not worktree commits or merged PRs.
+- wiki-index: `--verify` found 7 stale or missing pages (183 of 188 indexed); `--reconcile` brought it to 188 of 188. `.lightrag/` backed up first.
+- Dotfiles-side fixes (separate PRs): relaxed mode single-sourced in the grill-me skill, council location corrected, scout and worker availability stated accurately.

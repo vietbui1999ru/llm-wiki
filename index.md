@@ -191,7 +191,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[comparisons/cc-to-cross-platform-migration]] — Full migration matrix: CC rules/skills/subagents/hooks/plugins → Gemini/OpenCode/Codex/Cursor/Copilot/Zed; parity rating per layer; hook event counts; DRY adapter pattern
 
 ## Syntheses
-- [[syntheses/spec-conformance-and-review-loop-options]] — Current dotfiles workflow vs lifecycle gaps (spec, test strength, review loops, operate); three refactor options (Harvest / Spec spine / Gated pipeline) with recommendation; decision aid, not adopted
+- [[syntheses/spec-conformance-and-review-loop-options]] — Current dotfiles workflow vs lifecycle gaps (spec, test strength, review loops, operate); three refactor options (Harvest / Spec spine / Gated pipeline) with recommendation; Option 1 built on a branch 2026-10-15 (ac-run, floor-guard, grill-me/verify-spec moved to dotfiles; 3 review cycles, honour-system approval), not live until the dotfiles PR merges
 - [[syntheses/minimal-coding-agent]] — Cross-source thesis from Ball (Go) + Eric (Python): the coding-agent core is LLM+loop+3 tools with no secret; the one real axis is native-API vs prompt-parsed tool protocol (two layers of one idea); leverage lives in the surrounding "elbow grease"
 - [[syntheses/builderio-control-plane-integration]] — Concrete Builder.io integration plan for Commandr + DiffViewer: shared action vocabulary, visual plan/recap artifacts, SPEC-safe bus mapping, Mermaid workflows, implementation slices
 - [[syntheses/neovim-ai-operator-workflow]] — Neovim as human operator cockpit for AI agents: Mason LSP/DAP lane, diffview auto-refresh, selection context, CodeCompanion/Avante/MCPHub/claudecode.nvim roles

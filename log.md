@@ -1054,3 +1054,9 @@ Result: 183 pages, all indexed, no orphans.
 
 ## [2026-10-15] update | Firecrawl across all four harnesses
 Updated systems/dotfiles-agent-harness-layout (new "Firecrawl across the four harnesses" section: credential shim, MCP launcher, per-harness agent files, verification matrix, Codex findings, skill cost) and entities/firecrawl (CLI-first section). Findings come from an independent verifier run plus direct re-checks of the Codex symlink, Codex network and key-staleness results; the OpenCode crash is the verifier's report only. Dotfiles changes are on branch feat/firecrawl-all-harnesses in ~/dotfiles (commits f7e2d3c, afd187c), not merged.
+
+## [2026-10-15] ingest | addyosmani/agent-skills + spec-conformance research
+Sources: raw/addyosmaniagent-skills ... .md (today's capture), raw/What if Code Review Happened Before the Code was Written?.md (Aviator), raw/Redesigning source control at Anthropic.md. Research also read the individual agent-skills SKILL.md files and four arXiv abstracts (2606.18168, 2607.21656, 2607.09902, 2510.09907, all abstract-checked via the arXiv API); Firecrawl returned 401 for the research agent, so SKILL.md text came via curl of raw GitHub files.
+Added: summaries/addyosmani-agent-skills, summaries/aviator-spec-driven-verification, summaries/anthropic-scion-source-control, concepts/agent-test-verification, syntheses/spec-conformance-and-review-loop-options.
+Ingest ran on Viet's direct request in a background session; the pre-ingest comprehension questions were not asked. Offer the quiz on return.
+Contradictions/drift noted, not edited: syntheses/lean-agentic-workflow names tools the dotfiles inventory did not find installed (to-prd, /issues, dangeresque, OpenCode lean-session); delegate-pi council script is missing from dotfiles; ~/.claude/hooks/context-threshold.sh is a dangling symlink.

@@ -3,6 +3,9 @@
 Catalog of all pages. Updated on every ingest operation.
 
 ## Summaries
+- [[summaries/addyosmani-agent-skills]] — 25-skill lifecycle pack (spec→ship): anti-rationalization tables, CONSTRAINTS.md floor guard, doubt-driven review cycle, skill routing evals; head-to-head and eval numbers are author-reported *(claimed, unverified)*
+- [[summaries/aviator-spec-driven-verification]] — Aviator experiment: humans review the spec, agent implements, second agent verifies 65 acceptance-criteria items; vendor self-reported *(claimed, unverified)*
+- [[summaries/anthropic-scion-source-control]] — Anthropic Scion: agent-scale source control; lessons on intent-level review, post-merge testing, myopic adversarial review; vendor figures
 - [[summaries/nurture-first-agent-development]] — Zhang 2026 (arXiv 2603.10808): grow domain-expert agents via conversation instead of code/prompt; Knowledge Crystallization Cycle over a 3-layer memory architecture; single-user case study *(illustrative, not validated)*
 - [[summaries/how-to-build-an-agent]] — Thorsten Ball (Amp): code-editing agent in ~300 lines Go via the Anthropic **native** tool-use API; LLM+loop+3 tools (read/list/edit); model chains tools unprompted
 - [[summaries/coding-agent-200-lines]] — Mihai Eric: ~200-line Python coding agent using a **prompt-parsed** `tool: NAME({json})` protocol (no native tool API); twin of how-to-build-an-agent; flags an OpenAI-vs-Anthropic source contradiction
@@ -121,6 +124,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/worker-coordination]] — Partial result passing between parallel workers: contract-first, pipeline, filesystem blackboard, actor mailbox; decision table; failure modes
 - [[concepts/wikilink-graph-extraction]] — Reducing LightRAG indexing cost by injecting Obsidian wikilink structure as extraction hints; ~40-55% token reduction; chunking_func hook; future direct graph injection path
 - [[concepts/verification-pipeline]] — Four-tier quality ladder: typecheck → visual verification → screenshot gate → design critique; origin failures; protocol rules
+- [[concepts/agent-test-verification]] — Weak oracles in agent-written tests (80.2% of patches), mutation and property-based checks, asymmetric cross-model review, post-merge cost of skipped review; arXiv-checked
 - [[concepts/owasp-security-checklist]] — hub for the OWASP pages (split 2026-10-04): severity classification table and pointers to the three pages below
 - [[concepts/owasp-top-10-checklist]] — OWASP Top 10 (A01-A10) review checklist
 - [[concepts/owasp-ai-agent-risks]] — AI-specific extensions: indirect prompt injection, sandbox controls, tool least-privilege, memory security, DoW, slopsquatting, test fabrication, CI/CD confused deputy, rules file injection
@@ -187,6 +191,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[comparisons/cc-to-cross-platform-migration]] — Full migration matrix: CC rules/skills/subagents/hooks/plugins → Gemini/OpenCode/Codex/Cursor/Copilot/Zed; parity rating per layer; hook event counts; DRY adapter pattern
 
 ## Syntheses
+- [[syntheses/spec-conformance-and-review-loop-options]] — Current dotfiles workflow vs lifecycle gaps (spec, test strength, review loops, operate); three refactor options (Harvest / Spec spine / Gated pipeline) with recommendation; decision aid, not adopted
 - [[syntheses/minimal-coding-agent]] — Cross-source thesis from Ball (Go) + Eric (Python): the coding-agent core is LLM+loop+3 tools with no secret; the one real axis is native-API vs prompt-parsed tool protocol (two layers of one idea); leverage lives in the surrounding "elbow grease"
 - [[syntheses/builderio-control-plane-integration]] — Concrete Builder.io integration plan for Commandr + DiffViewer: shared action vocabulary, visual plan/recap artifacts, SPEC-safe bus mapping, Mermaid workflows, implementation slices
 - [[syntheses/neovim-ai-operator-workflow]] — Neovim as human operator cockpit for AI agents: Mason LSP/DAP lane, diffview auto-refresh, selection context, CodeCompanion/Avante/MCPHub/claudecode.nvim roles

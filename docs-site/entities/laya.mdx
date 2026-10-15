@@ -32,10 +32,10 @@ Zero-shot Laya reranking of qmd `hybrid` on the retrieval golden set (104 scored
 
 ## As a skill router (assessment, 2026-10-15; not built)
 
-Question asked: could Laya make a deterministic choice among the installed skills (36 on this machine, no longer capped)? Not now, for two measured reasons.
+Question asked: could Laya make a deterministic choice among the installed skills (36 user-level skills in `~/.claude/skills` on this machine, and well over that once plugin skills are counted; the cap that warned at 22 is only proposed for removal, in the still-open dotfiles draft PR #86)? Not now, for two measured reasons.
 
 - **Zero-shot is not reliable here.** The rerank test above lost to qmd's own ordering, and the page's own limits say 50+ option questions need tuning.
-- **There are no labels to tune on.** The Claude transcripts hold 64 Skill-tool invocations across 235 transcript files and 19 distinct skills (most used: `wiki-context` 11, `grill-me` 7, `plugin-authoring` 7, `save-session` 7, `systematic-debugging` 6). Most skills have zero to two examples, so a 36-way decision head cannot be fine-tuned from this history. Counts only; the transcripts were not read.
+- **There are no labels to tune on.** The Claude transcripts hold 64 Skill-tool invocations across 235 transcript files and 19 distinct skills (most used: `wiki-context` 11, `grill-me` 7, `plugin-authoring` 7, `save-session` 7, `systematic-debugging` 6). Most skills have zero to two examples, so a decision head over 36 or more options cannot be fine-tuned from this history. Counts only; the transcripts were not read.
 
 A staged plan that uses what each tool is good at, to be measured at each step with a pre-registered design like the rerank test:
 

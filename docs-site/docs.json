@@ -44,6 +44,7 @@
           "concepts/agent-skills",
           "concepts/agent-subagents",
           "concepts/agent-teams",
+          "concepts/agent-test-verification",
           "concepts/agentic-cicd",
           "concepts/agentic-memory-tool",
           "concepts/agentic-sandbox-controls",
@@ -156,7 +157,8 @@
           "syntheses/local-rag-wiki",
           "syntheses/minimal-coding-agent",
           "syntheses/neovim-ai-operator-workflow",
-          "syntheses/pi-orchestration-architecture"
+          "syntheses/pi-orchestration-architecture",
+          "syntheses/spec-conformance-and-review-loop-options"
         ]
       },
       {

@@ -4,7 +4,7 @@ type: entity
 tags: [web-scraping, mcp, data-extraction, ai-tools, crawling]
 sources: ["Firecrawl MCP Server.md"]
 created: 2026-04-29
-updated: 2026-05-27
+updated: 2026-10-15
 ---
 
 # Firecrawl
@@ -20,6 +20,10 @@ Firecrawl handles the full stack of web data extraction:
 - Structured data extraction via LLM + JSON schema
 - Autonomous web research (async agent mode)
 - Interactive browser sessions via CDP
+
+## CLI-first across harnesses
+
+The MCP server is one way in, not the only one. The `firecrawl` CLI works from any harness that can run a shell command, and `firecrawl init` installs its skills into `~/.agents/skills`, which Claude Code, Codex, OpenCode and Pi all list (34 `firecrawl*` skills seen in each). The CLI reads `FIRECRAWL_API_KEY` from the environment and prefers it over a stored login, so a stale inherited key breaks every harness started before a key rotation. This setup puts a small shim ahead of the binary on `PATH` that loads the key from `~/secrets/.env` and overrides the inherited value; credentials, per-harness `firecrawl` agent files and the verification matrix are in [[systems/dotfiles-agent-harness-layout]]. Known gap: Codex's sandbox network proxy blocks `api.firecrawl.dev` until the domain is allowed.
 
 ## MCP Integration
 

@@ -57,10 +57,10 @@ Added 2026-10-15 so web research does not depend on one harness's MCP config. Th
 
 | Harness | T1 CLI | T2 skills | T3 agent | What blocked |
 |---|---|---|---|---|
-| Claude Code | pass | pass (34 listed) | pass | A depleted `ANTHROPIC_API_KEY` in the shell environment made every headless `claude -p` fail with "Credit balance is too low"; passed with `env -u ANTHROPIC_API_KEY` |
+| Claude Code | pass | pass (34 listed) | pass | A depleted `ANTHROPIC_API_KEY` inherited from the launching process tree (commented out in `~/secrets/.env`, in no shell or harness file) made every headless `claude -p` fail with "Credit balance is too low"; passed with `env -u ANTHROPIC_API_KEY`, and a fresh terminal should clear it |
 | Pi | pass | pass (34) | pass | Default provider (openai-codex) token expired; passed with `--model opencode-go/deepseek-v4-pro` |
 | Codex | **fail** | pass (34) | spawns after fix; cannot research while T1 fails | Sandbox network (below) |
-| OpenCode | not run | not run | not run | `opencode run` crashes on every invocation, including with a copy of the config that has no firecrawl agent: `TypeError: undefined is not an object (evaluating 'a.name')` in `SystemPrompt.environment`. Static checks pass: `opencode debug agent firecrawl` resolves it and `opencode debug skill` lists 34 firecrawl skills |
+| OpenCode | not run | not run | not run | `opencode run` (1.18.30) crashes on every invocation: `TypeError: undefined is not an object (evaluating 'a.name')` in `SystemPrompt.environment`. It crashed the same way with an empty config dir, a fresh data dir, three different models, no skills, plugins, commands or `AGENTS.md`, and no firecrawl agent, so it looks like an OpenCode bug rather than a setup fault. Not ruled out: skill discovery from `~/.claude/skills` or `~/.agents/skills`, because `HOME` could not be changed in the test. Static checks pass: `opencode debug agent firecrawl` resolves it and `opencode debug skill` lists 34 firecrawl skills |
 
 **Codex findings.**
 

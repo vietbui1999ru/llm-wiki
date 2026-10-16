@@ -1071,3 +1071,6 @@ Updated syntheses/spec-conformance-and-review-loop-options with a "Built" sectio
 - systems/wiki-indexing-pipeline: auto-indexing only fires for commits in the main checkout, not worktree commits or merged PRs.
 - wiki-index: `--verify` found 7 stale or missing pages (183 of 188 indexed); `--reconcile` brought it to 188 of 188. `.lightrag/` backed up first.
 - Dotfiles-side fixes (separate PRs): relaxed mode single-sourced in the grill-me skill, council location corrected, scout and worker availability stated accurately.
+
+## [2026-10-16] update | send-it spec loop rule (derived)
+- claude-setup/rules/send-it.md: send-it variant of the global spec loop. No ac-run approve or check in send-it; floor-guard and a manual diff read replace them. Linked into dotfiles P5 (#104).

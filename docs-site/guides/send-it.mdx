@@ -1,0 +1,204 @@
+---
+title: "send-it: Vibecode Mode"
+description: "send-it is an unattended mode for new, throwaway repositories. While it is on, the agent does not ask questions, does not wait for approvals, and ships its w…"
+---
+# send-it: Vibecode Mode
+
+send-it is an unattended mode for new, throwaway repositories. While it is on, the agent does not ask questions, does not wait for approvals, and ships its work as a pull request with auto-merge requested. The only human gate is the **use-test**: you try the result and decide whether it works.
+
+It is the opposite end of the dial from the [standard workflow](/guides/workflows), where a human approves the spec, every acceptance criterion runs as a command, and a human reviews each Pi run before anything is pushed.
+
+Sources: the rule text in `claude-setup/rules/send-it.md` (this repo), and the session-band mod in dotfiles: `session-band-plugin/hooks/send-it.ts` (pure core), `send-it.tsx` (command and hooks), and `scripts/cloud/send-it-setup.sh` (Claude Code on the web).
+
+---
+
+## Chart 1 — send-it Run
+
+```mermaid
+flowchart TD
+    ON(["You: /send-it on<br>composer only"])
+    ELIG{"eligible repo?<br>not dotfiles, llm-wiki, agent-events<br>root commit on or after 2026-10-16"}
+    REFUSE["refused<br>nothing written"]
+    WRITE["block written to<br>.claude/settings.local.json"]
+    RESTART(["You: restart the session"])
+    INJECT["SessionStart hook<br>injects send-it rule<br>band icon on"]
+
+    subgraph RUN["Agent: dontAsk mode, no questions"]
+        SPEC["read SPEC.md<br>if its branch: matches<br>work only toward its AC ids"]
+        ASSUME["decide open details itself<br>record each under<br>Assumptions in SPEC.md"]
+        BUILD["Haiku worker builds"]
+        CHECK["floor-guard on the diff<br>+ Opus reads the diff<br>against each verify: line"]
+        PASS{"checks pass?"}
+        FIX["fix and rerun<br>max 3 tries"]
+        STOP["stop, report<br>failing output"]
+        SHIP["stage by path, commit,<br>push branch, open PR,<br>request auto-merge"]
+    end
+
+    USE(["You: use-test<br>NEXT: use-test x [you]"])
+    OFF(["You: /send-it off<br>then restart"])
+
+    ON --> ELIG
+    ELIG -->|no| REFUSE
+    ELIG -->|yes| WRITE --> RESTART --> INJECT --> SPEC
+    SPEC --> ASSUME --> BUILD --> CHECK --> PASS
+    PASS -->|no| FIX --> CHECK
+    FIX -.->|3rd failure| STOP
+    PASS -->|yes| SHIP --> USE
+    USE -.-> OFF
+
+    classDef human fill:#fff4d6,stroke:#b8860b,stroke-width:2px,color:#222
+    class ON,RESTART,USE,OFF human
+```
+
+Yellow nodes are the human's. Everything inside the box runs without prompting.
+
+---
+
+## Turning it on and off
+
+| Step | What happens |
+| --- | --- |
+| `/send-it on` | Typed by the person at the composer. The command refuses any other origin, so an agent or script cannot turn it on. |
+| Eligibility | Refused in `~/dotfiles`, `~/repos/llm-wiki` and `~/repos/agent-events`. Otherwise the repo's root commit must be on or after `2026-10-16T00:00:00Z`. An empty repo is eligible. |
+| Write | Merges the send-it block into the repo's `.claude/settings.local.json`. If a key already holds a different value (`model`, `sandbox`, `env.SEND_IT`, `env.SEND_IT_ENV`, `permissions.defaultMode`), it refuses and names the keys, never their values. |
+| Restart | The command replies `written; restart to apply`. Settings load at session start. |
+| On means both | send-it counts as on only when `env.SEND_IT` is `"1"` **and** `permissions.defaultMode` is `dontAsk`. One stray key never turns it on. |
+| Rule injection | At `SessionStart` the mod appends `~/.claude/rules/send-it.md` to the session context. If the file is missing, it shows a toast and injects only a warning. |
+| Config guard | While send-it is on, or while its block is on disk, the `ConfigChange` hook refuses edits to local and user settings. Changes wait for the next start. |
+| `/send-it off` | Removes only the block's own keys and entries, then restart. `/send-it status` reports on or off. Every call is logged to `.claude/state/send-it.log`. |
+
+---
+
+## What the block sets
+
+| Area | Setting |
+| --- | --- |
+| Mode | `permissions.defaultMode: dontAsk`, `model: opus`, `env.SEND_IT=1` |
+| Allowed tools | `Bash`, `Edit`, `Read`, `Glob`, `Grep`, `WebFetch`, `WebSearch`, `Agent`, `Skill`, and the `context7`, `qmd` and `firecrawl` MCP servers |
+| Denied | `AskUserQuestion`; reading `~/secrets/**`; editing `.claude/settings*.json`, `.claude/{hooks,agents,rules,commands,skills}/**`, `.mcp.json`, `.git/hooks/**` |
+| Sandbox | On, with no unsandboxed escape. Cannot read `~/secrets`. Cannot write `~/.claude`, `~/dotfiles`, `~/repos/llm-wiki`, `~/repos/agent-events`, `~/.config/send-it`, `.git/hooks`, `.mcp.json` |
+| Network | `github.com`, `api.github.com`, `*.githubusercontent.com`, `registry.npmjs.org` |
+
+**Cloud variant.** On Claude Code on the web, `send-it-setup.sh` writes `env.SEND_IT=1` and `dontAsk` into the VM's `~/.claude/settings.json` with no sandbox block (the VM is the sandbox), and copies the rule from the llm-wiki checkout.
+
+---
+
+## The rule, in short
+
+The agent reads the full rule at session start. Its eight points:
+
+1. Read `SPEC.md` first when its `branch:` matches; work only toward its AC ids; obey its Boundaries.
+2. Never run `ac-run approve` or `ac-run check`. send-it has no approval record and does not execute `verify:` lines.
+3. Ask no questions. Decide spec details and scope narrowing, and record each under `Assumptions` in `SPEC.md`.
+4. Never edit a `verify:` or `baseline:` line, or a test, to make a check pass.
+5. Before "done", run `floor-guard` and report it; check the diff against each `verify:` line by reading.
+6. Fix and rerun on failure; stop after 3 tries and report.
+7. Build with the Haiku `worker`; Opus reviews the diff.
+8. Commit by path, push, open a PR, enable auto-merge, and end with `NEXT: use-test <x> [you]`.
+
+Never, under any circumstances: force-push, `push --delete`, `reset --hard` to remote refs, `git clean -fd`, `rm -rf` on home or root, reading `~/secrets`, editing send-it settings, running `/send-it`, or asking another agent to do any of these.
+
+---
+
+## send-it vs the standard workflow
+
+| | Standard workflow | send-it |
+| --- | --- | --- |
+| Spec approval | Human runs `ac-run approve` (hash recorded) | None; agent records assumptions |
+| `verify:` lines | Executed by `ac-run check` | Read against the diff, never run |
+| `floor-guard` | Yes | Yes |
+| Questions | One at a time, via grill-me | Denied (`AskUserQuestion` blocked) |
+| Implementation | Pi via pueue or pane-handoff | Haiku `worker` inside Claude |
+| Review | Human `agent-review` per Pi run | Opus diff review; human use-test |
+| Merge | Human decides | Auto-merge requested in the PR |
+| Where allowed | Any repo | New repos only; never the harness repos |
+
+---
+
+## Honest limits
+
+- **No `verify:` line runs.** A passing check is never proof. Correctness rests on Opus's diff review and your use-test.
+- **Auto-merge is a rule instruction, not code.** Nothing in the mod enables it; the agent does it with `gh` if it follows the rule.
+- **The rule is prose.** The settings block and sandbox are enforced by Claude Code; the eight points are not. The refused-repo list and the date floor are the hard boundary.
+- **Restart required.** Turning send-it on or off has no effect until the next session start.
+
+
+<iframe srcDoc="<!doctype html><html><head><meta charset=&quot;utf-8&quot;><style>
+html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
+#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel input[type=range]{width:100%;margin:0}
+#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><div id=&quot;gear&quot;>⚙</div>
+<div id=&quot;panel&quot;>
+<label>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<div class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;><span>Directional arrows</span></div>
+</div>
+<div id=&quot;g&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;guides/send-it&quot;,&quot;label&quot;:&quot;send-it: Vibecode Mode&quot;,&quot;group&quot;:&quot;guides&quot;,&quot;val&quot;:1}],LINKS=[],CUR=&quot;guides/send-it&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return 'rgba(255,255,255,0.12)';})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return 'rgba(255,255,255,0.4)';})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle='#fff';ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+function fit(){G.zoomToFit(400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){G.pauseAnimation();}function resume(){G.resumeAnimation();}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){if(hd.hasPointerCapture(e.pointerId))hd.releasePointerCapture(e.pointerId);hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e2){if(window.console)console.debug('graph: could not persist position',e2);}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />

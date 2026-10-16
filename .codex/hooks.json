@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/repos/llm-wiki/scripts/capture-bash-error.sh"
+          },
+          {
+            "type": "command",
+            "command": "cd ~/repos/llm-wiki && git diff --name-only HEAD 2>/dev/null | grep -q 'log\\.md' && ./scripts/publish-ai-kb.sh || true"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); prompt=$(echo \"$input\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d.get('prompt',''))\" 2>/dev/null); if echo \"$prompt\" | grep -qi 'ingest' && echo \"$prompt\" | grep -qE '\\.pdf'; then pdf=$(echo \"$prompt\" | grep -oE 'pdfs/[^ ]+\\.pdf' | head -1); if [ -n \"$pdf\" ]; then mkdir -p /tmp/docling-wiki-out; full=\"$HOME/repos/llm-wiki/$pdf\"; if [ -f \"$full\" ]; then if command -v docling >/dev/null 2>&1; then cd ~/repos/llm-wiki && docling \"$full\" --to md --output /tmp/docling-wiki-out/ 2>&1 && echo \"[docling] Parsed to /tmp/docling-wiki-out/\"; else echo \"[docling] Not installed. Run: uv tool install docling\"; fi; fi; fi; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -8,8 +8,7 @@ command = '''cd ~/repos/llm-wiki && git diff --name-only HEAD 2>/dev/null | grep
 [mcp_servers.firecrawl]
 command = "npx"
 args = [
-    "-y",
-    "firecrawl-mcp",
+    "firecrawl-mcp@3.29.1",
 ]
 
 [mcp_servers.firecrawl.env]

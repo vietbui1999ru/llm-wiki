@@ -1074,3 +1074,10 @@ Updated syntheses/spec-conformance-and-review-loop-options with a "Built" sectio
 
 ## [2026-10-16] update | send-it spec loop rule (derived)
 - claude-setup/rules/send-it.md: send-it variant of the global spec loop. No ac-run approve or check in send-it; floor-guard and a manual diff read replace them. Linked into dotfiles P5 (#104).
+
+## [2026-10-16] docs | workflow guides refresh + send-it guide
+- docs/workflows.md: new Chart 1 (spec loop + Pi via pueue, human gates marked, step table); claim-task pool trimmed and marked optional; day-to-day chart drops to-prd, to-issues, ralph-structured, spawn-parallel-agents (no longer installed); multi-machine chart kept as planned.
+- docs/send-it.md (new, published as guides/send-it): eligibility, on/off mechanics, settings block, run chart, comparison with the standard loop, honest limits.
+- docs/architecture.md Chart 7: orchestrator effort medium, scout/worker load caveat, spec-loop gate before the review gate.
+- GUIDE.md: grill-me and verify-spec rows, feature and anti-slop recipes match the live spec loop; vibecode recipe added.
+- build-docs-site.mjs: send-it guide, nav entry, landing "How work gets built" cards. docs-site regenerated.

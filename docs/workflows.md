@@ -1,15 +1,91 @@
 # Workflows
 
-## Chart 1 — Claim Task Flow (Local Worktree Pool)
+Two modes run on this harness:
+
+- **Standard** (Chart 1): spec loop plus Pi implementation, with three human gates. The default for every repo, and the only mode allowed in dotfiles, llm-wiki and agent-events.
+- **send-it** (vibecode): unattended, no questions, PR with auto-merge requested; the human's use-test is the gate. New repos only. See the [send-it guide](/guides/send-it).
+
+Rules behind these charts live in dotfiles: the spec-loop block in `claude/.claude/rules/tool-routing.md` (and `shared/AGENTS.md` for Codex, OpenCode and Pi), `plan-handoff.md`, and `model-routing.md`.
+
+---
+
+## Chart 1 — Current Workflow (Spec Loop + Pi)
+
+```mermaid
+flowchart TD
+    TASK([Task])
+
+    subgraph DEFINE["Define: spec loop"]
+        GRILL["grill-me<br>one question at a time<br>writes SPEC.md, ACs with verify: lines"]
+        LINT["ac-run lint SPEC.md<br>status: draft"]
+        APPROVE(["Human: ac-run approve<br>hash + baseline recorded"])
+    end
+
+    subgraph PLAN["Plan"]
+        DESIGN["brainstorming + writing-plans<br>plan tasks cite AC ids"]
+        PLAN_OK(["Human: approve plan"])
+    end
+
+    subgraph BUILD["Build: Pi, outside Claude"]
+        DISPATCH["pueue add ... pi --model explicit<br>--session-id pueue-slug<br>or pane-handoff (interactive)"]
+        PI_WORK["Pi implements, commits as it works"]
+        VERIFIER["post-run-verifier<br>format, lint, typecheck, focused tests<br>+ pi-lens signals"]
+    end
+
+    subgraph CHECK["Check: deterministic gates"]
+        ACCHECK["ac-run check SPEC.md<br>runs every verify: line"]
+        FLOOR["floor-guard<br>skipped tests, new suppressions,<br>lowered thresholds"]
+        PASS{"all ACs pass?"}
+        FIX["verify-spec fix loop<br>max 3 tries, then report"]
+    end
+
+    subgraph SHIP["Review and ship"]
+        REVIEW(["Human: agent-review<br>:AgentReview in Neovim<br>approve via dialog only"])
+        PUSH["Claude: commit by path,<br>push branch, draft PR"]
+        MERGE(["Human: merge"])
+    end
+
+    COUNCIL["council: pi -p peer review<br>advisory only"]
+
+    TASK --> GRILL --> LINT --> APPROVE --> DESIGN --> PLAN_OK --> DISPATCH
+    DISPATCH --> PI_WORK --> VERIFIER --> ACCHECK --> FLOOR --> PASS
+    PASS -->|no| FIX --> ACCHECK
+    PASS -->|yes| REVIEW --> PUSH --> MERGE
+    DESIGN -.->|arch / security / irreversible| COUNCIL
+
+    classDef human fill:#fff4d6,stroke:#b8860b,stroke-width:2px,color:#222
+    class APPROVE,PLAN_OK,REVIEW,MERGE human
+```
+
+Yellow nodes are human gates. Agents are told never to run `ac-run approve` or `agent-review approve`; settings deny the latter, and its approval opens a dialog an agent cannot click.
+
+| Step | Tool | Lives in (dotfiles) | Who |
+| --- | --- | --- | --- |
+| Interview, write spec | `grill-me` skill | `shared/skills/grill-me` | Agent + human answers |
+| Approve spec | `ac-run approve` (y/N on stdin) | `scripts/ac-run` | Human only |
+| Plan | superpowers brainstorming, writing-plans | plugin | Agent; human approves |
+| Dispatch | `pueue` + `pi --model`, or `scripts/pane-handoff` | `claude/.claude/rules/plan-handoff.md`, `shared/skills/delegate-pi` | Claude |
+| Implement | Pi (model chosen per `model-routing.md`) | — | Pi |
+| Verify run | post-run-verifier, pi-lens | `pi/.pi/agent/extensions/` | Automatic |
+| Check ACs | `ac-run check`, `floor-guard` | `scripts/ac-run`, `scripts/floor-guard` | Agent, pastes both outputs |
+| Fix loop | `verify-spec` skill | `shared/skills/verify-spec` | Agent, max 3 reruns |
+| Review | `agent-review`, `:AgentReview` | `scripts/agent-review`, `nvim/.../agent_review.lua` | Human |
+| Push, PR | git, `gh` | `plan-handoff.md` (Claude pushes branches, never main) | Claude |
+| Merge | GitHub | — | Human |
+
+**Honest limits.** Spec approval is an honour system: an agent with a shell could forge it, and the defence is the rule plus `floor-guard` reporting. Prose rules are not verified; only the scripts' results are. Planning before approval is not phase-locked.
+
+---
+
+## Chart 2 — Optional: Parallel Worktree Pool (claim-task)
 
 ```mermaid
 flowchart TD
     START([Orchestrator session starts])
 
     subgraph SETUP["Orchestrator: prep work"]
-        GRILL["grill-me skill<br>align requirements"]
-        PRD["to-prd skill<br>write PRD"]
-        ISSUES["to-issues skill<br>break into vertical slices"]
+        GRILL["grill-me<br>SPEC.md, human approves"]
+        ISSUES["split into vertical slices<br>each cites AC ids"]
         INBOX_WRITE["write TASK-*.md<br>to .agents/inbox/"]
         WORKTREES["create git worktrees<br>.trees/TASK-001/ etc."]
     end
@@ -43,7 +119,7 @@ flowchart TD
         VERIFY["verify"]
     end
 
-    START --> GRILL --> PRD --> ISSUES --> INBOX_WRITE --> WORKTREES
+    START --> GRILL --> ISSUES --> INBOX_WRITE --> WORKTREES
     WORKTREES -->|spawn N agents| CLAIM
 
     CLAIM --> READ_TASK --> IMPL --> COMMIT --> MOVE_DONE --> STATUS
@@ -59,9 +135,11 @@ flowchart TD
     COUNCIL_GATE -->|no| MERGE_WT --> VERIFY
 ```
 
+Use the pool only when a spec splits into independent slices that several sessions can build at once. The `claim-task` and `kanban-status` skills are live; each slice still goes through the Chart 1 checks before its branch is merged.
+
 ---
 
-## Chart 2 — Single Machine Day-to-Day Workflow
+## Chart 3 — Single Machine Day-to-Day Workflow
 
 ```mermaid
 flowchart TD
@@ -91,10 +169,10 @@ flowchart TD
     end
 
     subgraph IMPL["Implementation work"]
-        PLAN["to-prd + to-issues<br>decompose into tasks"]
-        SHORT["in-process agents<br>≤5 tasks, <30 min each"]
-        RALPH_S["ralph-structured<br>goal → tasks.json → /ralph-loop<br>one-task-per-iteration<br>stuckness protection (3 attempts)"]
-        LONG["worktree pool<br>spawn-parallel-agents<br>claim-task protocol"]
+        MODE{"repo?"}
+        STANDARD["standard workflow (Chart 1)<br>SPEC.md → Pi via pueue →<br>ac-run check + floor-guard → agent-review"]
+        POOL["parallel worktree pool (Chart 2)<br>independent slices"]
+        SENDIT["send-it (vibecode)<br>new repos only<br>use-test is the gate"]
     end
 
     subgraph EOD["End of session"]
@@ -122,7 +200,10 @@ flowchart TD
     COUNCIL_Q -->|"quick check"| QUICK
     COUNCIL_Q -->|"full synthesis"| FULL --> COUNCIL_OUT
 
-    VIET -->|"build something"| PLAN --> SHORT & RALPH_S & LONG
+    VIET -->|"build something"| MODE
+    MODE -->|"default, any repo"| STANDARD
+    MODE -->|"spec splits cleanly"| POOL
+    MODE -->|"throwaway, /send-it on"| SENDIT
 
     VIET -->|"wrapping up"| SAVE --> NEXT
 
@@ -141,13 +222,15 @@ flowchart TD
 
 ---
 
-## Chart 3 — Multi-Machine Future Architecture (Planned)
+## Chart 4 — Multi-Machine Future Architecture (Planned)
+
+Not built. Kept as the design target for moving implementation off the primary machine.
 
 ```mermaid
 flowchart TD
     subgraph M1["Machine A — primary (design + orchestration)"]
         VIET_A[Viet / orchestrator session]
-        GRILL_A["grill-me + to-prd"]
+        GRILL_A["grill-me → SPEC.md<br>human ac-run approve"]
         ISSUE_CREATE["gh issue create<br>--label ready-for-agent<br>(handoff body format)"]
         COUNCIL_A["council.py<br>design decisions"]
         SESSION_A["save-session<br>→ .claude/session-state.md"]

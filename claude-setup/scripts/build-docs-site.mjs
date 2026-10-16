@@ -39,6 +39,7 @@ const GUIDES = [
   { src: "GUIDE.md", out: "guides/reference" },
   { src: "docs/architecture.md", out: "guides/architecture" },
   { src: "docs/workflows.md", out: "guides/workflows" },
+  { src: "docs/send-it.md", out: "guides/send-it" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -409,6 +410,19 @@ description: "A compounding, agent-maintained knowledge base on AI agent enginee
     How the harness fits together (diagrams).
   </Card>
 </CardGroup>
+
+## How work gets built
+
+<CardGroup cols={2}>
+  <Card title="Standard workflow" icon="route" href="/guides/workflows">
+    Spec loop plus Pi: grill-me writes SPEC.md, you approve it, Pi implements, ac-run and
+    floor-guard check every criterion, you review before merge.
+  </Card>
+  <Card title="send-it (vibecode)" icon="paper-plane" href="/guides/send-it">
+    Unattended mode for new repos: no questions, PR with auto-merge requested,
+    your use-test is the gate.
+  </Card>
+</CardGroup>
 `;
 writeFileSync(join(OUT, "index.mdx"), landing + "\n" + widgetMarkup(null) + "\n");
 count++;
@@ -418,7 +432,7 @@ count++;
 
 const groups = [
   { group: "Get Started", pages: ["index", "guides/onboarding", "guides/reference"] },
-  { group: "Architecture", pages: ["guides/architecture", "guides/workflows"] },
+  { group: "Architecture", pages: ["guides/architecture", "guides/workflows", "guides/send-it"] },
 ];
 for (const [dir, label] of WIKI_DIRS) {
   const pages = files

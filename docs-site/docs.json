@@ -31,7 +31,8 @@
         "group": "Architecture",
         "pages": [
           "guides/architecture",
-          "guides/workflows"
+          "guides/workflows",
+          "guides/send-it"
         ]
       },
       {

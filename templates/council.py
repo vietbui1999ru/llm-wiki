@@ -12,9 +12,9 @@ No API keys needed — each CLI uses its own stored auth.
 Voice outputs are written to .council/ for git tracking and cross-run diffs.
 
 Reads from env (set via env-model-routing.sh):
-  OPENCODE_MODEL_COUNCIL      — council voice A (default: anthropic/claude-sonnet-4-6)
-  OPENCODE_MODEL_COUNCIL_FAST — council voice B (default: openai/gpt-5.4)
-  OPENCODE_MODEL_COUNCIL_CODE — chairman model  (default: anthropic/claude-opus-4-6)
+  OPENCODE_MODEL_COUNCIL      — council voice A (default: anthropic/claude-sonnet-5-5)
+  OPENCODE_MODEL_COUNCIL_FAST — council voice B (default: openai/gpt-6.1-sol)
+  OPENCODE_MODEL_COUNCIL_CODE — chairman model  (default: anthropic/claude-opus-5-5)
   COUNCIL_DIR                 — output directory (default: .council)
 
 Routing:
@@ -25,7 +25,7 @@ Usage:
   uv run council.py "should we use optimistic or pessimistic locking here?"
   echo "question" | uv run council.py
   uv run council.py --chairman "question"
-  uv run council.py --add openai/gpt-5.3-codex "question"
+  uv run council.py --add openai/gpt-6.1-sol "question"
 """
 
 import asyncio
@@ -36,9 +36,9 @@ import tempfile
 import textwrap
 from pathlib import Path
 
-MODEL_A  = os.getenv("OPENCODE_MODEL_COUNCIL",      "anthropic/claude-sonnet-4-6")
-MODEL_B  = os.getenv("OPENCODE_MODEL_COUNCIL_FAST", "openai/gpt-5.4")
-CHAIRMAN = os.getenv("OPENCODE_MODEL_COUNCIL_CODE", "anthropic/claude-opus-4-6")
+MODEL_A  = os.getenv("OPENCODE_MODEL_COUNCIL",      "anthropic/claude-sonnet-5-5")
+MODEL_B  = os.getenv("OPENCODE_MODEL_COUNCIL_FAST", "openai/gpt-6.1-sol")
+CHAIRMAN = os.getenv("OPENCODE_MODEL_COUNCIL_CODE", "anthropic/claude-opus-5-5")
 
 SEP  = "─" * 64
 SEP2 = "═" * 64

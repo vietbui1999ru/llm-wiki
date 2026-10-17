@@ -38,7 +38,7 @@ Voices run first, then Opus reads both files and writes `.council/synthesis.md`.
 ## Add Codex as third voice
 
 ```bash
-council --chairman --add openai/gpt-5.3-codex "QUESTION"
+council --chairman --add openai/gpt-6.1-sol "QUESTION"
 ```
 
 ## After output

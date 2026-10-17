@@ -23,8 +23,8 @@ Codex must participate as a council voice, not only as local harness.
 
 Preferred invocations:
 
-- Fast pass: `python3 templates/council.py --add openai/gpt-5.3-codex "question"`
-- Full pass: `python3 templates/council.py --chairman --add openai/gpt-5.3-codex "question"`
+- Fast pass: `python3 templates/council.py --add openai/gpt-6.1-sol "question"`
+- Full pass: `python3 templates/council.py --chairman --add openai/gpt-6.1-sol "question"`
 
 If you want Codex as Chairman too, override `OPENCODE_MODEL_COUNCIL_CODE` in the shell before running council.
 

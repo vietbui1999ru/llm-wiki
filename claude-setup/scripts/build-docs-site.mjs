@@ -16,7 +16,7 @@
 // Usage:  node claude-setup/scripts/build-docs-site.mjs
 // Source of truth stays in wiki/*.md; this only writes docs-site/.
 
-import { readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync, readdirSync, existsSync, copyFileSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -214,27 +214,30 @@ const FG_SRI = "sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJ
 // injected via tokens). Nested pages embed only their bounded neighbourhood; the
 // root page (cur=null) embeds the whole graph. The animation loop pauses when the
 // pointer is not over the widget, so it never repaints during page scroll.
-const WIDGET_HTML = `<!doctype html><html><head><meta charset="utf-8"><style>
+const WIDGET_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Knowledge graph</title><style>
 html,body{margin:0;height:100%;background:#0f1117;overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
 #g{width:100%;height:100%}
-#hd{position:absolute;top:0;left:0;right:30px;height:22px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:10px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
-#gear{position:absolute;top:5px;right:7px;z-index:7;cursor:pointer;color:#aeb3c2;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;user-select:none}
-#panel{position:absolute;top:31px;right:7px;z-index:7;background:rgba(22,25,34,.96);border:1px solid #2b2f3a;border-radius:8px;padding:6px 9px 9px;display:none;width:150px;color:#c9cdd8;font-size:10px}
+#hd{position:absolute;top:0;left:0;right:36px;height:28px;display:flex;align-items:center;gap:6px;padding:0 10px;color:#aeb3c2;font-size:11px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(#0f1117cc,#0f111700)}
+#gear{position:absolute;top:4px;right:6px;z-index:7;cursor:pointer;color:#c9cdd8;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+#panel{position:absolute;top:36px;right:6px;z-index:7;background:rgba(22,25,34,.97);border:1px solid #2b2f3a;border-radius:8px;padding:6px 10px 10px;display:none;width:170px;color:#c9cdd8;font-size:12px}
 #panel.open{display:block}
-#panel label{display:flex;justify-content:space-between;margin:7px 0 1px;color:#9aa0b0}
+#panel label{display:flex;justify-content:space-between;margin:8px 0 2px;color:#b4b9c6}
 #panel input[type=range]{width:100%;margin:0}
-#panel .row{display:flex;align-items:center;gap:6px;margin-top:8px;color:#c9cdd8}
+#panel label.row{justify-content:flex-start;align-items:center;gap:6px;margin-top:10px;color:#c9cdd8}
+#reset{margin-top:10px;width:100%;min-height:26px;font:inherit;color:#c9cdd8;background:#1b1e27;border:1px solid #2b2f3a;border-radius:6px;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid #9E8CFC;outline-offset:2px}
 </style><script src="${FG_SRC}" integrity="${FG_SRI}" crossorigin="anonymous"></script></head>
-<body><div id="hd">Graph</div><div id="gear">⚙</div>
-<div id="panel">
-<label>Node size<span id="vns"></span></label><input id="ns" type="range" min="0.6" max="6" step="0.2">
-<label>Link width<span id="vlw"></span></label><input id="lw" type="range" min="0" max="3" step="0.1">
-<label>Label size<span id="vts"></span></label><input id="ts" type="range" min="0" max="8" step="0.5">
-<label>Label opacity<span id="vto"></span></label><input id="to" type="range" min="0" max="1" step="0.05">
-<div id="depthRow"><label>Depth<span id="vd"></span></label><input id="dp" type="range" min="1" max="5" step="1"></div>
-<div class="row"><input id="ar" type="checkbox"><span>Directional arrows</span></div>
+<body><div id="hd">Graph</div><button type="button" id="gear" aria-label="Graph settings" aria-expanded="false" aria-controls="panel">⚙</button>
+<div id="panel" role="group" aria-label="Graph settings">
+<label for="ns">Node size<span id="vns"></span></label><input id="ns" type="range" min="0.6" max="6" step="0.2">
+<label for="lw">Link width<span id="vlw"></span></label><input id="lw" type="range" min="0" max="3" step="0.1">
+<label for="ts">Label size<span id="vts"></span></label><input id="ts" type="range" min="0" max="8" step="0.5">
+<label for="to">Label opacity<span id="vto"></span></label><input id="to" type="range" min="0" max="1" step="0.05">
+<div id="depthRow"><label for="dp">Depth<span id="vd"></span></label><input id="dp" type="range" min="1" max="5" step="1"></div>
+<label class="row"><input id="ar" type="checkbox">Directional arrows</label>
+<button type="button" id="reset">Reset position</button>
 </div>
-<div id="g"></div>
+<div id="g" aria-hidden="true"></div>
 <script>
 const NODES=__NODES__,LINKS=__LINKS__,CUR=__CUR__,MAXD=__MAXD__;
 const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
@@ -262,7 +265,8 @@ var G=ForceGraph()(el).backgroundColor('#0f1117').nodeId('id')
   if(opt.to>0&&opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?'#ffffff':'#aab0c0';ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
  .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
 G.graphData(visible());G.d3VelocityDecay(0.4);
-function fit(){G.zoomToFit(400,20);}
+var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fit(){G.zoomToFit(RM?0:400,20);}
 setTimeout(fit,350);setTimeout(fit,1100);
 // Stop the render/sim loop while idle so the fixed widget never repaints during
 // parent-page scroll; resume only while the pointer is over the widget.
@@ -281,12 +285,19 @@ bind('to','to',function(v){return v.toFixed(2);},false);
 var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
 if(!CUR)document.getElementById('depthRow').style.display='none';
 var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
-document.getElementById('gear').addEventListener('click',function(){document.getElementById('panel').classList.toggle('open');});
+var gear=document.getElementById('gear'),panel=document.getElementById('panel');
+function setPanel(open){panel.classList.toggle('open',open);gear.setAttribute('aria-expanded',String(open));}
+gear.addEventListener('click',function(){setPanel(!panel.classList.contains('open'));});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&panel.classList.contains('open')){setPanel(false);gear.focus();}});
 var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
 // free-form placement: drag by the header. Default is bottom-right (inline style);
 // a moved position is saved per parent-origin and restored on every page.
 function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
 function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+// Non-drag alternative (WCAG 2.5.7): back to the stylesheet's bottom-right default.
+document.getElementById('reset').addEventListener('click',function(){var fe=window.frameElement;if(fe){fe.style.left=fe.style.top=fe.style.right=fe.style.bottom='';}try{localStorage.removeItem('llmwiki_graph_pos');}catch(e){if(window.console)console.debug('graph: could not clear position',e);}});
+// keep a moved panel inside the viewport when the parent window shrinks.
+try{(window.top||window).addEventListener('resize',function(){var fe=window.frameElement;if(fe&&fe.style.left)place(fe,parseFloat(fe.style.left),parseFloat(fe.style.top));});}catch(e){if(window.console)console.debug('graph: parent resize unavailable',e);}
 try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&&window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
 hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
  function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
@@ -334,7 +345,22 @@ function widgetMarkup(id) {
     .replace("__DEPTH__", String(depth))
     .replace(/&/g, "&amp;")
     .replace(/"/g, "&quot;");
-  return `<iframe srcDoc="${srcdoc}" title="Knowledge graph" loading="lazy" style={{position:"fixed",right:"18px",bottom:"18px",width:"320px",height:"340px",border:0,borderRadius:"14px",boxShadow:"0 6px 28px rgba(0,0,0,0.38)",zIndex:50,background:"#0f1117"}} />`;
+  // Size, position and the mobile breakpoint live in docs-site-assets/style.css.
+  const title = id
+    ? "Knowledge graph (visual). The same links are listed under Linked pages."
+    : "Knowledge graph (visual)";
+  return `<iframe srcDoc="${srcdoc}" title="${title}" loading="lazy" className="llmwiki-graph" />`;
+}
+
+// Text equivalent of the graph: the page's direct neighbours. Screen readers and
+// keyboard users get the graph's information, and phones (graph hidden) get it too.
+function linkedPagesMarkup(id) {
+  const items = [...(adj.get(id) || [])]
+    .map((n) => ({ path: n, label: nodeMeta.get(n).label }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+  if (!items.length) return "";
+  const esc = (s) => escapeMdx(s).replace(/[[\]]/g, "\\$&");
+  return "## Linked pages\n\n" + items.map((i) => `- [${esc(i.label)}](/${i.path})`).join("\n") + "\n";
 }
 
 // ---------------------------------------------------------------------------
@@ -354,12 +380,14 @@ function writePage(outPath, title, description, body) {
     "---",
     "",
   ].filter((l) => l !== null).join("\n");
+  const linked = linkedPagesMarkup(outPath);
   const widget = widgetMarkup(outPath);
-  writeFileSync(dest, fm + transformBody(body) + "\n" + (widget ? "\n" + widget + "\n" : ""));
+  writeFileSync(dest, fm + transformBody(body) + "\n" + (linked ? "\n" + linked : "") + (widget ? "\n" + widget + "\n" : ""));
 }
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
+copyFileSync(join(ROOT, "claude-setup", "docs-site-assets", "style.css"), join(OUT, "style.css"));
 
 let count = 0;
 

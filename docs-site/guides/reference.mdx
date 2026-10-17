@@ -587,7 +587,7 @@ Periodically: capture-mistake distillation pass
 ```
 Quick (advisory Codex check):
   pi -p "Peer review: [decision]. Flag concerns." \
-     --model openai-codex/gpt-5.3-codex --no-session --no-extensions --no-skills
+     --model openai-codex/gpt-6.1-sol --no-session --no-extensions --no-skills
 → Codex output is advisory — synthesize, don't defer
 
 Full (two voices + Opus synthesis):
@@ -657,7 +657,7 @@ Do NOT use for: routine implementation, single-file edits, config changes, wiki 
 
 ```bash
 pi -p "Peer review: [decision summary]. Context: [details]. Flag concerns." \
-   --model openai-codex/gpt-5.3-codex \
+   --model openai-codex/gpt-6.1-sol \
    --no-session \
    --no-extensions \
    --no-skills
@@ -671,8 +671,8 @@ Output is advisory — synthesize disagreements yourself, don't defer blindly.
 council.py --chairman "Should we [decision]?"
 ```
 
-- **Voice A:** Sonnet (`claude -p --model claude-sonnet-4-6`)
-- **Voice B:** Codex (`pi -p --model openai-codex/gpt-5.3-codex --no-session`)
+- **Voice A:** Sonnet (`claude -p --model claude-sonnet-5-5`)
+- **Voice B:** Codex (`pi -p --model openai-codex/gpt-6.1-sol --no-session`)
 - **Chairman:** Opus synthesizes disagreements → `.council/synthesis.md`
 - Output auto-committed to `.council/`
 
@@ -696,7 +696,7 @@ OpenCode (`opencode` CLI v1.14.30) is installed, configured, and has its full ru
 | `opencode run` as council Voice C (GPT via Copilot) | ✅ stdout-compatible with ANSI filter |
 | TUI interactive sessions | ✅ Works via authenticated providers |
 
-**To unlock `opencode/` models (GPT-5.3-codex, Gemini-3.1-pro, etc.):** add a payment method to the OpenCode workspace. Once done: migrate Pi to `opencode` provider and retire the ChatGPT Team subscription.
+**To unlock `opencode/` models (GPT-6.1-sol, Gemini-3.1-pro, etc.):** add a payment method to the OpenCode workspace. Once done: migrate Pi to `opencode` provider and retire the ChatGPT Team subscription.
 
 ---
 

@@ -114,7 +114,7 @@ flowchart TD
     subgraph MERGE["Orchestrator: integrate"]
         REVIEW["review step<br>per completed task"]
         COUNCIL_GATE{"design-risk?"}
-        COUNCIL_RUN["pi -p peer review<br>--model openai-codex/gpt-5.3-codex<br>--no-session"]
+        COUNCIL_RUN["pi -p peer review<br>--model openai-codex/gpt-6.1-sol<br>--no-session"]
         MERGE_WT["merge worktrees<br>into main branch"]
         VERIFY["verify"]
     end
@@ -163,7 +163,7 @@ flowchart TD
 
     subgraph DESIGN["Design / decision"]
         COUNCIL_Q{"scope?"}
-        QUICK["pi -p peer review<br>openai-codex/gpt-5.3-codex<br>--no-session<br>advisory output only"]
+        QUICK["pi -p peer review<br>openai-codex/gpt-6.1-sol<br>--no-session<br>advisory output only"]
         FULL["council.py --chairman<br>Voice A: Sonnet (claude -p)<br>Voice B: Codex (pi -p)<br>Chair: Opus synthesis"]
         COUNCIL_OUT[".council/voice_*.md<br>+ synthesis.md<br>auto-committed"]
     end

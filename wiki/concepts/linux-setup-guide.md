@@ -4,7 +4,7 @@ type: concept
 tags: [setup, tooling, workflow, claude-code, opencode, headroom, dotfiles]
 sources: []
 created: 2026-06-09
-updated: 2026-10-04
+updated: 2026-10-17
 ---
 
 # Linux Machine Setup Guide
@@ -178,7 +178,7 @@ Key uses by tool:
 |-----|------------|
 | `ANTHROPIC_API_KEY` | Claude Code |
 | `OPENCODE_GO_API_KEY_LIGHTRAG` | wiki-index extraction, wiki-chat and wiki-mcp synthesis (OpenCode Go, OpenAI-compatible; unset → no backend, error) |
-| `GITHUB_TOKEN` (models:read scope) | Pi council voice (openai/gpt-5.4 via GitHub Models endpoint) |
+| `GITHUB_TOKEN` (models:read scope) | Pi council voice (openai/gpt-6.1-sol via GitHub Models endpoint) |
 
 ---
 
@@ -201,7 +201,7 @@ pi --version
 Pi is used as a stateless subprocess in the council workflow:
 ```bash
 pi -p "Peer review: [decision]. Flag concerns." \
-   --model openai-codex/gpt-5.3-codex \
+   --model openai-codex/gpt-6.1-sol \
    --no-session --no-extensions --no-skills
 ```
 

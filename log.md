@@ -1081,3 +1081,9 @@ Updated syntheses/spec-conformance-and-review-loop-options with a "Built" sectio
 - docs/architecture.md Chart 7: orchestrator effort medium, scout/worker load caveat, spec-loop gate before the review gate.
 - GUIDE.md: grill-me and verify-spec rows, feature and anti-slop recipes match the live spec loop; vibecode recipe added.
 - build-docs-site.mjs: send-it guide, nav entry, landing "How work gets built" cards. docs-site regenerated.
+
+## [2026-10-17] update | council models moved to current releases
+- Council voices: A `claude-sonnet-5-5`, B `gpt-6.1-sol` (codex for council.py, `openai-codex/gpt-6.1-sol` for the Pi quick check), chairman `claude-opus-5-5`. Each answered a one-line smoke prompt.
+- Updated: templates/council.py and env-model-routing.sh defaults, skills/council, .codex/AGENTS.md, claude-setup/rules/applied-ai.md (Tier 0), docs/architecture.md, docs/workflows.md, GUIDE.md, wiki/concepts/linux-setup-guide.md.
+- Not changed: wiki summaries (record what sources said), illustrative model names in unrelated pages, the optional Copilot voice C (`github-copilot/gpt-5.2-codex`, catalog not checked).
+- Pi side (dotfiles #111): scoped models recorded in model-routing.md; Pi default is now `opencode-go/deepseek-v4.1-flash` at medium thinking.

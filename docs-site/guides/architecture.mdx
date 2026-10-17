@@ -31,9 +31,9 @@ graph TD
 
     subgraph COUNCIL["Council / Review"]
         COUNCIL_PY[council.py]
-        VOICE_A[Voice A — Sonnet<br>claude -p --model claude-sonnet-4-6]
-        VOICE_B[Voice B — Codex<br>pi -p --model openai-codex/gpt-5.3-codex<br>--no-session]
-        CHAIR[Chairman — Opus<br>claude -p --model claude-opus-4-7]
+        VOICE_A[Voice A — Sonnet<br>claude -p --model claude-sonnet-5-5]
+        VOICE_B[Voice B — Codex<br>pi -p --model openai-codex/gpt-6.1-sol<br>--no-session]
+        CHAIR[Chairman — Opus<br>claude -p --model claude-opus-5-5]
     end
 
     subgraph CONFIG["Config Distribution"]
@@ -164,15 +164,15 @@ sequenceDiagram
     User->>council.py: question [--chairman] [--add MODEL]
 
     par parallel dispatch
-        council.py->>VoiceA: claude -p --model claude-sonnet-4-6
-        council.py->>VoiceB: pi -p --model openai-codex/gpt-5.3-codex --no-session
+        council.py->>VoiceA: claude -p --model claude-sonnet-5-5
+        council.py->>VoiceB: pi -p --model openai-codex/gpt-6.1-sol --no-session
     end
 
     VoiceA-->>Files: voice_a.md
     VoiceB-->>Files: voice_b.md
 
     alt --chairman flag set
-        council.py->>Chair: claude -p --model claude-opus-4-7\n(synthesis prompt — all voice files concatenated)
+        council.py->>Chair: claude -p --model claude-opus-5-5\n(synthesis prompt — all voice files concatenated)
         Chair-->>Files: synthesis.md
     end
 
@@ -188,8 +188,8 @@ opencode run "question" -m github-copilot/gpt-5.2-codex 2>/dev/null \
 
 **Quick council (no council.py):**
 ```bash
-# Voice B — Pi (GPT-5.3-codex, clean stdout)
-pi -p "peer review: [question]" --model openai-codex/gpt-5.3-codex --no-session --no-extensions --no-skills
+# Voice B — Pi (GPT-6.1-sol, clean stdout)
+pi -p "peer review: [question]" --model openai-codex/gpt-6.1-sol --no-session --no-extensions --no-skills
 
 # Voice C — OpenCode run (GPT-5.2-codex via Copilot, filterable stdout)
 opencode run "peer review: [question]" -m github-copilot/gpt-5.2-codex 2>/dev/null \
@@ -351,7 +351,7 @@ graph TD
     end
 
     subgraph COUNCIL["Council (subprocess, not fleet)"]
-        PI_SUB["pi -p --model openai-codex/gpt-5.3-codex<br>--no-session<br>Codex peer review: advisory only<br>reads stdout, not .agents/ bus"]
+        PI_SUB["pi -p --model openai-codex/gpt-6.1-sol<br>--no-session<br>Codex peer review: advisory only<br>reads stdout, not .agents/ bus"]
     end
 
     USER --> ORCH

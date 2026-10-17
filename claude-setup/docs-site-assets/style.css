@@ -16,6 +16,13 @@
   background: #0f1117;
 }
 
+/* Light theme (Mintlify sets class light|dark on <html>). Matches the widget's
+   own light palette so there is no dark flash before its script runs. */
+html.light .llmwiki-graph {
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.14), 0 0 0 1px #e5e7eb;
+}
+
 /* Mintlify's #content sets isolation:isolate, so the iframe's z-index only ranks
    inside #content, and the whole of #content sits under the table-of-contents
    column (z-index 21) that shows at >=1280px. The TOC then swallowed clicks on

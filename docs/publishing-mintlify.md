@@ -40,6 +40,13 @@ Every page carries a fixed bottom-right graph panel:
   never loads, so phones don't download `force-graph` at all. Instead, every page ends with a
   **Linked pages** list of its direct neighbours. That list is also the text equivalent of the
   graph for keyboard and screen-reader users. The canvas itself is `aria-hidden`.
+- **The panel follows the site theme live.** Mintlify sets `class="light"` or `class="dark"` on
+  `<html>`. The widget watches that class with a `MutationObserver` on its parent document, and
+  falls back to `prefers-color-scheme`. Its CSS colours are variables, and the canvas colours
+  come from a `PAL` table. On a switch it turns `autoPauseRedraw` off for 250ms. Without that,
+  force-graph keeps the old frame, because nothing in the graph moved. Note that with Mintlify's
+  preference set to "System", Mintlify itself doesn't re-theme on an OS change until reload. The
+  widget follows the page, not the OS.
 - Layout lives in `claude-setup/docs-site-assets/style.css`, which the generator copies to
   `docs-site/style.css`. Mintlify loads every `.css` file in the content directory on every page.
   The stylesheet also lifts `#content` above the table-of-contents column. Mintlify isolates

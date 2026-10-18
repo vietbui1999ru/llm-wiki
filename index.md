@@ -155,6 +155,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/slash-commands]] — Decision guide for Claude Code session commands: when to use /goal, /loop, /ralph-structured, /clear, /compact, /save-session, /handoff, and how they differ
 - [[concepts/linux-setup-guide]] — Authoritative step-by-step guide for bootstrapping the full AI workflow on a fresh Linux machine; AI-executable; covers dotfiles, Claude Code, plugins, wiki toolchain, LightRAG index
 - [[concepts/cli-driven-vault-automation]] — Wrapper-script + cron patterns over the Obsidian CLI; doctor/health-check convention, "Obsidian must be running" guard, small-stable-verb-set instinct shared with MCP Code Mode
+- [[concepts/acp-protocol]] *(stub)* — Agent Communication Protocol (Zed): editor-native agent ↔ editor protocol; buffer access + write-through save path; distinct from MCP; omp, CodeCompanion.nvim, Avante.nvim support
 
 ## Patterns
 - [[patterns/principles]] — SOLID (SRP/OCP/LSP/ISP/DIP), DRY, Rule of Three (timing for DRY), YAGNI, KISS, Law of Demeter, SoC, composition over inheritance; per-principle violation patterns and decision table; YAGNI section expanded with the four costs, scope limit and agent guidance

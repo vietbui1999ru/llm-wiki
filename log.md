@@ -1087,3 +1087,28 @@ Updated syntheses/spec-conformance-and-review-loop-options with a "Built" sectio
 - Updated: templates/council.py and env-model-routing.sh defaults, skills/council, .codex/AGENTS.md, claude-setup/rules/applied-ai.md (Tier 0), docs/architecture.md, docs/workflows.md, GUIDE.md, wiki/concepts/linux-setup-guide.md.
 - Not changed: wiki summaries (record what sources said), illustrative model names in unrelated pages, the optional Copilot voice C (`github-copilot/gpt-5.2-codex`, catalog not checked).
 - Pi side (dotfiles #111): scoped models recorded in model-routing.md; Pi default is now `opencode-go/deepseek-v4.1-flash` at medium thinking.
+
+## [2026-10-18] lint
+
+### Orphan pages (no cross-links from content pages; all appear in index.md)
+- `patterns/algorithmic` — zero content-page wikilinks; index-only
+- `patterns/backend` — zero content-page wikilinks; index-only
+- `systems/otel-council` — zero content-page wikilinks; index-only
+
+### Stale claims
+- **Tier-0 drift**: `concepts/council-pattern` (updated 2026-05-22) still shows "Sonnet 4.6 + GPT-5.4 … Chairman: Opus 4.6" in its "This repo council" table, but the 2026-10-17 update moved council to `claude-sonnet-5-5` / `gpt-6.1-sol` / `claude-opus-5-5`. `applied-ai.md` references `[[concepts/council-pattern]]` — page is stale relative to the Tier-0 rule. Flag for manual update on next council-focused ingest.
+- No other contradictions found between recent summaries (Oct 2026) and older concept pages.
+
+### Missing concept stubs created
+- `concepts/acp-protocol` (new stub) — ACP (Agent Communication Protocol, Zed) mentioned in 8 wiki pages; no dedicated page existed. Stub created.
+
+### index.md
+- Added `[[concepts/acp-protocol]] *(stub)*` entry.
+
+### Source suggestions (gaps)
+1. **ACP protocol docs (Zed)** — fill the `acp-protocol` stub; editor-native agent protocol vs MCP
+2. **Anthropic prompt caching docs** — mentioned in 4 pages; no concept page; fills a gap in context-engineering coverage
+3. **A2A (Agent-to-Agent) protocol by Google** — mentioned in 2 pages alongside ACP; multi-agent communication standard
+4. **LightRAG paper / docs** — used in wiki-indexing-pipeline but no dedicated summary; would document the extraction/synthesis mechanism in use
+5. **Structured outputs / JSON mode across LLM providers** — mentioned in 3+ pages; no dedicated concept page; relevant to tool-design-for-agents
+

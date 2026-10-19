@@ -1,0 +1,43 @@
+/* Copied into docs-site/ by claude-setup/scripts/build-docs-site.mjs.
+   Mintlify loads every .css file in the content directory on every page. */
+
+/* Knowledge-graph panel (iframe emitted by widgetMarkup). Default: bottom-right.
+   The widget's drag handler overrides left/top inline. */
+.llmwiki-graph {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  width: 320px;
+  height: 340px;
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.38);
+  z-index: 50;
+  background: #0f1117;
+}
+
+/* Light theme (Mintlify sets class light|dark on <html>). Matches the widget's
+   own light palette so there is no dark flash before its script runs. */
+html.light .llmwiki-graph {
+  background: #ffffff;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.14), 0 0 0 1px #e5e7eb;
+}
+
+/* Mintlify's #content sets isolation:isolate, so the iframe's z-index only ranks
+   inside #content, and the whole of #content sits under the table-of-contents
+   column (z-index 21) that shows at >=1280px. The TOC then swallowed clicks on
+   the panel's top-right, gear included. Lift #content above the TOC and keep it
+   under the navbar (z-index 30). */
+#content:has(.llmwiki-graph) {
+  z-index: 22;
+}
+
+/* Phones and portrait tablets: the content column is full width, so a fixed
+   panel covers the text. Hide it; the page's "Linked pages" list replaces it.
+   A hidden lazy iframe never loads, so phones skip the graph library too.
+   !important beats the inline left/top a saved drag position writes. */
+@media (max-width: 1023px) {
+  .llmwiki-graph {
+    display: none !important;
+  }
+}

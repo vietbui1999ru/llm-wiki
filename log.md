@@ -1074,3 +1074,52 @@ Updated syntheses/spec-conformance-and-review-loop-options with a "Built" sectio
 
 ## [2026-10-15] update | Laya as a skill router assessed, not built
 entities/laya: new section. Zero-shot Laya is unreliable here (earlier rerank test) and there are no labels to tune on: 64 Skill-tool invocations across 235 Claude transcripts and 19 distinct skills (counts only, content not read). Staged plan recorded: qmd shortlist, then a small model for ambiguity, then Laya only once labelled pairs exist and it beats the first two. Dotfiles draft PR #86 proposes removing the skill cap; it is still open, so the cap (`skills 36/22`) is live. The 36 counts user-level skills only; plugin skills add more.
+
+## [2026-10-16] update | send-it spec loop rule (derived)
+- claude-setup/rules/send-it.md: send-it variant of the global spec loop. No ac-run approve or check in send-it; floor-guard and a manual diff read replace them. Linked into dotfiles P5 (#104).
+
+## [2026-10-16] docs | workflow guides refresh + send-it guide
+- docs/workflows.md: new Chart 1 (spec loop + Pi via pueue, human gates marked, step table); claim-task pool trimmed and marked optional; day-to-day chart drops to-prd, to-issues, ralph-structured, spawn-parallel-agents (no longer installed); multi-machine chart kept as planned.
+- docs/send-it.md (new, published as guides/send-it): eligibility, on/off mechanics, settings block, run chart, comparison with the standard loop, honest limits.
+- docs/architecture.md Chart 7: orchestrator effort medium, scout/worker load caveat, spec-loop gate before the review gate.
+- GUIDE.md: grill-me and verify-spec rows, feature and anti-slop recipes match the live spec loop; vibecode recipe added.
+- build-docs-site.mjs: send-it guide, nav entry, landing "How work gets built" cards. docs-site regenerated.
+
+## [2026-10-17] update | council models moved to current releases
+- Council voices: A `claude-sonnet-5-5`, B `gpt-6.1-sol` (codex for council.py, `openai-codex/gpt-6.1-sol` for the Pi quick check), chairman `claude-opus-5-5`. Each answered a one-line smoke prompt.
+- Updated: templates/council.py and env-model-routing.sh defaults, skills/council, .codex/AGENTS.md, claude-setup/rules/applied-ai.md (Tier 0), docs/architecture.md, docs/workflows.md, GUIDE.md, wiki/concepts/linux-setup-guide.md.
+- Not changed: wiki summaries (record what sources said), illustrative model names in unrelated pages, the optional Copilot voice C (`github-copilot/gpt-5.2-codex`, catalog not checked).
+- Pi side (dotfiles #111): scoped models recorded in model-routing.md; Pi default is now `opencode-go/deepseek-v4.1-flash` at medium thinking.
+
+## [2026-10-18] lint
+
+### Orphan pages (no cross-links from content pages; all appear in index.md)
+- `patterns/algorithmic` — zero content-page wikilinks; index-only
+- `patterns/backend` — zero content-page wikilinks; index-only
+- `systems/otel-council` — zero content-page wikilinks; index-only
+
+### Stale claims
+- **Tier-0 drift**: `concepts/council-pattern` (updated 2026-05-22) still shows "Sonnet 4.6 + GPT-5.4 … Chairman: Opus 4.6" in its "This repo council" table, but the 2026-10-17 update moved council to `claude-sonnet-5-5` / `gpt-6.1-sol` / `claude-opus-5-5`. `applied-ai.md` references `[[concepts/council-pattern]]` — page is stale relative to the Tier-0 rule. Flag for manual update on next council-focused ingest.
+- No other contradictions found between recent summaries (Oct 2026) and older concept pages.
+
+### Missing concept stubs created
+- `concepts/acp-protocol` (new stub) — ACP (Agent Communication Protocol, Zed) mentioned in 8 wiki pages; no dedicated page existed. Stub created.
+
+### index.md
+- Added `[[concepts/acp-protocol]] *(stub)*` entry.
+
+### Source suggestions (gaps)
+1. **ACP protocol docs (Zed)** — fill the `acp-protocol` stub; editor-native agent protocol vs MCP
+2. **Anthropic prompt caching docs** — mentioned in 4 pages; no concept page; fills a gap in context-engineering coverage
+3. **A2A (Agent-to-Agent) protocol by Google** — mentioned in 2 pages alongside ACP; multi-agent communication standard
+4. **LightRAG paper / docs** — used in wiki-indexing-pipeline but no dedicated summary; would document the extraction/synthesis mechanism in use
+5. **Structured outputs / JSON mode across LLM providers** — mentioned in 3+ pages; no dedicated concept page; relevant to tool-design-for-agents
+
+## [2026-10-19] ingest | Anthropic frontend-design skill
+Source: raw/ "claude-plugins-officialpluginsfrontend-designskillsfrontend-designSKILL.md at main.md" (same text as the marketplace plugin's SKILL.md). Pre-ingest comprehension quiz skipped at Viet's request.
+- New: `summaries/anthropic-frontend-design-skill`.
+- Updated: `patterns/frontend`: the Agent Trigger gains a visual-design entry that points to the summary.
+- Context: the grill session chose a cross-harness overlay skill `design-brief` (dotfiles `feat/design-brief`, SPEC approved, Pi pueue task #64) with a slop-register hook, non-Gemini judges (deepseek-v4-pro for text, Opus for screenshots) and a per-project design-log.
+- Noted drift: `claude-setup/settings.json` enables `frontend-design@claude-plugins-official`, but the live session does not load it. Left as is, because the overlay does not depend on the plugin.
+- Not ingested: two jj captures in raw/ (2026-10-18).
+

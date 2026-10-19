@@ -6,7 +6,7 @@ sources:
   - "Design Patterns for React Interviews.md"
   - "Persson Dennis - 21 Fantastic React Design Patterns and When to Use Them.md"
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-10-19
 ---
 
 # Frontend Patterns
@@ -17,6 +17,9 @@ Reference and agent guide for React component patterns, state strategy, renderin
 
 **Apply when:** Building or reviewing React components, client state, rendering strategy, or CSS architecture.
 **Rule of thumb:** Choose the narrowest state scope that works; pick CSR/SSR/SSG/ISR by data freshness needs; memoize only measured hot paths.
+
+**Visual design (apply when):** Building a new UI or reshaping the look of an existing one: palette, typography, layout, motion, UI copy.
+**Rule of thumb:** Ground the design in the subject, write a token plan and check it against what a generic default would be before coding, spend boldness in one place, avoid the named tells (single-word headline accent, all-caps labels, fake 01/02/03, fade-up on every section), and critique from screenshots. Source: [[summaries/anthropic-frontend-design-skill]].
 
 ---
 

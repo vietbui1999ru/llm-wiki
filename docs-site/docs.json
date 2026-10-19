@@ -31,12 +31,14 @@
         "group": "Architecture",
         "pages": [
           "guides/architecture",
-          "guides/workflows"
+          "guides/workflows",
+          "guides/send-it"
         ]
       },
       {
         "group": "Concepts",
         "pages": [
+          "concepts/acp-protocol",
           "concepts/actor-model",
           "concepts/agent-context-instructions",
           "concepts/agent-harness",

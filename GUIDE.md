@@ -137,7 +137,7 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 
 | Skill                            | Invoke                                                      | When to use                                                                                                | Example                                        |
 | -------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `/grill-me`                      | `/grill-me`                                                 | Stress-test a plan before starting                                                                         | "I want to add auth — /grill-me"               |
+| `/grill-me`                      | `/grill-me`                                                 | Interview one question at a time, then write a lint-clean SPEC.md and stop for `ac-run approve` | "I want to add auth — /grill-me"               |
 | `/zoom-out`                      | `/zoom-out`                                                 | Need the big picture of unfamiliar code                                                                    | "I don't understand this middleware"           |
 | `/improve-codebase-architecture` | `/improve-codebase-architecture`                            | Find shallow modules, refactor opportunities                                                               | "Codebase feels messy"                         |
 | `feature-dev:feature-dev`        | Auto (guided feature dev)                                   | Codebase analysis → architect → implement                                                                  | Complex feature with exploration phase         |
@@ -146,7 +146,7 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 **New project setup order:**
 ```
 /setup-matt-pocock-skills  → configure repo
-/grill-me                  → plan the change
+/grill-me                  → SPEC.md with acceptance criteria; you run ac-run approve
                            → implement with TDD, debug with systematic-debugging
 ```
 
@@ -163,7 +163,7 @@ Skills load on-demand via `/skill-name` or auto-trigger based on context. Superp
 | `code-review:code-review` | `/code-review`                          | Code review a pull request                                                                       |
 | `/review`                 | `/review`                               | Review a pull request (alias)                                                                    |
 | `/security-review`        | `/security-review`                      | Full OWASP + AI-specific security audit; structured threat report                                |
-| `/verify-spec`            | `/verify-spec`                          | After implementation: agent pass verifies each AC (pass/fail/partial), then generates test stubs for failing ACs |
+| `/verify-spec`            | `/verify-spec`                          | After implementation: runs `ac-run check` (every AC's `verify:` command) then `floor-guard`; fix loop of at most 3 reruns; reads code only for manual ACs |
 
 ---
 
@@ -416,10 +416,24 @@ Override: say "add linting" to re-run setup even if linting:disabled.
 
 ### "I want to build a new feature"
 ```
-1. /grill-me         → plan it, nail down scope and acceptance criteria
-2. Capture the plan   → superpowers:writing-plans
-3. Implement          → TDD (superpowers:test-driven-development), red-green-refactor
-4. When done: superpowers:finishing-a-development-branch triggers automatically
+1. /grill-me         → interview, then a lint-clean SPEC.md (status: draft)
+2. You approve        → ~/dotfiles/scripts/ac-run approve SPEC.md   (human only)
+3. Capture the plan   → superpowers:writing-plans, tasks cite AC ids; you approve
+4. Implement          → Pi via pueue (explicit --model), TDD where it applies
+5. Check              → ac-run check SPEC.md + floor-guard; /verify-spec fix loop, max 3
+6. Review and ship    → you review in :AgentReview; Claude pushes the branch, opens a draft PR
+Full chart: docs/workflows.md (Chart 1)
+```
+
+### "I want to vibecode a throwaway repo"
+```
+In a new repo (root commit on or after 2026-10-16; never dotfiles, llm-wiki, agent-events):
+1. /send-it on       → typed at the composer; writes .claude/settings.local.json
+2. Restart           → dontAsk mode, sandbox on, send-it rule injected
+3. Agent runs alone  → no questions; Haiku worker builds; floor-guard + Opus diff review
+4. PR opened         → auto-merge requested; ends with NEXT: use-test <x> [you]
+5. You use-test it   → /send-it off and restart when done
+Full guide: docs/send-it.md
 ```
 
 ### "I have a bug I can't figure out"
@@ -440,12 +454,12 @@ After any code/plan/design response:
 ### "I want to prevent AI slop in my codebase"
 ```
 Spec-first (prevent slop at source):
-1. /grill-me       → nail down scope + acceptance criteria before any code
-2. Capture the spec → superpowers:writing-plans (GitHub issue or local spec file)
-3. Implement       → TDD or AI-assisted generation against the spec
-4. /verify-spec    → agent pass: each AC gets PASS/FAIL/PARTIAL in ~minutes
-                     → test stubs generated for failing ACs
-5. TDD             → drive stubs to green (hard gate)
+1. /grill-me       → SPEC.md: every AC carries a shell verify: command
+2. ac-run approve  → you record the hash; an edited verify: line voids it
+3. Implement       → TDD or AI-assisted generation against the ACs
+4. /verify-spec    → ac-run check runs each verify: line (PASS / FAIL / PRE-SATISFIED)
+                     + floor-guard flags skipped tests, new suppressions, lowered thresholds
+5. Fix loop        → at most 3 reruns, then report; never edit a verify: line or a test to pass
 ```
 
 ### "I want to learn by doing (not just copy)"
@@ -569,7 +583,7 @@ Periodically: capture-mistake distillation pass
 ```
 Quick (advisory Codex check):
   pi -p "Peer review: [decision]. Flag concerns." \
-     --model openai-codex/gpt-5.3-codex --no-session --no-extensions --no-skills
+     --model openai-codex/gpt-6.1-sol --no-session --no-extensions --no-skills
 → Codex output is advisory — synthesize, don't defer
 
 Full (two voices + Opus synthesis):
@@ -639,7 +653,7 @@ Do NOT use for: routine implementation, single-file edits, config changes, wiki 
 
 ```bash
 pi -p "Peer review: [decision summary]. Context: [details]. Flag concerns." \
-   --model openai-codex/gpt-5.3-codex \
+   --model openai-codex/gpt-6.1-sol \
    --no-session \
    --no-extensions \
    --no-skills
@@ -653,8 +667,8 @@ Output is advisory — synthesize disagreements yourself, don't defer blindly.
 council.py --chairman "Should we [decision]?"
 ```
 
-- **Voice A:** Sonnet (`claude -p --model claude-sonnet-4-6`)
-- **Voice B:** Codex (`pi -p --model openai-codex/gpt-5.3-codex --no-session`)
+- **Voice A:** Sonnet (`claude -p --model claude-sonnet-5-5`)
+- **Voice B:** Codex (`pi -p --model openai-codex/gpt-6.1-sol --no-session`)
 - **Chairman:** Opus synthesizes disagreements → `.council/synthesis.md`
 - Output auto-committed to `.council/`
 
@@ -678,7 +692,7 @@ OpenCode (`opencode` CLI v1.14.30) is installed, configured, and has its full ru
 | `opencode run` as council Voice C (GPT via Copilot) | ✅ stdout-compatible with ANSI filter |
 | TUI interactive sessions | ✅ Works via authenticated providers |
 
-**To unlock `opencode/` models (GPT-5.3-codex, Gemini-3.1-pro, etc.):** add a payment method to the OpenCode workspace. Once done: migrate Pi to `opencode` provider and retire the ChatGPT Team subscription.
+**To unlock `opencode/` models (GPT-6.1-sol, Gemini-3.1-pro, etc.):** add a payment method to the OpenCode workspace. Once done: migrate Pi to `opencode` provider and retire the ChatGPT Team subscription.
 
 ---
 

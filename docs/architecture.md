@@ -27,9 +27,9 @@ graph TD
 
     subgraph COUNCIL["Council / Review"]
         COUNCIL_PY[council.py]
-        VOICE_A[Voice A — Sonnet<br>claude -p --model claude-sonnet-4-6]
-        VOICE_B[Voice B — Codex<br>pi -p --model openai-codex/gpt-5.3-codex<br>--no-session]
-        CHAIR[Chairman — Opus<br>claude -p --model claude-opus-4-7]
+        VOICE_A[Voice A — Sonnet<br>claude -p --model claude-sonnet-5-5]
+        VOICE_B[Voice B — Codex<br>pi -p --model openai-codex/gpt-6.1-sol<br>--no-session]
+        CHAIR[Chairman — Opus<br>claude -p --model claude-opus-5-5]
     end
 
     subgraph CONFIG["Config Distribution"]
@@ -160,15 +160,15 @@ sequenceDiagram
     User->>council.py: question [--chairman] [--add MODEL]
 
     par parallel dispatch
-        council.py->>VoiceA: claude -p --model claude-sonnet-4-6
-        council.py->>VoiceB: pi -p --model openai-codex/gpt-5.3-codex --no-session
+        council.py->>VoiceA: claude -p --model claude-sonnet-5-5
+        council.py->>VoiceB: pi -p --model openai-codex/gpt-6.1-sol --no-session
     end
 
     VoiceA-->>Files: voice_a.md
     VoiceB-->>Files: voice_b.md
 
     alt --chairman flag set
-        council.py->>Chair: claude -p --model claude-opus-4-7\n(synthesis prompt — all voice files concatenated)
+        council.py->>Chair: claude -p --model claude-opus-5-5\n(synthesis prompt — all voice files concatenated)
         Chair-->>Files: synthesis.md
     end
 
@@ -184,8 +184,8 @@ opencode run "question" -m github-copilot/gpt-5.2-codex 2>/dev/null \
 
 **Quick council (no council.py):**
 ```bash
-# Voice B — Pi (GPT-5.3-codex, clean stdout)
-pi -p "peer review: [question]" --model openai-codex/gpt-5.3-codex --no-session --no-extensions --no-skills
+# Voice B — Pi (GPT-6.1-sol, clean stdout)
+pi -p "peer review: [question]" --model openai-codex/gpt-6.1-sol --no-session --no-extensions --no-skills
 
 # Voice C — OpenCode run (GPT-5.2-codex via Copilot, filterable stdout)
 opencode run "peer review: [question]" -m github-copilot/gpt-5.2-codex 2>/dev/null \
@@ -316,14 +316,14 @@ flowchart TD
 
 ## Chart 7 — Agent Fleet
 
-Roster as of 2026-10-14, checked against `~/dotfiles/claude/.claude/agents/` (only `scout` and `worker` exist) and the global rules `model-routing.md` and `plan-handoff.md`. An earlier version of this chart showed a larger fleet (`agent-delegator`, `code-writer`, `code-reviewer`, `architecture-reviewer`, `security-auditor` and others); none of those are installed. Define a custom agent only when a repeated job justifies its own prompt and tool limits.
+Roster as of 2026-10-16, checked against `~/dotfiles/claude/.claude/agents/` (only `scout` and `worker` exist) and the global rules `model-routing.md` and `plan-handoff.md`. An earlier version of this chart showed a larger fleet (`agent-delegator`, `code-writer`, `code-reviewer`, `architecture-reviewer`, `security-auditor` and others); none of those are installed. Define a custom agent only when a repeated job justifies its own prompt and tool limits.
 
 ```mermaid
 graph TD
     USER[User task]
-    ORCH["Orchestrator: main session<br>Opus, effort high<br>decisions, root cause, review gate"]
+    ORCH["Orchestrator: main session<br>Opus 5.5, effort medium<br>high or xhigh for hard arch/security<br>decisions, root cause, review gate"]
 
-    subgraph CUSTOM["Custom subagents (Haiku 5.5, effort medium)"]
+    subgraph CUSTOM["Custom subagents (Haiku 5.5, effort medium)<br>loaded only where claude/.claude/agents is linked"]
         SCOUT["scout<br>read-only recon before planning"]
         WORKER["worker<br>bounded, fully specified edits"]
     end
@@ -338,22 +338,28 @@ graph TD
         PI_IMPL["pi --model explicit-model<br>approved file-backed plans:<br>multi-file features, migrations, refactors"]
     end
 
+    subgraph SPEC["Spec loop gates (deterministic)"]
+        ACCHECK["ac-run check + floor-guard<br>verify-spec fix loop, max 3"]
+    end
+
     subgraph GATE["Review gate: stays in Claude"]
         REVIEW["agent-review, post-run-verifier, pi-lens"]
     end
 
     subgraph COUNCIL["Council (subprocess, not fleet)"]
-        PI_SUB["pi -p --model openai-codex/gpt-5.3-codex<br>--no-session<br>Codex peer review: advisory only<br>reads stdout, not .agents/ bus"]
+        PI_SUB["pi -p --model openai-codex/gpt-6.1-sol<br>--no-session<br>Codex peer review: advisory only<br>reads stdout, not .agents/ bus"]
     end
 
     USER --> ORCH
     ORCH --> CUSTOM & BUILTIN
     ORCH -->|approved plan| PI_IMPL
-    PI_IMPL -->|commits reviewed| REVIEW
+    PI_IMPL -->|commits| ACCHECK -->|ACs pass| REVIEW
     ORCH -.->|arch/security/irreversible| PI_SUB
 ```
 
 **Pi runs outside Claude Code's subagent system**, in two roles: implementation dispatched through `pueue` after a plan is approved, and the advisory council subprocess. In both it is a separate process and does not share Claude Code's hooks or skill-invocation contract.
+
+The full step-by-step flow, with human gates marked, is in [Workflows](/guides/workflows). The unattended alternative for new repos, where a Haiku `worker` builds inside Claude and Opus reviews the diff, is [send-it](/guides/send-it).
 
 ---
 

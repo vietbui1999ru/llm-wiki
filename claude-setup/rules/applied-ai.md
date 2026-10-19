@@ -25,7 +25,7 @@ Applies to: ML/AI, AI Engineering, Agent Orchestration, Data Analyst, Data Engin
 **Council (Codex via Pi)**: three stages — (1) parallel dispatch to voices, (2) optional anonymized peer review (prevents anchoring), (3) Chairman (Opus) synthesis. Fire for: architectural decisions, security changes, irreversible ops.
 ```bash
 pi -p "Peer review: [decision]. Flag concerns." \
-   --model openai-codex/gpt-5.3-codex --no-session --no-extensions --no-skills
+   --model openai-codex/gpt-6.1-sol --no-session --no-extensions --no-skills
 ```
 Output is advisory. Don't invoke for: routine impl, single-file edits, config, ingest, <30 min tasks. [[concepts/council-pattern]]
 

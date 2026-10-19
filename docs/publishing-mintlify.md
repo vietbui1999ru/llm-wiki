@@ -33,8 +33,24 @@ Every page carries a fixed bottom-right graph panel:
 - A **⚙ controls panel** (top-right of the widget) exposes sliders for node size, link width,
   label size, label opacity, and **depth**, plus a **directional-arrows** toggle.
 - The panel is **draggable** by its header to anywhere on the page (defaults to the bottom-right
-  corner); the chosen position is remembered across pages via `localStorage`.
+  corner); the chosen position is remembered across pages via `localStorage`. **Reset position**
+  in the ⚙ panel returns it to the corner, so you can move it without dragging.
 - Click any node to navigate to that page; colours map to wiki section.
+- **Below 1024px wide (phones, portrait tablets) the panel is hidden.** The hidden lazy iframe
+  never loads, so phones don't download `force-graph` at all. Instead, every page ends with a
+  **Linked pages** list of its direct neighbours. That list is also the text equivalent of the
+  graph for keyboard and screen-reader users. The canvas itself is `aria-hidden`.
+- **The panel follows the site theme live.** Mintlify sets `class="light"` or `class="dark"` on
+  `<html>`. The widget watches that class with a `MutationObserver` on its parent document, and
+  falls back to `prefers-color-scheme`. Its CSS colours are variables, and the canvas colours
+  come from a `PAL` table. On a switch it turns `autoPauseRedraw` off for 250ms. Without that,
+  force-graph keeps the old frame, because nothing in the graph moved. Note that with Mintlify's
+  preference set to "System", Mintlify itself doesn't re-theme on an OS change until reload. The
+  widget follows the page, not the OS.
+- Layout lives in `claude-setup/docs-site-assets/style.css`, which the generator copies to
+  `docs-site/style.css`. Mintlify loads every `.css` file in the content directory on every page.
+  The stylesheet also lifts `#content` above the table-of-contents column. Mintlify isolates
+  `#content` (`isolation: isolate`), so without the lift the TOC covered the panel at ≥1280px.
 
 Implementation: a self-contained `<iframe srcDoc>` per page using
 [`force-graph`](https://github.com/vasturiano/force-graph) pinned at `1.51.4` with Subresource

@@ -1,6 +1,19 @@
-[hooks]
-PostToolUse = [
-  { matcher = "exec_command|apply_patch", hooks = [
-    { type = "command", command = "cd ~/repos/llm-wiki && git diff --name-only HEAD 2>/dev/null | grep -q 'log\\.md' && ./scripts/publish-ai-kb.sh || true" }
-  ] }
+[[hooks.PostToolUse]]
+matcher = "exec_command|apply_patch"
+
+[[hooks.PostToolUse.hooks]]
+type = "command"
+command = '''cd ~/repos/llm-wiki && git diff --name-only HEAD 2>/dev/null | grep -q 'log\.md' && ./scripts/publish-ai-kb.sh || true'''
+
+[mcp_servers.firecrawl]
+command = "npx"
+args = [
+    "firecrawl-mcp@3.29.1",
 ]
+
+[mcp_servers.firecrawl.env]
+
+[mcp_servers.github]
+url = "https://api.githubcopilot.com/mcp"
+
+[mcp_servers.github.http_headers]

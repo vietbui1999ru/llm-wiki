@@ -38,6 +38,7 @@
       {
         "group": "Concepts",
         "pages": [
+          "concepts/acp-protocol",
           "concepts/actor-model",
           "concepts/agent-context-instructions",
           "concepts/agent-harness",
@@ -205,6 +206,7 @@
           "entities/opencode-dcp",
           "entities/opencode-go",
           "entities/opentelemetry",
+          "entities/pele",
           "entities/pentagi",
           "entities/pi-agent",
           "entities/ponytail",

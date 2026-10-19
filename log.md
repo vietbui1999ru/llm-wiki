@@ -1130,3 +1130,9 @@ Source: raw/ "claude-plugins-officialpluginsfrontend-designskillsfrontend-design
 - Noted drift: `claude-setup/settings.json` enables `frontend-design@claude-plugins-official`, but the live session does not load it. Left as is, because the overlay does not depend on the plugin.
 - Not ingested: two jj captures in raw/ (2026-10-18).
 
+
+## [2026-10-19] ingest | Jujutsu (jj) README + docs index
+Source: raw/ "jj-vcsjj A Git-compatible VCS that is both simple and powerful.md" (GitHub README) and "Jujutsu docs.md" (docs landing page, link hub only). Pre-ingest comprehension quiz skipped at Viet's request.
+- New: `summaries/jujutsu`, `entities/jujutsu`.
+- Updated: `concepts/worktree-isolation` (rerere section points to jj's propagated resolutions), `systems/dotfiles-agent-harness-layout` (stow list links jj).
+- Flag: capture is stale on release history (README news ends v0.24, Dec 2024; installed 0.45.1).

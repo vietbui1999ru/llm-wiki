@@ -193,6 +193,7 @@
           "entities/firecrawl",
           "entities/gemini-cli",
           "entities/headroom",
+          "entities/jujutsu",
           "entities/karpathy-llm-council",
           "entities/ketch",
           "entities/laya",

@@ -156,6 +156,7 @@ git config rerere.enabled true
 # Records conflict resolutions; auto-reapplies on identical recurrence
 # Valuable when agents touch the same files in sequential waves
 ```
+Jujutsu does this by design: a resolved conflict propagates to all rebased descendants. See [[entities/jujutsu]].
 
 ### Sparse checkout (monorepos)
 Constrain worktree to files the agent actually needs:

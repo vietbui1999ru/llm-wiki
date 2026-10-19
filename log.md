@@ -1112,3 +1112,11 @@ Updated syntheses/spec-conformance-and-review-loop-options with a "Built" sectio
 4. **LightRAG paper / docs** — used in wiki-indexing-pipeline but no dedicated summary; would document the extraction/synthesis mechanism in use
 5. **Structured outputs / JSON mode across LLM providers** — mentioned in 3+ pages; no dedicated concept page; relevant to tool-design-for-agents
 
+## [2026-10-19] ingest | Anthropic frontend-design skill
+Source: raw/ "claude-plugins-officialpluginsfrontend-designskillsfrontend-designSKILL.md at main.md" (same text as the marketplace plugin's SKILL.md). Pre-ingest comprehension quiz skipped at Viet's request.
+- New: `summaries/anthropic-frontend-design-skill`.
+- Updated: `patterns/frontend`: the Agent Trigger gains a visual-design entry that points to the summary.
+- Context: the grill session chose a cross-harness overlay skill `design-brief` (dotfiles `feat/design-brief`, SPEC approved, Pi pueue task #64) with a slop-register hook, non-Gemini judges (deepseek-v4-pro for text, Opus for screenshots) and a per-project design-log.
+- Noted drift: `claude-setup/settings.json` enables `frontend-design@claude-plugins-official`, but the live session does not load it. Left as is, because the overlay does not depend on the plugin.
+- Not ingested: two jj captures in raw/ (2026-10-18).
+

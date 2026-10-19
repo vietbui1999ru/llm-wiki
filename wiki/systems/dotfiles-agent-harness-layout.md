@@ -15,7 +15,7 @@ How the `~/dotfiles` repo provisions the config of each coding-agent harness, an
 
 | Mechanism | What it does | Drift risk |
 |---|---|---|
-| **stow** (symlink) | `scripts/restow.sh` links a package's files into `$HOME`. Packages: zsh, starship, nvim, tmux, tmuxinator, kitty, git, jj, claude, opencode, pi, codex. aerospace, mouseless, sketchybar, herdr and launchd are stowed by hand. | None; the repo file is the file. |
+| **stow** (symlink) | `scripts/restow.sh` links a package's files into `$HOME`. Packages: zsh, starship, nvim, tmux, tmuxinator, kitty, git, jj ([[entities/jujutsu]]), claude, opencode, pi, codex. aerospace, mouseless, sketchybar, herdr and launchd are stowed by hand. | None; the repo file is the file. |
 | **materialized** | `scripts/bootstrap-dirs.sh` creates directories and per-skill links once. | Drifts after creation. |
 | **sync-pushed** | `scripts/sync-agent-rules.sh` copies `shared/AGENTS.md` and MCP server config one way into OpenCode and Codex (runs on dotfiles commits). | Edits made in the target are overwritten. |
 

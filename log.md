@@ -1119,3 +1119,11 @@ Created: wiki/summaries/pele.md, wiki/entities/pele.md.
 Updated: wiki/systems/dotfiles-agent-harness-layout.md (shared-skill list was stale at four; now six plus pele).
 Setup: pele added as a shared skill in dotfiles (PR #124): pinned pele@1.6.0 with a lockfile, `pele-render` CLI wrapper, bootstrap-dirs.sh installs and links it. Speed claim left `(claimed, unverified)`; no benchmark run.
 
+## [2026-10-19] ingest | Anthropic frontend-design skill
+Source: raw/ "claude-plugins-officialpluginsfrontend-designskillsfrontend-designSKILL.md at main.md" (same text as the marketplace plugin's SKILL.md). Pre-ingest comprehension quiz skipped at Viet's request.
+- New: `summaries/anthropic-frontend-design-skill`.
+- Updated: `patterns/frontend`: the Agent Trigger gains a visual-design entry that points to the summary.
+- Context: the grill session chose a cross-harness overlay skill `design-brief` (dotfiles `feat/design-brief`, SPEC approved, Pi pueue task #64) with a slop-register hook, non-Gemini judges (deepseek-v4-pro for text, Opus for screenshots) and a per-project design-log.
+- Noted drift: `claude-setup/settings.json` enables `frontend-design@claude-plugins-official`, but the live session does not load it. Left as is, because the overlay does not depend on the plugin.
+- Not ingested: two jj captures in raw/ (2026-10-18).
+

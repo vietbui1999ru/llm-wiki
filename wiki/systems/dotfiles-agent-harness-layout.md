@@ -4,7 +4,7 @@ type: concept
 tags: [dotfiles, stow, claude-code, codex, pi, opencode, agents, configuration, macos]
 sources: ["dotfiles README.md (Packages table)", "dotfiles scripts/restow.sh, bootstrap-dirs.sh, sync-agent-rules.sh", "dotfiles docs/workflows/sync-agents-disk-roster.md", "dotfiles shared/", "dotfiles scripts/firecrawl, scripts/firecrawl-mcp (verification run 2026-10-15)"]
 created: 2026-10-04
-updated: 2026-10-15
+updated: 2026-10-19
 ---
 
 # Dotfiles Layout for the Agent Harnesses
@@ -29,7 +29,7 @@ The harness homes are **real directories, not symlinks**; only individual childr
 | `~/.codex` | Only `hooks.json` (symlink). `AGENTS.md` is a sync-pushed copy. | sqlite DBs, `sessions/`, `auth.json`, `config.toml`, `history.jsonl`. |
 | `~/.pi` | `agent/AGENTS.md`, plus `extensions/` and `extensions-available/` from the `pi` package. | `agent/sessions/`, `auth.json`, `settings.json`, `mcp*.json`, `models-store.json`, logs; `~/.pi/.pi/` and `.pi-subagents/` hold runtime state. |
 | `~/.config/opencode` | `opencode.json` and `plugins/` (symlinks). `AGENTS.md` is sync-pushed. | `commands/`, `skills/`, `node_modules`, `bun.lock`. |
-| `~/.agents` | Four skills linked from `dotfiles/shared/skills` (approval-workflow, delegate-pi, gh-stack, kanban-status). | The other skills (real directories) and `.skill-lock.json`. |
+| `~/.agents` | Skills linked from `dotfiles/shared/skills` by `scripts/bootstrap-dirs.sh` (approval-workflow, delegate-pi, gh-stack, grill-me, kanban-status, verify-spec; [[entities/pele]] once dotfiles #124 merges, which also installs its pinned npm dependency). | The other skills (real directories) and `.skill-lock.json`. |
 | `dotfiles/.agents/` | None. | Per-repo workflow state (sessions, `events.jsonl`, approvals), gitignored. |
 
 `dotfiles/shared/` is the harness-neutral source of truth (not a stow package): `AGENTS.md`, `mcp-servers.json`, `agent-workflow.default.json`, `research-tool-routing.md`, `skills/`, `templates/`.

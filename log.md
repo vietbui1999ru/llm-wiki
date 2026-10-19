@@ -1112,3 +1112,10 @@ Updated syntheses/spec-conformance-and-review-loop-options with a "Built" sectio
 4. **LightRAG paper / docs** — used in wiki-indexing-pipeline but no dedicated summary; would document the extraction/synthesis mechanism in use
 5. **Structured outputs / JSON mode across LLM providers** — mentioned in 3+ pages; no dedicated concept page; relevant to tool-design-for-agents
 
+## [2026-10-19] ingest | pele (obsidianmd/pele README)
+
+Sources: raw/obsidianmdpele Renders Mermaid diagrams faster than you'd run from a volcano! 🌋.md, plus context7 `/obsidianmd/pele` (api, theming) for API details. Comprehension review skipped at user request.
+Created: wiki/summaries/pele.md, wiki/entities/pele.md.
+Updated: wiki/systems/dotfiles-agent-harness-layout.md (shared-skill list was stale at four; now six plus pele).
+Setup: pele added as a shared skill in dotfiles (PR #124): pinned pele@1.6.0 with a lockfile, `pele-render` CLI wrapper, bootstrap-dirs.sh installs and links it. Speed claim left `(claimed, unverified)`; no benchmark run.
+

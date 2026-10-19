@@ -32,6 +32,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/yagni-fowler-and-laws]] — YAGNI per Fowler's bliki and Laws of Software Engineering: four costs of presumptive features, the scope limit (refactoring and tests are not YAGNI violations), imagine-the-refactoring test
 - [[summaries/rule-of-three]] — Rule of Three ("three strikes and you refactor", Fowler/Don Roberts): extract on the third copy because two examples risk the wrong abstraction (Sandi Metz); a rule of thumb with no measured evidence for the number
 - [[summaries/laya]] — Laya README + HF model card: open non-autoregressive encoder decision model (choice/score/noul), RLCD proper-scoring-rule training, router across 3 checkpoints; Jev comparison with author-measured vs third-party provenance *(claimed, unverified)*; honest limits (near chance zero-shot, negation, 20+ options)
+- [[summaries/pele]] — pele README (obsidianmd): zero-dependency synchronous Mermaid 12.1.0 to SVG renderer with own layout, CSS-variable theming, source/output size limits; speed *(claimed, unverified)*
 - [[summaries/cc-auto-mode]] — CC auto mode: 2-stage classifier, threat model, 17% FNR on overeager actions, deny-and-continue
 - [[summaries/aws-security-agent]] — AWS managed pen test service: target/accessible/out-of-scope domain split, credential injection patterns, IAM role scoping, out-of-scope URL hierarchy, launch checklist
 - [[summaries/hamel-evals-skills]] — Claude Code plugin (`hamelsmu/evals-skills`): 7 skills including eval-audit, write-judge-prompt, validate-evaluator, evaluate-rag
@@ -47,6 +48,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/rtk]] — Rust CLI proxy that filters/compresses command output before it hits LLM context; PreToolUse hook across 15 agents; 4 strategies (filter/group/truncate/dedup); 60-90% token savings *(claimed, unverified — self-reported estimates)*
 - [[entities/context7]] — Live library doc fetching (MCP + ctx7 CLI); per-platform: CC/Opencode/Codex/Pi/OMP
 - [[entities/laya]] — Open-source (Apache 2.0, claimed) calibrated decision model; one encoder forward pass, ~33 ms *(author-measured)*; Jev-compatible `/v1/systemone` server; needs fine-tuning, weak on 20+ options and negation; tested here as a qmd reranker: no gain (nDCG@10 0.651 vs hybrid 0.681, vs qmd full 0.713)
+- [[entities/pele]] — Mermaid-to-SVG JS library (no CLI); installed as the shared `pele` skill with pinned lockfile and `pele-render` wrapper via dotfiles bootstrap; use for agent-written design/slide diagrams, mmdc for Neovim previews, Excalidraw for freeform
 - [[entities/ponytail]] — Cross-agent coding skill/plugin that reduces AI overbuild via a minimality ladder; adapters for Claude Code, Codex, OpenCode, Gemini, Pi, Copilot CLI, and more
 - [[entities/agent-native]] — Builder.io framework for agent-native apps: shared actions, SQL-backed state, rich UI + agent surfaces, MCP/A2A compatibility
 - [[entities/headroom]] — Context compression proxy/library/MCP for AI agents; ContentRouter (JSON/AST/prose), CacheAligner, CCR reversible compression, cross-agent memory, `headroom learn` failure mining

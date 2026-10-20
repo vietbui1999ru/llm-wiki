@@ -2,7 +2,7 @@
 title: "rtk (Rust Token Killer)"
 type: entity
 tags: [tool, cli, token-compression, context-management, agent-tooling, rust, hook]
-sources: ["rtk-airtk CLI proxy that reduces LLM token consumption by 60-90% on common dev commands. Single Rust binary, zero dependencies.md", "raw/claude-code-worktree-guard-issues-2026-10-20.md"]
+sources: ["rtk-airtk CLI proxy that reduces LLM token consumption by 60-90% on common dev commands. Single Rust binary, zero dependencies.md", "claude-code-worktree-guard-issues-2026-10-20.md"]
 created: 2026-07-20
 updated: 2026-10-20
 ---

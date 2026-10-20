@@ -2,7 +2,11 @@
 title: "Claude Code worktree-guard issues (rtk#3864, claude-code#84720, #88550, #84530, #40164)"
 type: summary
 tags: [claude-code, worktree-isolation, bash-guard, rtk, hook, agent-tooling, bug-report]
-sources: ["raw/claude-code-worktree-guard-issues-2026-10-20.md"]
+sources:
+  - "claude-code-worktree-guard-issues-2026-10-20.md"
+  - "Bug Worktree isolation guard rejects non-git commands due to early AST complexity check · Issue 84720.md"
+  - "BUG 2.1.222 escalates 82966 to ordinary sessions worktree isolation refuses every `source``.` via an interpreter denylist, with no opt-out · Issue 84530 1.md"
+  - "BUG 2.1.222 escalates 82966 to ordinary sessions worktree isolation refuses every `source``.` via an interpreter denylist, with no opt-out · Issue 84530.md"
 created: 2026-10-20
 updated: 2026-10-20
 ---

@@ -200,3 +200,4 @@ State carried between tasks lives in: commits, branch history, `.agents/decision
 - [[entities/dangeresque]] — lightweight host-native orchestrator using worktrees
 - [[entities/sandcastle]] — TypeScript lib; worktree + container combination
 - [[concepts/agent-subagents]] — `isolation: "worktree"` parameter
+- [[concepts/claude-code-worktree-guard]] — Claude Code's Bash guard for isolated sessions; refusal classes and bandaids

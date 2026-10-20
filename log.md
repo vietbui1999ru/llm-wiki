@@ -1142,3 +1142,17 @@ Updated: `entities/jujutsu` — 0.46.0, colocated `~/dotfiles` (`.jj/` since 202
 Decision: jj is human-only, used in the main `~/dotfiles` checkout for history editing. Agents use Git only, and Claude's settings deny `Bash(jj ...)`. Reason: `agent-review`, `ac-run`, `floor-guard`, `session-band` and the rtk/safety hooks are all git-specific.
 Gotchas recorded: colocated HEAD detaches at `@-` (breaks `ac-run`'s branch check and starship's branch segment until `git switch`); auto-track snapshots untracked files like `git add -A`, so config sets `snapshot.auto-track = "none()"`; every command writes, even `jj st`; rewriting a branch another Git worktree has checked out leaves that worktree stale; jj workspaces are not Git worktrees, so the harness cannot see them.
 Workflows recorded: rewrite Pi commits instead of reverting; `jj rebase -b X -d main@origin` instead of merging main in; quick tweak via `jj new main` plus a bookmark; `jj op log` / `jj op restore` as a safety net.
+
+## [2026-10-20] ingest | Claude Code worktree guard issues
+Source: raw/ clips of #84720 and #84530 (two captures; " 1" is the later, with the maintainer reply), plus "claude-code-worktree-guard-issues-2026-10-20.md" (agent capture of rtk-ai/rtk#3864; anthropics/claude-code#84720, #88550, #84530, #40164; CHANGELOG lines). Pre-ingest comprehension quiz skipped at Viet's request.
+- New: `summaries/claude-code-worktree-guard-issues`, `concepts/claude-code-worktree-guard`.
+- Updated: `entities/rtk` (guard collision, PR #3879 unreleased in v1.0.1), `concepts/worktree-isolation` (Related link), `mistakes/2026-10-20-claude-code-worktree-guard-compound-bash` (narrowed cause).
+- Contradiction flagged: a Google-AI summary cited #84530 for chaining (it is about `source`) and #40164 for bypassing the guard (it is a Windows worktree-creation bug). `&&` and pipes pass on their own per #88550.
+- Versions: Claude Code 2.1.304, rtk 1.0.1.
+
+## [2026-10-20] ingest | r/ClaudeCode: complex git situations tripping up Claude
+Source: raw/ "Complex git situations tripping up claude  rClaudeCode.md" (thread dated 2026-06-25). Pre-ingest comprehension quiz skipped at Viet's request.
+- New: `summaries/reddit-complex-git-claude-code`.
+- Updated: `concepts/claude-code-worktree-guard` (commit-funnel row in the workaround matrix).
+- Flag: the thread does not mention rtk, and it predates the worktree guard; it is about rule-following in a multi-repo parent directory.
+- Probe: `python3 <tmp>/git-commit.py` runs in a worktree-isolated session on 2.1.304, so a funnel passes the guard by hiding git from it; the funnel must enforce its own worktree and branch checks.

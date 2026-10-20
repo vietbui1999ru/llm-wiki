@@ -2,9 +2,9 @@
 title: "rtk (Rust Token Killer)"
 type: entity
 tags: [tool, cli, token-compression, context-management, agent-tooling, rust, hook]
-sources: ["rtk-airtk CLI proxy that reduces LLM token consumption by 60-90% on common dev commands. Single Rust binary, zero dependencies.md"]
+sources: ["rtk-airtk CLI proxy that reduces LLM token consumption by 60-90% on common dev commands. Single Rust binary, zero dependencies.md", "claude-code-worktree-guard-issues-2026-10-20.md"]
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-10-20
 ---
 
 # rtk (Rust Token Killer)
@@ -27,6 +27,8 @@ Editing/reading verbosity is tunable: `rtk read file.rs -l aggressive` returns *
 ### Auto-rewrite hook (the intended mode)
 
 `rtk init -g` installs a **PreToolUse hook** that transparently rewrites Bash tool calls (`git status` → `rtk git status`) before execution — the agent needs no awareness of rtk. Supports 15 agents via each one's interception mechanism: Claude Code / Copilot (PreToolUse hook, native binary), Gemini CLI (BeforeTool), Codex (AGENTS.md instructions), Cursor/Windsurf/Cline/Kilo/Antigravity/Kimi (project rules files), OpenCode/OpenClaw/Pi (TS plugin), Hermes (Python plugin), Factory Droid (hook).
+
+**Collision with Claude Code's worktree guard:** in a worktree-isolated session the rewritten `rtk git …` is refused, because the guard cannot verify a launcher-wrapped git call (rtk#3864). rtk PR #3879 (merged 2026-10-17) leaves git unrewritten when cwd is under `<repo>/.claude/worktrees/<name>`, but stable v1.0.1 predates it. Until a release ships it, wrap the hook or call `/usr/bin/git`. See [[concepts/claude-code-worktree-guard]].
 
 **Important scope limit:** the hook only fires on **Bash tool calls**. Claude Code's built-in `Read`/`Grep`/`Glob` tools bypass it, so they are *not* auto-compressed — to get rtk output there you must call `rtk read`/`rtk grep`/`rtk find` or shell equivalents explicitly. (This is a real gap for Claude Code, whose agents lean heavily on the native Read/Grep/Glob tools.)
 

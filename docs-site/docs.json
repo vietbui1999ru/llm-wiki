@@ -56,6 +56,7 @@
           "concepts/branch-strategy-for-agents",
           "concepts/cicd-testing",
           "concepts/claude-code-plugins",
+          "concepts/claude-code-worktree-guard",
           "concepts/cli-driven-vault-automation",
           "concepts/compound-engineering",
           "concepts/compounding-knowledge-base",

@@ -29,6 +29,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/autoresearch-karpathy]] — Karpathy's autonomous ML experiment loop: agent modifies train.py, 5-min runs, val_bpb metric, program.md as control layer
 - [[summaries/claude-usage-limits]] — Usage vs. length limits; 200K product context window vs 1M API; shared budget across all surfaces; tools/connectors token-expensive per request
 - [[summaries/claude-code-permissions-settings]] — CC settings schema: permissions.allow/ask/deny/defaultMode, bypassPermissions, sandbox.enabled (Bash-only), filesystem+network rules; corrects old allowedTools schema
+- [[summaries/claude-code-worktree-guard-issues]] — Five GitHub issues behind "too complex to verify… worktree" refusals: rtk rewrite (rtk#3864, fix unreleased), `~` never expanded (#88550, open), loop/heredoc false positives (fixed 2.1.257/259), `source` denylist; verdicts on a Google-AI fix list
+- [[summaries/reddit-complex-git-claude-code]] — r/ClaudeCode thread: agent keeps breaking git rules in a multi-repo parent dir; fix suggested is a canonical commit script (engineering vs process controls); passes the worktree guard only by hiding git, so it must check the worktree itself *(anecdotal)*
 - [[summaries/claude-code-subagents-pro-limits]] — Opus main + Sonnet/Haiku subagents on Claude Pro: setup, break-even rules, measured cost per PR (about 40% lower), docs verification, caveats
 - [[summaries/yagni-fowler-and-laws]] — YAGNI per Fowler's bliki and Laws of Software Engineering: four costs of presumptive features, the scope limit (refactoring and tests are not YAGNI violations), imagine-the-refactoring test
 - [[summaries/rule-of-three]] — Rule of Three ("three strikes and you refactor", Fowler/Don Roberts): extract on the third copy because two examples risk the wrong abstraction (Sandi Metz); a rule of thumb with no measured evidence for the number
@@ -47,7 +49,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/llm-serialization-formats]] — Schema-first formats (ONTO, TOON) cutting LLM input overhead 40–60% via schema-once design; covers format comparison, tradeoffs, and caveats on synthetic benchmarks
 
 ## Entities
-- [[entities/rtk]] — Rust CLI proxy that filters/compresses command output before it hits LLM context; PreToolUse hook across 15 agents; 4 strategies (filter/group/truncate/dedup); 60-90% token savings *(claimed, unverified — self-reported estimates)*
+- [[entities/rtk]] — Rust CLI proxy that filters/compresses command output before it hits LLM context; PreToolUse hook across 15 agents; 4 strategies (filter/group/truncate/dedup); 60-90% token savings *(claimed, unverified — self-reported estimates)*; hook rewrite collides with the Claude Code worktree guard (rtk#3864)
 - [[entities/context7]] — Live library doc fetching (MCP + ctx7 CLI); per-platform: CC/Opencode/Codex/Pi/OMP
 - [[entities/laya]] — Open-source (Apache 2.0, claimed) calibrated decision model; one encoder forward pass, ~33 ms *(author-measured)*; Jev-compatible `/v1/systemone` server; needs fine-tuning, weak on 20+ options and negation; tested here as a qmd reranker: no gain (nDCG@10 0.651 vs hybrid 0.681, vs qmd full 0.713)
 - [[entities/pele]] — Mermaid-to-SVG JS library (no CLI); installed as the shared `pele` skill with pinned lockfile and `pele-render` wrapper via dotfiles bootstrap; use for agent-written design/slide diagrams, mmdc for Neovim previews, Excalidraw for freeform
@@ -99,6 +101,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/context-engineering]] — Discipline of curating minimal high-signal tokens: JIT retrieval, compaction, note-taking, sub-agents
 - [[concepts/agentic-memory-tool]] — Anthropic beta API for file-based cross-session memory (memory_20250818) + in-session context editing (clear_tool_uses + clear_thinking); canonical config pattern, semantic learning, memory poisoning security
 - [[concepts/software-documentation]] — Doc types (Diátaxis), audiences (including AI agents), principles, structure for doc-hosting platforms
+- [[concepts/claude-code-worktree-guard]] — Claude Code Bash guard in worktree-isolated sessions: refusal classes as of 2.1.304, workaround matrix (hook wrapper, /usr/bin/git, $HOME not ~), removal criteria
 - [[concepts/claude-code-plugins]] — Plugin structure, manifest format, namespacing, symlink gotcha, when to use plugins vs. personal config
 - [[concepts/compounding-knowledge-base]] — Knowledge bases that accumulate compiled structure vs. RAG's per-query retrieval
 - [[concepts/tiered-knowledge-delivery]] — This wiki's push/hook/pull model (Tier 0 always-loaded / Tier 1 hook-fired / Tier 2 JIT pull); decided 2026-06-12, promoted by frequency × cost-of-violation; the actual mechanism behind "agent-first"

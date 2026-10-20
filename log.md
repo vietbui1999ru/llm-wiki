@@ -1136,3 +1136,9 @@ Source: raw/ "jj-vcsjj A Git-compatible VCS that is both simple and powerful.md"
 - New: `summaries/jujutsu`, `entities/jujutsu`.
 - Updated: `concepts/worktree-isolation` (rerere section points to jj's propagated resolutions), `systems/dotfiles-agent-harness-layout` (stow list links jj).
 - Flag: capture is stale on release history (README news ends v0.24, Dec 2024; installed 0.45.1).
+
+## [2026-10-20] decision | jj is human-only, agents stay on Git
+Updated: `entities/jujutsu` — 0.46.0, colocated `~/dotfiles` (`.jj/` since 2026-07-02), `hunk.nvim` provides `DiffEditor`; Local setup now records the decision, plus Gotchas and Workflows lists. `index.md` entry refreshed.
+Decision: jj is human-only, used in the main `~/dotfiles` checkout for history editing. Agents use Git only, and Claude's settings deny `Bash(jj ...)`. Reason: `agent-review`, `ac-run`, `floor-guard`, `session-band` and the rtk/safety hooks are all git-specific.
+Gotchas recorded: colocated HEAD detaches at `@-` (breaks `ac-run`'s branch check and starship's branch segment until `git switch`); auto-track snapshots untracked files like `git add -A`, so config sets `snapshot.auto-track = "none()"`; every command writes, even `jj st`; rewriting a branch another Git worktree has checked out leaves that worktree stale; jj workspaces are not Git worktrees, so the harness cannot see them.
+Workflows recorded: rewrite Pi commits instead of reverting; `jj rebase -b X -d main@origin` instead of merging main in; quick tweak via `jj new main` plus a bookmark; `jj op log` / `jj op restore` as a safety net.

@@ -29,7 +29,8 @@ const PI_ARGS = [
 const PI_CONCURRENCY = 3;
 const MAX_BUFFER = 32 * 1024 * 1024;
 const PROMPT_BUDGET = 60_000; // chars of diff per rewrite prompt
-const DELETION_CAP = 0.6; // reject a rewrite that removes more than 60% of the lines
+const DELETION_CAP = 0.75; // reject a rewrite that removes more than 75% of the lines
+const SHRINK_FLOOR = 0.5; // reject a rewrite with under half the original's non-blank lines
 const LINT_PIN = "markdownlint-cli2@0.14.0"; // bundled by markdownlint-cli2-action@v17
 const EXCLUDE_GLOBS = [".claude/worktrees/**", "docs/superpowers/**", "**/*.bak"];
 const CATALOG_DIRS = ["systems", "entities", "concepts", "syntheses"];
@@ -161,23 +162,40 @@ export function mermaidRenders(body) {
   return true;
 }
 
+const nonBlankLines = (text) => text.split("\n").filter((line) => line.trim()).length;
+
 /**
- * Decide whether a rewrite may replace the original page.
+ * Decide whether a rewrite may replace the original page. Every check is hard:
+ * the run is unattended, so a doubtful rewrite keeps the original page.
  *
- * TODO(user): this is your gate policy — see design step 5. Compose the helpers
- * above (parseSentinels, mermaidRenders, deletionRatio, unresolvedWikilinks) and
- * pick which checks are hard. The flow currently uses `gateRewrite` below, a
- * provisional composition with the design's defaults; replace that call with
- * acceptRewrite once this policy is written.
+ * - Deletion cap is 75%, not 60%: deletionRatio counts every edited line as
+ *   removed, and restructuring is allowed.
+ * - Shrink guard: fewer than half the original's non-blank lines usually means
+ *   the model's output was cut off, not that the page got tighter.
  *
- * @param {string} original  current page body (frontmatter stripped)
- * @param {string} rewritten raw model reply (body between sentinel markers)
- * @returns {{ok: boolean, body?: string, index?: string, reason?: string}}
+ * @param {string} original current page body (frontmatter stripped)
+ * @param {string} reply    raw model reply (body between sentinel markers)
+ * @param {Set<string>} keys resolvable wikilink targets
+ * @returns {{ok: boolean, rewrite?: string, index?: string, reason?: string}}
  */
-/* eslint-disable-next-line no-unused-vars -- signature is the gate contract; the body is the user's TODO */
-export function acceptRewrite(original, rewritten) {
-  // TODO(user): gate policy - see design step 5
-  throw new Error("acceptRewrite not implemented");
+export function acceptRewrite(original, reply, keys) {
+  const parsed = parseSentinels(reply);
+  if (!parsed) return { ok: false, reason: "sentinels missing" };
+  const body = parsed.body;
+  if (!body.trim()) return { ok: false, reason: "empty body" };
+  if (body === original) return { ok: false, reason: "body unchanged" };
+  if (nonBlankLines(body) < nonBlankLines(original) * SHRINK_FLOOR) {
+    return { ok: false, reason: `shrank to ${nonBlankLines(body)}/${nonBlankLines(original)} lines (likely truncated)` };
+  }
+  const ratio = deletionRatio(original, body);
+  if (ratio > DELETION_CAP) {
+    return { ok: false, reason: `deletes ${Math.round(ratio * 100)}% of lines (cap ${DELETION_CAP * 100}%)` };
+  }
+  const missing = unresolvedWikilinks(body, keys);
+  if (missing.length) return { ok: false, reason: `unresolved wikilinks: ${[...new Set(missing)].join(", ")}` };
+  // Last: the only check that spawns a process.
+  if (!mermaidRenders(body)) return { ok: false, reason: "mermaid block does not render" };
+  return { ok: true, rewrite: body, index: parsed.index };
 }
 
 // ---------------------------------------------------------------------------
@@ -415,25 +433,7 @@ async function rewriteOne({ dotfiles, base, item, keys, originals }) {
   );
 
   const reply = await runPi(rewritePrompt({ doc: item.doc, body, commits, diff }));
-  const parsed = parseSentinels(reply);
-  return { doc: item.doc, ...gateRewrite(body, parsed, keys) };
-}
-
-function gateRewrite(original, parsed, keys) {
-  // Provisional composition of the individual checks (design step 5 defaults).
-  // The user's acceptRewrite policy replaces this call.
-  if (!parsed) return { ok: false, reason: "sentinels missing" };
-  const body = parsed.body;
-  if (!body.trim()) return { ok: false, reason: "empty body" };
-  if (body === original) return { ok: false, reason: "body unchanged" };
-  if (!mermaidRenders(body)) return { ok: false, reason: "mermaid block does not render" };
-  const ratio = deletionRatio(original, body);
-  if (ratio > DELETION_CAP) {
-    return { ok: false, reason: `deletes ${Math.round(ratio * 100)}% of lines (cap 60%)` };
-  }
-  const missing = unresolvedWikilinks(body, keys);
-  if (missing.length) return { ok: false, reason: `unresolved wikilinks: ${[...new Set(missing)].join(", ")}` };
-  return { ok: true, rewrite: body, index: parsed.index };
+  return { doc: item.doc, ...acceptRewrite(body, reply, keys) };
 }
 
 // ---------------------------------------------------------------------------

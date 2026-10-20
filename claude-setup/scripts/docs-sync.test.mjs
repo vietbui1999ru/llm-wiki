@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  acceptRewrite,
   bumpUpdated,
   deletionRatio,
   isExcluded,
@@ -137,4 +138,27 @@ test("bumpUpdated: adds the field when the frontmatter lacks it", () => {
 
 test("bumpUpdated: refuses a page without frontmatter", () => {
   assert.throws(() => bumpUpdated("# no frontmatter\n", "2026-10-20"), /no frontmatter/);
+});
+
+const reply = (body) => `<<<DOCS_SYNC_BODY>>>\n${body}<<<DOCS_SYNC_END>>>\nINDEX: refreshed`;
+const PAGE = Array.from({ length: 10 }, (_, i) => `line ${i} see [[pi-agent]]`).join("\n") + "\n";
+const KEYS = new Set(["pi-agent"]);
+
+test("acceptRewrite: accepts a modest edit and returns the index line", () => {
+  const edited = PAGE.replace("line 0", "line zero");
+  assert.deepEqual(acceptRewrite(PAGE, reply(edited), KEYS), { ok: true, rewrite: edited, index: "refreshed" });
+});
+
+test("acceptRewrite: rejects missing sentinels, no-op and truncation", () => {
+  assert.equal(acceptRewrite(PAGE, "no markers", KEYS).reason, "sentinels missing");
+  assert.equal(acceptRewrite(PAGE, reply(PAGE), KEYS).reason, "body unchanged");
+  const cut = PAGE.split("\n").slice(0, 3).join("\n") + "\n";
+  assert.match(acceptRewrite(PAGE, reply(cut), KEYS).reason, /likely truncated/);
+});
+
+test("acceptRewrite: rejects near-total replacement and invented wikilinks", () => {
+  const replaced = PAGE.split("\n").map((l, i) => (i < 9 ? `new ${i}` : l)).join("\n");
+  assert.match(acceptRewrite(PAGE, reply(replaced), KEYS).reason, /cap 75%/);
+  const invented = PAGE.replace("[[pi-agent]]", "[[made-up-page]]");
+  assert.match(acceptRewrite(PAGE, reply(invented), KEYS).reason, /made-up-page/);
 });

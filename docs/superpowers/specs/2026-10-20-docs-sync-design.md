@@ -78,7 +78,9 @@ Modified:
 5. **Gate** (`acceptRewrite`, per doc; fail = keep original, log reason):
    - sentinels parsed, non-empty, actually changed;
    - every ```mermaid block renders via `pele-render`;
-   - deletion cap (reject if >60% of original lines removed);
+   - deletion cap (reject if >75% of original lines removed; raised from 60% because
+     edited lines count as removed and restructuring is allowed);
+   - shrink guard (reject if under 50% of the original's non-blank lines: likely truncation);
    - every `[[wikilink]]` resolves to an existing page.
 6. **Bookkeeping** — wiki pages: set `updated:` today; replace that page's `index.md` line
    text with `INDEX:`; append `## [YYYY-MM-DD] docs-sync | dotfiles <old>..<new>` to

@@ -6,9 +6,9 @@ Do NOT load raw-log.md or individual mistakes/*.md at startup — use qmd for lo
 ## CLI / Shell
 - docling: flag is `--output`, not `--output-dir`; `docling-slim` lacks `pypdfium2` — check `docling --version` first, full install is `uv tool install docling` (2026-04-30, 2026-05-26)
 - Before any unfamiliar CLI flag or API: resolve via context7 first (`resolve-library-id` → `query-docs`), not `--help` or memory
-- For Markdown PR/issue bodies containing backticks or `$`: write a body file and pass `--body-file`/equivalent; never inline with double-quoted shell args (2026-06-15)
 - For interactive CLI verification, use scripted inputs for every prompt or test a lower-level non-interactive function instead; blank stdin can loop until timeout (2026-06-17)
 - Before deleting or relinking a deployed dotfile, resolve its real path — `readlink`/`realpath` the parent chain; a symlinked parent dir makes repo files look like un-stowed copies (2026-09-22)
+- Commit messages and PR/issue bodies go in a file passed via `-F`/`--body-file`; never inline them with double-quoted shell args (2026-06-15). In worktree-isolated Claude sessions, also run git/gh/rtk-rewritten tools as single literal-path commands and move loops, variables, heredocs and `$(...)` into a `$CLAUDE_JOB_DIR/tmp` script: the guard refuses compound forms, and rtk can drop variables (2026-10-20)
 
 ## Wiki Authoring
 

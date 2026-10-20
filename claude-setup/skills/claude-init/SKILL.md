@@ -195,10 +195,10 @@ Approve? (yes / modify / skip)
 If linting enabled — after approval, install noslop for the primary language pack:
 ```bash
 # TypeScript
-npx noslop@latest init ts
+bunx noslop@latest init ts
 
 # Python (if applicable)
-npx noslop@latest init py
+bunx noslop@latest init py
 ```
 Then write `linting: enabled` to profile.md.
 If linting skipped — write `linting: disabled` to profile.md.
@@ -324,7 +324,7 @@ Add to project `CLAUDE.md` under a new `## Memory Bank` section:
 ## Memory Bank
 
 Bootstrap command — run as first action every session:
-npx repomix --quiet --include _memory/ --ignore _memory/knowledgeBase --style markdown --stdout
+bunx repomix --quiet --include _memory/ --ignore _memory/knowledgeBase --style markdown --stdout
 
 `_memory/basicTruths/` — read every session start.
 `_memory/currentState/` — update every turn.

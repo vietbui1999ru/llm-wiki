@@ -36,7 +36,7 @@ and pushes one commit to llm-wiki main. Fully unattended.
 - `--dry-run` flag: everything except commit/push (needed for first verification).
 - `pele-render` required at preflight (abort if missing). Today it is NOT on PATH — dotfiles
   PR #124 must land or `pele` be installed first.
-- markdownlint via `npx --yes markdownlint-cli2@<pin matching CI action v17>`.
+- markdownlint via `bunx markdownlint-cli2@<pin matching CI action v17>` (bun is the package manager; Node stays the runtime).
 - Model never edits frontmatter; script owns `updated:`.
 
 ## Files

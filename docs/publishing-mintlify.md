@@ -71,7 +71,7 @@ is ~5 MB of MDX (plain text, compresses well).
 ## Preview locally
 
 ```bash
-npm i -g mint          # one-time; needs Node >= 20.17
+bun add -g mint       # one-time; mint still runs on Node >= 20.17
 cd docs-site
 mint dev               # http://localhost:3000
 ```

@@ -320,7 +320,7 @@ async function preflight(dotfiles) {
   if (branch !== "main") throw new Error(`llm-wiki is on "${branch}", expected main`);
   const dirty = (await git(["status", "--porcelain"])).stdout.trim();
   if (dirty) throw new Error(`llm-wiki working tree is dirty; commit or stash first:\n${dirty}`);
-  for (const command of ["pi", "pele-render", "node"]) {
+  for (const command of ["pi", "pele-render", "node", "bun"]) {
     if (!hasCommand(command)) throw new Error(`required command not found on PATH: ${command}`);
   }
   if (!existsSync(join(dotfiles, ".git"))) throw new Error(`dotfiles repo not found: ${dotfiles}`);
@@ -482,7 +482,7 @@ function logEntry({ base, head, accepted, skipped, uncovered, newEntries }) {
 async function buildAndLint(docs, originals) {
   await run("node", [BUILD_SCRIPT]);
   if (!docs.length) return { reverted: [] };
-  const lint = await run("npx", ["--yes", LINT_PIN, ...docs], { allowFailure: true });
+  const lint = await run("bunx", [LINT_PIN, ...docs], { allowFailure: true });
   if (lint.code === 0) return { reverted: [] };
 
   const failing = new Set();
@@ -614,7 +614,7 @@ async function main() {
 
     // log.md and index.md are script-generated, so a lint error there is a bug
     // in this script: fail loudly instead of reverting.
-    const metaLint = await run("npx", ["--yes", LINT_PIN, "log.md", "index.md"], { allowFailure: true });
+    const metaLint = await run("bunx", [LINT_PIN, "log.md", "index.md"], { allowFailure: true });
     if (metaLint.code !== 0) {
       throw new Error(`markdownlint failed on log.md/index.md\n${metaLint.stdout || metaLint.stderr}`);
     }

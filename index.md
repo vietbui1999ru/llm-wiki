@@ -51,7 +51,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/context7]] — Live library doc fetching (MCP + ctx7 CLI); per-platform: CC/Opencode/Codex/Pi/OMP
 - [[entities/laya]] — Open-source (Apache 2.0, claimed) calibrated decision model; one encoder forward pass, ~33 ms *(author-measured)*; Jev-compatible `/v1/systemone` server; needs fine-tuning, weak on 20+ options and negation; tested here as a qmd reranker: no gain (nDCG@10 0.651 vs hybrid 0.681, vs qmd full 0.713)
 - [[entities/pele]] — Mermaid-to-SVG JS library (no CLI); installed as the shared `pele` skill with pinned lockfile and `pele-render` wrapper via dotfiles bootstrap; use for agent-written design/slide diagrams, mmdc for Neovim previews, Excalidraw for freeform
-- [[entities/jujutsu]] — jj VCS 0.45.1 (Homebrew), config stowed from dotfiles `jj` package with Neovim `DiffEditor` as diff-editor; Git-to-jj mental-model table; not part of the agent harness
+- [[entities/jujutsu]] — jj VCS 0.46.0 (Homebrew), colocated `~/dotfiles` repo, hunk.nvim `DiffEditor`; Git-to-jj mental-model table, colocated-repo gotchas; human-only decision (2026-10-20) — agents and hooks stay on Git
 - [[entities/ponytail]] — Cross-agent coding skill/plugin that reduces AI overbuild via a minimality ladder; adapters for Claude Code, Codex, OpenCode, Gemini, Pi, Copilot CLI, and more
 - [[entities/agent-native]] — Builder.io framework for agent-native apps: shared actions, SQL-backed state, rich UI + agent surfaces, MCP/A2A compatibility
 - [[entities/headroom]] — Context compression proxy/library/MCP for AI agents; ContentRouter (JSON/AST/prose), CacheAligner, CCR reversible compression, cross-agent memory, `headroom learn` failure mining

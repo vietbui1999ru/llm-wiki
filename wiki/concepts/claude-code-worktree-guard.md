@@ -7,6 +7,7 @@ sources:
   - "Bug Worktree isolation guard rejects non-git commands due to early AST complexity check · Issue 84720.md"
   - "BUG 2.1.222 escalates 82966 to ordinary sessions worktree isolation refuses every `source``.` via an interpreter denylist, with no opt-out · Issue 84530 1.md"
   - "BUG 2.1.222 escalates 82966 to ordinary sessions worktree isolation refuses every `source``.` via an interpreter denylist, with no opt-out · Issue 84530.md"
+  - "Complex git situations tripping up claude  rClaudeCode.md"
 created: 2026-10-20
 updated: 2026-10-20
 ---
@@ -39,6 +40,7 @@ No longer refused (fixed 2.1.257/2.1.259): plain loops, heredocs, `$VAR` reads a
 | Call `/usr/bin/git` by absolute path | rtk does not rewrite it | Yes |
 | `$HOME` or absolute paths instead of `~` | Satisfies the path check | Yes |
 | Commit message and PR body in files (`git commit -F`, `gh pr create --body-file`) | Keeps "git" prose out of arguments | Yes |
+| Canonical commit funnel (`python3 git-commit.py`) that checks worktree root, branch, staged paths and message | Passes (probed 2.1.304); turns prose rules into an engineering control ([[summaries/reddit-complex-git-claude-code]]) | Only if the funnel itself refuses to leave the session's worktree |
 | Multi-step logic in a script run as `bash script.sh` | Passes, but hides the commands from the check | Technically, but it defeats the check rather than satisfying it |
 | `ExitWorktree(keep)` then `cd` into the worktree | Guard no longer applies | No; needs explicit user consent |
 | Disable isolation, WorktreeCreate hooks | Not possible / no effect | — |

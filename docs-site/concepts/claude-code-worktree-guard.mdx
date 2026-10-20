@@ -31,6 +31,7 @@ No longer refused (fixed 2.1.257/2.1.259): plain loops, heredocs, `$VAR` reads a
 | Call `/usr/bin/git` by absolute path | rtk does not rewrite it | Yes |
 | `$HOME` or absolute paths instead of `~` | Satisfies the path check | Yes |
 | Commit message and PR body in files (`git commit -F`, `gh pr create --body-file`) | Keeps "git" prose out of arguments | Yes |
+| Canonical commit funnel (`python3 git-commit.py`) that checks worktree root, branch, staged paths and message | Passes (probed 2.1.304); turns prose rules into an engineering control (Reddit Complex Git Claude Code) | Only if the funnel itself refuses to leave the session's worktree |
 | Multi-step logic in a script run as `bash script.sh` | Passes, but hides the commands from the check | Technically, but it defeats the check rather than satisfying it |
 | `ExitWorktree(keep)` then `cd` into the worktree | Guard no longer applies | No; needs explicit user consent |
 | Disable isolation, WorktreeCreate hooks | Not possible / no effect | — |

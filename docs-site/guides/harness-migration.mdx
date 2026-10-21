@@ -1,0 +1,322 @@
+---
+title: "Agent Harness Migration (Planned)"
+description: "The agent workflow (configs, rules, skills, review gates, Pi delegation and UI bridges) grew inside ~/dotfiles, with more pieces in llm-wiki/claude-setup, se…"
+---
+# Agent Harness Migration (Planned)
+
+> **Planned change, under development.** Nothing described below the "Where it stands" section has been built yet. The source of truth is `SPEC-HARNESS-MIGRATION.md` in this repo, and the executable spec (20 acceptance criteria, each with a `verify:` command) lives on the `worktree-feat+harness-orchestrator` branch of `~/repos/agent-harness`, status draft. This page is a simplified presentation; when the two disagree, the spec wins.
+
+The agent workflow (configs, rules, skills, review gates, Pi delegation and UI bridges) grew inside `~/dotfiles`, with more pieces in `llm-wiki/claude-setup`, several sibling repos, and live config files that no repo tracks. The plan moves it into a dedicated **agent-harness** repo, then grows that repo into a **multi-machine orchestrator**: one hub on the homelab that dispatches agents to other machines over Tailscale.
+
+Related guides: [Architecture](/guides/architecture) (how the harness fits together today) and [Standard workflow](/guides/workflows) (the spec loop the migration must not break).
+
+---
+
+## Why
+
+- **Sprawl.** The workflow spans four agents (Claude Code, Codex, Pi, OpenCode), the spec loop and review gates, Pi delegation through pueue, and UI bridges in Neovim, sketchybar, herdr and claude-tui. Nobody can hold it in their head any more.
+- **Coupling.** About 50 hardcoded `~/dotfiles/scripts/...` paths, many inside agent rule text, and a symlink loop between three repos.
+- **No clean install.** A second machine cannot run the workflow, because part of it is untracked live state. That blocks the orchestrator, which needs remote nodes to install the harness on their own.
+
+## Where it stands
+
+**Step 1 is done (2026-10-22): a link-view repo.** `~/repos/agent-harness` exists locally with no remote. Nothing has moved; dotfiles is still the live source.
+
+| Piece | Role |
+|---|---|
+| `links.tsv` | Manifest of 43 components: path, source, layer, status (`linked` or `owned`). Doubles as the migration checklist. |
+| `scripts/sync-links` | Creates or repairs the symlinks from the manifest; `--check` reports broken ones. |
+| `local-snapshots/` | Copies of 13 untracked live files (Pi and Codex config, judge scripts, herdr hooks). No credentials. |
+| `docs/inventory.md` | Full inventory, data flow and coupling report. |
+
+Every component is `linked` today. The migration flips rows to `owned`, one layer at a time.
+
+---
+
+## Chart 1 — Ownership before and after Phase A
+
+Who owns each layer. Today ownership is split across three repos plus untracked files, with a loop between dotfiles and llm-wiki. After Phase A the harness owns everything a node needs; the UI bridges stay where they are for now.
+
+```mermaid
+flowchart LR
+    subgraph BEFORE["Today"]
+        direction TB
+        DF["dotfiles<br>agent config, workflow CLIs,<br>session-band mod, bridges"]
+        WK["llm-wiki/claude-setup<br>rules, skills, scripts"]
+        LIVE["untracked live files<br>Pi settings + routing,<br>Codex config, herdr hooks"]
+        SIB["sibling repos<br>claude-tui, agent-events,<br>pi-live-status"]
+        DF -- "symlinks rules + skills" --> WK
+        WK -- "docs-sync points back" --> DF
+    end
+
+    subgraph AFTER["After Phase A"]
+        direction TB
+        H["agent-harness<br>workflow CLIs behind PATH shim<br>single rules + skills source<br>tracked Pi + Codex config<br>harness install --profile node"]
+        DF2["dotfiles<br>UI bridges, mods<br>old paths symlink into harness"]
+        WK2["llm-wiki<br>knowledge only"]
+        DF2 -- "links" --> H
+    end
+
+    BEFORE ==> AFTER
+```
+
+| Layer | Today | After Phase A |
+|---|---|---|
+| Agent config (Claude, Codex, Pi, OpenCode) | dotfiles, partly untracked | harness, tracked, no credentials |
+| Rules and skills | llm-wiki `claude-setup`, linked from dotfiles | harness, one source |
+| Workflow CLIs (`ac-run`, `floor-guard`, `commit-funnel`, `agent-review`) | `dotfiles/scripts`, called by hardcoded path | harness, found on `PATH` through a shim |
+| Claude mods (session-band) | dotfiles | unchanged (later phase) |
+| UI bridges (Neovim, sketchybar, herdr, claude-tui) | dotfiles and sibling repos | unchanged (later phase) |
+
+## Chart 2 — Data flow today
+
+How state moves between the agents and the UI surfaces. The migration changes where these pieces live, not how they talk; this flow must still work after every step.
+
+```mermaid
+flowchart LR
+    subgraph AGENTS["Agents"]
+        CC["Claude Code"]
+        PI["Pi"]
+        CX["Codex"]
+    end
+
+    CC -- "hooks" --> STATE["~/.claude/state"]
+    CC -- "panes" --> HERDR["herdr socket"]
+    PI -- "panes" --> HERDR
+    PI -- "agent-review extension" --> REVIEW[".pi/agent-review"]
+    PUEUE["pueue<br>Pi task queue"]
+
+    HERDR --> BRIDGE["herdr to sketchybar bridge"]
+    PUEUE --> BRIDGE
+    BRIDGE --> SB["sketchybar agents item"]
+
+    REVIEW --> CLI["agent-review CLI"]
+    REVIEW --> NVIM["Neovim :AgentReview"]
+    REVIEW --> BAND["session-band gates"]
+    STATE --> BAND
+    PUEUE --> BAND
+    STATE --> EVENTS["agent-events"]
+
+    DAEMON["claude-daemon"] --> TUI["claude-tui status"]
+    TUI --> SB
+    TUI --> PISTAT["Pi statusline"]
+```
+
+---
+
+## Chart 3 — Migration order (Phase A)
+
+Each step is gated by the same baseline. A0 records today's state as passing; every later step reruns it, and any regression blocks that step. Old `~/dotfiles/...` paths keep working through symlinks into the harness until every consumer is updated.
+
+```mermaid
+flowchart TD
+    A0["A0 · Baseline gate<br>dotfiles tests: 77 Python + 23 Node<br>stow dry-run claude + pi<br>sync-links --check: 43 links<br>Claude settings parse, pi --version"]
+    S1["1 · Workflow CLIs<br>harness-owned behind a PATH shim<br>removes ~50 hardcoded paths"]
+    S2["2 · Rules and skills<br>single source in the harness<br>collapses the three-repo loop"]
+    S3["3 · Untracked config<br>Pi + Codex config tracked, no credentials<br>fix codex + shared stow conflicts"]
+    S4["4 · Node install<br>harness install --profile node<br>sets up a clean machine over SSH"]
+    S5["5 · Phase B MVP-1<br>two-node ping-pong through the hub"]
+    GATE{{"after every step:<br>rerun A0 checks<br>regression blocks the step"}}
+
+    A0 --> S1 --> S2 --> S3 --> S4 --> S5
+    S1 -.-> GATE
+    S2 -.-> GATE
+    S3 -.-> GATE
+    S4 -.-> GATE
+```
+
+---
+
+## Chart 4 — Phase B: the orchestrator
+
+Once a node can install the harness by itself, the same Go binary, `harness`, runs in two roles. The **hub** on the homelab keeps a node registry (declared tags plus probed facts), a SQLite store of tickets and messages, an MCP server so one Claude Code session can see every agent's context, and a kanban WebUI. **Nodes** are machines reached over SSH on the tailnet; the hub places an agent on the node whose tags match the job, for example a monitoring agent on the machine with the monitoring stack.
+
+```mermaid
+flowchart TB
+    YOU(["You<br>one Claude Code prompt session"])
+    WEB(["Kanban WebUI<br>tailnet only"])
+
+    subgraph TAILNET["Tailscale tailnet"]
+        subgraph HUB["Hub · homelab · harness hub"]
+            MCP["MCP server"]
+            REG["Node registry<br>tags + probed facts"]
+            DB[("SQLite<br>tickets + messages")]
+            RELAY["Message relay<br>direct · group · broadcast"]
+        end
+
+        subgraph N1["Node · tag: monitoring"]
+            A1["Pi agent"]
+        end
+        subgraph N2["Node · tag: gateway"]
+            A2["Pi agent"]
+        end
+        GW["AI gateway"]
+    end
+
+    YOU -- "MCP" --> MCP
+    WEB --> DB
+    MCP --> DB
+    REG -- "place by tags" --> N1
+    REG -- "place by tags" --> N2
+    A1 <-- "control messages" --> RELAY
+    A2 <-- "control messages" --> RELAY
+    RELAY --> DB
+    A1 -- "per-node virtual key" --> GW
+    A2 -- "per-node virtual key" --> GW
+```
+
+Design boundaries:
+
+- **Control plane only.** The hub relays agent and orchestrator messages. Agents may *set up* data links, such as shipping gateway logs to the monitoring machine, but the harness never carries that traffic.
+- **No provider keys on nodes.** Nodes call the AI gateway with per-node virtual keys the hub can revoke.
+- **Tailnet only.** The WebUI is single-user and not exposed publicly.
+- **No auto-rescheduling.** If a node fails mid-task, the ticket is parked and you are notified. Infrastructure work has side effects, so it is never silently re-run elsewhere.
+
+## Chart 5 — MVP-1: two-node ping-pong
+
+The first end-to-end proof. Two Pi agents on two different nodes exchange messages only through the hub, and the result lands on the ticket. MVP-2, the monitoring scenario, gets its own spec.
+
+```mermaid
+sequenceDiagram
+    participant You
+    participant Hub as Hub (homelab)
+    participant A as Pi on node A
+    participant B as Pi on node B
+
+    You->>Hub: create ticket "ping-pong"
+    Hub->>A: dispatch over SSH (tags match)
+    Hub->>B: dispatch over SSH (tags match)
+    A->>Hub: message to B: ping
+    Hub->>B: relay ping
+    B->>Hub: message to A: pong
+    Hub->>A: relay pong
+    A->>Hub: report done
+    Hub->>You: ticket updated, visible in WebUI and MCP
+    Note over Hub,B: on reconnect, missed messages are replayed<br>a node that misses heartbeats parks the ticket
+```
+
+---
+
+## How "done" will be checked
+
+The agent-harness spec has 20 acceptance criteria. Grouped:
+
+| Criteria | Scope | How checked |
+|---|---|---|
+| AC-1 to AC-5 | Baseline: dotfiles tests, stow dry-run, harness links, Claude settings, Pi CLI | Commands, now and after every step |
+| AC-6 to AC-10 | Phase A: no hardcoded script paths, CLIs behind the shim, rules and skills owned, config tracked without credentials, node install | Commands; node install checked by hand on a second machine |
+| AC-11 to AC-18 | Phase B units: message relay, replay after reconnect, heartbeat timeout, tag placement, guarded `--dangerously-skip`, MCP tool list, in-process ping-pong | Go tests |
+| AC-19 to AC-20 | Phase B on real hardware: ping-pong across two tailnet nodes, WebUI reachable only on the tailnet | By hand |
+
+## Risks and open items
+
+- **Hidden consumers of old paths.** Rule text and one test assert `~/dotfiles/scripts/ac-run`. The compatibility symlinks must stay until a search shows zero consumers.
+- **Relative symlinks inside dotfiles** depend on directory depth and can break when a package moves.
+- **Untracked state.** `pi-live-status` is not under git, and Pi, Codex, judge and herdr files exist only as snapshots.
+- **Stale pieces** to delete during the move: `claude-setup/settings.json`, `install-claude-symlink.sh`, a dangling `~/.local/bin/ao`.
+- **Likely bug found during the inventory:** `pi-status.lua` reads `~/.pi/status` while the writer uses `<cwd>/.pi/status`.
+- **Open:** the spec is still a draft awaiting approval; the agent-harness repo has no remote yet; the UI-bridge move is unscheduled.
+
+
+<iframe srcDoc="<!doctype html><html lang=&quot;en&quot;><head><meta charset=&quot;utf-8&quot;><title>Knowledge graph</title><style>
+:root{--bg:#0f1117;--hd:#aeb3c2;--tx:#c9cdd8;--mu:#b4b9c6;--btn:#1b1e27;--bd:#2b2f3a;--pn:rgba(22,25,34,.97);--hdg:#0f1117cc;--fo:#9E8CFC}
+:root[data-theme=light]{--bg:#ffffff;--hd:#4b5563;--tx:#374151;--mu:#4b5563;--btn:#f3f4f6;--bd:#e5e7eb;--pn:rgba(255,255,255,.97);--hdg:#ffffffcc;--fo:#6E56CF}
+html,body{margin:0;height:100%;background:var(--bg);overflow:hidden;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif}
+#g{width:100%;height:100%}
+#hd{position:absolute;top:0;left:0;right:36px;height:28px;display:flex;align-items:center;gap:6px;padding:0 10px;color:var(--hd);font-size:11px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(var(--hdg),transparent)}
+#gear{position:absolute;top:4px;right:6px;z-index:7;cursor:pointer;color:var(--tx);background:var(--btn);border:1px solid var(--bd);border-radius:6px;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+#panel{position:absolute;top:36px;right:6px;z-index:7;background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:6px 10px 10px;display:none;width:170px;color:var(--tx);font-size:12px}
+#panel.open{display:block}
+#panel label{display:flex;justify-content:space-between;margin:8px 0 2px;color:var(--mu)}
+#panel input[type=range]{width:100%;margin:0}
+#panel label.row{justify-content:flex-start;align-items:center;gap:6px;margin-top:10px;color:var(--tx)}
+#reset{margin-top:10px;width:100%;min-height:26px;font:inherit;color:var(--tx);background:var(--btn);border:1px solid var(--bd);border-radius:6px;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--fo);outline-offset:2px}
+</style><script src=&quot;https://cdn.jsdelivr.net/npm/force-graph@1.51.4/dist/force-graph.min.js&quot; integrity=&quot;sha384-Hm6GpQcTNI5VqGgGS7lLxTGtEFcxu/kOVV0B7ozIZRu9blWVvigv5httJQZ2qZmY&quot; crossorigin=&quot;anonymous&quot;></script></head>
+<body><div id=&quot;hd&quot;>Graph</div><button type=&quot;button&quot; id=&quot;gear&quot; aria-label=&quot;Graph settings&quot; aria-expanded=&quot;false&quot; aria-controls=&quot;panel&quot;>⚙</button>
+<div id=&quot;panel&quot; role=&quot;group&quot; aria-label=&quot;Graph settings&quot;>
+<label for=&quot;ns&quot;>Node size<span id=&quot;vns&quot;></span></label><input id=&quot;ns&quot; type=&quot;range&quot; min=&quot;0.6&quot; max=&quot;6&quot; step=&quot;0.2&quot;>
+<label for=&quot;lw&quot;>Link width<span id=&quot;vlw&quot;></span></label><input id=&quot;lw&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;3&quot; step=&quot;0.1&quot;>
+<label for=&quot;ts&quot;>Label size<span id=&quot;vts&quot;></span></label><input id=&quot;ts&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;8&quot; step=&quot;0.5&quot;>
+<label for=&quot;to&quot;>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
+<div id=&quot;depthRow&quot;><label for=&quot;dp&quot;>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
+<label class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;>Directional arrows</label>
+<button type=&quot;button&quot; id=&quot;reset&quot;>Reset position</button>
+</div>
+<div id=&quot;g&quot; aria-hidden=&quot;true&quot;></div>
+<script>
+const NODES=[{&quot;id&quot;:&quot;guides/harness-migration&quot;,&quot;label&quot;:&quot;Agent Harness Migration (Planned)&quot;,&quot;group&quot;:&quot;guides&quot;,&quot;val&quot;:1}],LINKS=[],CUR=&quot;guides/harness-migration&quot;,MAXD=3;
+const C={concepts:'#8B7CF6',patterns:'#0D9373',systems:'#E0567C',syntheses:'#E2A03F',comparisons:'#3B82F6',entities:'#14B8A6',guides:'#9CA3AF'};
+// canvas colours per theme; the CSS above switches on :root[data-theme].
+const PAL={dark:{bg:'#0f1117',link:'rgba(255,255,255,0.12)',arrow:'rgba(255,255,255,0.4)',label:'#aab0c0',cur:'#ffffff'},light:{bg:'#ffffff',link:'rgba(15,23,42,0.15)',arrow:'rgba(15,23,42,0.45)',label:'#4b5563',cur:'#111827'}};
+// Mintlify puts class light|dark on the parent <html>; fall back to the OS setting.
+function parentTheme(){try{var c=window.parent.document.documentElement.classList;if(c.contains('light'))return 'light';if(c.contains('dark'))return 'dark';}catch(e){if(window.console)console.debug('graph: parent theme unavailable',e);}return matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';}
+var P=PAL[parentTheme()];document.documentElement.dataset.theme=parentTheme();
+function lid(x){return (x&amp;&amp;x.id!==undefined)?x.id:x;}
+const ADJ=new Map(NODES.map(function(n){return [n.id,new Set()];}));
+LINKS.forEach(function(l){var s=lid(l.source),t=lid(l.target);if(ADJ.has(s)&amp;&amp;ADJ.has(t)){ADJ.get(s).add(t);ADJ.get(t).add(s);}});
+var opt={ns:1.8,lw:0.6,ts:3.5,to:0.75,dp:2,ar:false};
+function visible(){
+ if(!CUR)return {nodes:NODES,links:LINKS};
+ var dist=new Map([[CUR,0]]),fr=[CUR];
+ for(var d=1;d<=opt.dp;d++){var nx=[];fr.forEach(function(u){(ADJ.get(u)||[]).forEach(function(v){if(!dist.has(v)){dist.set(v,d);nx.push(v);}});});fr=nx;}
+ var keep=new Set(dist.keys());
+ return {nodes:NODES.filter(function(n){return keep.has(n.id);}),links:LINKS.filter(function(l){return keep.has(lid(l.source))&amp;&amp;keep.has(lid(l.target));})};
+}
+var el=document.getElementById('g');
+var G=ForceGraph()(el).backgroundColor(P.bg).nodeId('id')
+ .warmupTicks(24).cooldownTicks(70).autoPauseRedraw(true)
+ .nodeColor(function(n){return C[n.group]||'#9CA3AF';}).nodeLabel('label').nodeVal(function(n){return n.val;})
+ .linkColor(function(){return P.link;})
+ .nodeRelSize(opt.ns).linkWidth(opt.lw)
+ .linkDirectionalArrowLength(0).linkDirectionalArrowRelPos(1).linkDirectionalArrowColor(function(){return P.arrow;})
+ .nodeCanvasObjectMode(function(){return 'after';})
+ .nodeCanvasObject(function(n,ctx,scale){var r=opt.ns*Math.sqrt(n.val||1);
+  if(n.id===CUR){ctx.beginPath();ctx.arc(n.x,n.y,r+1.6,0,6.283);ctx.strokeStyle=P.cur;ctx.lineWidth=1.2/scale;ctx.stroke();}
+  if(opt.to>0&amp;&amp;opt.ts>0){var t=n.label.length>28?n.label.slice(0,26)+'…':n.label;ctx.globalAlpha=opt.to;ctx.font=((n.id===CUR?opt.ts+1:opt.ts))+'px ui-sans-serif,sans-serif';ctx.fillStyle=(n.id===CUR)?P.cur:P.label;ctx.textAlign='center';ctx.textBaseline='top';ctx.fillText(t,n.x,n.y+r+1.5);ctx.globalAlpha=1;}})
+ .onNodeClick(function(n){if(window.top){window.top.location.href='/'+n.id;}});
+G.graphData(visible());G.d3VelocityDecay(0.4);
+var RM=window.matchMedia&amp;&amp;matchMedia('(prefers-reduced-motion: reduce)').matches;
+function fit(){G.zoomToFit(RM?0:400,20);}
+setTimeout(fit,350);setTimeout(fit,1100);
+// Stop the render/sim loop while idle so the fixed widget never repaints during
+// parent-page scroll; resume only while the pointer is over the widget.
+var pt;function pause(){G.pauseAnimation();}function resume(){G.resumeAnimation();}
+function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
+document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
+document.body.addEventListener('pointerleave',function(){idle(250);});
+addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+idle(2000);
+// follow the site theme live. autoPauseRedraw skips frames when nothing moved, so
+// turn it off briefly to repaint links and labels in the new palette.
+function setTheme(t){P=PAL[t];document.documentElement.dataset.theme=t;G.backgroundColor(P.bg);G.autoPauseRedraw(false);resume();setTimeout(function(){G.autoPauseRedraw(true);},250);idle(400);}
+try{new MutationObserver(function(){setTheme(parentTheme());}).observe(window.parent.document.documentElement,{attributes:true,attributeFilter:['class']});}
+catch(e){matchMedia('(prefers-color-scheme: light)').addEventListener('change',function(){setTheme(parentTheme());});}
+function apply(re){resume();G.nodeRelSize(opt.ns).linkWidth(opt.lw).linkDirectionalArrowLength(opt.ar?2.6:0);if(re){G.graphData(visible());setTimeout(fit,450);}idle(re?2200:1400);}
+function bind(id,key,fmt,re){var e=document.getElementById(id),o=document.getElementById('v'+id);e.value=opt[key];if(o)o.textContent=fmt(opt[key]);e.addEventListener('input',function(){opt[key]=parseFloat(e.value);if(o)o.textContent=fmt(opt[key]);apply(re);});}
+bind('ns','ns',function(v){return v.toFixed(1);},false);
+bind('lw','lw',function(v){return v.toFixed(1);},false);
+bind('ts','ts',function(v){return v.toFixed(1);},false);
+bind('to','to',function(v){return v.toFixed(2);},false);
+var dE=document.getElementById('dp'),dO=document.getElementById('vd');dE.max=MAXD;dE.value=opt.dp;dO.textContent=opt.dp;dE.addEventListener('input',function(){opt.dp=parseInt(dE.value,10);dO.textContent=opt.dp;apply(true);});
+if(!CUR)document.getElementById('depthRow').style.display='none';
+var aE=document.getElementById('ar');aE.checked=opt.ar;aE.addEventListener('change',function(){opt.ar=aE.checked;apply(false);});
+var gear=document.getElementById('gear'),panel=document.getElementById('panel');
+function setPanel(open){panel.classList.toggle('open',open);gear.setAttribute('aria-expanded',String(open));}
+gear.addEventListener('click',function(){setPanel(!panel.classList.contains('open'));});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&amp;&amp;panel.classList.contains('open')){setPanel(false);gear.focus();}});
+var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'Knowledge graph');
+// free-form placement: drag by the header. Default is bottom-right (inline style);
+// a moved position is saved per parent-origin and restored on every page.
+function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
+function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
+// Non-drag alternative (WCAG 2.5.7): back to the stylesheet's bottom-right default.
+document.getElementById('reset').addEventListener('click',function(){var fe=window.frameElement;if(fe){fe.style.left=fe.style.top=fe.style.right=fe.style.bottom='';}try{localStorage.removeItem('llmwiki_graph_pos');}catch(e){if(window.console)console.debug('graph: could not clear position',e);}});
+// keep a moved panel inside the viewport when the parent window shrinks.
+try{(window.top||window).addEventListener('resize',function(){var fe=window.frameElement;if(fe&amp;&amp;fe.style.left)place(fe,parseFloat(fe.style.left),parseFloat(fe.style.top));});}catch(e){if(window.console)console.debug('graph: parent resize unavailable',e);}
+try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
+hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
+ function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
+ function up(){if(hd.hasPointerCapture(e.pointerId))hd.releasePointerCapture(e.pointerId);hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e2){if(window.console)console.debug('graph: could not persist position',e2);}}
+ hd.addEventListener('pointermove',mv);hd.addEventListener('pointerup',up);e.preventDefault();});
+</script></body></html>" title="Knowledge graph (visual). The same links are listed under Linked pages." loading="lazy" className="llmwiki-graph" />

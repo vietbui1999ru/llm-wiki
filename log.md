@@ -1156,3 +1156,9 @@ Source: raw/ "Complex git situations tripping up claude  rClaudeCode.md" (thread
 - Updated: `concepts/claude-code-worktree-guard` (commit-funnel row in the workaround matrix).
 - Flag: the thread does not mention rtk, and it predates the worktree guard; it is about rule-following in a multi-repo parent directory.
 - Probe: `python3 <tmp>/git-commit.py` runs in a worktree-isolated session on 2.1.304, so a funnel passes the guard by hiding git from it; the funnel must enforce its own worktree and branch checks.
+
+## [2026-10-22] docs | agent harness migration guide (planned)
+- SPEC-HARNESS-MIGRATION.md committed (draft); its MVP presentation checklist now points at the guide.
+- docs/harness-migration.md (new, published as guides/harness-migration): planned-change banner, ownership before/after, data flow, Phase A migration order with baseline gate, Phase B hub-and-nodes topology, MVP-1 ping-pong sequence, AC groups, risks. Five Mermaid charts, each parsed with pele-render.
+- build-docs-site.mjs: guide entry, Architecture nav item, landing card. docs-site regenerated.
+- mistakes: ingested 2026-10-21 shell-unchecked-path and tests-expectation-contradicts-rule; two wiki-authoring line pairs merged to keep global-prevention-rules.md at the 45-line cap.

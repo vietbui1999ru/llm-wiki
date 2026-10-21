@@ -8,6 +8,7 @@ import {
   bumpUpdated,
   deletionRatio,
   execClosed,
+  failureReason,
   globMatch,
   hasSecretContent,
   isExcluded,
@@ -62,6 +63,12 @@ test("isExcluded: worktrees, superpowers specs and backups are out of scope", ()
   assert.equal(isExcluded("top.bak"), true);
   assert.equal(isExcluded("docs/workflows.md"), false);
   assert.equal(isExcluded("scripts/ac-run"), false);
+});
+
+test("failureReason: multi-line pi errors become one capped line", () => {
+  const err = new Error("pi failed (exit 1)\nProvider finish_reason: content_filter\n");
+  assert.equal(failureReason(err), "pi failed (exit 1): Provider finish_reason: content_filter");
+  assert.equal(failureReason(new Error("x".repeat(500))).length, 160);
 });
 
 test("globMatch: ** crosses dot directories, literal dot segments still match", () => {

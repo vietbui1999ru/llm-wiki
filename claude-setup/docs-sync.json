@@ -1,0 +1,113 @@
+{
+  "dotfiles": "~/dotfiles",
+  "last_synced_sha": null,
+  "entries": [
+    {
+      "paths": ["shared/skills/delegate-pi/**"],
+      "docs": ["wiki/entities/pi-agent.md", "docs/workflows.md"]
+    },
+    {
+      "paths": ["shared/skills/grill-me/**"],
+      "docs": ["docs/workflows.md", "wiki/syntheses/spec-conformance-and-review-loop-options.md"]
+    },
+    {
+      "paths": ["shared/skills/verify-spec/**"],
+      "docs": ["docs/workflows.md", "wiki/syntheses/spec-conformance-and-review-loop-options.md"]
+    },
+    {
+      "paths": ["shared/skills/pele/**"],
+      "docs": ["wiki/entities/pele.md", "wiki/systems/dotfiles-agent-harness-layout.md"]
+    },
+    {
+      "paths": ["shared/skills/gh-stack/**"],
+      "docs": [
+        "wiki/syntheses/spec-conformance-and-review-loop-options.md",
+        "wiki/systems/dotfiles-agent-harness-layout.md"
+      ]
+    },
+    {
+      "paths": ["shared/skills/kanban-status/**"],
+      "docs": ["docs/workflows.md", "wiki/syntheses/control-plane-expansion-plan.md"]
+    },
+    {
+      "paths": ["claude/.claude/rules/**"],
+      "docs": [
+        "docs/architecture.md",
+        "wiki/concepts/model-tier-routing.md",
+        "wiki/systems/dotfiles-agent-harness-layout.md"
+      ]
+    },
+    {
+      "paths": ["claude/.claude/hooks/**", "claude/.claude/settings.json"],
+      "docs": ["wiki/concepts/claude-code-worktree-guard.md", "docs/architecture.md"]
+    },
+    {
+      "paths": ["claude/.claude/agents/**"],
+      "docs": ["wiki/concepts/agent-subagents.md", "wiki/systems/dotfiles-agent-harness-layout.md"]
+    },
+    {
+      "paths": ["scripts/ac-run", "scripts/floor-guard"],
+      "docs": ["wiki/syntheses/spec-conformance-and-review-loop-options.md", "docs/workflows.md"]
+    },
+    {
+      "paths": ["scripts/hooks/post-commit"],
+      "docs": ["docs/architecture.md", "wiki/systems/dotfiles-agent-harness-layout.md"]
+    },
+    {
+      "paths": ["scripts/bootstrap-dirs.sh", "scripts/restow.sh"],
+      "docs": ["wiki/systems/dotfiles-agent-harness-layout.md"]
+    },
+    {
+      "paths": ["scripts/sync-agent-rules.sh"],
+      "docs": ["docs/architecture.md", "wiki/systems/dotfiles-agent-harness-layout.md"]
+    },
+    {
+      "paths": ["scripts/firecrawl", "scripts/firecrawl-mcp", "scripts/firecrawl-setup.sh"],
+      "docs": ["wiki/entities/firecrawl.md", "wiki/systems/dotfiles-agent-harness-layout.md"]
+    },
+    {
+      "paths": ["scripts/agent-review", "scripts/agent-review-nvim-*.lua"],
+      "docs": ["wiki/systems/agent-review.md", "wiki/syntheses/neovim-ai-operator-workflow.md"]
+    },
+    {
+      "paths": ["scripts/mistake-*.mjs"],
+      "docs": ["wiki/concepts/agent-self-correction.md"]
+    },
+    {
+      "paths": ["shared/AGENTS.md", "shared/research-tool-routing.md"],
+      "docs": ["docs/architecture.md", "wiki/concepts/agent-context-instructions.md"]
+    },
+    {
+      "paths": ["shared/mcp-servers.json"],
+      "docs": ["docs/architecture.md", "wiki/systems/dotfiles-agent-harness-layout.md"]
+    },
+    {
+      "paths": ["pi/.pi/agent/extensions/agent-review/**"],
+      "docs": ["wiki/systems/agent-review.md"]
+    },
+    {
+      "paths": ["pi/.pi/agent/extensions/post-run-verifier.ts", "pi/.pi/agent/extensions/lib/post-run-verifier*.ts"],
+      "docs": ["wiki/concepts/verification-pipeline.md", "docs/workflows.md"]
+    },
+    {
+      "paths": ["pi/.pi/agent/extensions/rtk.ts"],
+      "docs": ["wiki/entities/rtk.md"]
+    },
+    {
+      "paths": ["pi/.pi/agent/extensions/pi-statusline.ts", "pi/.pi/agent/extensions/pi-side-panel/**"],
+      "docs": ["wiki/entities/pi-agent.md"]
+    },
+    {
+      "paths": ["opencode/.config/opencode/opencode.json", "opencode/.config/opencode/plugins/**"],
+      "docs": ["wiki/entities/opencode.md", "wiki/entities/lean-session.md"]
+    },
+    {
+      "paths": ["codex/.codex/**"],
+      "docs": ["wiki/entities/codex.md"]
+    },
+    {
+      "paths": ["codex-guardrails-plugin/**"],
+      "docs": ["wiki/entities/codex.md", "wiki/concepts/rules-vs-hooks.md"]
+    }
+  ]
+}

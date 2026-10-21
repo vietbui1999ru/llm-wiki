@@ -36,7 +36,7 @@ if [ "$INSTALL_HEADROOM" = "true" ] && [ -d "$PLUGIN_DIR" ]; then
   echo "Installing pi-headroom plugin (opt-in)..."
   cd "$PLUGIN_DIR"
   if [ ! -d "node_modules" ]; then
-    npm install 2>/dev/null || echo "WARN: npm install failed; plugin may not function"
+    bun install 2>/dev/null || echo "WARN: bun install failed; plugin may not function"
   fi
   $OMP_BIN install "$PLUGIN_DIR" 2>/dev/null || echo "WARN: plugin install failed; may already be installed"
   

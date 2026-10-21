@@ -375,8 +375,8 @@ Subsequent sessions (no /claude-init needed):
 ```
 /claude-init  (or just say "add linting")
 → Installs noslop quality gates as pre-commit hooks (per-project):
-    npx noslop@latest init ts    # TypeScript
-    npx noslop@latest init py    # Python
+    bunx noslop@latest init ts    # TypeScript
+    bunx noslop@latest init py    # Python
 → Writes linting: enabled to .claude/profile.md
 
 Active hooks (always-on globally, no per-project setup):

@@ -76,6 +76,9 @@ When Viet says "lint the wiki":
 5. Tier-0 distillation sync: for each wikilink cited in `claude-setup/rules/applied-ai.md` and `mistakes/global-prevention-rules.md` (the always-loaded files), open the linked page and verify its current recommendation still matches the Tier-0 claim. Flag any mismatch — these files are the highest-leverage drift surface because every session loads them.
 6. Append to log.md: `## [YYYY-MM-DD] lint`
 
+### Docs sync
+`node claude-setup/scripts/docs-sync.mjs [--since <ref>] [--dry-run]` — rewrites the docs that describe the dotfiles agent harness after a burst of changes; path→doc mapping in `claude-setup/docs-sync.json`.
+
 ## context7 lookup rule
 Before using any library, framework, CLI tool, or API — resolve current docs via context7 MCP:
 1. `mcp__context7__resolve-library-id` → get the library ID

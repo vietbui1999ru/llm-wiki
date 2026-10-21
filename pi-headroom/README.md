@@ -16,7 +16,7 @@ Compresses tool outputs before they reach the LLM. Falls back to basic truncatio
 ```bash
 # 1. Install headroom-ai inside the plugin directory
 cd pi-headroom
-npm install
+bun install
 
 # 2. Install the plugin into omp (symlinks + watches for changes)
 omp install ./pi-headroom
@@ -93,7 +93,7 @@ Edit `hooks/pre/headroom-compress.ts` to tune:
 | Symptom | Fix |
 |---|---|
 | Hook not firing | Verify file is in `~/.omp/agent/hooks/pre/` (not nested deeper) |
-| `headroom-ai` import fails | Run `npm install` inside the plugin directory |
+| `headroom-ai` import fails | Run `bun install` inside the plugin directory |
 | Tool not available | Verify `~/.omp/agent/tools/headroom-retrieve/index.ts` exists |
 | No compression happening | Check if content exceeds `COMPRESS_THRESHOLD_CHARS`; verify proxy/API key config |
 

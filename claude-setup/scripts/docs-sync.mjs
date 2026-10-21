@@ -42,9 +42,15 @@ const LINT_PIN = "markdownlint-cli2@0.14.0"; // bundled by markdownlint-cli2-act
 // Secret-looking paths never reach a prompt (diffs go to a remote model, rewrites to a
 // public site). Built-ins always win over a manifest `!` keep.
 const SECRET_GLOBS = [
-  "**/.env", "**/.env.*", "**/*.pem", "**/*.key", "**/auth.json", "**/.netrc",
-  "**/hosts.yml", "**/*credential*", "**/*secret*", "**/*token*",
+  "**/.env", "**/.env.*", "**/*.pem", "**/*.key", "**/*.p12", "**/*.pfx", "**/*.gpg",
+  "**/auth.json", "**/.netrc", "**/.npmrc", "**/.pypirc", "**/.git-credentials", "**/hosts.yml",
+  "**/id_rsa*", "**/id_ed25519*", "**/id_ecdsa*", "**/.ssh/**", "**/.kube/config",
+  "**/*credential*", "**/*credential*/**", "**/*secret*", "**/*secret*/**",
+  "**/*token*", "**/*token*/**",
 ];
+// Second line of defence on content: a diff hunk with one of these skips its page.
+const SECRET_CONTENT_RE = /\b(sk-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|AKIA[0-9A-Z]{16}|xox[abpr]-[A-Za-z0-9-]{10,})|-----BEGIN [A-Z ]*PRIVATE KEY-----/;
+export const hasSecretContent = (text) => SECRET_CONTENT_RE.test(text);
 const EXCLUDE_GLOBS = [".claude/worktrees/**", "docs/superpowers/**", "**/*.bak", ...SECRET_GLOBS];
 const CATALOG_DIRS = ["systems", "entities", "concepts", "syntheses"];
 const SENTINEL_OPEN = "<<<DOCS_SYNC_BODY>>>";
@@ -249,7 +255,8 @@ async function run(cmd, args, { allowFailure = false, cwd = ROOT } = {}) {
 }
 
 const git = (args, opts) => run("git", args, opts);
-const dotfilesGit = (dotfiles, args, opts) => run("git", ["-C", dotfiles, ...args], opts);
+// --literal-pathspecs: changed paths go to git as-is, never as glob or :(magic) pathspecs.
+const dotfilesGit = (dotfiles, args, opts) => run("git", ["-C", dotfiles, "--literal-pathspecs", ...args], opts);
 
 function hasCommand(name) {
   return spawnSync("/bin/sh", ["-c", `command -v -- ${name}`], { encoding: "utf8" }).status === 0;
@@ -467,10 +474,9 @@ async function rewriteOne({ dotfiles, base, item, keys, originals }) {
     (await dotfilesGit(dotfiles, ["log", "--format=%h %s", `${base}..main`, "--", ...item.paths])).stdout.trim(),
     4_000,
   );
-  const diff = truncate(
-    (await dotfilesGit(dotfiles, ["diff", "--unified=2", `${base}..main`, "--", ...item.paths])).stdout,
-    PROMPT_BUDGET,
-  );
+  const fullDiff = (await dotfilesGit(dotfiles, ["diff", "--unified=2", `${base}..main`, "--", ...item.paths])).stdout;
+  if (hasSecretContent(fullDiff) || hasSecretContent(commits)) return { doc: item.doc, ok: false, reason: "secret-like content in diff; not sent" };
+  const diff = truncate(fullDiff, PROMPT_BUDGET);
 
   const reply = await runPi(rewritePrompt({ doc: item.doc, body, commits, diff }));
   return { doc: item.doc, ...acceptRewrite(body, reply, keys) };

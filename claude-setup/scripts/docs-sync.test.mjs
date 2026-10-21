@@ -9,6 +9,7 @@ import {
   deletionRatio,
   execClosed,
   globMatch,
+  hasSecretContent,
   isExcluded,
   mapToDocs,
   parseSentinels,
@@ -89,6 +90,17 @@ test("isExcluded: secret-looking paths are always out, even inside dot dirs and 
   assert.equal(isExcluded("gh/.config/gh/hosts.yml", keep), true);
   assert.equal(isExcluded("scripts/github-token-refresh", keep), true);
   assert.equal(isExcluded("claude/.claude/keybindings.json", keep), false);
+  assert.equal(isExcluded("home/.ssh/config", keep), true);
+  assert.equal(isExcluded("shared/secrets/notes.md", keep), true);
+});
+
+test("hasSecretContent: flags key-shaped strings, passes ordinary diffs", () => {
+  // Built at runtime so no secret-shaped literal is committed.
+  assert.equal(hasSecretContent(`+export KEY=${"sk-" + "a".repeat(24)}`), true);
+  assert.equal(hasSecretContent(`+token: ${"ghp_" + "b".repeat(36)}`), true);
+  assert.equal(hasSecretContent(`+${"AKIA" + "C".repeat(16)}`), true);
+  assert.equal(hasSecretContent(`+${"-----BEGIN " + "OPENSSH PRIVATE KEY-----"}`), true);
+  assert.equal(hasSecretContent("+const tokenBudget = 4000; // ask-first rules"), false);
 });
 
 test("parseSentinels: body between the markers plus the INDEX line", () => {

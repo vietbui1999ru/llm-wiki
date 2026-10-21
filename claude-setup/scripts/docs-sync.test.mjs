@@ -8,6 +8,7 @@ import {
   bumpUpdated,
   deletionRatio,
   execClosed,
+  globMatch,
   isExcluded,
   mapToDocs,
   parseSentinels,
@@ -60,6 +61,25 @@ test("isExcluded: worktrees, superpowers specs and backups are out of scope", ()
   assert.equal(isExcluded("top.bak"), true);
   assert.equal(isExcluded("docs/workflows.md"), false);
   assert.equal(isExcluded("scripts/ac-run"), false);
+});
+
+test("globMatch: ** crosses dot directories, literal dot segments still match", () => {
+  assert.equal(globMatch("nvim/.config/nvim/init.lua", "nvim/**"), true);
+  assert.equal(globMatch("session-band-plugin/.claude-plugin/plugin.json", "session-band-plugin/**"), true);
+  assert.equal(globMatch("claude/.claude/rules/x.md", "claude/.claude/rules/**"), true);
+  assert.equal(globMatch(".claude/worktrees/a/b.md", ".claude/worktrees/**"), true);
+  assert.equal(globMatch("nvim/.config/nvim/init.lua", "kitty/**"), false);
+  assert.equal(globMatch("scripts/ac-run.bak", "**/*.bak"), true);
+});
+
+test("isExcluded: manifest ignore globs, with ! keeping a path in scope", () => {
+  const ignore = ["sketchybar/**", "Brewfile", "nvim/**", "!nvim/.config/nvim/lua/custom/agent_*.lua"];
+  assert.equal(isExcluded("sketchybar/.config/sketchybar/plugins/x.sh", ignore), true);
+  assert.equal(isExcluded("Brewfile", ignore), true);
+  assert.equal(isExcluded("nvim/.config/nvim/init.lua", ignore), true);
+  assert.equal(isExcluded("nvim/.config/nvim/lua/custom/agent_review.lua", ignore), false);
+  assert.equal(isExcluded("session-band-plugin/hooks/pane.tsx", ignore), false);
+  assert.equal(isExcluded(".claude/worktrees/x/a.md", ["!**"]), true); // built-ins always win
 });
 
 test("parseSentinels: body between the markers plus the INDEX line", () => {

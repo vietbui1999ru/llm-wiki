@@ -76,9 +76,22 @@ export function bumpUpdated(raw, date) {
     raw.slice(frontmatter.length);
 }
 
-/** True when a dotfiles path is out of scope (worktrees, specs, backups). */
-export function isExcluded(path) {
-  return EXCLUDE_GLOBS.some((glob) => matchesGlob(path, glob));
+// path.matchesGlob never lets * or ** match a segment that starts with "." (hidden files),
+// but dotfiles paths are full of .config/ and .claude/ dirs. Mask the leading dot of every
+// segment in both path and glob: a literal ".claude" still matches, and ** crosses .config.
+const unhide = (text) => text.replace(/(^|\/)\./g, "$1\u0001");
+export const globMatch = (path, glob) => matchesGlob(unhide(path), unhide(glob));
+
+/**
+ * True when a dotfiles path is out of scope: the built-in excludes (worktrees, specs,
+ * backups) or the manifest's `ignore` globs. An `ignore` glob starting with `!` keeps a
+ * path in scope even when another ignore glob matches it (e.g. agent files under nvim/).
+ */
+export function isExcluded(path, ignore = []) {
+  if (EXCLUDE_GLOBS.some((glob) => globMatch(path, glob))) return true;
+  const keep = ignore.filter((glob) => glob.startsWith("!")).map((glob) => glob.slice(1));
+  if (keep.some((glob) => globMatch(path, glob))) return false;
+  return ignore.some((glob) => !glob.startsWith("!") && globMatch(path, glob));
 }
 
 /** Map changed dotfiles paths to llm-wiki docs; report paths no entry covers. */
@@ -86,7 +99,7 @@ export function mapToDocs(changedPaths, entries) {
   const byDoc = new Map();
   const uncovered = [];
   for (const path of changedPaths) {
-    const hits = entries.filter((entry) => entry.paths.some((glob) => matchesGlob(path, glob)));
+    const hits = entries.filter((entry) => entry.paths.some((glob) => globMatch(path, glob)));
     if (!hits.length) {
       uncovered.push(path);
       continue;
@@ -354,7 +367,7 @@ async function resolveRange(dotfiles, manifest, since) {
   const base = (await dotfilesGit(dotfiles, ["rev-parse", ref])).stdout.trim();
   const head = (await dotfilesGit(dotfiles, ["rev-parse", "main"])).stdout.trim();
   const names = (await dotfilesGit(dotfiles, ["diff", "--name-only", `${base}..main`])).stdout;
-  const changed = names.split("\n").map((line) => line.trim()).filter((line) => line && !isExcluded(line));
+  const changed = names.split("\n").map((line) => line.trim()).filter((line) => line && !isExcluded(line, manifest.ignore));
   return { base, head, changed };
 }
 
@@ -394,14 +407,14 @@ async function proposeEntries({ uncovered, manifest }) {
   const added = [];
   for (const [glob, docs] of Object.entries(proposals)) {
     if (typeof glob !== "string" || !glob || !Array.isArray(docs)) continue;
-    const covered = uncovered.some((path) => matchesGlob(path, glob));
+    const covered = uncovered.some((path) => globMatch(path, glob));
     const valid = docs.filter((doc) => typeof doc === "string" && catalog.has(doc) && existsSync(join(ROOT, doc)));
     if (!covered || !valid.length) continue;
     added.push({ paths: [glob], docs: [...new Set(valid)] });
   }
   manifest.entries.push(...added);
   const stillUncovered = uncovered.filter(
-    (path) => !added.some((entry) => entry.paths.some((glob) => matchesGlob(path, glob))),
+    (path) => !added.some((entry) => entry.paths.some((glob) => globMatch(path, glob))),
   );
   return { added, uncovered: stillUncovered };
 }

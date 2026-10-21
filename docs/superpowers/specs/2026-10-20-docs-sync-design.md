@@ -44,8 +44,10 @@ and pushes one commit to llm-wiki main. Fully unattended.
 ## Files
 
 New:
-- `claude-setup/docs-sync.json` — `dotfiles: ~/dotfiles`, `last_synced_sha`, and
-  `entries: [{paths: [globs], docs: [llm-wiki paths]}]`. JSON, parsed with `JSON.parse`
+- `claude-setup/docs-sync.json` — `dotfiles: ~/dotfiles`, `last_synced_sha`, `ignore` (dotfiles
+  globs that are not agent workflow, e.g. `sketchybar/**`; a leading `!` keeps a path in scope),
+  and `entries: [{paths: [globs], docs: [llm-wiki paths]}]`. Globs match through dot directories
+  (`nvim/**` covers `nvim/.config/...`), unlike plain `path.matchesGlob`. JSON, parsed with `JSON.parse`
   (no YAML library in the repo; a JSON document is also valid YAML). Seed ~15-25 entries by hand from
   recon (e.g. `shared/skills/delegate-pi/**` → `wiki/entities/pi-agent.md`, `docs/workflows.md`;
   `claude/.claude/rules/**` → `docs/architecture.md`, `wiki/concepts/model-tier-routing.md`;

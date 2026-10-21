@@ -262,6 +262,7 @@ html,body{margin:0;height:100%;background:var(--bg);overflow:hidden;font-family:
 #g{width:100%;height:100%}
 #hd{position:absolute;top:0;left:0;right:36px;height:28px;display:flex;align-items:center;gap:6px;padding:0 10px;color:var(--hd);font-size:11px;letter-spacing:.08em;text-transform:uppercase;z-index:6;cursor:move;user-select:none;touch-action:none;background:linear-gradient(var(--hdg),transparent)}
 #gear{position:absolute;top:4px;right:6px;z-index:7;cursor:pointer;color:var(--tx);background:var(--btn);border:1px solid var(--bd);border-radius:6px;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.rz{position:absolute;z-index:8;touch-action:none}
 #panel{position:absolute;top:36px;right:6px;z-index:7;background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:6px 10px 10px;display:none;width:170px;color:var(--tx);font-size:12px}
 #panel.open{display:block}
 #panel label{display:flex;justify-content:space-between;margin:8px 0 2px;color:var(--mu)}
@@ -278,7 +279,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--fo);outline-off
 <label for=&quot;to&quot;>Label opacity<span id=&quot;vto&quot;></span></label><input id=&quot;to&quot; type=&quot;range&quot; min=&quot;0&quot; max=&quot;1&quot; step=&quot;0.05&quot;>
 <div id=&quot;depthRow&quot;><label for=&quot;dp&quot;>Depth<span id=&quot;vd&quot;></span></label><input id=&quot;dp&quot; type=&quot;range&quot; min=&quot;1&quot; max=&quot;5&quot; step=&quot;1&quot;></div>
 <label class=&quot;row&quot;><input id=&quot;ar&quot; type=&quot;checkbox&quot;>Directional arrows</label>
-<button type=&quot;button&quot; id=&quot;reset&quot;>Reset position</button>
+<label for=&quot;sz&quot;>Panel size<span id=&quot;vsz&quot;></span></label><input id=&quot;sz&quot; type=&quot;range&quot; min=&quot;220&quot; max=&quot;720&quot; step=&quot;20&quot;>
+<button type=&quot;button&quot; id=&quot;reset&quot;>Reset position and size</button>
 </div>
 <div id=&quot;g&quot; aria-hidden=&quot;true&quot;></div>
 <script>
@@ -322,7 +324,7 @@ var pt;function pause(){G.pauseAnimation();}function resume(){G.resumeAnimation(
 function idle(ms){clearTimeout(pt);pt=setTimeout(pause,ms);}
 document.body.addEventListener('pointerenter',function(){clearTimeout(pt);resume();});
 document.body.addEventListener('pointerleave',function(){idle(250);});
-addEventListener('resize',function(){resume();G.zoomToFit(0,20);idle(700);});
+addEventListener('resize',function(){resume();G.width(innerWidth).height(innerHeight);G.zoomToFit(0,20);idle(700);});
 idle(2000);
 // follow the site theme live. autoPauseRedraw skips frames when nothing moved, so
 // turn it off briefly to repaint links and labels in the new palette.
@@ -348,10 +350,32 @@ var hd=document.getElementById('hd');hd.textContent='⠿  '+(CUR?'Local graph':'
 function clampPos(fe,l,t){var TW=(window.top||window),r=fe.getBoundingClientRect();return [Math.min(Math.max(0,l),Math.max(0,TW.innerWidth-r.width)),Math.min(Math.max(0,t),Math.max(0,TW.innerHeight-r.height))];}
 function place(fe,l,t){var p=clampPos(fe,l,t);fe.style.left=p[0]+'px';fe.style.top=p[1]+'px';fe.style.right='auto';fe.style.bottom='auto';}
 // Non-drag alternative (WCAG 2.5.7): back to the stylesheet's bottom-right default.
-document.getElementById('reset').addEventListener('click',function(){var fe=window.frameElement;if(fe){fe.style.left=fe.style.top=fe.style.right=fe.style.bottom='';}try{localStorage.removeItem('llmwiki_graph_pos');}catch(e){if(window.console)console.debug('graph: could not clear position',e);}});
+document.getElementById('reset').addEventListener('click',function(){var fe=window.frameElement;if(fe){fe.style.left=fe.style.top=fe.style.right=fe.style.bottom=fe.style.width=fe.style.height='';syncSize();}try{localStorage.removeItem('llmwiki_graph_pos');localStorage.removeItem('llmwiki_graph_size');}catch(e){if(window.console)console.debug('graph: could not clear position',e);}});
 // keep a moved panel inside the viewport when the parent window shrinks.
 try{(window.top||window).addEventListener('resize',function(){var fe=window.frameElement;if(fe&amp;&amp;fe.style.left)place(fe,parseFloat(fe.style.left),parseFloat(fe.style.top));});}catch(e){if(window.console)console.debug('graph: parent resize unavailable',e);}
 try{var sp=JSON.parse(localStorage.getItem('llmwiki_graph_pos'));if(sp&amp;&amp;window.frameElement)place(window.frameElement,sp.l,sp.t);}catch(e){if(window.console)console.debug('graph: saved position unavailable',e);}
+// border resize: press and drag any edge or corner. The panel stays square and the
+// opposite edge stays put. The &quot;Panel size&quot; slider is the non-drag alternative.
+function maxSize(){var TW=(window.top||window);return Math.max(220,Math.min(720,TW.innerWidth-16,TW.innerHeight-16));}
+function clampSize(s){return Math.round(Math.min(Math.max(220,s),maxSize()));}
+var szE=document.getElementById('sz'),szO=document.getElementById('vsz');
+function syncSize(){var fe=window.frameElement;if(!fe)return;var s=Math.round(fe.getBoundingClientRect().width);szE.max=maxSize();szE.value=s;szO.textContent=s+'px';}
+function saveSize(fe){try{localStorage.setItem('llmwiki_graph_size',String(Math.round(fe.getBoundingClientRect().width)));if(fe.style.left)localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e){if(window.console)console.debug('graph: could not persist size',e);}}
+function setSize(fe,s){s=clampSize(s);fe.style.width=fe.style.height=s+'px';if(fe.style.left)place(fe,parseFloat(fe.style.left),parseFloat(fe.style.top));syncSize();}
+szE.addEventListener('input',function(){var fe=window.frameElement;if(fe){setSize(fe,parseFloat(szE.value));saveSize(fe);}});
+try{var ss=parseFloat(localStorage.getItem('llmwiki_graph_size'));if(ss&amp;&amp;window.frameElement){setSize(window.frameElement,ss);if(sp)place(window.frameElement,sp.l,sp.t);}}catch(e){if(window.console)console.debug('graph: saved size unavailable',e);}
+try{(window.top||window).addEventListener('resize',function(){var fe=window.frameElement;if(fe&amp;&amp;fe.style.width&amp;&amp;parseFloat(fe.style.width)>maxSize())setSize(fe,maxSize());});}catch(e){if(window.console)console.debug('graph: parent resize unavailable',e);}
+syncSize();
+// handles: [x side, y side, cursor]; -1 = left/top edge, 1 = right/bottom, 0 = not that axis.
+[[-1,0,'ew'],[1,0,'ew'],[0,-1,'ns'],[0,1,'ns'],[-1,-1,'nwse'],[1,1,'nwse'],[1,-1,'nesw'],[-1,1,'nesw']].forEach(function(h){
+ var d=document.createElement('div'),x=h[0],y=h[1],w=(x&amp;&amp;y)?18:6;d.className='rz';
+ // corners are 18px: the iframe's 14px border-radius clips the outermost pixels.
+ d.style.cssText=(x<0?'left:0;':x>0?'right:0;':'left:18px;right:18px;')+(y<0?'top:0;':y>0?'bottom:0;':'top:18px;bottom:18px;')+(x?'width:'+w+'px;':'')+(y?'height:'+w+'px;':'')+'cursor:'+h[2]+'-resize';
+ d.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var r=fe.getBoundingClientRect(),sx=e.screenX,sy=e.screenY;place(fe,r.left,r.top);d.setPointerCapture(e.pointerId);resume();
+  function mv(ev){var dx=(ev.screenX-sx)*x,dy=(ev.screenY-sy)*y,s=clampSize(r.width+(Math.abs(dx)>Math.abs(dy)?dx:dy));fe.style.width=fe.style.height=s+'px';place(fe,x<0?r.right-s:r.left,y<0?r.bottom-s:r.top);}
+  function up(){if(d.hasPointerCapture(e.pointerId))d.releasePointerCapture(e.pointerId);d.removeEventListener('pointermove',mv);d.removeEventListener('pointerup',up);saveSize(fe);syncSize();idle(1400);}
+  d.addEventListener('pointermove',mv);d.addEventListener('pointerup',up);e.preventDefault();});
+ document.body.appendChild(d);});
 hd.addEventListener('pointerdown',function(e){var fe=window.frameElement;if(!fe)return;var rect=fe.getBoundingClientRect();var sx=e.screenX,sy=e.screenY,L=rect.left,T=rect.top;place(fe,L,T);hd.setPointerCapture(e.pointerId);
  function mv(ev){place(fe,L+ev.screenX-sx,T+ev.screenY-sy);}
  function up(){if(hd.hasPointerCapture(e.pointerId))hd.releasePointerCapture(e.pointerId);hd.removeEventListener('pointermove',mv);hd.removeEventListener('pointerup',up);try{localStorage.setItem('llmwiki_graph_pos',JSON.stringify({l:parseFloat(fe.style.left),t:parseFloat(fe.style.top)}));}catch(e2){if(window.console)console.debug('graph: could not persist position',e2);}}

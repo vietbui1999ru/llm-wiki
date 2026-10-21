@@ -9,6 +9,7 @@ Do NOT load raw-log.md or individual mistakes/*.md at startup — use qmd for lo
 - For interactive CLI verification, use scripted inputs for every prompt or test a lower-level non-interactive function instead; blank stdin can loop until timeout (2026-06-17)
 - Before deleting or relinking a deployed dotfile, resolve its real path — `readlink`/`realpath` the parent chain; a symlinked parent dir makes repo files look like un-stowed copies (2026-09-22)
 - Commit messages and PR/issue bodies go in a file passed via `-F`/`--body-file`; never inline them with double-quoted shell args (2026-06-15). In worktree-isolated Claude sessions, also run git/gh/rtk-rewritten tools as single literal-path commands and move loops, variables, heredocs and `$(...)` into a `$CLAUDE_JOB_DIR/tmp` script: the guard refuses compound forms, and rtk can drop variables (2026-10-20)
+- zsh: quote any word starting with `=` (`echo '====='`, not `echo =====`); unquoted it is `=command` expansion and fails "not found" (2026-10-21)
 
 ## Wiki Authoring
 
@@ -19,8 +20,7 @@ Do NOT load raw-log.md or individual mistakes/*.md at startup — use qmd for lo
 - Downstream pages must inherit the uncertainty qualifier — if source says unverified, the synthesis must too
 
 ### Citing model names
-- Verify any model name exists in a major provider catalog before adding to routing tables (2026-05-06)
-- Single Reddit commenter ≠ evidence of existence — write `(reported, unverified in public catalogs)` only after checking the provider's release notes or model page; the model list in your own context can lag them (2026-10-09)
+- Verify any model name exists in a major provider catalog before adding to routing tables (2026-05-06); a single Reddit commenter ≠ evidence of existence — write `(reported, unverified in public catalogs)` only after checking the provider's release notes or model page; the model list in your own context can lag them (2026-10-09)
 
 ### index.md consistency
 - After updating a page's core claim: grep for all cross-references and check each for stale descriptions (2026-05-06)

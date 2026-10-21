@@ -478,8 +478,20 @@ async function rewriteOne({ dotfiles, base, item, keys, originals }) {
   if (hasSecretContent(fullDiff) || hasSecretContent(commits)) return { doc: item.doc, ok: false, reason: "secret-like content in diff; not sent" };
   const diff = truncate(fullDiff, PROMPT_BUDGET);
 
-  const reply = await runPi(rewritePrompt({ doc: item.doc, body, commits, diff }));
+  let reply;
+  try {
+    reply = await runPi(rewritePrompt({ doc: item.doc, body, commits, diff }));
+  } catch (err) {
+    // One failed call (provider content filter, timeout) skips its page, not the run.
+    return { doc: item.doc, ok: false, reason: failureReason(err) };
+  }
   return { doc: item.doc, ...acceptRewrite(body, reply, keys) };
+}
+
+/** One-line skip reason from a pi error: "pi failed (exit 1): Provider finish_reason: ...". */
+export function failureReason(err) {
+  const lines = String(err?.message ?? err).split("\n").map((line) => line.trim()).filter(Boolean);
+  return lines.join(": ").slice(0, 160);
 }
 
 // ---------------------------------------------------------------------------
@@ -626,7 +638,11 @@ async function main() {
     let uncovered = mapped.uncovered;
     let newEntries = [];
     if (uncovered.length) {
-      const proposed = await proposeEntries({ uncovered, manifest });
+      // A failed map call leaves the manifest as it was; the run goes on with existing entries.
+      const proposed = await proposeEntries({ uncovered, manifest }).catch((err) => {
+        console.log(`! map call failed, continuing with the existing manifest: ${failureReason(err)}`);
+        return { added: [], uncovered };
+      });
       newEntries = proposed.added;
       uncovered = proposed.uncovered;
       for (const entry of newEntries) console.log(`+ manifest ${entry.paths.join(", ")} -> ${entry.docs.join(", ")}`);

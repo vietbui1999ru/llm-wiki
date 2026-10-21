@@ -39,7 +39,13 @@ const PROMPT_BUDGET = 60_000; // chars of diff per rewrite prompt
 const DELETION_CAP = 0.75; // reject a rewrite that removes more than 75% of the lines
 const SHRINK_FLOOR = 0.5; // reject a rewrite with under half the original's non-blank lines
 const LINT_PIN = "markdownlint-cli2@0.14.0"; // bundled by markdownlint-cli2-action@v17
-const EXCLUDE_GLOBS = [".claude/worktrees/**", "docs/superpowers/**", "**/*.bak"];
+// Secret-looking paths never reach a prompt (diffs go to a remote model, rewrites to a
+// public site). Built-ins always win over a manifest `!` keep.
+const SECRET_GLOBS = [
+  "**/.env", "**/.env.*", "**/*.pem", "**/*.key", "**/auth.json", "**/.netrc",
+  "**/hosts.yml", "**/*credential*", "**/*secret*", "**/*token*",
+];
+const EXCLUDE_GLOBS = [".claude/worktrees/**", "docs/superpowers/**", "**/*.bak", ...SECRET_GLOBS];
 const CATALOG_DIRS = ["systems", "entities", "concepts", "syntheses"];
 const SENTINEL_OPEN = "<<<DOCS_SYNC_BODY>>>";
 const SENTINEL_CLOSE = "<<<DOCS_SYNC_END>>>";
@@ -407,6 +413,7 @@ async function proposeEntries({ uncovered, manifest }) {
   const added = [];
   for (const [glob, docs] of Object.entries(proposals)) {
     if (typeof glob !== "string" || !glob || !Array.isArray(docs)) continue;
+    if (/^[*!]/.test(glob)) continue; // model globs need a literal first segment: no catch-alls
     const covered = uncovered.some((path) => globMatch(path, glob));
     const valid = docs.filter((doc) => typeof doc === "string" && catalog.has(doc) && existsSync(join(ROOT, doc)));
     if (!covered || !valid.length) continue;

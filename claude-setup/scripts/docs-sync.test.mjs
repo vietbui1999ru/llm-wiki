@@ -82,6 +82,15 @@ test("isExcluded: manifest ignore globs, with ! keeping a path in scope", () => 
   assert.equal(isExcluded(".claude/worktrees/x/a.md", ["!**"]), true); // built-ins always win
 });
 
+test("isExcluded: secret-looking paths are always out, even inside dot dirs and under !", () => {
+  const keep = ["!**"];
+  assert.equal(isExcluded("pi/.pi/agent/auth.json", keep), true);
+  assert.equal(isExcluded("opencode/.config/opencode/.env", keep), true);
+  assert.equal(isExcluded("gh/.config/gh/hosts.yml", keep), true);
+  assert.equal(isExcluded("scripts/github-token-refresh", keep), true);
+  assert.equal(isExcluded("claude/.claude/keybindings.json", keep), false);
+});
+
 test("parseSentinels: body between the markers plus the INDEX line", () => {
   const reply = [
     "Here is the rewrite:",

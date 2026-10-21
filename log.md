@@ -2,6 +2,14 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-10-22] update | diagrammer agent + Mermaid on the docs site
+
+Created:
+- `wiki/entities/diagrammer-agent.md` — where the agent is defined in each harness, how it works, and why the docs site keeps Mermaid fences instead of pele SVGs.
+
+Updated:
+- `wiki/entities/pele.md` — tool table: fences for markdown pages, pele for validation and standalone SVG; Mintlify renders fences natively; `mmdc` is gone.
+
 ## [2026-06-19] research | omp snapcompact + RPC mode deep dive
 
 Created:

@@ -2,12 +2,13 @@
    Mintlify loads every .css file in the content directory on every page. */
 
 /* Knowledge-graph panel (iframe emitted by widgetMarkup). Default: bottom-right.
-   The widget's drag handler overrides left/top inline. */
+   The widget's drag handler overrides left/top inline, and its border-resize
+   handles override width/height inline (kept square). */
 .llmwiki-graph {
   position: fixed;
   right: 18px;
   bottom: 18px;
-  width: 320px;
+  width: 340px;
   height: 340px;
   border: 0;
   border-radius: 14px;

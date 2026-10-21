@@ -1,6 +1,13 @@
 {
   "dotfiles": "~/dotfiles",
   "last_synced_sha": null,
+  "ignore": [
+    "aerospace/**", "ansible/**", "ansible.cfg", "Brewfile", "i3/**", "kitty/**",
+    "sketchybar/**", "starship/**", "tmux/**", "tmuxinator/**", "mouseless/**", "git/**",
+    "nvim/**",
+    "!nvim/.config/nvim/lua/custom/agent_*.lua",
+    "!nvim/.config/nvim/lua/custom/plugins/pi-ai.lua"
+  ],
   "entries": [
     {
       "paths": ["shared/skills/delegate-pi/**"],

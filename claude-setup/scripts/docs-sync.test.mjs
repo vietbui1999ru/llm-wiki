@@ -8,6 +8,8 @@ import {
   bumpUpdated,
   deletionRatio,
   execClosed,
+  globMatch,
+  hasSecretContent,
   isExcluded,
   mapToDocs,
   parseSentinels,
@@ -60,6 +62,45 @@ test("isExcluded: worktrees, superpowers specs and backups are out of scope", ()
   assert.equal(isExcluded("top.bak"), true);
   assert.equal(isExcluded("docs/workflows.md"), false);
   assert.equal(isExcluded("scripts/ac-run"), false);
+});
+
+test("globMatch: ** crosses dot directories, literal dot segments still match", () => {
+  assert.equal(globMatch("nvim/.config/nvim/init.lua", "nvim/**"), true);
+  assert.equal(globMatch("session-band-plugin/.claude-plugin/plugin.json", "session-band-plugin/**"), true);
+  assert.equal(globMatch("claude/.claude/rules/x.md", "claude/.claude/rules/**"), true);
+  assert.equal(globMatch(".claude/worktrees/a/b.md", ".claude/worktrees/**"), true);
+  assert.equal(globMatch("nvim/.config/nvim/init.lua", "kitty/**"), false);
+  assert.equal(globMatch("scripts/ac-run.bak", "**/*.bak"), true);
+});
+
+test("isExcluded: manifest ignore globs, with ! keeping a path in scope", () => {
+  const ignore = ["sketchybar/**", "Brewfile", "nvim/**", "!nvim/.config/nvim/lua/custom/agent_*.lua"];
+  assert.equal(isExcluded("sketchybar/.config/sketchybar/plugins/x.sh", ignore), true);
+  assert.equal(isExcluded("Brewfile", ignore), true);
+  assert.equal(isExcluded("nvim/.config/nvim/init.lua", ignore), true);
+  assert.equal(isExcluded("nvim/.config/nvim/lua/custom/agent_review.lua", ignore), false);
+  assert.equal(isExcluded("session-band-plugin/hooks/pane.tsx", ignore), false);
+  assert.equal(isExcluded(".claude/worktrees/x/a.md", ["!**"]), true); // built-ins always win
+});
+
+test("isExcluded: secret-looking paths are always out, even inside dot dirs and under !", () => {
+  const keep = ["!**"];
+  assert.equal(isExcluded("pi/.pi/agent/auth.json", keep), true);
+  assert.equal(isExcluded("opencode/.config/opencode/.env", keep), true);
+  assert.equal(isExcluded("gh/.config/gh/hosts.yml", keep), true);
+  assert.equal(isExcluded("scripts/github-token-refresh", keep), true);
+  assert.equal(isExcluded("claude/.claude/keybindings.json", keep), false);
+  assert.equal(isExcluded("home/.ssh/config", keep), true);
+  assert.equal(isExcluded("shared/secrets/notes.md", keep), true);
+});
+
+test("hasSecretContent: flags key-shaped strings, passes ordinary diffs", () => {
+  // Built at runtime so no secret-shaped literal is committed.
+  assert.equal(hasSecretContent(`+export KEY=${"sk-" + "a".repeat(24)}`), true);
+  assert.equal(hasSecretContent(`+token: ${"ghp_" + "b".repeat(36)}`), true);
+  assert.equal(hasSecretContent(`+${"AKIA" + "C".repeat(16)}`), true);
+  assert.equal(hasSecretContent(`+${"-----BEGIN " + "OPENSSH PRIVATE KEY-----"}`), true);
+  assert.equal(hasSecretContent("+const tokenBudget = 4000; // ask-first rules"), false);
 });
 
 test("parseSentinels: body between the markers plus the INDEX line", () => {

@@ -31,7 +31,9 @@ and pushes one commit to llm-wiki main. Fully unattended.
   `.claude/worktrees/**`, `docs/superpowers/**`, `*.bak`.
 - pi runs as pure text-in/text-out:
   `pi -p --model opencode-go/deepseek-v4.1-flash:medium --no-tools --no-session
-  --no-extensions --no-skills --no-context-files --no-mcp < /dev/null` (prompt via arg/file).
+  --no-extensions --no-skills --no-context-files --no-mcp --system-prompt <text-only> < /dev/null`
+  (prompt via arg/file). `--system-prompt` replaces pi's coding-assistant prompt: with only
+  `--no-tools`, the model still emitted bash tool-call markup as its reply.
 - Concurrency 3 pi calls at a time.
 - `--dry-run` flag: everything except commit/push (needed for first verification).
 - `pele-render` required at preflight (abort if missing). Today it is NOT on PATH — dotfiles
@@ -42,8 +44,10 @@ and pushes one commit to llm-wiki main. Fully unattended.
 ## Files
 
 New:
-- `claude-setup/docs-sync.json` — `dotfiles: ~/dotfiles`, `last_synced_sha`, and
-  `entries: [{paths: [globs], docs: [llm-wiki paths]}]`. JSON, parsed with `JSON.parse`
+- `claude-setup/docs-sync.json` — `dotfiles: ~/dotfiles`, `last_synced_sha`, `ignore` (dotfiles
+  globs that are not agent workflow, e.g. `sketchybar/**`; a leading `!` keeps a path in scope),
+  and `entries: [{paths: [globs], docs: [llm-wiki paths]}]`. Globs match through dot directories
+  (`nvim/**` covers `nvim/.config/...`), unlike plain `path.matchesGlob`. JSON, parsed with `JSON.parse`
   (no YAML library in the repo; a JSON document is also valid YAML). Seed ~15-25 entries by hand from
   recon (e.g. `shared/skills/delegate-pi/**` → `wiki/entities/pi-agent.md`, `docs/workflows.md`;
   `claude/.claude/rules/**` → `docs/architecture.md`, `wiki/concepts/model-tier-routing.md`;

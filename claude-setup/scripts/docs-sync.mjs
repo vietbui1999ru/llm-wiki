@@ -21,10 +21,16 @@ const MANIFEST_REL = "claude-setup/docs-sync.json";
 const BUILD_SCRIPT = join(ROOT, "claude-setup", "scripts", "build-docs-site.mjs");
 
 const MODEL = "opencode-go/deepseek-v4.1-flash:medium";
+// --no-tools alone is not enough: pi's default system prompt still says it has bash and
+// file tools, so on an exploratory-sounding task the model emits tool-call markup as text.
+const PI_SYSTEM_PROMPT = "You are a text transformer, not a coding agent. You have no tools and "
+  + "cannot read files or run commands. Everything you need is in the user message. Reply with "
+  + "exactly the output the user asks for and nothing else.";
 const PI_ARGS = [
   "-p", "--model", MODEL,
   "--no-tools", "--no-session", "--no-extensions",
   "--no-skills", "--no-context-files", "--no-mcp",
+  "--system-prompt", PI_SYSTEM_PROMPT,
 ];
 const PI_CONCURRENCY = 3;
 const MAX_BUFFER = 32 * 1024 * 1024;
@@ -33,7 +39,19 @@ const PROMPT_BUDGET = 60_000; // chars of diff per rewrite prompt
 const DELETION_CAP = 0.75; // reject a rewrite that removes more than 75% of the lines
 const SHRINK_FLOOR = 0.5; // reject a rewrite with under half the original's non-blank lines
 const LINT_PIN = "markdownlint-cli2@0.14.0"; // bundled by markdownlint-cli2-action@v17
-const EXCLUDE_GLOBS = [".claude/worktrees/**", "docs/superpowers/**", "**/*.bak"];
+// Secret-looking paths never reach a prompt (diffs go to a remote model, rewrites to a
+// public site). Built-ins always win over a manifest `!` keep.
+const SECRET_GLOBS = [
+  "**/.env", "**/.env.*", "**/*.pem", "**/*.key", "**/*.p12", "**/*.pfx", "**/*.gpg",
+  "**/auth.json", "**/.netrc", "**/.npmrc", "**/.pypirc", "**/.git-credentials", "**/hosts.yml",
+  "**/id_rsa*", "**/id_ed25519*", "**/id_ecdsa*", "**/.ssh/**", "**/.kube/config",
+  "**/*credential*", "**/*credential*/**", "**/*secret*", "**/*secret*/**",
+  "**/*token*", "**/*token*/**",
+];
+// Second line of defence on content: a diff hunk with one of these skips its page.
+const SECRET_CONTENT_RE = /\b(sk-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|AKIA[0-9A-Z]{16}|xox[abpr]-[A-Za-z0-9-]{10,})|-----BEGIN [A-Z ]*PRIVATE KEY-----/;
+export const hasSecretContent = (text) => SECRET_CONTENT_RE.test(text);
+const EXCLUDE_GLOBS = [".claude/worktrees/**", "docs/superpowers/**", "**/*.bak", ...SECRET_GLOBS];
 const CATALOG_DIRS = ["systems", "entities", "concepts", "syntheses"];
 const SENTINEL_OPEN = "<<<DOCS_SYNC_BODY>>>";
 const SENTINEL_CLOSE = "<<<DOCS_SYNC_END>>>";
@@ -70,9 +88,22 @@ export function bumpUpdated(raw, date) {
     raw.slice(frontmatter.length);
 }
 
-/** True when a dotfiles path is out of scope (worktrees, specs, backups). */
-export function isExcluded(path) {
-  return EXCLUDE_GLOBS.some((glob) => matchesGlob(path, glob));
+// path.matchesGlob never lets * or ** match a segment that starts with "." (hidden files),
+// but dotfiles paths are full of .config/ and .claude/ dirs. Mask the leading dot of every
+// segment in both path and glob: a literal ".claude" still matches, and ** crosses .config.
+const unhide = (text) => text.replace(/(^|\/)\./g, "$1\u0001");
+export const globMatch = (path, glob) => matchesGlob(unhide(path), unhide(glob));
+
+/**
+ * True when a dotfiles path is out of scope: the built-in excludes (worktrees, specs,
+ * backups) or the manifest's `ignore` globs. An `ignore` glob starting with `!` keeps a
+ * path in scope even when another ignore glob matches it (e.g. agent files under nvim/).
+ */
+export function isExcluded(path, ignore = []) {
+  if (EXCLUDE_GLOBS.some((glob) => globMatch(path, glob))) return true;
+  const keep = ignore.filter((glob) => glob.startsWith("!")).map((glob) => glob.slice(1));
+  if (keep.some((glob) => globMatch(path, glob))) return false;
+  return ignore.some((glob) => !glob.startsWith("!") && globMatch(path, glob));
 }
 
 /** Map changed dotfiles paths to llm-wiki docs; report paths no entry covers. */
@@ -80,7 +111,7 @@ export function mapToDocs(changedPaths, entries) {
   const byDoc = new Map();
   const uncovered = [];
   for (const path of changedPaths) {
-    const hits = entries.filter((entry) => entry.paths.some((glob) => matchesGlob(path, glob)));
+    const hits = entries.filter((entry) => entry.paths.some((glob) => globMatch(path, glob)));
     if (!hits.length) {
       uncovered.push(path);
       continue;
@@ -224,7 +255,8 @@ async function run(cmd, args, { allowFailure = false, cwd = ROOT } = {}) {
 }
 
 const git = (args, opts) => run("git", args, opts);
-const dotfilesGit = (dotfiles, args, opts) => run("git", ["-C", dotfiles, ...args], opts);
+// --literal-pathspecs: changed paths go to git as-is, never as glob or :(magic) pathspecs.
+const dotfilesGit = (dotfiles, args, opts) => run("git", ["-C", dotfiles, "--literal-pathspecs", ...args], opts);
 
 function hasCommand(name) {
   return spawnSync("/bin/sh", ["-c", `command -v -- ${name}`], { encoding: "utf8" }).status === 0;
@@ -348,7 +380,7 @@ async function resolveRange(dotfiles, manifest, since) {
   const base = (await dotfilesGit(dotfiles, ["rev-parse", ref])).stdout.trim();
   const head = (await dotfilesGit(dotfiles, ["rev-parse", "main"])).stdout.trim();
   const names = (await dotfilesGit(dotfiles, ["diff", "--name-only", `${base}..main`])).stdout;
-  const changed = names.split("\n").map((line) => line.trim()).filter((line) => line && !isExcluded(line));
+  const changed = names.split("\n").map((line) => line.trim()).filter((line) => line && !isExcluded(line, manifest.ignore));
   return { base, head, changed };
 }
 
@@ -374,7 +406,9 @@ async function proposeEntries({ uncovered, manifest }) {
   const reply = await runPi(mapPrompt(uncovered, inScopeCatalog()));
   const start = reply.indexOf("{");
   const end = reply.lastIndexOf("}");
-  if (start === -1 || end <= start) throw new Error("map call returned no JSON object");
+  if (start === -1 || end <= start) {
+    throw new Error(`map call returned no JSON object; reply starts: ${JSON.stringify(reply.slice(0, 200))}`);
+  }
   let proposals;
   try {
     proposals = JSON.parse(reply.slice(start, end + 1));
@@ -386,14 +420,15 @@ async function proposeEntries({ uncovered, manifest }) {
   const added = [];
   for (const [glob, docs] of Object.entries(proposals)) {
     if (typeof glob !== "string" || !glob || !Array.isArray(docs)) continue;
-    const covered = uncovered.some((path) => matchesGlob(path, glob));
+    if (/^[*!]/.test(glob)) continue; // model globs need a literal first segment: no catch-alls
+    const covered = uncovered.some((path) => globMatch(path, glob));
     const valid = docs.filter((doc) => typeof doc === "string" && catalog.has(doc) && existsSync(join(ROOT, doc)));
     if (!covered || !valid.length) continue;
     added.push({ paths: [glob], docs: [...new Set(valid)] });
   }
   manifest.entries.push(...added);
   const stillUncovered = uncovered.filter(
-    (path) => !added.some((entry) => entry.paths.some((glob) => matchesGlob(path, glob))),
+    (path) => !added.some((entry) => entry.paths.some((glob) => globMatch(path, glob))),
   );
   return { added, uncovered: stillUncovered };
 }
@@ -439,10 +474,9 @@ async function rewriteOne({ dotfiles, base, item, keys, originals }) {
     (await dotfilesGit(dotfiles, ["log", "--format=%h %s", `${base}..main`, "--", ...item.paths])).stdout.trim(),
     4_000,
   );
-  const diff = truncate(
-    (await dotfilesGit(dotfiles, ["diff", "--unified=2", `${base}..main`, "--", ...item.paths])).stdout,
-    PROMPT_BUDGET,
-  );
+  const fullDiff = (await dotfilesGit(dotfiles, ["diff", "--unified=2", `${base}..main`, "--", ...item.paths])).stdout;
+  if (hasSecretContent(fullDiff) || hasSecretContent(commits)) return { doc: item.doc, ok: false, reason: "secret-like content in diff; not sent" };
+  const diff = truncate(fullDiff, PROMPT_BUDGET);
 
   const reply = await runPi(rewritePrompt({ doc: item.doc, body, commits, diff }));
   return { doc: item.doc, ...acceptRewrite(body, reply, keys) };

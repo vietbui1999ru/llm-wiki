@@ -28,6 +28,7 @@ const PI_ARGS = [
 ];
 const PI_CONCURRENCY = 3;
 const MAX_BUFFER = 32 * 1024 * 1024;
+const PI_TIMEOUT_MS = 10 * 60 * 1000; // one stuck model call fails its page, not the run
 const PROMPT_BUDGET = 60_000; // chars of diff per rewrite prompt
 const DELETION_CAP = 0.75; // reject a rewrite that removes more than 75% of the lines
 const SHRINK_FLOOR = 0.5; // reject a rewrite with under half the original's non-blank lines
@@ -203,9 +204,17 @@ export function acceptRewrite(original, reply, keys) {
 
 const execFileAsync = promisify(execFile);
 
+// Close the child's stdin at once. An open pipe that is never written never sends
+// EOF, and `pi -p` waits for stdin EOF before it starts (why dispatches use < /dev/null).
+export function execClosed(cmd, args, opts) {
+  const call = execFileAsync(cmd, args, opts);
+  call.child.stdin?.end();
+  return call;
+}
+
 async function run(cmd, args, { allowFailure = false, cwd = ROOT } = {}) {
   try {
-    const { stdout, stderr } = await execFileAsync(cmd, args, { cwd, maxBuffer: MAX_BUFFER });
+    const { stdout, stderr } = await execClosed(cmd, args, { cwd, maxBuffer: MAX_BUFFER });
     return { code: 0, stdout, stderr };
   } catch (err) {
     const failed = { code: err.code ?? 1, stdout: err.stdout ?? "", stderr: err.stderr ?? err.message };
@@ -290,13 +299,16 @@ async function pool(items, limit, worker) {
 }
 
 // pi runs as pure text-in/text-out: no tools, no session, no extensions. The
-// prompt goes in argv (budgeted, PROMPT_BUDGET) and stdin is never written, so
-// pi reads EOF — the design's `< /dev/null`.
+// prompt goes in argv (budgeted, PROMPT_BUDGET) and execClosed ends stdin, so pi
+// reads EOF — the design's `< /dev/null`.
 async function runPi(prompt) {
   try {
-    const { stdout } = await execFileAsync("pi", [...PI_ARGS, prompt], { cwd: ROOT, maxBuffer: MAX_BUFFER });
+    const { stdout } = await execClosed("pi", [...PI_ARGS, prompt], {
+      cwd: ROOT, maxBuffer: MAX_BUFFER, timeout: PI_TIMEOUT_MS,
+    });
     return stdout;
   } catch (err) {
+    if (err.killed) throw new Error(`pi timed out after ${PI_TIMEOUT_MS / 60_000} min`);
     throw new Error(`pi failed (exit ${err.code ?? 1})\n${err.stderr || err.message}`);
   }
 }
@@ -560,6 +572,13 @@ async function main() {
   const manifest = loadManifest();
   const dotfiles = resolveDotfiles(manifest);
   const lockPath = acquireLock();
+  // Ctrl+C skips `finally`; drop the lock so the next run is not refused.
+  for (const signal of ["SIGINT", "SIGTERM"]) {
+    process.once(signal, () => {
+      rmSync(lockPath, { force: true });
+      process.exit(130);
+    });
+  }
   try {
     await preflight(dotfiles);
     const { base, head, changed } = await resolveRange(dotfiles, manifest, values.since);

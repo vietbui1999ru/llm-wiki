@@ -7,6 +7,7 @@ import {
   acceptRewrite,
   bumpUpdated,
   deletionRatio,
+  execClosed,
   isExcluded,
   mapToDocs,
   parseSentinels,
@@ -138,6 +139,12 @@ test("bumpUpdated: adds the field when the frontmatter lacks it", () => {
 
 test("bumpUpdated: refuses a page without frontmatter", () => {
   assert.throws(() => bumpUpdated("# no frontmatter\n", "2026-10-20"), /no frontmatter/);
+});
+
+test("execClosed: a child that reads stdin to EOF returns instead of hanging", async () => {
+  // `cat` waits for stdin EOF exactly like `pi -p`; an unclosed pipe hung docs-sync.
+  const { stdout } = await execClosed("cat", [], { timeout: 5_000 });
+  assert.equal(stdout, "");
 });
 
 const reply = (body) => `<<<DOCS_SYNC_BODY>>>\n${body}<<<DOCS_SYNC_END>>>\nINDEX: refreshed`;

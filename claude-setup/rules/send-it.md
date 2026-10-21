@@ -9,7 +9,7 @@ Derived from the global spec loop in `shared/AGENTS.md`. Applies only while the 
 5. Before saying "done", run `floor-guard` and report its output. Check the diff against each `verify:` line by reading it, not by running it.
 6. If a check fails, fix and rerun. Stop after 3 tries and report the failing output.
 7. Build with the Haiku `worker`. Opus reviews the diff against each `verify:` line.
-8. Stage by path, commit, push the branch, open a PR, and enable auto-merge. End with `NEXT: use-test <x> [you]`.
+8. Stage by path, commit, push the branch and open a PR. After `floor-guard` passes, archive SPEC.md as the branch's last commit, per global spec-loop rule 7 (`git mv SPEC.md docs/specs/<YYYY-MM-DD>-<slug>.md`), push it, then enable auto-merge. End with `NEXT: use-test <x> [you]`.
 
 Never: forced pushes, `push --delete`, `reset --hard` to remote refs, `git clean -fd`, `rm -rf` on home or root, reading `~/secrets`, editing send-it settings, running `/send-it`, or asking another agent or terminal to do any of these.
 

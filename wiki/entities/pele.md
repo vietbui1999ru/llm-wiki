@@ -4,7 +4,7 @@ type: entity
 tags: [pele, mermaid, diagrams, svg, system-design, presentations, agent-skills, javascript]
 sources: ["obsidianmdpele Renders Mermaid diagrams faster than you'd run from a volcano! 🌋.md"]
 created: 2026-10-19
-updated: 2026-10-19
+updated: 2026-10-22
 ---
 
 # pele
@@ -41,9 +41,16 @@ Installed as the `pele` skill in `~/dotfiles/shared/skills/pele/` (dotfiles PR #
 
 | Need | Tool |
 |---|---|
-| Agent-written diagram as a file (design docs, wiki, slides) | pele (`pele-render`) |
-| Neovim inline preview (snacks.image, diagram.nvim) | `mermaid-cli` / `mmdc` (Brewfile), which matches Mermaid's own rendering exactly |
+| Diagram inside a markdown page (wiki, docs site, README, spec) | A `mermaid` fence in the page; Mintlify, GitHub and Obsidian render it natively. Validate it with `pele-render` (stdin, exit 1 on a parse error). |
+| Standalone diagram file (slides, `<img>`, export) | pele (`pele-render x.mmd -o x.svg`) |
+| Designing the diagram itself | the [[entities/diagrammer-agent]] subagent, in any harness |
+| Neovim inline preview | none: `mmdc` was removed (not installed as of 2026-10-22) and nothing replaces it |
 | Freeform layout, whiteboard, hand-drawn slide deck | Excalidraw MCP |
+
+The docs site does not need pele. `build-docs-site.mjs` passes `mermaid` fences through to `.mdx`, and Mintlify
+renders them client-side with zoom and pan. Pre-rendering pages with pele would lose that and use pele's own
+layout instead of Mermaid's. pele targets Mermaid 12.1; Mintlify ships its own Mermaid build, so check newer
+types such as `architecture-beta` on the published page.
 
 Diagram type per question, for system design: components and links → `flowchart LR` or `architecture-beta`;
 calls over time → `sequenceDiagram`; context for non-engineers → `C4Context`; entity lifecycle →
@@ -55,5 +62,6 @@ is narrow, because below 640 px pele switches supported diagrams to a vertical l
 
 ## Related pages
 
+- [[entities/diagrammer-agent]]: the subagent that designs diagrams and validates them with pele
 - [[systems/system-design-process]]
 - [[systems/dotfiles-agent-harness-layout]]: where shared skills are linked

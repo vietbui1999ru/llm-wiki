@@ -2,6 +2,11 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-10-22] update | Harness migration guide: MVP presentation charts
+
+Updated:
+- `docs/harness-migration.md` (guides/harness-migration) — reworked by the diagrammer agent into an 8-chart presentation: a layers section; the 15-node data-flow chart split in two; a migration timeline; the orchestrator chart corrected to match the spec; a ticket-lifecycle state diagram (state names other than Blocked are working labels); MVP-1 relay sequence with reconnect and heartbeat paths. All fences validated with pele-render.
+
 ## [2026-06-19] research | omp snapcompact + RPC mode deep dive
 
 Created:

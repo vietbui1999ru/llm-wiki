@@ -22,63 +22,7 @@ cat .claude/profile.md 2>/dev/null || echo "NO_PROFILE"
 ```
 
 If profile exists: show it, ask "What changed?" and update rather than full re-init.
-If no profile: proceed to Step 0.5.
-
-## Step 0.5 — CodeGraphContext Decision
-
-**First: instant flag check — always before any bash or questions:**
-```bash
-grep "^codegraphcontext:" .claude/profile.md 2>/dev/null
-```
-
-| Result | Action |
-|---|---|
-| `codegraphcontext: enabled` | Index live — skip rest of Step 0.5 |
-| `codegraphcontext: session` | Index exists, no daemon — skip rest of Step 0.5 |
-| `codegraphcontext: disabled` | User declined — skip rest of Step 0.5, write nothing |
-| No output | Proceed to analysis below |
-
-**If flag missing — run analysis (claude-init is explicit, Q1 is implicit):**
-
-```bash
-find . -type f \( -name "*.py" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \
-  -o -name "*.go" -o -name "*.rs" -o -name "*.java" -o -name "*.kt" -o -name "*.rb" \
-  -o -name "*.php" -o -name "*.swift" -o -name "*.cs" -o -name "*.cpp" -o -name "*.c" -o -name "*.h" \) \
-  -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/vendor/*" \
-  -not -path "*/dist/*" -not -path "*/__pycache__/*" | wc -l
-
-find . -type f \( -name "*.py" -o -name "*.ts" -o -name "*.tsx" -o -name "*.js" \
-  -o -name "*.go" -o -name "*.rs" -o -name "*.java" -o -name "*.cpp" -o -name "*.c" \) \
-  -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/vendor/*" \
-  | sed 's/.*\.//' | sort -u
-
-find . -maxdepth 4 \( -name "Dockerfile" -o -name "docker-compose*.yml" -o -name "*.tf" \
-  -o -name "*.yaml" -path "*/.github/workflows/*" \) \
-  -not -path "*/.git/*" 2>/dev/null | head -5
-```
-
-Report: file count, languages, infra detected, threshold verdict (2+ languages OR >100 files OR infra).
-
-**Ask Q2 — one question, regardless of whether threshold was met:**
-> "Add CodeGraphContext to this project?" (session / daemon / no)
-
-| Answer | Action | Write to profile.md |
-|---|---|---|
-| `session` | `codegraphcontext index .` | `codegraphcontext: session` |
-| `daemon` | `codegraphcontext watch .` | `codegraphcontext: enabled` |
-| `no` | Nothing | `codegraphcontext: disabled` — never ask again |
-
-**If session or daemon — also add query routing to project `CLAUDE.md`** under `## Codebase search routing`:
-```
-"where is X defined"             → grep/ripgrep
-"what calls X / dependencies"    → CodeGraphContext: analyze_code_relationships
-"blast radius of changing X"     → CodeGraphContext: analyze_code_relationships
-"dead code / unused exports"     → CodeGraphContext: find_dead_code
-"design pattern for X"           → qmd wiki search
-"overall structure / complexity" → CodeGraphContext: get_repository_stats + find_most_complex_functions
-```
-
-Proceed to Step 0.6.
+If no profile: proceed to Step 0.6.
 
 ## Step 0.6 — LSP Baseline Decision
 
@@ -217,7 +161,6 @@ mode: production | learning
 security_sensitive: yes | no
 agent_work: yes | no
 linting: enabled | disabled
-codegraphcontext: enabled | session | disabled
 memory_bank: enabled | disabled
 lsp: lazy | enabled | disabled
 lsp_servers: [<server/plugin names>]

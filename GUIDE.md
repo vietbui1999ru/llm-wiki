@@ -193,7 +193,7 @@ The mistakes pipeline: `capture-mistake` → individual `mistakes/YYYY-MM-DD-*.m
 
 | Skill                                     | Invoke                      | When to use                                                                |
 | ----------------------------------------- | --------------------------- | -------------------------------------------------------------------------- |
-| `/claude-init`                            | `/claude-init`              | Project onboarding — checks CGC flag in profile.md first; if missing, scans codebase and asks "Add CGC?" (session/daemon/no); then asks 7 questions + offers linting (noslop+biome+shellcheck) to set up CLAUDE.md and profile.md |
+| `/claude-init`                            | `/claude-init`              | Project onboarding — asks 7 questions + offers linting (noslop+biome+shellcheck) to set up CLAUDE.md and profile.md |
 | `/init`                                   | `/init`                     | Initialize a new CLAUDE.md file                                            |
 | `update-config`                           | `/update-config`            | Configure settings.json: permissions, hooks, env vars, automated behaviors |
 | `keybindings-help`                        | `/keybindings-help`         | Customize keyboard shortcuts, rebind keys, chord bindings                  |
@@ -301,7 +301,7 @@ MCP tools are available directly to Claude — no skill needed.
 | **context7**         | Fetch live library/framework docs                                              | "how does X work in Next.js", "Prisma migration syntax"                       |
 | **qmd**              | Search wiki + any qmd-indexed collection                                       | Wiki searches (used by wiki-context skill)                                    |
 | **sentry**           | Query error tracking, issues, events                                           | "what errors are trending", "analyze this Sentry issue"                       |
-| **CodeGraphContext** | Code graph analysis, dead code, complexity, relationship discovery             | Relationship queries ("what calls X?", "blast radius of Y"), dead code sweeps, complexity audits. Activated via `/claude-init` or session startup prompt. Check `.claude/profile.md` for `codegraphcontext: enabled\|session` — if `disabled`, user declined and won't be asked again. |
+| **CodeGraphContext** | Code graph analysis, dead code, complexity, relationship discovery             | Relationship queries ("what calls X?", "blast radius of Y"), dead code sweeps, complexity audits. Index a repo by hand with `codegraphcontext index .`. |
 | **Figma**            | Read designs, generate diagrams, code connect                                  | When given a figma.com URL                                                    |
 | **MermaidChart**     | Create and validate Mermaid diagrams                                           | "generate a diagram of X", "create a flowchart"                               |
 
@@ -361,33 +361,14 @@ Always-on hooks, wired in `settings.json`. No per-project setup needed.
 ### "I'm starting in a new or unfamiliar codebase"
 ```
 /claude-init
-→ Step 0.5: grep "^codegraphcontext:" .claude/profile.md
-    enabled/session/disabled → honor flag, skip questions
-    missing → scan codebase (file count, languages, infra)
-              ask "Add CGC?" → session / daemon / no
-              write flag to profile.md (no = disabled, never ask again)
 → Asks 7 questions + linting offer → writes profile.md + CLAUDE.md
     linting: enabled  → installs noslop (pre-commit quality gates), wires biome+shellcheck hooks
     linting: disabled → hooks skip for this project
 
 Subsequent sessions (no /claude-init needed):
-→ startup rule auto-checks codegraphcontext flag
-    enabled  → verify index live
-    session  → ask "re-index?"
-    disabled → silent skip, no questions ever
 → startup rule auto-checks linting flag
     enabled  → reminder: lint configs are protected; biome auto-fix runs at Stop
     disabled → silent skip
-
-After init — use query routing:
-  "where is X defined"           → grep/ripgrep
-  "what calls X"                 → CGC: analyze_code_relationships
-  "blast radius of changing X"   → CGC: analyze_code_relationships
-  "dead code"                    → CGC: find_dead_code
-  "design pattern for X"         → qmd wiki search
-  "overall structure"            → CGC: get_repository_stats
-
-Override: say "check CGC for this repo" to re-run even if disabled.
 ```
 
 ### "I want to add linting to a project"

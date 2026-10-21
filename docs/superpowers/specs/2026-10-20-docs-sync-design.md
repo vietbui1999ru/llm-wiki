@@ -31,7 +31,9 @@ and pushes one commit to llm-wiki main. Fully unattended.
   `.claude/worktrees/**`, `docs/superpowers/**`, `*.bak`.
 - pi runs as pure text-in/text-out:
   `pi -p --model opencode-go/deepseek-v4.1-flash:medium --no-tools --no-session
-  --no-extensions --no-skills --no-context-files --no-mcp < /dev/null` (prompt via arg/file).
+  --no-extensions --no-skills --no-context-files --no-mcp --system-prompt <text-only> < /dev/null`
+  (prompt via arg/file). `--system-prompt` replaces pi's coding-assistant prompt: with only
+  `--no-tools`, the model still emitted bash tool-call markup as its reply.
 - Concurrency 3 pi calls at a time.
 - `--dry-run` flag: everything except commit/push (needed for first verification).
 - `pele-render` required at preflight (abort if missing). Today it is NOT on PATH — dotfiles

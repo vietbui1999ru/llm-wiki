@@ -21,10 +21,16 @@ const MANIFEST_REL = "claude-setup/docs-sync.json";
 const BUILD_SCRIPT = join(ROOT, "claude-setup", "scripts", "build-docs-site.mjs");
 
 const MODEL = "opencode-go/deepseek-v4.1-flash:medium";
+// --no-tools alone is not enough: pi's default system prompt still says it has bash and
+// file tools, so on an exploratory-sounding task the model emits tool-call markup as text.
+const PI_SYSTEM_PROMPT = "You are a text transformer, not a coding agent. You have no tools and "
+  + "cannot read files or run commands. Everything you need is in the user message. Reply with "
+  + "exactly the output the user asks for and nothing else.";
 const PI_ARGS = [
   "-p", "--model", MODEL,
   "--no-tools", "--no-session", "--no-extensions",
   "--no-skills", "--no-context-files", "--no-mcp",
+  "--system-prompt", PI_SYSTEM_PROMPT,
 ];
 const PI_CONCURRENCY = 3;
 const MAX_BUFFER = 32 * 1024 * 1024;
@@ -374,7 +380,9 @@ async function proposeEntries({ uncovered, manifest }) {
   const reply = await runPi(mapPrompt(uncovered, inScopeCatalog()));
   const start = reply.indexOf("{");
   const end = reply.lastIndexOf("}");
-  if (start === -1 || end <= start) throw new Error("map call returned no JSON object");
+  if (start === -1 || end <= start) {
+    throw new Error(`map call returned no JSON object; reply starts: ${JSON.stringify(reply.slice(0, 200))}`);
+  }
   let proposals;
   try {
     proposals = JSON.parse(reply.slice(start, end + 1));

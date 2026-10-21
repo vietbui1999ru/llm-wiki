@@ -32,7 +32,8 @@
         "pages": [
           "guides/architecture",
           "guides/workflows",
-          "guides/send-it"
+          "guides/send-it",
+          "guides/harness-migration"
         ]
       },
       {

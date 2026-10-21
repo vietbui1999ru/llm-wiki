@@ -40,6 +40,7 @@ const GUIDES = [
   { src: "docs/architecture.md", out: "guides/architecture" },
   { src: "docs/workflows.md", out: "guides/workflows" },
   { src: "docs/send-it.md", out: "guides/send-it" },
+  { src: "docs/harness-migration.md", out: "guides/harness-migration" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -462,6 +463,10 @@ description: "A compounding, agent-maintained knowledge base on AI agent enginee
     Unattended mode for new repos: no questions, PR with auto-merge requested,
     your use-test is the gate.
   </Card>
+  <Card title="Harness migration (planned)" icon="truck-moving" href="/guides/harness-migration">
+    Under development: move the agent workflow out of dotfiles into agent-harness,
+    then grow it into a multi-machine orchestrator.
+  </Card>
 </CardGroup>
 `;
 writeFileSync(join(OUT, "index.mdx"), landing + "\n" + widgetMarkup(null) + "\n");
@@ -472,7 +477,7 @@ count++;
 
 const groups = [
   { group: "Get Started", pages: ["index", "guides/onboarding", "guides/reference"] },
-  { group: "Architecture", pages: ["guides/architecture", "guides/workflows", "guides/send-it"] },
+  { group: "Architecture", pages: ["guides/architecture", "guides/workflows", "guides/send-it", "guides/harness-migration"] },
 ];
 for (const [dir, label] of WIKI_DIRS) {
   const pages = files

@@ -68,7 +68,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/firecrawl]] — Managed web scraping/crawling service for LLM consumption; 14-tool MCP server; CLI-first use across Claude/Codex/OpenCode/Pi; vs. Pydoll/Playwright comparison
 - [[entities/ketch]] — Stateless Go CLI unifying web search/scrape/crawl, OSS code search, and Context7 library docs behind one agent-facing binary; config-driven backend swap
 - [[entities/sandcastle]] *(documented-not-adopted)* — Matt Pocock's TS lib for parallel agents in worktrees; branch strategy (head/merge-to-head/branch), token telemetry, provider abstraction
-- [[entities/dangeresque]] *(documented-not-adopted)* — Host-native CLI orchestrator; mandatory adversarial reviewer + human-merge gate; ToS-compliant (no container for CC)
+- [[entities/dangeresque]] *(documented-not-adopted)* — Host-native TypeScript CLI: one worktree per issue in `.claude/worktrees/`, verify + review, human `merge` that removes the worktree; compared with our setup 2026-10-22 (same worktree base; borrow lifecycle verbs, per-run record, resume)
 - [[entities/mnemory]] — Self-hosted MCP cross-session memory: Qdrant vector search + S3/MinIO artifact store; OSS alternative to Anthropic memory tool
 - [[entities/agentops]] *(documented-not-adopted)* — Repo-native `.agents/` corpus + `/council` multi-vendor consensus CLI; cross-vendor coordination layer
 - [[entities/gemini-cli]] — Google's Gemini CLI: GEMINI.md + TOML commands + activate_skill; high parity with CC; hooks + subagents (experimental)

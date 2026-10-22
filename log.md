@@ -1176,3 +1176,22 @@ Source: raw/ "Complex git situations tripping up claude  rClaudeCode.md" (thread
 - docs/harness-migration.md (new, published as guides/harness-migration): planned-change banner, ownership before/after, data flow, Phase A migration order with baseline gate, Phase B hub-and-nodes topology, MVP-1 ping-pong sequence, AC groups, risks. Five Mermaid charts, each parsed with pele-render.
 - build-docs-site.mjs: guide entry, Architecture nav item, landing card. docs-site regenerated.
 - mistakes: ingested 2026-10-21 shell-unchecked-path and tests-expectation-contradicts-rule; two wiki-authoring line pairs merged to keep global-prevention-rules.md at the 45-line cap.
+
+## [2026-10-22] ingest | Self-Healing Agentic Orchestrators for Reliable Tool-Augmented LLM Systems (self-healing-agentic-orchestrator-LLM-research.pdf) → summaries/self-healing-agentic-orchestrator
+Source: pdfs/self-healing-agentic-orchestrator-LLM-research.pdf (33 pp). Parsed with Docling 2.107 using `--no-ocr`: the default run failed in rapidocr (`Unsupported configuration: torch.PP-OCRv6.det.small`); the PDF has a text layer, but equations came out as `formula-not-decoded`. Pre-ingest comprehension quiz skipped at Viet's request.
+- New: `summaries/self-healing-agentic-orchestrator`.
+- Updated: `concepts/self-healing-loop` (first cited sources; new sections on failure classification + targeted recovery and on the ops layer).
+- Flag: every result comes from an author-built benchmark with simulated tools; the 100% figures hold only inside the authors' fault templates.
+
+## [2026-10-22] ingest | Confidence-Aware Routing for LLM Reliability Enhancement (confidence-aware-routing-for-llm-reliability-system-one-laya-jev-open-source.pdf) → summaries/confidence-aware-routing
+Source: pdfs/confidence-aware-routing-for-llm-reliability-system-one-laya-jev-open-source.pdf (Docling, `--no-ocr`). Pre-ingest comprehension quiz skipped at Viet's request.
+- New: `summaries/confidence-aware-routing`.
+- Updated: `entities/laya` (Related link).
+- Flag: same author as Laya, but a different method (hidden-state probes on SmolLM2-360M, not Laya's encoder decision head); the PDF names neither Laya nor Jev. 72-example training set and no per-dataset breakdown, so all numbers are marked *(claimed, unverified)*.
+
+## [2026-10-22] ingest | Self-healing and self-improving agents: web batch (7 sources)
+Sources (raw/): "The Full Lifecycle of Agentic AI From Spec-Driven Observability to Self-Healing Operations.md", "Automate Your CI Fixes Self-Healing Pipelines with AI Agents.md", "Self-improving software with goal-led agents.md", "Has anyone actually built a Claude Code setup that improves itself over time? Did it genuinely help?  rClaudeCode.md", "Stop Scripting Your Coding Agent. Start Steering It..md", "Stop Stuffing Your CLAUDE.md. The Research Says Less Is More..md", "google-researchharness2.md". Pre-ingest comprehension quiz skipped at Viet's request.
+- New: `summaries/agentic-ai-lifecycle-self-healing-ops`, `summaries/dagger-self-healing-ci`, `summaries/coral-goal-led-agents`, `summaries/reddit-self-improving-claude-code-setup`, `summaries/steer-not-script-agent-instructions`, `summaries/less-is-more-claude-md`, `summaries/harness2-recursive-agent-harnessing`, `concepts/self-improving-agent-setup`.
+- Updated: `concepts/self-healing-loop` (Dagger rows corrected: the old text claimed "bounded by attempt config" and "reruns only the failing gate", and the source says neither), `concepts/agentic-cicd` (fix agents that suggest, not commit), `concepts/agent-context-instructions` (contradiction flagged, plus "less is more" and protocol-vs-judgment sections), `concepts/rules-vs-hooks` (146/153 ignored-rule evidence), `concepts/preference-feedback-loop` (duplicate-rule caution).
+- Contradiction: the ETH "Evaluating AGENTS.md" study (arXiv 2602.11988, via a blog summary) conflicts with the "What to include" template in `concepts/agent-context-instructions`. Flagged at the top of that page. The paper itself has not been ingested yet.
+- Tier-0 check: `applied-ai.md` cites `[[concepts/preference-feedback-loop]]` for the /judge rule; that rule still matches the page, so nothing changed.

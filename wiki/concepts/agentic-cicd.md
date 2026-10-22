@@ -2,9 +2,9 @@
 title: "Agentic CI/CD"
 type: concept
 tags: [agent-engineering, cicd, autonomy, deployment, watchdog, self-healing]
-sources: []
+sources: ["Automate Your CI Fixes Self-Healing Pipelines with AI Agents.md", "The Full Lifecycle of Agentic AI From Spec-Driven Observability to Self-Healing Operations.md"]
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-10-22
 ---
 
 # Agentic CI/CD
@@ -119,6 +119,17 @@ CI/CD owns rollback triggering, not the agent:
 - CI pipeline itself fails N times with same signature → pipeline marks job as "blocked, escalation required" and halts
 
 The agent should never need to manually trigger rollback — this is a harness responsibility.
+
+---
+
+## Fix Agents That Suggest, Not Commit
+
+A second pattern applies when a human is still the developer and the agent only repairs CI failures. Two published variants, neither with measurements:
+
+- **CI fix agent** ([[summaries/dagger-self-healing-ci]]): a failing lint/test stage triggers an agent with a narrow toolset (read/write/list files, run tests, run lint). The run tools reuse the pipeline's own functions, so the agent validates against exactly what CI checks. The validated diff is posted as **line-anchored PR code suggestions**; the developer accepts each with one click.
+- **Ops fix agent** ([[summaries/agentic-ai-lifecycle-self-healing-ops]]): a production alert triggers an SRE agent's root-cause analysis, which opens an issue with telemetry; a coding agent picks up the issue and opens a PR; on-call reviews and merges.
+
+Both keep the same boundary as the gates above: the agent proposes, and a human or an external gate decides. Neither source defines a give-up path, so add the retry budget and escalation from [[concepts/self-healing-loop]].
 
 ---
 

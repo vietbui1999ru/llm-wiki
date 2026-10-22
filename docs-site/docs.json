@@ -100,6 +100,7 @@
           "concepts/reranking",
           "concepts/rules-vs-hooks",
           "concepts/self-healing-loop",
+          "concepts/self-improving-agent-setup",
           "concepts/shared-task-queue",
           "concepts/slash-commands",
           "concepts/software-documentation",

@@ -2,9 +2,9 @@
 title: "Self-Healing Loop"
 type: concept
 tags: [agent-engineering, harness, autonomy, retry, rollback, failure-recovery]
-sources: []
+sources: ["pdfs/self-healing-agentic-orchestrator-LLM-research.pdf", "Automate Your CI Fixes Self-Healing Pipelines with AI Agents.md", "The Full Lifecycle of Agentic AI From Spec-Driven Observability to Self-Healing Operations.md"]
 created: 2026-05-06
-updated: 2026-05-27
+updated: 2026-10-22
 ---
 
 # Self-Healing Loop
@@ -101,6 +101,31 @@ These are enforced by the harness, not by the agent's discretion:
 
 ---
 
+## Failure Classification and Targeted Recovery
+
+Source: [[summaries/self-healing-agentic-orchestrator]] (Suresh Babu & Agrawal 2026; author-built benchmark, no external replication).
+
+The core loop above diagnoses "failure type" loosely. The paper makes it explicit as a **monitor → detect → diagnose → recover → verify** control plane around the agent, and shows why it matters: a uniform recovery action (retry everything, or replan everything) mismatches many causes.
+
+- **Separate detector, classifier and policy.** The detector answers *did it deviate?*, the classifier *why?*, the policy *what now, given the remaining budget?*
+- **Map class → action, cheapest local fix first:** timeout → retry with backoff or substitute tool; bad arguments → repair and regenerate the call; stale context → refresh retrieval; contradictory evidence → cross-check an independent source; retry storm / no progress → stop, replan from a checkpoint, or escalate. Full replanning and human escalation come last.
+- **Budget is a vector, not a count:** retry, replanning, tool-substitution, model-escalation, latency and cost. Failed attempts still spend it.
+- **Verifier rejection is a failure signal.** Wrong-but-plausible output raises no runtime error; only a verifier inside the loop catches it. In the paper's semantic-fault setting, non-verifying methods returned silent wrong answers 13.2–17.6% of the time vs 0.0% with the verifier.
+
+Reported effect in the controlled benchmark: 98.8% success vs 94.5% retry-only and 93.8% full replanning; with a single recovery attempt, 94.0% vs 85.3% and 88.2%. This means targeted recovery beats "just try more" at every matched budget. Removing the classifier cost 3.6 points.
+
+**Side-effecting tools** (payments, writes, notifications) need stricter recovery than read-only ones: idempotency checks, stronger verification, human confirmation. This matches the low budgets for migrations and deploys in the table above.
+
+---
+
+## Ops Layer: Alert → Agent PR → Human Merge
+
+Source: [[summaries/agentic-ai-lifecycle-self-healing-ops]] (vendor blog, no measurements).
+
+In production operations the loop is: smart alert (dynamic baseline) → SRE agent root-cause analysis over logs/traces/deploys → remediation report → auto-created issue with telemetry → coding agent opens a PR → on-call engineer reviews and merges. The argument is that investigation and coordination, not the fix, dominate MTTR. The human stays on the merge, which is the same escalation boundary as the CI layer.
+
+---
+
 ## Composition with Ralph Loop
 
 The ralph-loop is the outer driver; self-healing is the inner recovery mechanism:
@@ -138,13 +163,13 @@ Without structured output, the outer harness cannot distinguish "agent is thinki
 
 | Tool | Layer | What it does |
 |---|---|---|
-| **Dagger** | CI failure | AI agent diagnoses failure log → patches code → reruns failing gate → posts diff to PR; bounded by attempt config |
+| **Dagger** | CI failure | AI agent reads failure → patches via a 5-tool `Workspace` → reruns tests/lint → posts diff as PR suggestions ([[summaries/dagger-self-healing-ci]]) |
 | **ArgoCD** | Deploy | Stores known-good revision before deploy; waits for health + operation phase; rolls back to stored revision on failure |
 | **Windmill** | Workflow step | Per-step retry with exponential backoff + jitter; each retry is an isolated execution context |
 
 Dagger handles the "analyze and patch" half; ArgoCD handles the "rollback on deploy failure" half; Windmill provides the retry scheduling primitive that both can use.
 
-**Dagger flow** (AI-driven CI layer): detect failure → agent analyzes log → patches code scoped to relevant file → reruns only the failing gate (not full suite) → posts reviewed diff to PR; agent does not auto-merge.
+**Dagger flow** (AI-driven CI layer): CI lint/test stage fails → agent gets the failure output and a constrained toolset (`ReadFile`, `WriteFile`, `ListFiles`, `RunTests`, `RunLint`, where the run tools reuse the project's existing Dagger Functions) → loops fix/rerun until green → returns a diff → a second function posts it as line-anchored GitHub code suggestions. Agent never pushes or merges. The source post names no retry cap or give-up path; supply one from the budget table above.
 
 **ArgoCD rollback** (deploy layer):
 ```bash
@@ -190,3 +215,5 @@ Self-healing loops fail in predictable ways:
 - [[concepts/verification-pipeline]] — the verification layer whose failures trigger self-healing
 - [[concepts/agentic-sandbox-controls]] — isolation required for safe autonomous operation
 - [[concepts/worktree-isolation]] — isolates each repair attempt's filesystem changes
+- [[concepts/self-improving-agent-setup]] — changes the harness *between* runs; self-healing recovers *within* a run
+- [[summaries/confidence-aware-routing]] — pre-generation counterpart: route uncertain queries to RAG/larger model/human before failing

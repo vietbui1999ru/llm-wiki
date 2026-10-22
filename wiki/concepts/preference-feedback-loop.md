@@ -4,7 +4,7 @@ type: concept
 tags: [feedback, evaluation, self-improvement, llm-as-judge, preference-memory, agent-quality]
 sources: []
 created: 2026-05-07
-updated: 2026-05-07
+updated: 2026-10-22
 ---
 
 # Preference Feedback Loop
@@ -147,3 +147,5 @@ Implemented 2026-05-07.
 - [[summaries/self-refinement]] — within-turn same-model self-feedback (complements this; different scope)
 - [[summaries/rlhf-cai]] — RLHF/RLAIF/DPO background; inspiration for the preference signal pipeline
 - [[entities/dspy]] — programmatic prompt optimization (heavier alternative; requires training set; no human approval gate)
+- [[concepts/self-improving-agent-setup]] — where this loop sits on the self-improvement spectrum. Practitioner caution (2026-10, anecdotal): automated lesson extraction mostly re-discovers rules that already exist but were ignored, so extracted rules should be checked for duplicates and preferably promoted to hooks or checks rather than added as prose
+- [[summaries/harness2-recursive-agent-harnessing]] — automated, contrast-based harness refinement; admits only evidence-supported lessons

@@ -4,7 +4,7 @@ type: entity
 tags: [laya, jev, classification, calibration, open-weights, encoder-models, routing]
 sources: ["NandhaKishorMlaya Non-autoregressive System 1 decision engine. Typed choice, score and yesno decisions over any text in a single forward pass, in 100+ languages, with a router that picks the right checkpoint per request..md", "Hugging Face.md"]
 created: 2026-10-11
-updated: 2026-10-15
+updated: 2026-10-22
 ---
 
 # Laya
@@ -58,3 +58,4 @@ A staged plan that uses what each tool is good at, to be measured at each step w
 - [[summaries/laya]] — full claim-by-claim summary with provenance flags
 - [[concepts/model-tier-routing]] — routing work to LLM tiers (different thing; Laya's model-router preset can feed such a decision)
 - [[concepts/llm-as-judge]] — a generating judge, the opposite design point
+- [[summaries/confidence-aware-routing]] — same author's paper on pre-generation confidence routing (local / RAG / larger model / human); different method (hidden-state probes on a generating 360M LLM, not an encoder decision head); numbers *(claimed, unverified)*

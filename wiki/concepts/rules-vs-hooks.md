@@ -4,7 +4,7 @@ type: concept
 tags: [agent-context-instructions, hooks, dynamic-context, agent-harness]
 sources: ["AGENTS md gets it wrong in 2 ways.md", "Rules.md", "AGENTS.md"]
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-10-22
 ---
 
 # Rules vs. Hooks
@@ -85,6 +85,8 @@ Both rules and hooks that instruct the agent to invoke commands (e.g., "run test
 
 From the AGENTS.md critique (Wand, 2026-05-06):
 > "No agent will reliably follow any such instructions — even assuming there is no ambiguity — nor is such behavior enforceable by the orchestrator managing the agent."
+
+Practitioner evidence (2026-10, anecdotal, [[summaries/reddit-self-improving-claude-code-setup]]): a nightly job that reviewed Claude Code and Codex sessions found that 146 of 153 write-ups concerned a rule that already existed and was not followed. Several users converge on "a CLAUDE.md line is advice the model can skip under context pressure; a hook that blocks the edit is not." See [[concepts/self-improving-agent-setup]].
 
 ---
 

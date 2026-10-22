@@ -47,6 +47,15 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/hn-junior-devs-and-ai]] — HN community: AI amplifies existing ability; juniors lack evaluation frame; repetition/debugging gap; agentic tools harmful for beginners; 7 actionable heuristics
 - [[summaries/cc-linting-debugging-reddit]] — r/ClaudeCode community: Stop hook for file-modifying linters (file-state conflict); PostToolUse read-only only; noslop quality gates; layered shellcheck/biome/pre-commit setup; gdb/Replay MCP/JetBrains debugger
 - [[concepts/llm-serialization-formats]] — Schema-first formats (ONTO, TOON) cutting LLM input overhead 40–60% via schema-once design; covers format comparison, tradeoffs, and caveats on synthetic benchmarks
+- [[summaries/self-healing-agentic-orchestrator]] — Suresh Babu & Agrawal 2026: monitor→detect→diagnose→recover→verify control plane; failure-class→recovery mapping under vector budgets; 98.8% vs 94.5% retry-only on author-built 100-task fault-injection benchmark; verifier cuts silent failures to 0% in controlled setting
+- [[summaries/confidence-aware-routing]] — Nandakishor M (Convai): pre-generation confidence score (hidden-state alignment + layer convergence + learned head) routes to local/RAG/larger model/human via fixed thresholds; same author as [[entities/laya]] but different method; 72-example training set, 360M model *(claimed, unverified)*
+- [[summaries/harness2-recursive-agent-harnessing]] — Google Research Harness² README: Propose–Probe–Compose harness refinement from run contrasts + persistent improvement harness of evidence-backed lessons; 8 editable harness components; +4.5 to +11.8 pts *(claimed, unverified)*
+- [[summaries/agentic-ai-lifecycle-self-healing-ops]] — blog: dev loop (agent observability) + ops loop (SRE agent RCA → issue → coding-agent PR → human merge); MTTR dominated by investigation, not fix; vendor stats unverified
+- [[summaries/dagger-self-healing-ci]] — Dagger blog: CI fix agent with 5-tool Workspace reusing pipeline functions; posts validated diff as PR code suggestions; no retry cap described
+- [[summaries/coral-goal-led-agents]] — Coral blog: split shipping core team from persistent goal-focused agents (speed, security, cost, SEO); board + single-owner tasks; no measurements
+- [[summaries/reddit-self-improving-claude-code-setup]] — r/ClaudeCode thread (2026-10): lessons files work if curated, dated and pruned; 146/153 nightly-review lessons were existing-but-ignored rules; hooks over prose; startup-injection disagreement *(anecdotal)*
+- [[summaries/steer-not-script-agent-instructions]] — Pattern Interruption essay: script the protocol (format, phases, contracts, safety gates), principle-ize the judgment (principles, end-state criteria, anti-patterns)
+- [[summaries/less-is-more-claude-md]] — blog on ETH "Evaluating AGENTS.md" (arXiv 2602.11988): generated context files −2–3% success, +20% cost; dev-written +4%; ~30-line pointer file + system-design doc *(secondary report)*
 
 ## Entities
 - [[entities/rtk]] — Rust CLI proxy that filters/compresses command output before it hits LLM context; PreToolUse hook across 15 agents; 4 strategies (filter/group/truncate/dedup); 60-90% token savings *(claimed, unverified — self-reported estimates)*; hook rewrite collides with the Claude Code worktree guard (rtk#3864)
@@ -111,7 +120,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/reranking]] — Post-retrieval filtering: score top ~150 candidates, pass top 20 to LLM; stacks with contextual retrieval
 - [[concepts/ai-code-review]] — Reviewing AI-generated code: automated + human layers, 8-point checklist, core risk of intent misalignment
 - [[concepts/ai-specific-pitfalls]] — Failure modes unique to AI code: hallucinated APIs, slopsquatting, deleted tests, "looks right" logic errors, over-engineering mitigations
-- [[concepts/agent-context-instructions]] — Standards documents that align agent output to team conventions before generation
+- [[concepts/agent-context-instructions]] — Standards documents that align agent output to team conventions; ETH AGENTS.md study favors minimal non-obvious rules + linked design doc (contradiction flagged on old template); protocol vs judgment split
 - [[concepts/indirect-prompt-injection]] — Primary attack vector on AI agents: adversarial instructions in third-party content; dev-loop vectors; rules files as persistent steering; CI/CD confused deputy; MCP tool shadowing; typoglycemia; Best-of-N power-law scaling; RAG poisoning; dual-LLM pattern
 - [[concepts/agentic-sandbox-controls]] — OS-level security controls for AI agents; Anthropic ToS constraint on CC in containers; host-native alternative
 - [[concepts/web-fingerprinting]] — Multi-layer browser/network/behavioral fingerprinting used by anti-bot systems; evasion principles
@@ -150,15 +159,16 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/council-pattern]] — 3-stage multi-model deliberation: parallel dispatch → optional anonymized peer review → Chairman or human synthesis; Stage 2 optional; cost model; when to use
 - [[concepts/worktree-isolation]] — git worktrees for agent filesystem isolation; ToS-compliant sandboxing alternative; scope overlap, merge-before-cleanup; runtime isolation gap (ports); worktree-per-task vs per-agent; git worktree lock, rerere, sparse-checkout
 - [[concepts/shared-task-queue]] — filesystem inbox in main checkout; atomic claim via POSIX mv; git-common-dir trick to find inbox from any worktree; 3 startup layers (CLAUDE.md/orchestrator/skill); pull vs push model
-- [[concepts/rules-vs-hooks]] — static rules files vs. dynamic hook injection; compliance problem; hybrid patterns; when to use each
+- [[concepts/rules-vs-hooks]] — static rules files vs. dynamic hook injection; compliance problem (incl. 146/153 ignored-rule practitioner evidence); hybrid patterns; when to use each
 - [[concepts/memory-bank-pattern]] — Josh Wand's `_memory/` hierarchy for cross-session persistence; repomix compile; yak-shaving tracking; mode-based workflow
-- [[concepts/self-healing-loop]] — failure→bounded retry→rollback→escalation; failure signature detection; guardrails; composes with ralph-loop; Dagger/ArgoCD/Windmill implementations
-- [[concepts/agentic-cicd]] — CI as external watchdog when agent IS the developer; gate sequence; staging-first; diff size cap; builder/deployer network split
+- [[concepts/self-healing-loop]] — failure→bounded retry→rollback→escalation; failure signature detection; failure-class→targeted recovery + verifier-as-signal (orchestrator paper); ops alert→agent PR→human merge; Dagger/ArgoCD/Windmill implementations
+- [[concepts/self-improving-agent-setup]] — harness that changes between runs: lessons file → hook/check promotion → scheduled review → goal agents → automated harness search (Harness²); compliance not rule count is the bottleneck; date, cap and prune memory
+- [[concepts/agentic-cicd]] — CI as external watchdog when agent IS the developer; gate sequence; staging-first; diff size cap; builder/deployer network split; fix agents that suggest, not commit (Dagger CI, SRE ops)
 - [[concepts/error-budget]] — SRE error budget adapted to agent loops; retry/token/runtime/session budget axes; progress score; no-progress detection
 - [[concepts/llm-as-judge]] — LLM evaluates another LLM's output via structured prompt; pairwise vs direct scoring vs G-Eval; failure modes (self-bias, reward hacking, sycophancy); relation to RLHF
 - [[concepts/llm-eval-pipeline]] — Continuous quality system for LLM products: error analysis flywheel, golden/eval/regression datasets, code assertion vs LLM-judge split, CI gates, production monitoring, guardrails vs evaluators
 - [[concepts/rag-evaluation]] — RAG eval split: retrieval (Recall@k, Precision@k, MRR, nDCG) vs generation (faithfulness, answer relevance, context utilization); Ragas/DeepEval; Jason Liu 6-RAG-evals framework
-- [[concepts/preference-feedback-loop]] — cross-vendor judge evaluates agent outputs on 4-dimension rubric; pattern-triggered rule extraction; human approval gate; extends mistakes/ + memory/feedback_*
+- [[concepts/preference-feedback-loop]] — cross-vendor judge evaluates agent outputs on 4-dimension rubric; pattern-triggered rule extraction; human approval gate; extends mistakes/ + memory/feedback_*; caution: extracted rules often duplicate ignored ones
 - [[concepts/actor-model]] — actors as unit of concurrency; 3 primitives (send/spawn/become); mailbox semantics; no shared state; supervision trees + let-it-crash; virtual actor model (Orleans grains/silos); Erlang/Akka/Orleans/ProtoActor implementations
 - [[concepts/llm-observability]] — Observability patterns for LLM and agent systems: OpenTelemetry GenAI semantic conventions (incubating), span types, metrics, sampling, multi-agent trace correlation, production monitoring tools
 - [[concepts/slash-commands]] — Decision guide for Claude Code session commands: when to use /goal, /loop, /ralph-structured, /clear, /compact, /save-session, /handoff, and how they differ

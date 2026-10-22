@@ -2,6 +2,11 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-10-22] update | Dangeresque re-checked against the repo
+
+Updated:
+- `wiki/entities/dangeresque.md` — rewritten from the upstream README, docs and source (was a Reddit-thread summary): TypeScript not shell, reviewer model optional, worktree lifecycle with PID lock and merge/discard cleanup, local `git merge` gate, no Pi or jj. Added a run-lifecycle diagram and a comparison with our worktree setup; verdict: do not adopt, borrow lifecycle verbs, a per-run record and crash resume.
+
 ## [2026-10-22] update | diagrammer agent + Mermaid on the docs site
 
 Created:

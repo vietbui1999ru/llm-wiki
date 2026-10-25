@@ -1200,3 +1200,37 @@ Sources (raw/): "The Full Lifecycle of Agentic AI From Spec-Driven Observability
 - Updated: `concepts/self-healing-loop` (Dagger rows corrected: the old text claimed "bounded by attempt config" and "reruns only the failing gate", and the source says neither), `concepts/agentic-cicd` (fix agents that suggest, not commit), `concepts/agent-context-instructions` (contradiction flagged, plus "less is more" and protocol-vs-judgment sections), `concepts/rules-vs-hooks` (146/153 ignored-rule evidence), `concepts/preference-feedback-loop` (duplicate-rule caution).
 - Contradiction: the ETH "Evaluating AGENTS.md" study (arXiv 2602.11988, via a blog summary) conflicts with the "What to include" template in `concepts/agent-context-instructions`. Flagged at the top of that page. The paper itself has not been ingested yet.
 - Tier-0 check: `applied-ai.md` cites `[[concepts/preference-feedback-loop]]` for the /judge rule; that rule still matches the page, so nothing changed.
+
+## [2026-10-25] lint
+
+### Orphan pages (no inbound wikilinks from wiki content pages)
+- `patterns/algorithmic` — index-only; persists from 2026-10-18 lint (reference material, no inbound cross-links expected)
+- `patterns/backend` — index-only; persists from 2026-10-18 lint
+- `systems/otel-council` — index-only; persists from 2026-10-18 lint (specialized OTel config, not cross-referenced)
+- `concepts/acp-protocol` *(stub)* — only in index.md; created 2026-10-18 lint, still not expanded
+
+No new orphan pages introduced since the 2026-10-22 ingest batch.
+
+### Stale claims
+- **Persists from 2026-10-18:** `concepts/council-pattern` line 76 still shows "Sonnet 4.6 + GPT-5.4 … Chairman: Opus 4.6" — actual config since 2026-10-17 is `claude-sonnet-5-5` / `gpt-6.1-sol` / `claude-opus-5-5`. Flag: update this table on the next council-focused ingest or decision session.
+- `concepts/agent-context-instructions` — contradiction with ETH AGENTS.md study already flagged at top of page (arXiv 2602.11988 not yet ingested as primary source).
+- `summaries/coding-agent-200-lines` — source inconsistency flagged inline; no concept page drift.
+
+### Tier-0 sync
+All 10 Tier-0 wikilinks in `applied-ai.md` and `global-prevention-rules.md` resolve to existing pages. No drift.
+
+### Missing concept stubs created
+- `concepts/prompt-caching` (new stub) — mentioned in 9 wiki pages across context-compression, subagent-cost-model, agent-harness, and more; no concept page existed.
+- `entities/lightrag` (new stub) — mentioned in 9 wiki pages (wiki-indexing-pipeline, retrieval-eval-suite, local-rag-wiki, etc.); no entity page existed.
+- `concepts/a2a-protocol` (new stub) — mentioned in 2 pages (agent-native, builderio-agent-native); suggested in Oct 18 lint; now created.
+
+### index.md
+- Added `[[entities/lightrag]] *(stub)*` to Entities section.
+- Added `[[concepts/prompt-caching]] *(stub)*` and `[[concepts/a2a-protocol]] *(stub)*` to Concepts section.
+
+### Source suggestions (gaps)
+1. **Anthropic prompt caching docs** — fill the `concepts/prompt-caching` stub; critical for subagent cost modeling and context-compression coverage
+2. **LightRAG paper / docs (HKUDS/LightRAG)** — fill the `entities/lightrag` stub; used in wiki-indexing-pipeline with no dedicated source page
+3. **ACP protocol docs (Zed)** — fill the `concepts/acp-protocol` stub; editor-native agent ↔ editor protocol vs MCP
+4. **A2A protocol spec (Google)** — fill the `concepts/a2a-protocol` stub; multi-agent communication standard
+5. **arXiv 2602.11988 (ETH "Evaluating AGENTS.md")** — primary source for the contradiction at `concepts/agent-context-instructions`; only the blog summary was ingested

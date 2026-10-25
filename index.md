@@ -100,6 +100,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/obsidian-cli]] — Official Obsidian CLI (v1.12.4+, free); requires app running; key=value + bare-word flags (flag-syntax contradiction flagged); 100+ commands across search/daily/tasks/properties/dev
 - [[entities/obsidian-cli-rest-mcp]] — Community REST API + MCP plugin wrapping the CLI; 2-tool Code Mode (search/execute); StreamableHTTP, Bearer auth, dangerous-command gating
 - [[entities/obsidian-claude-code-mcp]] *(stub)* — Community WebSocket MCP bridge for live Claude Code ↔ vault connection; alternative to REST/MCP and raw CLI
+- [[entities/lightrag]] *(stub)* — Graph-based RAG framework (HKUDS); entity/relation extraction, persistent knowledge graph, multiple retrieval modes; graph indexing layer for this wiki alongside qmd
 
 ## Concepts
 - [[concepts/lsp-agent-baseline]] — Language servers as lazy project-scoped baseline for coding agents; L2 capability, not L3 bus state; pairs with typecheck/tests/diff review
@@ -175,6 +176,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/linux-setup-guide]] — Authoritative step-by-step guide for bootstrapping the full AI workflow on a fresh Linux machine; AI-executable; covers dotfiles, Claude Code, plugins, wiki toolchain, LightRAG index
 - [[concepts/cli-driven-vault-automation]] — Wrapper-script + cron patterns over the Obsidian CLI; doctor/health-check convention, "Obsidian must be running" guard, small-stable-verb-set instinct shared with MCP Code Mode
 - [[concepts/acp-protocol]] *(stub)* — Agent Communication Protocol (Zed): editor-native agent ↔ editor protocol; buffer access + write-through save path; distinct from MCP; omp, CodeCompanion.nvim, Avante.nvim support
+- [[concepts/prompt-caching]] *(stub)* — Provider-side KV-cache reuse for stable prompt prefixes; billed at reduced rate; requires prefix stability; critical for multi-request agent cost modeling
+- [[concepts/a2a-protocol]] *(stub)* — Google's Agent-to-Agent protocol for cross-vendor agent delegation; complements MCP (tools/data); mentioned alongside agent-native shared action surface
 
 ## Patterns
 - [[patterns/principles]] — SOLID (SRP/OCP/LSP/ISP/DIP), DRY, Rule of Three (timing for DRY), YAGNI, KISS, Law of Demeter, SoC, composition over inheritance; per-principle violation patterns and decision table; YAGNI section expanded with the four costs, scope limit and agent guidance

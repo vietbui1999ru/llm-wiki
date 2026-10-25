@@ -39,6 +39,7 @@
       {
         "group": "Concepts",
         "pages": [
+          "concepts/a2a-protocol",
           "concepts/acp-protocol",
           "concepts/actor-model",
           "concepts/agent-context-instructions",
@@ -94,6 +95,7 @@
           "concepts/owasp-web-security-reference",
           "concepts/pentest-agent-design",
           "concepts/preference-feedback-loop",
+          "concepts/prompt-caching",
           "concepts/proxy-rotation",
           "concepts/rag-evaluation",
           "concepts/ralph-loop",
@@ -202,6 +204,7 @@
           "entities/ketch",
           "entities/laya",
           "entities/lean-session",
+          "entities/lightrag",
           "entities/mnemory",
           "entities/obsidian-claude-code-mcp",
           "entities/obsidian-cli",

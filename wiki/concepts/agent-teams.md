@@ -148,7 +148,7 @@ The debate structure prevents anchoring — sequential investigation is biased t
 ## Related Pages
 
 - [[concepts/agent-subagents]] — subagents and when to prefer them over teams
-- [[concepts/agent-harness]] — harness components; teams as the highest coordination layer
+- [[concepts/agent-harness]] — harness components; teams as the highest coordination layer. Its "Multi-agent limits" section (2026): more than four agent-to-agent handoffs almost always failed (Azure SRE Agent), and a four-role team gained 0.4 points *(claimed, unverified)*
 - [[concepts/context-degradation]] — why each teammate needs its own context window
 - [[concepts/worktree-isolation]] — worktrees as the alternative for long-running parallel tasks (>30 min)
 - [[concepts/shared-task-queue]] — filesystem inbox for cross-worktree coordination; pull model alternative to in-process task list

@@ -33,3 +33,5 @@ Agent-Native makes the "agent as product peer" pattern explicit. Rather than bol
 - [[concepts/agent-harness]] — broader harness architecture.
 - [[concepts/tool-design-for-agents]] — action schemas as agent tool contracts.
 - [[concepts/agent-context-instructions]] — per-user instructions and skills as product state.
+- [[concepts/a2a-protocol]] — the agent-to-agent protocol it supports
+- [[concepts/acp-protocol]] — related agent client protocol

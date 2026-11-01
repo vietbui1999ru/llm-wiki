@@ -260,3 +260,4 @@ Limitations: requires LoRA fine-tuning; benchmarks limited to MRQA/QMSum/GovRepo
 - [[entities/everything-claude-code]] — ECC's `strategic-compact` skill and token optimization settings
 - [[summaries/state-of-harness-engineering-2026]] — evidence review of the fresh-context loop
 - [[summaries/azure-sre-agent-context-engineering]] — offloading large outputs to files and code
+- [[concepts/prompt-caching]] — the KV-cache cost trap: compression that changes the prefix breaks cache reuse

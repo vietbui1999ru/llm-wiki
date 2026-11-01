@@ -198,3 +198,8 @@ No single tool is superior in every dimension. Over-focusing on tools instead of
 - [[concepts/verification-pipeline]] — four-tier quality ladder for coding agents
 - [[concepts/indirect-prompt-injection]] — primary attack vector for safety evaluation
 - [[concepts/owasp-security-checklist]] — security eval checklist
+
+## Related Pages
+
+- [[summaries/hamel-evals-skills]] — practitioner guide to eval skills and error analysis
+

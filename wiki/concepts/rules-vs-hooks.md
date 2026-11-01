@@ -111,3 +111,4 @@ Practitioner evidence (2026-10, anecdotal, [[summaries/reddit-self-improving-cla
 - [[concepts/agent-self-correction]] — hooks as enforcement mechanism
 - [[entities/opencode]] — compaction hook and plugin event surface
 - [[concepts/slash-commands]] — session-command decision guide; the third config surface alongside rules and hooks
+- [[concepts/tiered-knowledge-delivery]] — push/hook/pull tiers that decide where a rule lives

@@ -201,3 +201,5 @@ See [[summaries/autoresearch-karpathy]] for details.
 - [[summaries/state-of-harness-engineering-2026]] — empirical survey of 246 harness repos and 57 publications
 - [[summaries/build-ai-agent-harness-vercel]] — build-along course: failure-driven harness components
 - [[summaries/azure-sre-agent-context-engineering]] — wide tools, generalists, four-handoff cliff
+- [[summaries/swe-bench-mobile]] — same model scores 12% vs 2% task success across harnesses on 50 iOS tasks
+- [[summaries/what-is-an-agent-harness-parallel-ai]] — source definition of the harness and its components

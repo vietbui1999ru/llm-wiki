@@ -2,6 +2,18 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-11-01] lint | lint + index reconcile after the 2026-11-01 ingest
+
+Reconcile: every wiki page has an index entry and every entry resolves; no broken wikilinks; frontmatter complete; stub markers consistent; pending-sync.md has 0 pending entries.
+Fixed: 9 stale index lines (jujutsu, context-compression, agent-subagents, subagent-cost-model, agent-harness, worktree-isolation, agent-context-instructions, context-engineering, agent-review); orphan links for swe-bench-mobile, what-is-an-agent-harness-parallel-ai, prompt-caching, lightrag, a2a/acp-protocol, tiered-knowledge-delivery, hamel-evals-skills, cc-auto-mode; ralph-loop contradiction callout (fresh context unmeasured); agent-teams handoff-limit note.
+Still orphaned (index-only): patterns/algorithmic, patterns/backend, systems/otel-council, concepts/software-documentation, entities/docling, entities/eggroll and four summaries.
+Stale, needs Viet: council-pattern model table (still Oct 16 models), model-tier-routing (Sonnet as default), multi-vendor-adversarial-review (reviewer-agent counter-evidence, GPT-4.1 mini), context-compression "Now Community Consensus" heading.
+Tier-0 drift (needs Viet): applied-ai.md context-compression line and multi-agent line; domain-glossary grill-me vs grill-with-docs; GPR's model-tier-routing link points at a page that still says Sonnet is default.
+Schema: 13 patterns pages use type: pattern and wiki/research/ uses type: research; neither is in the CLAUDE.md enum.
+Missing concept pages: MCP (58 mentions), multi-agent handoffs, independent reviewer, progressive disclosure.
+Suggested sources: a controlled clear-vs-compact study; NLAH ablation (arXiv 2603.25723) and four-role team study (arXiv 2602.01465); ETH Zurich AGENTS.md study (arXiv 2602.11988); MCP spec; current Claude Code hooks and subagents docs.
+Also: mistakes/worktree-guard-rules.md absorbed the reconcile-stash entries (10-27 retry-variations, 10-29 for-loop) and today's commit-funnel jj gaps.
+
 ## [2026-11-01] ingest | Harness engineering cluster (OpenAI Codex, State of Harness Engineering 2026, Azure SRE Agent, Vercel harness course)
 
 - Four summaries: harness-engineering-codex-openai, state-of-harness-engineering-2026, azure-sre-agent-context-engineering, build-ai-agent-harness-vercel.

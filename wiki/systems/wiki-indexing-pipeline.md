@@ -63,3 +63,4 @@ The `post-commit` hook runs after a commit **in the main checkout** (see the got
 - [[entities/opencode-go]]: the extraction LLM provider and its usage limits
 - [[concepts/bm25]]: lexical retrieval used by qmd
 - [[concepts/linux-setup-guide]]: installing the indexing tools on a fresh machine
+- [[entities/lightrag]] — graph-based RAG engine in the indexing comparison

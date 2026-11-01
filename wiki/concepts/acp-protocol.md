@@ -14,4 +14,9 @@ ACP (Agent Communication Protocol) is an editor-native protocol for AI agent ↔
 
 Mentioned in [[comparisons/cc-to-cross-platform-migration]], [[comparisons/our-stack-vs-omp]], [[syntheses/neovim-ai-operator-workflow]], and [[entities/omp]] (`omp acp` command). Neovim plugins CodeCompanion.nvim and Avante.nvim also list ACP support.
 
+
+## Related Pages
+
+- [[concepts/a2a-protocol]] — sibling agent-to-agent protocol
+
 *Stub — expand when a dedicated source is ingested.*

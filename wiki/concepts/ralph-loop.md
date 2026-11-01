@@ -7,8 +7,10 @@ sources:
   - "Harness engineering leveraging Codex in an agent-first world.md"
   - "Agent Harness explained in 8min...md"
 created: 2026-04-25
-updated: 2026-05-22
+updated: 2026-11-01
 ---
+
+> **Contradiction (2026-11-01):** the claim below that clean context means "no degraded reasoning" is unmeasured. [[summaries/state-of-harness-engineering-2026]] finds the fresh-context variant rests on one uncontrolled toy-app run with no baseline, and argues the benefit comes from work written to files, not from the wipe.
 
 # Ralph Loop
 

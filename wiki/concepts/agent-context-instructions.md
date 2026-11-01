@@ -2,9 +2,9 @@
 title: "Agent Context Instructions"
 type: concept
 tags: [ai-agents, context, instructions, alignment, automation]
-sources: ["Using GitHub Copilot to reduce technical debt.md", "Build an optimized review process with Copilot.md", "AGENTS.md", "Rules.md", "Stop Stuffing Your CLAUDE.md. The Research Says Less Is More..md", "Stop Scripting Your Coding Agent. Start Steering It..md"]
+sources: ["Using GitHub Copilot to reduce technical debt.md", "Build an optimized review process with Copilot.md", "AGENTS.md", "Rules.md", "Stop Stuffing Your CLAUDE.md. The Research Says Less Is More..md", "Stop Scripting Your Coding Agent. Start Steering It..md", "pdfs/When _Do Not_ Is Not Deny_ Security Rules in CLAUDE.md vs Built-In Controls - 2608.23550v1.pdf"]
 created: 2026-04-22
-updated: 2026-10-22
+updated: 2026-11-01
 ---
 
 > **Contradiction (2026-10-22):** The "What to include" template below (project context, style and conventions sections) conflicts with the ETH Zurich "Evaluating AGENTS.md" study (arXiv:2602.11988, reported via [[summaries/less-is-more-claude-md]]). That study found that LLM-generated context files, which are mostly overviews of this kind, lowered task success ~2–3% and raised cost > 20%; developer-written files helped only ~4%. Prefer the minimal shape in [Evidence: less is more](#evidence-less-is-more). The template is kept for history.
@@ -37,6 +37,7 @@ Typically a markdown file in the repository (e.g., `.github/copilot-instructions
 
 ## Security requirements
 - Input validation, auth patterns, data handling rules
+  (prose here is advisory only; see "Security rules are mostly unenforced" below)
 
 ## Error handling
 - Logging format, retry behavior, what not to swallow
@@ -99,6 +100,20 @@ Sort each instruction into one of two kinds:
 
 Common failure: scripting judgment ("use library X") while leaving protocol vague ("format nicely").
 
+## Security rules are mostly unenforced
+
+Source: [[summaries/do-not-is-not-deny-claude-md]] (Yan 2026, arXiv 2608.23550; 481 public `CLAUDE.md` files, LLM classifier validated against two blind human annotators).
+
+A security rule in a context file is prose the model interprets; it is not a control. Of 870 retrieved security rules, only about 4-16% had a documented Claude Code control (permission `deny`/`ask`/`allow`, permission mode, filesystem or network sandbox, managed settings) that could enforce the whole rule without added code; 4.4% (95% CI 2.6-6.7%) under the strict, human-adjudicated standard. Rules fail to match when they depend on a condition ("only when releasing"), on content ("never commit secrets"), on meaning or system state, or on data flow. Rule wording ("never", "do not", "must") does not reveal which rules are enforceable, and the file gives no feedback either way: the paper calls it a write-only channel.
+
+Practical consequence:
+
+- For each security rule, ask whether a `permissions.deny`/`ask` pattern or sandbox setting can express the full rule. If yes, put it there (see [[summaries/claude-code-permissions-settings]]); keeping the prose line too is fine, but the setting is what enforces it.
+- If it needs code (a content or state check), it belongs in a hook, scanner or CI check ([[concepts/rules-vs-hooks]]). The paper's unvalidated classifier split puts about half of all security rules in this bucket.
+- Whatever remains is model-mediated. Treat it as advice, not protection.
+
+Scope: the paper measures whether a matching control *exists* in Claude Code's docs, not whether repositories configured one, and its corpus skews to new, low-star projects.
+
 ## Related
 
 - [[entities/ai-coding-agents]] — the agents that consume these instructions
@@ -107,3 +122,4 @@ Common failure: scripting judgment ("use library X") while leaving protocol vagu
 - [[concepts/rules-vs-hooks]] — static files vs. dynamic hooks for context injection
 - [[concepts/memory-bank-pattern]] — structured filesystem hierarchy for large-project context
 - [[concepts/self-improving-agent-setup]] — keeping the instruction file small while it learns from corrections
+- [[summaries/do-not-is-not-deny-claude-md]] — measured gap between prose security rules and built-in controls

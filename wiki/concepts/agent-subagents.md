@@ -7,8 +7,10 @@ sources:
   - "Orchestrate teams of Claude Code sessions.md"
   - "Simple Pi Subagents.md"
   - "How I use Claude Code subagents to make my Claude Pro limits last longer.md"
+  - "Building agents When to fold subagents into your main agent loop.md"
+  - "anyone actually fold their subagents back in after that anthropic guide?  rClaudeAI.md"
 created: 2026-04-26
-updated: 2026-10-09
+updated: 2026-11-01
 ---
 
 # Agent Subagents
@@ -149,7 +151,23 @@ Source: Pi Subagents extension practice (Amos Blomqvist).
 - Work is self-contained and can return a summary
 - You want to protect main context from pollution
 
+## When to Fold a Subagent Back In (2026-11-01)
+
+Anthropic's Applied AI guide ([[summaries/fold-subagents-into-main-loop]]) argues that many multi-agent systems, especially enterprise ones built team by team, do better as one agent loop that discloses skills and deferred tools progressively. Its keep-conditions for a subagent are narrower than the list above:
+
+- the single loop shows **measurable** degradation from context bloat;
+- several tasks must run **in parallel** with fresh, discardable context; or
+- one agent struggles to choose tools, or its system prompt holds conflicting instructions.
+
+Verification, parallel work and modular permissioning remain named strengths. "Self-contained work that returns a summary" is still a good split, but the guide sharpens it into **divide by context, not by problem type**: a subagent should need little from the rest of the system and return a compact result. Splitting by problem type (one agent per team or domain) creates a telephone game of lossy handoffs.
+
+Migration path, one step at a time: build a small end-to-end task-completion eval; merge specialists that chain or share data; call the remaining ones as tools so the main agent keeps the conversation; then fold each into a skill (its prompt) plus MCP tools (its API calls) and **keep it only if the folded version scores worse**. Compare which tasks flipped, not only the score, and rerun each task more than once.
+
+Practitioner reaction (same summary) converges on one exception: keep an **independent reviewer** that did not write the code. Give it fresh context, the diff, and the ticket plus acceptance criteria (a diff-only reviewer drifts into a linter); a different model or harness strengthens it ([[concepts/multi-vendor-adversarial-review]]). To decide whether it earns its cost, log what it blocks for a couple of weeks. Name it explicitly at the merge step: one user reported that automatic delegation never picked a closely matching subagent in 2 of 2 runs (anecdote, unverified).
+
 ## Related Pages
+
+- [[summaries/fold-subagents-into-main-loop]] — Anthropic guide on folding subagents into skills and tools, plus practitioner reaction
 
 - [[concepts/subagent-cost-model]] — why delegation saves cost, price table, break-even rule
 - [[concepts/agent-teams]] — when teammates need to coordinate with each other

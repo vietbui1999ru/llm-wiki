@@ -7,8 +7,11 @@ sources:
   - "Exit Code 0 Is Not Quality What 198 Autonomous Agents Taught Me About AI Orchestration.md"
   - "How to Use Git Worktrees for Parallel AI Agent Execution.md"
   - "Parallel agents + git worktrees real-world experience?.md"
+  - "jj-agents-research-2026-10-21/geirsson-jj-workspaces.md"
+  - "jj-agents-research-2026-10-21/cc-issue-66503.md"
+  - "jj-agents-research-2026-10-21/cc-hooks.md"
 created: 2026-05-05
-updated: 2026-05-27
+updated: 2026-11-01
 ---
 
 # Worktree Isolation
@@ -168,6 +171,32 @@ git sparse-checkout set src/payments/ tests/payments/
 
 ---
 
+## Non-Git Isolation: jj Workspaces and the `WorktreeCreate` Hook
+
+Jujutsu has its own equivalent, **workspaces** (`jj workspace add ../name`): one repo, one operation log, shared
+change ids, several working copies. One practitioner ran parallel Cursor CLI agents this way and had an agent
+merge the workspaces with revsets ([[summaries/jj-for-coding-agents]]). Reported costs: editing an ancestor of
+another workspace's change makes that workspace stale (`jj workspace update-stale`), and `jj log` does not
+snapshot other workspaces.
+
+Claude Code lets you replace its `git worktree add` with a `WorktreeCreate` hook (fires for `--worktree`,
+`EnterWorktree`, subagent `isolation: "worktree"`, workflow agents and background sessions; the command hook
+prints the absolute path as its last stdout line). A paired `WorktreeRemove` hook must do its own dirty check,
+because Claude Code checks for uncommitted work with git and finds none in a non-git directory. Worktrees made
+by the hook for subagents and workflow agents are never removed automatically.
+
+The rest of the tool is still Git-shaped: `EnterWorktree` validates the hook's path against
+`git worktree list` and refuses a jj workspace (claude-code issue #66503, open as of 2026-09-03), which hard-blocks
+background sessions. Making the jj workspace also a hand-registered Git worktree was tried and abandoned: jj
+never moves that worktree's Git `HEAD`, so Git commands there use the wrong index.
+
+What works in this harness: keep Claude Code's Git worktree and colocate a jj repo inside it with
+`jj git init --colocate` (run by a `PreToolUse` hook on the first Bash call). Git-based guards and review gates
+see an ordinary worktree; agents get jj's undo and history editing. See [[entities/jujutsu]] for the commit
+funnel and gotchas.
+
+---
+
 ## Fresh Context Window Per Task
 
 Each worktree task gets a fresh agent session — no accumulated context from prior tasks. This is the mechanical basis for [[concepts/context-compression]] clear-over-compact in AFK workflows:
@@ -201,3 +230,4 @@ State carried between tasks lives in: commits, branch history, `.agents/decision
 - [[entities/sandcastle]] — TypeScript lib; worktree + container combination
 - [[concepts/agent-subagents]] — `isolation: "worktree"` parameter
 - [[concepts/claude-code-worktree-guard]] — Claude Code's Bash guard for isolated sessions; refusal classes and bandaids
+- [[summaries/jj-for-coding-agents]] — jj workspaces vs Git worktrees for agents; Claude Code worktree hooks

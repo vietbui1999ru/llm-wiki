@@ -2,9 +2,11 @@
 title: "Context Degradation Patterns"
 type: concept
 tags: [agent-engineering, context-management, context-rot, harness, long-horizon]
-sources: []
+sources:
+  - "Context Engineering for Reliable AI Agents Lessons from Building Azure SRE Agent.md"
+  - "The State Of AI Harness Engineering 2026.md"
 created: 2026-04-25
-updated: 2026-04-25
+updated: 2026-11-01
 ---
 
 # Context Degradation Patterns
@@ -77,6 +79,13 @@ Compaction should trigger before degradation becomes severe:
 | 90% context window | Aggressive compaction — preserve only active task state and critical decisions |
 
 The exact thresholds depend on model behavior. Some models degrade gracefully; others show sharp performance cliffs.
+
+## Production Corroboration (2026)
+
+- **Degradation starts early and is non-linear.** The Azure SRE Agent team reports that model quality "often drops non-linearly" as the window fills, with lost-in-the-middle and instruction non-adherence appearing "well before we hit the advertised limits" ([[summaries/azure-sre-agent-context-engineering]]). This is a practitioner observation without a published measurement, but it is consistent with the smart-zone model above.
+- **Poisoning across agents.** In a 50+ sub-agent handoff system, one poorly tuned sub-agent's confused output polluted the orchestrator's context and degraded the whole chain. Context poisoning is not limited to a single agent's history; handoffs propagate it.
+- **Distraction from instructions themselves.** Large rule sets are a distraction source: OpenAI's one-big-AGENTS.md "crowds out the task" and "when everything is important, nothing is" ([[summaries/harness-engineering-codex-openai]]). The survey in [[summaries/state-of-harness-engineering-2026]] cites ETH Zurich (arXiv 2602.11988): context files add 14–22% reasoning tokens, and machine-generated ones lowered task success versus none.
+- **Prevention beats cleanup.** Bounding tool output at the source and routing large outputs to files or a code interpreter keeps the window out of the degraded zone in the first place; see [[concepts/context-engineering]] (Production Patterns).
 
 ## Detection Heuristic
 

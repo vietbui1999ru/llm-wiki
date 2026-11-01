@@ -9,8 +9,10 @@ urls:
   - "https://code.claude.com/docs/en/settings"
   - "https://www.truefoundry.com/blog/claude-code-dangerously-skip-permissions"
 created: 2026-05-06
-updated: 2026-05-06
+updated: 2026-11-01
 ---
+
+> **Possible contradiction (2026-11-01):** [[summaries/do-not-is-not-deny-claude-md]] (arXiv 2608.23550, checked against the official docs on 2026-08-16) reports that an `allowedDomains` list on its own blocks nothing: hosts outside it are blocked only with `strictAllowlist` or a managed lockdown. It also reports that `additionalDirectories` widens access rather than restricting it. The network examples below pair `allowedDomains` with `deniedDomains: ["*"]` and call that default-deny; how the two lists combine was not verified here. Re-check against https://code.claude.com/docs/en/settings before relying on the examples.
 
 # Claude Code Permissions & Settings Schema
 

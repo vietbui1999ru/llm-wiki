@@ -2,9 +2,9 @@
 title: "agent-review: Per-Run Neovim Review Gate for Pi"
 type: concept
 tags: [agent-review, neovim, pi, human-in-the-loop, code-review, diffview, gitsigns, dotfiles]
-sources: ["dotfiles docs/workflows/agent-review.md", "dotfiles docs/workflows/ai-workflow-consolidation.md", "dotfiles docs/workflows/agent-review-handoff.md", "dotfiles scripts/agent-review, scripts/trial-usage.sh", "dotfiles pi/.pi/agent/extensions/agent-review/index.ts", "dotfiles nvim/.config/nvim/lua/custom/agent_review.lua"]
+sources: ["dotfiles docs/workflows/agent-review.md", "dotfiles docs/workflows/ai-workflow-consolidation.md", "dotfiles docs/workflows/agent-review-handoff.md", "dotfiles scripts/agent-review, scripts/trial-usage.sh", "dotfiles pi/.pi/agent/extensions/agent-review/index.ts", "dotfiles nvim/.config/nvim/lua/custom/agent_review.lua", "How the Claude Code team does code review.md"]
 created: 2026-10-04
-updated: 2026-10-04
+updated: 2026-11-01
 ---
 
 # agent-review: Per-Run Neovim Review Gate for Pi
@@ -48,6 +48,27 @@ The spec defines a trial of agent-review against `pi-diff-review`: expiry 30 day
 - **Manual verification still open per the spec:** diffview render and `reset_hunk` correctness, a live round trip, subdirectory repo root, `pi-diff-review` non-activation, tamper flag live.
 - **agent-flow integration** (a `review` state in the status pill, escalation, per-phase `Review: on|off`) is specified but no implementation was found in the sketchybar bridge *(not examined in detail)*.
 - The `which-key` label for `<leader>aR` is missing from `init.lua` (the keymap carries its own description).
+
+## Compared with the Claude Code team's practice
+
+Comparison against [[summaries/claude-code-team-code-review]] (2026-11-01). That source reviews PRs in a shared repo at team scale; agent-review gates one person's local Pi runs, so some gaps are scope, not shortcomings.
+
+**What the Claude Code team does that agent-review does not:**
+
+- **Machine review before the human.** A fresh-context subagent reviews the diff, then parallel bug finders with verifier voting and a separate security pass post findings that must be resolved. agent-review hands the human the raw diff; only the post-run verifier (format, lint, focused tests) runs first.
+- **Risk-tiered human attention.** A classifier decides whether a change needs zero, one or two people. agent-review reviews every non-empty run the same way (fail closed), with no tier for docs-only or trivially reversible runs.
+- **Convergence limits.** They cap review/fix loops at three rounds, re-review only the new diff and never repeat a finding. agent-review's follow-up message starts a new reviewed run with no round cap; nothing here measured whether loops occur *(not examined)*.
+- **Reviewer evaluation.** Incidents become a daily eval for the reviewer, and comment outcomes (fixed, wrong, intentional, did not matter) measure noise. agent-review records decisions but has no eval of review quality; its trial compares only usage counts.
+- **Guardrail metrics.** They track human time per change against revert/incident rates. agent-review has no revert or rework metric.
+
+**What agent-review does that their process does not describe:**
+
+- **Hunk-level human editing in place.** Accept, reset a hunk, reject a file or edit the buffer, with `{file, line, note}` notes sent back to the agent; their human step is approve/comment on a PR.
+- **Blocking the agent until review.** Further input to Pi is refused while a review is pending; their agents keep working (often overnight) and humans review later.
+- **Snapshot-pinned decisions.** The decision is validated against the run's end tree and a fresh snapshot, close in spirit to their "approval covers one specific commit" rule, but per run rather than per commit.
+- **Tamper flag on the gate's own mode file** (explicitly not a security boundary).
+
+Shared ground: verification output exists before the human looks, the human owns the outcome, and the approval is meant to be the person's, not an agent's (though here an agent in herdr can still type `/review skip`; see Known limits).
 
 ## Related
 

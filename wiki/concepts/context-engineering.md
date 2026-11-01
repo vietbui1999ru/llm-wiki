@@ -7,8 +7,12 @@ sources:
   - "Context windows.md"
   - "Agent Harness explained in 8min...md"
   - "Memory & context management with Claude Sonnet 4.6.md"
+  - "Context Engineering for Reliable AI Agents Lessons from Building Azure SRE Agent.md"
+  - "Build Your Own AI Coding Agent Harness.md"
+  - "Harness engineering leveraging Codex in an agent-first world 1.md"
+  - "The State Of AI Harness Engineering 2026.md"
 created: 2026-04-27
-updated: 2026-05-27
+updated: 2026-11-01
 ---
 
 # Context Engineering
@@ -91,6 +95,26 @@ Memory files (filesystem) survive context editing — this separation is the key
 
 See [[concepts/agentic-memory-tool]] for full API details and the memory tool (`memory_20250818`).
 
+## Production Patterns (field reports, 2026)
+
+Patterns that recur across independent production accounts. Numbers are each team's self-report *(claimed, unverified)*.
+
+| Pattern | What it does | Source |
+|---|---|---|
+| **Wide tools over many tools** | Replace 100+ narrow wrappers with a few general CLIs (`az`, `kubectl`) the model already knows from training; recovers context and widens capability | [[summaries/azure-sre-agent-context-engineering]] |
+| **Compute outside the context** | Send structured data to a code interpreter; the model writes the analysis and sees only results. "LLMs are orchestrators, not calculators" | Azure SRE Agent |
+| **Large outputs as data sources** | Write big tool results to a sandboxed session file; the model inspects, filters and summarizes via tools instead of reading 200K+ tokens | Azure SRE Agent |
+| **Tool-call chaining** | The model writes a script chaining several tools; one round-trip instead of many (claimed 60–70% less context overhead; in development) | Azure SRE Agent |
+| **Bounded output on every tool** | "Prevention over cleanup": cap each tool's output, then prune stale results and use provider cache control | [[summaries/build-ai-agent-harness-vercel]] |
+| **Map, not manual** | ~100-line AGENTS.md as table of contents into a versioned `docs/` tree; CI checks freshness and cross-links | [[summaries/harness-engineering-codex-openai]] |
+| **Knowledge on demand** | Move domain knowledge out of system prompts into files or skills read when needed | Azure SRE Agent; OpenAI |
+
+**Tool count is a context setting.** Fewer visible tools and skills is one of the few changes reported to improve success, cost and latency together ([[summaries/state-of-harness-engineering-2026]]); the direction is corroborated by several teams, the magnitudes are not.
+
+**Context files are not free.** ETH Zurich (arXiv 2602.11988, 138 Python tasks, as cited by the survey): machine-generated context files lowered success compared with no file and cost 20%+ more inference; human-written ones gained about 4%; both added 14–22% reasoning tokens.
+
+Azure's framing borrows Karpathy's analogy of the context window as the agent's RAM: context engineering is memory management — what to load, compress, page out, or compute externally.
+
 ## Historical Origin
 
 Context engineering emerged from constraint pressure. Early models operated in ~4K token windows — small enough that any useful agent had to actively *recycle* that space. Engineers could no longer simply prompt; they had to curate what lived in the window at all times. Tool calling, MCP, and RAG were the response: load only what the task requires, discard the rest.
@@ -126,3 +150,4 @@ See [[concepts/agent-harness]] for the harness layer. Context engineering is the
 - [[concepts/agentic-memory-tool]] — API primitives that implement compaction and note-taking
 - [[concepts/agent-harness]] — the broader harness that orchestrates context management
 - [[concepts/tool-design-for-agents]] — token-efficient tool design as context engineering
+- [[summaries/azure-sre-agent-context-engineering]] — production context engineering: wide tools, code execution, file-backed outputs

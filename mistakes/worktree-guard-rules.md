@@ -12,6 +12,8 @@ the commit funnel. Load them with `qmd query "worktree guard"` when a session wo
   commands. Move loops, variables, heredocs and `$(...)` into a `$CLAUDE_JOB_DIR/tmp` script run
   with `python3 -I`, or edit files with Edit/Write. The guard refuses compound forms, any heredoc,
   and `zsh`/`bash` running a script file; rtk can drop variables (2026-10-20; 2026-10-23).
+- The guard also refuses inline `python3 -c` (or any `-c`/`-e` code) whose text merely mentions
+  "git", even inside string literals; write content with Write instead (2026-11-01).
 - The session cwd is already the worktree: use relative paths, never `$HOME` in arguments or
   `cd ... &&` chains (2026-10-26).
 

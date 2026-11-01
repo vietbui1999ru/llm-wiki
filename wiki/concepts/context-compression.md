@@ -6,9 +6,14 @@ sources:
   - "Acon Optimizing Context Compression for Long-horizon LLM Agents.md"
   - "Evaluating Context Compression for AI Agents.md"
   - "pdfs/17241_Autoencoding_Free_Contex.pdf"
+  - "The State Of AI Harness Engineering 2026.md"
+  - "Context Engineering for Reliable AI Agents Lessons from Building Azure SRE Agent.md"
+  - "Build Your Own AI Coding Agent Harness.md"
 created: 2026-04-25
-updated: 2026-05-27
+updated: 2026-11-01
 ---
+
+> **Contradiction (2026-11-01):** "Clear Over Compact — Now Community Consensus" below records clear-over-compact as majority practice in harness/AFK workflows. [[summaries/state-of-harness-engineering-2026]] reviewed the evidence and found the fresh-context loop variant "rests on one uncontrolled run of a toy app, with no baseline"; its reading is that "what actually helps isn't the wipe, it's that the work is written down in files." Both can be true: clearing is common practice, but its advantage over compaction is unmeasured. The design principle below ("make clearing safe, then prefer clearing") stands on practice, not on a controlled comparison.
 
 # Context Compression Strategies
 
@@ -205,6 +210,15 @@ All claimed impact numbers from ECC README; not independently verified. The patt
 
 ---
 
+## Offload Instead of Compress (production pattern)
+
+Compression decides what to keep from content already in context. A complementary lever is to stop large content from entering at all:
+
+- **Bounded tool output**: cap every tool's output at the source, then prune stale results ([[summaries/build-ai-agent-harness-vercel]]: "prevention over cleanup").
+- **Large outputs as files**: Azure SRE Agent writes large tool results to a sandboxed session file; the model sees a reference plus tools to inspect, filter and analyze it. A log query that would have produced 200K+ tokens never reaches context ([[summaries/azure-sre-agent-context-engineering]]). This is close to CCR (strategy 4) but the model queries the stored data with code rather than retrieving the original text.
+- **Compute externally**: structured data goes to a code interpreter; only the analysis returns.
+- **Compaction into structured state**: Azure compacts history into summaries plus structured incident facts and keeps the plan as an external checklist, which matches anchored iterative summarization with an externalized plan.
+
 ## Serialization Format (orthogonal layer)
 
 Compression (selection) and serialization (encoding) are independent axes:
@@ -244,3 +258,5 @@ Limitations: requires LoRA fine-tuning; benchmarks limited to MRQA/QMSum/GovRepo
 - [[concepts/ralph-loop]] — filesystem as durable state across clean context windows (the complement to compression)
 - [[concepts/dynamic-context-pruning]] — mid-session context reduction via Compress tool + deduplication + purge-errors; complements compaction
 - [[entities/everything-claude-code]] — ECC's `strategic-compact` skill and token optimization settings
+- [[summaries/state-of-harness-engineering-2026]] — evidence review of the fresh-context loop
+- [[summaries/azure-sre-agent-context-engineering]] — offloading large outputs to files and code

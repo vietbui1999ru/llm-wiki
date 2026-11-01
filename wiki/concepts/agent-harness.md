@@ -8,9 +8,15 @@ sources:
   - "Agent Harness explained in 8min...md"
   - "wshobsonagents Intelligent automation and multi-agent orchestration for Claude Code.md"
   - "What is an agent harness in the context of large-language models?.md"
+  - "Harness engineering leveraging Codex in an agent-first world 1.md"
+  - "The State Of AI Harness Engineering 2026.md"
+  - "Build Your Own AI Coding Agent Harness.md"
+  - "Context Engineering for Reliable AI Agents Lessons from Building Azure SRE Agent.md"
 created: 2026-04-25
-updated: 2026-06-08
+updated: 2026-11-01
 ---
+
+> **Contradiction (2026-11-01):** "Why Harness Engineering Emerged" below says the harness pattern formalizes "fresh context per iteration" as the solution to summarization loss. [[summaries/state-of-harness-engineering-2026]] finds the fresh-context Ralph variant rests on one uncontrolled toy-app run with no baseline, and argues the benefit comes from work being written to files, not from the wipe. Treat fresh-context-per-iteration as a plausible design, not a measured win.
 
 # Agent Harness
 
@@ -20,7 +26,7 @@ A harness is the system that wraps a language model to make its intelligence use
 
 Without a harness, a model can only take in data and output text in a single turn. The harness is what turns that into a work engine.
 
-**Term coined**: early 2026, though the pattern existed before the term. Emerged as the third layer in an additive stack:
+**Term coined**: February 2026, by OpenAI's "Harness engineering" post ([[summaries/harness-engineering-codex-openai]]); the "Agent = Model + Harness" formula is credited to Birgitta Böckeler (Thoughtworks), though the pattern existed before the term. Emerged as the third layer in an additive stack:
 
 | Layer | Responsibility |
 |---|---|
@@ -131,6 +137,31 @@ Combines all primitives for autonomous multi-session work:
 
 **Entropy / garbage collection.** Agent-generated code replicates existing patterns — including bad ones. Background cleanup agents scanning for deviations on a daily cadence prevent debt from compounding.
 
+**Build each piece in reaction to a failure.** Vercel's harness course orders every component by the failure it answers (unbounded reads → output caps and pruning; `bash` → execute-level gates; "explains instead of acting" → Agency/Guardrails prompt sections). See [[summaries/build-ai-agent-harness-vercel]].
+
+## Empirical State of the Practice (2026)
+
+From marmelab's audit of 246 harness repositories, a 145-project non-AI counter-test and 57 publications ([[summaries/state-of-harness-engineering-2026]]; the authors disclose that one of their own harnesses is a finalist):
+
+- **Harness choice matters, but is barely measured.** The one controlled comparison found: same model, provider and tools across 8 harnesses on 25 tasks gave 68% to 88% success *(third-party, unreplicated)*.
+- **Instructions are common, enforcement is rare.** 63% of large projects ship an instruction file, but only 12 of 391 repositories commit a `deny` rule and 22 a `PreToolUse` hook; in the median repo with subagents, 1 in 4 has a restricted tool list. Separately, only 4.4% of security rules in 481 public `CLAUDE.md` files could be fully expressed by a built-in Claude Code control (arXiv 2608.23550, [[summaries/do-not-is-not-deny-claude-md]]; the survey misreports this as rules "backed by a real control"). See [[concepts/rules-vs-hooks]].
+- **Harnesses rarely test themselves.** 60% of 97 testable harnesses have neither tests nor evals.
+
+Practices the survey recommends, on top of the principles above:
+
+| Practice | Detail |
+|---|---|
+| Test guards both ways | Each rule needs a must-fire and a must-not-fire case; one-sided tests make the harness drift toward blocking everything |
+| Eval with ablation | 20–50 frozen tasks from real failures; fixed model; change one part at a time; remove parts to see which pull their weight |
+| Minimal harness | Fewer rules, tools and skills; machine-generated context files lowered success vs. none in ETH Zurich's 138-task study, human-written ones gained ~4% |
+| Scripts measure, agent judges | Deterministic code produces facts; the agent reasons over them; a script checks the agent's claims against them |
+| Usage telemetry | Log skill activations and hook blocks (5 of 391 repos do) |
+| Expiry conditions | Record the incident each control exists for, so it can be removed when the model no longer needs it |
+
+**Multi-agent limits.** Azure SRE Agent found that problems requiring more than four agent-to-agent handoffs "almost always failed" and collapsed 50+ specialists into a few generalists with wide tools (`az`, `kubectl`) and on-demand knowledge files ([[summaries/azure-sre-agent-context-engineering]]). In the NLAH ablation (arXiv 2603.25723), adding a second reviewer agent lowered success by 8% from a 41% base; a four-role team beat the best single agent by only 0.4 points on SWE-bench 500 (arXiv 2602.01465). These are single studies; the survey authors report the opposite experience with their own reviewer role.
+
+**Harnesses rot as models improve.** A harness encodes what the model cannot do; when the model learns it, the control becomes cost. Anthropic's context resets for "context anxiety" became dead weight with Opus 4.5.
+
 ## Model + Harness Co-evolution
 
 Frontier coding agents (Claude Code, Codex) are post-trained with harness in the loop. Models improve at primitives their harness designers prioritized. Side effects:
@@ -166,3 +197,7 @@ See [[summaries/autoresearch-karpathy]] for details.
 - [[summaries/autoresearch-karpathy]] — minimal harness instantiation for autonomous ML research
 - [[concepts/tool-design-for-agents]] — dual audience principle; error messages as agent recovery instructions
 - [[syntheses/agent-diff-viewer]] — localhost real-time diff viewer over the harness PostToolUse hook stream
+- [[summaries/harness-engineering-codex-openai]] — the OpenAI post that named the discipline
+- [[summaries/state-of-harness-engineering-2026]] — empirical survey of 246 harness repos and 57 publications
+- [[summaries/build-ai-agent-harness-vercel]] — build-along course: failure-driven harness components
+- [[summaries/azure-sre-agent-context-engineering]] — wide tools, generalists, four-handoff cliff

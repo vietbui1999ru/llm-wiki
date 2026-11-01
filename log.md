@@ -2,6 +2,50 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-11-01] ingest | Harness engineering cluster (OpenAI Codex, State of Harness Engineering 2026, Azure SRE Agent, Vercel harness course)
+
+- Four summaries: harness-engineering-codex-openai, state-of-harness-engineering-2026, azure-sre-agent-context-engineering, build-ai-agent-harness-vercel.
+- Updated concepts/agent-harness (empirical state section, term origin, multi-agent limits), concepts/context-engineering (production patterns), concepts/context-degradation (production corroboration), concepts/context-compression (offload-instead-of-compress).
+- Contradiction callouts added to agent-harness and context-compression: the fresh-context loop is common practice but unmeasured.
+- Flagged that the State of Harness Engineering survey misstates arXiv 2608.23550 (the 4.4% figure).
+- Pre-ingest comprehension quiz skipped at Viet's request.
+
+## [2026-11-01] ingest | When to fold subagents into your main agent loop
+
+- Sources: Anthropic Applied AI guide (~2026-10-22) and r/ClaudeAI reaction thread (2026-10-26).
+- Created summaries/fold-subagents-into-main-loop (guide primary, thread as practitioner reaction).
+- Updated concepts/agent-subagents (fold-vs-keep section) and concepts/subagent-cost-model (contradiction callout, two new not-worth-it cases, delegation-never-fires note).
+- Pre-ingest comprehension quiz skipped at Viet's request.
+
+## [2026-11-01] ingest | How the Claude Code team does code review
+
+- Source: Anthropic vendor article; all metrics self-reported, marked claimed/unverified.
+- Created summaries/claude-code-team-code-review.
+- Updated concepts/ai-code-review (agent-volume practice section; contradiction callout on zero-human low-risk merges) and systems/agent-review (comparison section; mechanism description unchanged).
+- Pre-ingest comprehension quiz skipped at Viet's request.
+
+## [2026-11-01] ingest | Jujutsu (jj) for coding agents
+
+- Ingested raw/jj-agents-research-2026-10-21/ (panozzaj-jj, geirsson-jj-workspaces, cc-issue-66503, cc-hooks; only the worktree, session-start and compaction hook sections of the hooks reference were used).
+- Created summaries/jj-for-coding-agents. Updated entities/jujutsu (supersession callout, current agent-use section) and concepts/worktree-isolation (jj workspaces and the WorktreeCreate hook).
+- Supersedes the 2026-10-20 decision "jj is human-only, agents stay on Git": jj is now the agent default, colocated with Git, with commits through commit-funnel.
+- Recorded the 2026-11-01 gotcha: jj's 1 MiB default snapshot.max-new-file-size made commit-funnel skip a 10 MB PDF silently.
+- Pre-ingest comprehension quiz skipped at Viet's request.
+
+## [2026-11-01] ingest | When "Do Not" Is Not Deny (arXiv 2608.23550)
+
+- Docling parse with `--no-ocr`; the default OCR config failed (PP-OCRv6 torch).
+- Measures how many CLAUDE.md security rules a Claude Code permission or sandbox control can enforce: 4-16%, strict 4.4%.
+- Created summaries/do-not-is-not-deny-claude-md; updated concepts/agent-context-instructions (unenforced security rules). Added a possible-contradiction callout to summaries/claude-code-permissions-settings (allowedDomains default-deny claim).
+- Pre-ingest comprehension quiz skipped at Viet's request.
+
+## [2026-11-01] ingest | SWE-Bench Mobile (KDD 2026)
+
+- Native PDF reading: the PDF is image-only and no Docling OCR engine was usable.
+- The page_11 extract supplies the end of Appendix C, missing from the 10-page file.
+- Created summaries/swe-bench-mobile: 50 tasks / 449 tests, Table 5, prompt ablation, failure taxonomy; caveats inline (diff-text tests, private set, n=50). First SWE-bench-family page in the wiki.
+- Pre-ingest comprehension quiz skipped at Viet's request.
+
 ## [2026-10-22] update | Dangeresque re-checked against the repo
 
 Updated:

@@ -52,7 +52,7 @@ Classify complexity before every task and agent spawn. Always set the `model` pa
 - Before invoking `apply_patch`, confirm `patchText` contains `*** Begin Patch`, at least one file operation, and `*** End Patch` (2026-06-19)
 
 ## Planning / Subagents
-- Plans cite only files/symbols verified via Read/Grep in the current tree; never embed unverified names or commit refs in subagent prompts — agents amplify orchestrator slop (2026-07-07)
+- Plans cite only files/symbols verified via Read/Grep in the current tree; never embed unverified names or commit refs in subagent prompts — agents amplify orchestrator slop (2026-07-07). A grep hit is not a read: before saying what code does, read the enclosing branch or function (2026-10-21)
 - User-named artifacts (models, packages, tools) are used verbatim; verify in repo/env before "correcting" to a training-data-familiar name (2026-07-07)
 - Enumerate existing deploy/config artifacts (compose files, Dockerfiles, deploy docs, lib modules) before proposing new ones; state why each isn't reusable (2026-07-07)
 - Validation guarantees come from validator code, not prompt text; absence claims ("no X exists") need a shown empty search — same evidence bar as presence (2026-07-07)

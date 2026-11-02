@@ -27,7 +27,7 @@ Every wiki page must have:
 ```yaml
 ---
 title: ""
-type: entity | concept | summary | comparison | synthesis | question
+type: entity | concept | summary | comparison | synthesis | question | pattern | research
 tags: []
 sources: []        # filenames from raw/ that informed this page
 created: YYYY-MM-DD
@@ -133,10 +133,17 @@ wiki/comparisons/  # side-by-side analyses
 wiki/syntheses/    # cross-source theses
 wiki/patterns/     # parallel software-engineering reference track (SOLID, GoF, refactoring, etc.) — NOT derived from concepts/; a peer human-learning track
 wiki/systems/      # system-level design and architecture pages (distributed systems, scalability, data modeling)
+wiki/research/     # investigation notes for a specific question (type: research); not published to the docs site
+
+Type by directory: patterns/ pages use `type: pattern`, research/ pages use `type: research`;
+the other directories use the types listed in the frontmatter section.
 
 ## Optional frontmatter fields
 
 status: stub       # page created but thin; omit when page is substantive
+publish: false     # keep off the public docs site: pages about this repo owner's own setup
+                   # (dotfiles layout, internal tools, harness plans). Default: published.
+                   # Workflow diagrams and how-I-work guides stay published.
 
 ## Stub conventions
 

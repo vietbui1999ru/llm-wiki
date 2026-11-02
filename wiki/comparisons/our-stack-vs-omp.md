@@ -5,6 +5,7 @@ tags: [omp, claude-code, pi-agent, feature-gap, harness-design, lsp, dap, hashli
 sources: ["omp oh-my-pi README (github.com/can1357/oh-my-pi)"]
 created: 2026-06-17
 updated: 2026-06-17
+publish: false
 ---
 
 # Our Stack vs omp

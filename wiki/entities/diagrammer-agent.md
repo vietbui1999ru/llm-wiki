@@ -5,6 +5,7 @@ tags: [subagents, mermaid, diagrams, system-design, mvp, documentation, pele, ag
 sources: []
 created: 2026-10-22
 updated: 2026-10-22
+publish: false
 ---
 
 # diagrammer agent

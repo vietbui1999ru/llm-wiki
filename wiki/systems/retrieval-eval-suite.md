@@ -5,6 +5,7 @@ tags: [retrieval, evaluation, rag, qmd, lightrag, ndcg, regression-gate, latency
 sources: ["docs/specs/retrieval-eval-suite.md", "docs/retrieval-eval.md", "tests/retrieval/", "PRs #12 to #16 and the M5 PR of vietbui1999ru/llm-wiki", "run outputs of 2026-10-06 and 2026-10-07"]
 created: 2026-10-07
 updated: 2026-10-07
+publish: false
 ---
 
 # Retrieval Evaluation Suite: qmd vs LightRAG

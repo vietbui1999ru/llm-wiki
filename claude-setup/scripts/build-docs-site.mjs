@@ -35,8 +35,9 @@ const WIKI_DIRS = [
 
 // Standalone guide pages: { src relative to ROOT, out site-path (no extension) }.
 const GUIDES = [
-  { src: "ONBOARDING.md", out: "guides/onboarding" },
-  { src: "GUIDE.md", out: "guides/reference" },
+  // Public entry point: a lean setup readers grow on their own. ONBOARDING.md
+  // (fork this harness) and GUIDE.md (owner's inventory) stay in the repo only.
+  { src: "docs/starter.md", out: "guides/starter" },
   { src: "docs/architecture.md", out: "guides/architecture" },
   { src: "docs/workflows.md", out: "guides/workflows" },
   { src: "docs/send-it.md", out: "guides/send-it" },
@@ -97,6 +98,9 @@ for (const [dir] of WIKI_DIRS) {
     if (!f.endsWith(".md")) continue;
     const slug = f.replace(/\.md$/, "");
     const { fm } = parseFrontmatter(readFileSync(join(abs, f), "utf8"));
+    // publish: false → owner-specific setup page; kept in the wiki, off the public site.
+    // Links to it degrade to plain text like any other unresolved link.
+    if (fm.publish === "false") continue;
     const title = fm.title || humanize(slug);
     const sitePath = `/${dir}/${slug}`;
     const entry = { path: sitePath, title };
@@ -448,9 +452,9 @@ title: "LLM Wiki"
 description: "A compounding, agent-maintained knowledge base on AI agent engineering."
 ---
 
-<Card title="New here? Start with the onboarding guide" icon="rocket" href="/guides/onboarding">
-  How to run this wiki as an agent-first knowledge harness — agent reads, writes, and links;
-  you curate and decide.
+<Card title="New here? Start small" icon="rocket" href="/guides/starter">
+  A lean coding-agent setup: one context file, a few rules, one review step. Add skills,
+  subagents and hooks only when a failure repeats.
 </Card>
 
 ## Explore the knowledge base
@@ -476,7 +480,7 @@ description: "A compounding, agent-maintained knowledge base on AI agent enginee
   </Card>
 </CardGroup>
 
-## How work gets built
+## How I work (one example setup, not a template)
 
 <CardGroup cols={2}>
   <Card title="Standard workflow" icon="route" href="/guides/workflows">
@@ -500,8 +504,8 @@ count++;
 // docs.json navigation
 
 const groups = [
-  { group: "Get Started", pages: ["index", "guides/onboarding", "guides/reference"] },
-  { group: "Architecture", pages: ["guides/architecture", "guides/workflows", "guides/send-it", "guides/harness-migration"] },
+  { group: "Get Started", pages: ["index", "guides/starter"] },
+  { group: "How I Work", pages:["guides/architecture", "guides/workflows", "guides/send-it", "guides/harness-migration"] },
 ];
 for (const [dir, label] of WIKI_DIRS) {
   const pages = files

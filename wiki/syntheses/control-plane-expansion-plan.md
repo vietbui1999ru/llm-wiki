@@ -5,6 +5,7 @@ tags: [agent-orchestration, control-plane, multi-agent, planning, gap-analysis]
 sources: ["BuilderIOagent-native A framework for building agent-native applications..md", "BuilderIOskills Skills for coding agents.md", "omp oh-my-pi README (github.com/can1357/oh-my-pi)"]
 created: 2026-05-19
 updated: 2026-06-17
+publish: false
 ---
 
 # Control Plane Expansion Plan

@@ -14,6 +14,9 @@ the commit funnel. Load them with `qmd query "worktree guard"` when a session wo
   and `zsh`/`bash` running a script file; rtk can drop variables (2026-10-20; 2026-10-23).
 - The guard also refuses inline `python3 -c` (or any `-c`/`-e` code) whose text merely mentions
   "git", even inside string literals; write content with Write instead (2026-11-01).
+- After one guard refusal, change the form of the command (a tmp script file, separate plain
+  commands) instead of retrying near-identical variants (2026-10-27). Reports differ on `zsh
+  <script>` (accepted 2026-10-27, refused 2026-10-23); `python3 -I <script>` is the reliable form.
 - The session cwd is already the worktree: use relative paths, never `$HOME` in arguments or
   `cd ... &&` chains (2026-10-26).
 
@@ -24,6 +27,12 @@ the commit funnel. Load them with `qmd query "worktree guard"` when a session wo
 ## New files through the commit funnel
 - New markdown note in a repo with frontmatter properties (e.g. `status.py` hooks): copy a sibling
   file's frontmatter first; pasted tool output never has it (2026-10-26).
+- In a jj-colocated worktree, `commit-funnel` skips new files over jj's 1 MiB
+  `snapshot.max-new-file-size` and still prints success: after committing a large file, check it is
+  in the commit (`git show --stat HEAD`) (2026-11-01).
+- `commit-funnel` in jj mode ignores a pending `git merge --no-commit` and makes a one-parent commit.
+  To finish a merge, give your unpushed commit a second parent with `jj rebase -r <rev> -d <tip> -d
+  <other>` and resolve with `jj restore --from <rev> --into <merge> <path>` (2026-11-01).
 
 ## Handing a checkout back
 - Before handing the owner a `switch`/`pull`/`merge` for a checkout, diff its tracked files against
@@ -33,4 +42,6 @@ the commit funnel. Load them with `qmd query "worktree guard"` when a session wo
 Source entries: `mistakes/2026-10-23-claude-code-heredoc-append-worktree-guard.md`,
 `mistakes/2026-10-26-worktree-guard-home-expansion.md`, `mistakes/2026-10-26-ac-run-branch-mismatch.md`,
 `mistakes/2026-10-26-commit-funnel-missing-frontmatter.md`,
-`mistakes/2026-10-26-switch-command-local-changes.md`.
+`mistakes/2026-10-26-switch-command-local-changes.md`,
+`mistakes/2026-10-27-worktree-guard-retry-variations.md`, `mistakes/2026-10-29-worktree-guard-for-loop.md`,
+`mistakes/2026-11-01-worktree-guard-inline-python-git-text.md`, `mistakes/2026-11-01-commit-funnel-jj-gaps.md`.

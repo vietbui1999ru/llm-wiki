@@ -1,0 +1,5 @@
+#!/bin/zsh
+# Pages merged through PRs reach this checkout by `git pull`, which never runs
+# post-commit, so qmd and LightRAG missed them. Reuse post-commit over the
+# range the merge brought in (ORIG_HEAD is the pre-merge HEAD).
+WIKI_HOOK_RANGE="ORIG_HEAD HEAD" exec "${0:A:h}/post-commit"

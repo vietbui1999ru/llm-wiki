@@ -7,6 +7,7 @@ sources:
   - "OpenTelemetry for Generative AI.md"
 created: 2026-05-25
 updated: 2026-05-25
+publish: false
 ---
 
 # OTel Instrumentation for council.py

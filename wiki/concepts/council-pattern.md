@@ -4,7 +4,7 @@ type: concept
 tags: [multi-vendor, adversarial-review, orchestration, synthesis, cross-vendor]
 sources: ["karpathyllm-council LLM Council works together to answer your hardest questions.md", "Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md"]
 created: 2026-05-05
-updated: 2026-05-22
+updated: 2026-11-02
 ---
 
 # Council Pattern
@@ -73,7 +73,20 @@ Karpathy's implementation anonymizes identities in Stage 2. Without anonymizatio
 | **Karpathy llm-council** | All models in parallel | Anonymized peer review + ranking | Chairman LLM | Local web app; OpenRouter; Q&A focused |
 | **AgentOps `/council`** | All models in parallel | None | Surfaces disagreements | CLI; design decisions; human synthesizes |
 | **BMAD workflow** | Opus plans, Codex reviews | Iterative back-and-forth | Human decides | Sequential, not parallel |
-| **This repo `council`** | Sonnet 4.6 + GPT-5.4 (parallel, via `claude`/`codex` CLIs) | None | Chairman: Opus 4.6 | CLI-based; no API keys in script; voice files → `.council/`; git auto-commit |
+| **This setup (dotfiles, as of 2026-11-02): `pi-council.sh`** | Three voices in parallel, one `pi` call each | None | No Chairman: majority rule (≥2 PASS) plus a security veto | Evaluates a diff, not a question; details below |
+
+### This setup (dotfiles, as of 2026-11-02)
+
+The council is the `delegate-pi` skill's council mode: `pi-council.sh --diff <range>|-` wraps the `bin/council` engine (`${COUNCIL_CMD:-council}`) and returns one JSON object with `verdict` and per-dimension `votes`. Routes live in `~/.pi/agent/routing.env`; the canonical role table is `claude/.claude/rules/model-routing.md`.
+
+| Voice | Route | Model and effort |
+|---|---|---|
+| `acceptance-criteria` | `PI_COUNCIL_ACCEPTANCE_MODEL` | `openai-codex/gpt-6.1-sol:high` |
+| `code-quality` | `PI_COUNCIL_CODE_QUALITY_MODEL` | `opencode-go/deepseek-v4-pro:high` |
+| `style` | `PI_COUNCIL_STYLE_MODEL` | `opencode-go/deepseek-v4-pro:high` |
+| `security` (veto) | `PI_COUNCIL_SECURITY_MODEL` | `opencode-go/glm-5.3:high` |
+
+Verdict is PASS when at least two of the three voices pass; ties and all-ABSTAIN fail safe to FAIL. A security FAIL overrides a passing majority. Every voice runs at `medium` or `high` effort, never above. The orchestrator (Opus 5.5) reads the verdict and reasons; there is no synthesizing model. The earlier Sonnet + GPT + Opus Chairman council, with its `.council/` voice files and git auto-commit, is retired.
 
 ---
 
@@ -128,5 +141,5 @@ For a 3-model council with 1K token query:
 - [[concepts/multi-vendor-adversarial-review]] — adversarial review; council as its strongest form
 - [[entities/karpathy-llm-council]] — reference implementation with anonymized peer review
 - [[entities/agentops]] — `/council` CLI; disagreement surfacing without Chairman
-- [[entities/pi-agent]] — API layer for our council dispatch
+- [[entities/pi-agent]] — the `pi` CLI that runs each council voice in this setup
 - [[syntheses/agent-primitive-selection]] — where council fits in the model-tier routing decision

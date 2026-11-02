@@ -2,6 +2,28 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-11-02] update | Stale pages, schema, lean public docs site, index hook
+
+- Stale pages brought to the dotfiles setup as of 2026-11-02: council-pattern (pi-council.sh: three Pi voices, majority plus security veto, no Chairman), model-tier-routing (Opus orchestrator, Haiku scout/worker, Pi tiers, Sonnet no default role), multi-vendor-adversarial-review (reviewer-agent counter-evidence; GitHub Models list retired), context-compression heading ("Common Practice (advantage unmeasured)").
+- Schema: `type: pattern` and `type: research` added; `wiki/research/` added to the taxonomy; new optional `publish: false` field.
+- Docs site: 18 owner-setup pages marked `publish: false` (dotfiles layout, agent-review, otel-council, retrieval-eval-suite, wiki-indexing-pipeline, local-rag-wiki, Commandr, DiffViewer, control-plane syntheses, pi-orchestration, spec-conformance options, our-stack-vs-omp, linux-setup-guide, diagrammer-agent, lean-session). ONBOARDING.md and GUIDE.md leave the site; new `docs/starter.md` ("Start small") is the entry point. Workflow, architecture, send-it and harness-migration guides stay as "How I Work". 166 → 147 published pages, 0 dead links.
+- Still published but mixing general content with this setup (follow-up): GUIDE-style sections in lean-agentic-workflow, neovim-ai-operator-workflow, model-task-routing, preference-feedback-loop, council-pattern, and the pi-agent, omp, jujutsu, qmd, pele, dangeresque, firecrawl, context7, laya entity pages.
+- Index: wiki-index only ran from post-commit, so pages merged by `git pull` were never indexed (a2a-protocol, prompt-caching, lightrag were missing). Added a post-merge hook that reuses post-commit over ORIG_HEAD..HEAD; ran `wiki-index --reconcile`, then `--verify`: "Index matches the wiki."
+- Tier-0 `claude-setup/rules/applied-ai.md` (Viet approved): context-compression line now "common practice, advantage unmeasured; write state to files first"; multi-agent line leads with one loop + skills/deferred tools, split only by context, ≤4 handoffs, links agent-subagents; council line drops Chairman synthesis (engine majority + security veto via pi-council.sh; Chairman template `templates/council.py --chairman` only on request); domain-glossary line no longer names grill-me (a CONTEXT.md grilling tool is planned). Deferred by Viet: CONTEXT.md tool, CLAUDE.md trim pass.
+
+## [2026-11-01] lint | lint + index reconcile after the 2026-11-01 ingest
+
+Reconcile: every wiki page has an index entry and every entry resolves; no broken wikilinks; frontmatter complete; stub markers consistent; pending-sync.md has 0 pending entries.
+Fixed: 9 stale index lines (jujutsu, context-compression, agent-subagents, subagent-cost-model, agent-harness, worktree-isolation, agent-context-instructions, context-engineering, agent-review); orphan links for swe-bench-mobile, what-is-an-agent-harness-parallel-ai, prompt-caching, lightrag, a2a/acp-protocol, tiered-knowledge-delivery, hamel-evals-skills, cc-auto-mode; ralph-loop contradiction callout (fresh context unmeasured); agent-teams handoff-limit note.
+Still orphaned (index-only): patterns/algorithmic, patterns/backend, systems/otel-council, concepts/software-documentation, entities/docling, entities/eggroll and four summaries.
+Stale, needs Viet: council-pattern model table (still Oct 16 models), model-tier-routing (Sonnet as default), multi-vendor-adversarial-review (reviewer-agent counter-evidence, GPT-4.1 mini), context-compression "Now Community Consensus" heading.
+Tier-0 drift (needs Viet): applied-ai.md context-compression line and multi-agent line; domain-glossary grill-me vs grill-with-docs; GPR's model-tier-routing link points at a page that still says Sonnet is default.
+Schema: 13 patterns pages use type: pattern and wiki/research/ uses type: research; neither is in the CLAUDE.md enum.
+Missing concept pages: MCP (58 mentions), multi-agent handoffs, independent reviewer, progressive disclosure.
+Suggested sources: a controlled clear-vs-compact study; NLAH ablation (arXiv 2603.25723) and four-role team study (arXiv 2602.01465); ETH Zurich AGENTS.md study (arXiv 2602.11988); MCP spec; current Claude Code hooks and subagents docs.
+Also: mistakes/worktree-guard-rules.md absorbed the reconcile-stash entries (10-27 retry-variations, 10-29 for-loop) and today's commit-funnel jj gaps.
+
+
 ## [2026-11-01] lint
 
 ### Orphan pages (no inbound wikilinks from wiki pages or tier-0 rules; only in index.md)

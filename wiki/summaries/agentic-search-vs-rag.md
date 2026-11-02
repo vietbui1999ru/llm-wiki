@@ -87,3 +87,4 @@ This experiment directly validates the switch from BM25+ollama to LightRAG for t
 - [[concepts/reranking]] — post-retrieval filtering (complementary to graph retrieval)
 - [[summaries/local-rag-elasticsearch]] — local RAG implementation reference
 - [[concepts/wikilink-graph-extraction]] — using Obsidian wikilinks to reduce LightRAG indexing cost; structural complement to context trees
+- [[entities/lightrag]] — a graph RAG engine on the RAG side of this comparison

@@ -84,3 +84,4 @@ Implementation is dispatched to Pi under the plan-handoff rule, which moves it o
 - [[concepts/model-tier-routing]] — which tier for which task
 - [[concepts/context-compression]] — KV-cache stability and compaction
 - [[syntheses/agent-primitive-selection]] — skill vs subagent vs team
+- [[concepts/prompt-caching]] — cache reuse is part of what a subagent spawn costs or saves

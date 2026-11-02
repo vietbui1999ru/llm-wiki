@@ -5,6 +5,7 @@ tags: [agent-bus, control-plane, task-queue, approval-gate, council, filesystem-
 sources: ["Commandr CLAUDE.md", "Commandr UNIFICATION-BLUEPRINT.md", "Commandr protocol/SPEC.md v0.3", "Commandr GUIDE.md", "BuilderIOagent-native A framework for building agent-native applications..md", "BuilderIOskills Skills for coding agents.md", "omp oh-my-pi README (github.com/can1357/oh-my-pi)"]
 created: 2026-06-17
 updated: 2026-06-19
+publish: false
 ---
 
 # Commandr

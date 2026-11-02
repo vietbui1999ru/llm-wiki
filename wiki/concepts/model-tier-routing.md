@@ -4,28 +4,42 @@ type: concept
 tags: [agent-orchestration, model-selection, cost, agent-subagents]
 sources: ["How I use Claude Code subagents to make my Claude Pro limits last longer.md"]
 created: 2026-06-12
-updated: 2026-10-09
+updated: 2026-11-02
 ---
 
 # Model Tier Routing
 
 Classify task complexity *before* every task and every agent spawn, then pick the cheapest model tier that can do the job correctly. No silent defaults — an unclassified task defaults to over- or under-spending.
 
-This page is the authoritative pull target for the routing rule. The always-loaded rules files (`mistakes/global-prevention-rules.md`, `~/.claude/rules/model-routing.md`) carry only a one-line pointer here, so the table has a single source of truth.
+This page holds the general rule. The live role table for this setup is `~/.claude/rules/model-routing.md` (stowed from `~/dotfiles/claude/.claude/rules/model-routing.md`); when the two disagree, that file wins. `mistakes/global-prevention-rules.md` carries only a pointer here.
 
 ## Tier selection
 
 | Tier | When |
 |---|---|
 | **Haiku** | Single-file edits, boilerplate, lookups, shell commands, rote subagent work, read-only exploration. All of: bounded, single-step, mechanical, no judgment. |
-| **Sonnet** | Default. Multi-file implementation, code review, debugging, ingests, standard orchestration. |
-| **Opus** | Architecture, security audits, irreversible operations, cross-source synthesis, hard multi-system bugs. |
+| **Sonnet** | Mid tier: multi-file implementation, code review, debugging when the top tier is not needed. |
+| **Opus** | Orchestration and judgment: architecture, security audits, irreversible operations, cross-source synthesis, hard multi-system bugs. |
+
+## This setup (dotfiles, as of 2026-11-02)
+
+From `model-routing.md`:
+
+| Role | Model | Effort |
+|---|---|---|
+| Orchestrator (main session): decisions, root cause, the review gate | Opus 5.5 (`opus`) | `medium`; `high` or `xhigh` for hard architecture or security work |
+| Light delegate: `scout` (read-only), `worker` (rote bounded edits), lookups, shell | Haiku 5.5 (`claude-haiku-5-5`) | `medium` |
+| Implementation, dispatched to Pi | high `opencode-go/claude-haiku-5-5:off`; medium `opencode-go/deepseek-v4.1-flash:medium`; low `opencode-go/deepseek-v4.1-flash:off` | per tier |
+| Council and adversarial review | see [[concepts/council-pattern]] | `medium` or `high`, never above |
+| Pi default (plain `pi`, no `--model`) | `opencode-go/deepseek-v4.1-flash` | `medium` |
+
+Sonnet 5.5 has no default role; pass `model: sonnet` on a spawn when a task needs it. Multi-file coding goes to Pi rather than a Sonnet subagent.
 
 ## Escalation and downgrade
 
 - **Escalate to Opus** if *any* hold: irreversible side effects, deep multi-domain reasoning, failure is hard to detect, or the output becomes downstream ground truth for other work.
 - **Downgrade to Haiku** only if *all* hold: bounded, single-step, mechanical, no judgment needed.
-- **Sonnet flag**: if a task warrants Opus but the session is running Sonnet, say so explicitly and let the user decide — do not silently proceed at the lower tier.
+- **Effort flag**: if a task warrants more model or effort than the session runs, say so explicitly and let the user decide — do not silently proceed at the lower tier.
 
 User-specified tiers always override this table.
 
@@ -56,15 +70,16 @@ Always set the `model` parameter explicitly on the `Agent` tool. Never let it de
 model: "opus" | "sonnet" | "haiku"
 ```
 
-Translate a chosen tier into a subagent by setting `model` explicitly on the spawn. No custom agent roster is installed in this setup, so use the harness's built-in roles with an explicit tier:
+Translate a chosen tier into a subagent by setting `model` explicitly on the spawn, or by spawning a custom agent whose frontmatter pins the model.
 
-| Tier | Built-in role | Use when |
+**This setup (dotfiles, as of 2026-11-02)** defines two custom agents in `~/dotfiles/claude/.claude/agents/`, stowed into `~/.claude/agents/`:
+
+| Agent | Frontmatter | Use when |
 |---|---|---|
-| Haiku | `Explore` | Read-only exploration, searches, no writes |
-| Sonnet | general-purpose | Standard implementation, multi-file features, review |
-| Opus | `Plan` or general-purpose | Architecture, security analysis, hard multi-system reasoning |
+| `scout` | `model: claude-haiku-5-5`, `effort: medium`, read-only tools, `permissionMode: plan` | Start of a non-trivial task whose code has not been read: collect goal, files, tests, boundaries. Skip when 3 or fewer unread files. |
+| `worker` | `model: claude-haiku-5-5`, `effort: medium`, edit tools | Bounded, fully specified mechanical edits. Skip when the change is a few lines the parent already knows. |
 
-An earlier version of this page mapped tiers to named agents (`code-writer`, `code-writer-fast`, `design-explorer`, `architecture-reviewer`, `security-auditor`). None of those exist here; they came from the wshobson plugin roster. Define a custom agent only when a repeated job justifies its own prompt and tool limits, and then follow [[concepts/subagent-cost-model]].
+Otherwise use built-in `Explore`, `Plan` or general-purpose with an explicit `model`; judgment work stays in the Opus orchestrator. The same folder also holds `firecrawl` (web research) and `diagrammer` agents, outside the tier table. The older wshobson-roster names (`code-writer`, `design-explorer`, `security-auditor` and others) do not exist here. Define a custom agent only when a repeated job justifies its own prompt and tool limits, and then follow [[concepts/subagent-cost-model]].
 
 **Precedence when several settings name a model** (Claude Code, checked 2026-10-09): per-invocation `model` parameter, then agent frontmatter `model`, then `CLAUDE_CODE_SUBAGENT_MODEL`, then the main model. The environment variable fills gaps only.
 

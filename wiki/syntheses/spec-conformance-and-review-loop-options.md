@@ -5,6 +5,7 @@ tags: [workflow, spec-driven, testing, review, grill-me, lifecycle, refactor-opt
 sources: ["addyosmaniagent-skills Production-grade engineering skills for AI coding agents..md", "What if Code Review Happened Before the Code was Written?.md", "Redesigning source control at Anthropic.md", "Are spec-driven frameworks like Agent OS, BMAD, Superpowers or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md"]
 created: 2026-10-15
 updated: 2026-10-15
+publish: false
 ---
 
 # Spec Conformance and Review Loop Options

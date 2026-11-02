@@ -5,6 +5,7 @@ tags: [control-plane, agent-orchestration, tauri, commandr, diffviewer, thin-wai
 sources: ["Commandr UNIFICATION-BLUEPRINT.md", "Commandr protocol/SPEC.md v0.3", "DiffViewer README + PRD + ARCHITECTURE + MVP0-MOBILE-SPEC", "Desktop AI Agent Control Plane Executive Summary (2026-06-17)", "BuilderIOagent-native A framework for building agent-native applications..md", "BuilderIOskills Skills for coding agents.md", "omp oh-my-pi README (github.com/can1357/oh-my-pi)", "cc-linting-debugging-reddit.md"]
 created: 2026-06-17
 updated: 2026-06-19
+publish: false
 ---
 
 # Desktop AI Agent Control Plane — Architecture Synthesis

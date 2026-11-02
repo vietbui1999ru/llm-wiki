@@ -5,6 +5,7 @@ tags: [agent-review, neovim, pi, human-in-the-loop, code-review, diffview, gitsi
 sources: ["dotfiles docs/workflows/agent-review.md", "dotfiles docs/workflows/ai-workflow-consolidation.md", "dotfiles docs/workflows/agent-review-handoff.md", "dotfiles scripts/agent-review, scripts/trial-usage.sh", "dotfiles pi/.pi/agent/extensions/agent-review/index.ts", "dotfiles nvim/.config/nvim/lua/custom/agent_review.lua", "How the Claude Code team does code review.md"]
 created: 2026-10-04
 updated: 2026-11-01
+publish: false
 ---
 
 # agent-review: Per-Run Neovim Review Gate for Pi

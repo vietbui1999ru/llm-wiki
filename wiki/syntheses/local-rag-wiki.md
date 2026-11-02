@@ -5,6 +5,7 @@ tags: [rag, local-llm, ollama, lightrag, graph, mcp, wiki-chat, wiki-index, wiki
 sources: ["summaries/agentic-search-vs-rag", "summaries/local-rag-elasticsearch"]
 created: 2026-05-11
 updated: 2026-10-04
+publish: false
 ---
 
 # Local Wiki RAG: LightRAG Graph Stack
@@ -157,3 +158,4 @@ Building the full graph from scratch is the expensive operation (3 extraction ph
 - [[entities/qmd]] — BM25 + vector engine for the wiki-context skill path
 - [[concepts/wikilink-graph-extraction]] — Obsidian wikilink hints injected at chunk time to reduce LightRAG extraction cost ~40–55%
 - [[systems/wiki-indexing-pipeline]] — how both indexes are built and kept current, step by step, with the failure modes found in practice
+- [[entities/lightrag]] — graph-based RAG engine considered for the wiki

@@ -5,8 +5,10 @@
 
 WIKI_ROOT="$(git rev-parse --show-toplevel)"
 
-# Check if any wiki pages or index changed in this commit
-if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -qE "^wiki/|^index\.md|^log\.md"; then
+# Check if any wiki pages or index changed in this commit. post-merge reuses
+# this hook with WIKI_HOOK_RANGE="ORIG_HEAD HEAD" so pages that arrive through
+# `git pull` (merged PRs) are indexed too.
+if git diff --name-only ${=WIKI_HOOK_RANGE:-HEAD~1 HEAD} 2>/dev/null | grep -qE "^wiki/|^index\.md|^log\.md"; then
     CHANGED=1
 elif ! git rev-parse HEAD~1 >/dev/null 2>&1; then
     # First commit — always run

@@ -203,3 +203,4 @@ See [[summaries/autoresearch-karpathy]] for details.
 - [[summaries/azure-sre-agent-context-engineering]] — wide tools, generalists, four-handoff cliff
 - [[summaries/swe-bench-mobile]] — same model scores 12% vs 2% task success across harnesses on 50 iOS tasks
 - [[summaries/what-is-an-agent-harness-parallel-ai]] — source definition of the harness and its components
+- [[concepts/lsp-agent-baseline]] — language servers as a lazy, project-scoped execution-substrate capability: diagnostics and symbols before tests

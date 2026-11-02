@@ -18,6 +18,8 @@ Synthesis backend (first one configured wins):
   OPENCODE_GO_API_KEY_LIGHTRAG=...  → OpenCode Go (OpenAI-compatible, flat monthly plan)
       OPENCODE_LIGHTRAG_MODEL       model id (default deepseek-v4.1-flash)
       OPENCODE_LIGHTRAG_BASE_URL    default https://opencode.ai/zen/go/v1
+      OPENCODE_LIGHTRAG_SESSION     routing/prefix-cache affinity id (default: wiki-mcp)
+  WIKI_LLM_PROXY_URL=...            send synthesis through a local proxy (see docs/headroom.md)
   OPENROUTER_API_KEY=sk-or-...      → OpenRouter (not yet implemented — stub only)
   none configured                   → wiki_query returns an error; wiki_status still works
 
@@ -65,7 +67,18 @@ _DISABLE_THINKING = os.environ.get("OPENCODE_LIGHTRAG_DISABLE_THINKING", "1") ==
 
 # OpenCode Go asks clients to identify themselves and send a stable session id
 # (https://opencode.ai/docs/go/#where-can-i-use-it) so routing/prompt caching work.
-_OPENCODE_HEADERS = {"User-Agent": "llm-wiki-lightrag/1.0", "x-opencode-session": f"wiki-mcp-{os.getpid()}"}
+# OpenCode Go requires a session id and uses it for routing/prefix-cache affinity.
+# Stable by default so consecutive runs share the namespace; override per experiment.
+_SESSION = os.environ.get("OPENCODE_LIGHTRAG_SESSION", "wiki-mcp")
+_PROXY_URL = os.environ.get("WIKI_LLM_PROXY_URL", "")
+_BASE_URL = _PROXY_URL or _OPENCODE_URL
+_OPENCODE_HEADERS: dict[str, str] = {
+    "User-Agent": "llm-wiki-lightrag/1.0",
+    "x-opencode-session": _SESSION,
+}
+if _PROXY_URL:  # stack attribution + session grouping in the proxy's /stats
+    _OPENCODE_HEADERS["x-headroom-stack"] = "llm-wiki-mcp"
+    _OPENCODE_HEADERS["x-headroom-session-id"] = _SESSION
 
 async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
     kwargs.setdefault("max_tokens", 4096)
@@ -75,7 +88,7 @@ async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwa
         _OPENCODE_MODEL, prompt,
         system_prompt=system_prompt,
         history_messages=history_messages or [],
-        base_url=_OPENCODE_URL,
+        base_url=_BASE_URL,
         api_key=_API_KEY,
         extra_headers=_OPENCODE_HEADERS,  # per-request; LightRAG overwrites client-level default_headers
         **kwargs,

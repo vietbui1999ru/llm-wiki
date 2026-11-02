@@ -22,8 +22,14 @@ Extraction backend (first one configured wins; set env vars in secrets/.env):
       OPENCODE_LIGHTRAG_MODEL       model id (default deepseek-v4.1-flash)
       OPENCODE_LIGHTRAG_BASE_URL    default https://opencode.ai/zen/go/v1
       OPENCODE_LIGHTRAG_DISABLE_THINKING  default 1: send thinking={"type":"disabled"}; set 0 to omit
+      OPENCODE_LIGHTRAG_SESSION     routing/prefix-cache affinity id (default: wiki-index)
   OPENROUTER_API_KEY=sk-or-...      → OpenRouter (not yet implemented — stub only)
   none configured                   → indexing/--test exit with an error; --status still works
+
+Optional Headroom proxy (see docs/headroom.md):
+  WIKI_LLM_PROXY_URL=http://127.0.0.1:8787/v1   send extraction through the local proxy
+  WIKI_PROXY_COMPRESS_INDEX=1                   let the proxy compress extraction prompts too
+                                                (off by default: those prompts are the graph content)
 
 USAGE NOTE — --full with OpenCode Go:
   LightRAG runs 3 extraction phases per page (entity → relation → community),
@@ -39,6 +45,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
 import sys
@@ -72,9 +79,26 @@ _OPENROUTER_KEY   = os.environ.get("OPENROUTER_API_KEY", "")
 # (probed: 2774 -> 185 completion tokens on a sample prompt). Set to 0 for models that reject it.
 _DISABLE_THINKING = os.environ.get("OPENCODE_LIGHTRAG_DISABLE_THINKING", "1") == "1"
 
-# OpenCode Go asks clients to identify themselves and send a stable session id
-# (https://opencode.ai/docs/go/#where-can-i-use-it) so routing/prompt caching work.
-_OPENCODE_HEADERS = {"User-Agent": "llm-wiki-lightrag/1.0", "x-opencode-session": f"wiki-index-{os.getpid()}"}
+# OpenCode Go requires a session id and uses it for routing/prefix-cache affinity
+# (https://opencode.ai/docs/go/#where-can-i-use-it). A per-process value makes every run a
+# new namespace, so the default is stable and can be overridden per experiment.
+_SESSION = os.environ.get("OPENCODE_LIGHTRAG_SESSION", "wiki-index")
+
+# Optional local proxy (Headroom) in front of the extraction backend. See docs/headroom.md.
+_PROXY_URL = os.environ.get("WIKI_LLM_PROXY_URL", "")
+_BASE_URL = _PROXY_URL or _OPENCODE_URL
+_OPENCODE_HEADERS: dict[str, str] = {
+    "User-Agent": "llm-wiki-lightrag/1.0",
+    "x-opencode-session": _SESSION,
+}
+if _PROXY_URL:
+    _OPENCODE_HEADERS["x-headroom-stack"] = "llm-wiki-index"
+    _OPENCODE_HEADERS["x-headroom-session-id"] = _SESSION
+    # Extraction prompts ARE the content the graph is built from: lossy compression here
+    # changes what gets stored. Keep the proxy in the path for monitoring and prefix-cache
+    # alignment only, unless the operator opts in explicitly.
+    if os.environ.get("WIKI_PROXY_COMPRESS_INDEX", "0") != "1":
+        _OPENCODE_HEADERS["x-headroom-bypass"] = "true"
 
 async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
     kwargs.setdefault("max_tokens", 4096)
@@ -84,7 +108,7 @@ async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwa
         _OPENCODE_MODEL, prompt,
         system_prompt=system_prompt,
         history_messages=history_messages or [],
-        base_url=_OPENCODE_URL,
+        base_url=_BASE_URL,
         api_key=_API_KEY,
         extra_headers=_OPENCODE_HEADERS,  # per-request; LightRAG overwrites client-level default_headers
         **kwargs,
@@ -223,6 +247,26 @@ def save_manifest(m: dict) -> None:
     MANIFEST.write_text(json.dumps(m, indent=2))
 
 
+def page_hash(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def is_current(path: Path, entry) -> bool:
+    """True when what is in the index still matches the file on disk.
+
+    Entries are content hashes: a checkout, clone or worktree switch rewrites mtimes for
+    unchanged pages, and an mtime key re-extracts all of them for nothing. Legacy float
+    entries are adopted without a reindex when their mtime still matches.
+    """
+    if isinstance(entry, dict):
+        return entry.get("hash") == page_hash(path)
+    return entry == path.stat().st_mtime
+
+
+def mark_indexed(manifest: dict, path: Path) -> None:
+    manifest[str(path)] = {"hash": page_hash(path), "mtime": path.stat().st_mtime}
+
+
 def page_content(path: Path) -> str:
     rel = path.relative_to(WIKI_DIR)
     return f"# Source: {rel}\n\n{path.read_text()}"
@@ -255,11 +299,7 @@ async def _index_one(rag: LightRAG, p: Path) -> str | None:
 
 
 async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
-    changed = [
-        p for p in pages
-        if str(p) not in manifest
-        or manifest[str(p)] != p.stat().st_mtime
-    ]
+    changed = [p for p in pages if str(p) not in manifest or not is_current(p, manifest[str(p)])]
 
     if not changed:
         print("Index up to date — no changes detected.")
@@ -275,7 +315,7 @@ async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
             print(f"    FAILED: {reason}", flush=True)
             failed.append(rel)
             continue
-        manifest[str(p)] = p.stat().st_mtime
+        mark_indexed(manifest, p)
         save_manifest(manifest)   # save after each page so partial runs resume
 
     print(f"Done. {len(changed) - len(failed)} pages indexed, {len(failed)} failed.")
@@ -330,7 +370,7 @@ async def reconcile(rag: LightRAG, problems: list[tuple[str, str]], manifest: di
             if reason := await _index_one(rag, p):
                 print(f"    FAILED: {reason}", flush=True)
             else:
-                manifest[str(p)] = p.stat().st_mtime
+                mark_indexed(manifest, p)
                 save_manifest(manifest)
     await rag.doc_status.index_done_callback()
 
@@ -338,13 +378,16 @@ async def reconcile(rag: LightRAG, problems: list[tuple[str, str]], manifest: di
 def show_status(pages: list[Path], manifest: dict) -> None:
     indexed   = sum(1 for p in pages if str(p) in manifest)
     changed   = sum(1 for p in pages
-                    if str(p) in manifest and manifest[str(p)] != p.stat().st_mtime)
+                    if str(p) in manifest and not is_current(p, manifest[str(p)]))
     unindexed = len(pages) - indexed
     print(f"Pages total:    {len(pages)}")
     print(f"Indexed:        {indexed}")
     print(f"Changed:        {changed}")
     print(f"Not yet:        {unindexed}")
     print(f"Work dir:       {WORK_DIR}")
+    print(f"Extraction:     {LLM_MODEL} via {_BASE_URL}")
+    print(f"Proxy:          {_PROXY_URL or 'none (direct)'}")
+    print(f"Session id:     {_SESSION}")
 
 
 async def test_llm_backend() -> None:

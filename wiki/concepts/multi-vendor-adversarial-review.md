@@ -8,7 +8,7 @@ sources:
   - "LLM-as-a-judge a complete guide to using LLMs for evaluations.md"
   - "LLM-As-Judge 7 Best Practices & Evaluation Templates.md"
 created: 2026-05-04
-updated: 2026-05-07
+updated: 2026-11-02
 ---
 
 # Multi-Vendor Adversarial Review
@@ -59,19 +59,13 @@ Less valuable for: routine implementation, obvious bug fixes, tasks with determi
 
 ---
 
-## Council with GitHub Copilot Models
+## Counter-evidence: reviewer agents can hurt
 
-For users with a GitHub Copilot subscription: the GitHub Models API (`https://models.inference.ai.azure.com`, authenticated with a GitHub PAT) provides cross-vendor council without separate API keys.
+The case for a reviewer is mostly practitioner reasoning, and the little 2026 measurement points the other way. In the NLAH ablation, adding a second reviewer agent lowered success by 8% from a 41% base; marmelab's survey lists "reviewer agent" under what doesn't work, while its authors report the opposite with their own reviewer role. Details and caveats (single studies, unreplicated) are on [[summaries/state-of-harness-engineering-2026]] and [[concepts/agent-harness]]. Treat the benefits claimed on this page as unmeasured, and prefer cheap gates (tests, scripts, a veto on one dimension) over an extra reviewer in every loop.
 
-| Model | Council role | Why |
-|---|---|---|
-| GPT-4.1 (`openai/gpt-4.1`) | Primary council voice | Different training from Claude; strong reasoning |
-| GPT-4.1 mini (`openai/gpt-4.1-mini`) | Backup / cheaper | Same cross-vendor benefit, lower cost |
-| Grok Code Fast (`xai/grok-code-fast`) | Fast adversarial pass | xAI training = third blind-spot perspective |
-| Codex (`openai/o1` or similar) | Code-specific review | Coding-specialized |
-| Haiku 4.5 | **Skip** | Same Claude family — no cross-vendor value |
+## This setup (dotfiles, as of 2026-11-02)
 
-Use [[entities/pi-agent]]'s `@mariozechner/pi-ai` as the unified API layer to call these without vendor-specific client code.
+Cross-vendor review runs through Pi, not a hosted model API: the `delegate-pi` council (`pi-council.sh`) sends a diff to `openai-codex/gpt-6.1-sol` (acceptance), `opencode-go/deepseek-v4-pro` (code quality, style) and `opencode-go/glm-5.3` (security veto), all at `high` effort. The same high-tier models do any second or third review of Pi's work; Claude-family models are not used as voices. Full table and voting rule: [[concepts/council-pattern]]. The earlier GitHub Models voice list (GPT-4.1, GPT-4.1 mini, Grok Code Fast) is retired.
 
 ## Cross-Vendor vs Same-Family Tiering
 

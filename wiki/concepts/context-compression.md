@@ -10,10 +10,10 @@ sources:
   - "Context Engineering for Reliable AI Agents Lessons from Building Azure SRE Agent.md"
   - "Build Your Own AI Coding Agent Harness.md"
 created: 2026-04-25
-updated: 2026-11-01
+updated: 2026-11-02
 ---
 
-> **Contradiction (2026-11-01):** "Clear Over Compact — Now Community Consensus" below records clear-over-compact as majority practice in harness/AFK workflows. [[summaries/state-of-harness-engineering-2026]] reviewed the evidence and found the fresh-context loop variant "rests on one uncontrolled run of a toy app, with no baseline"; its reading is that "what actually helps isn't the wipe, it's that the work is written down in files." Both can be true: clearing is common practice, but its advantage over compaction is unmeasured. The design principle below ("make clearing safe, then prefer clearing") stands on practice, not on a controlled comparison.
+> **Contradiction (2026-11-01):** "Clear Over Compact — Common Practice" below records clear-over-compact as majority practice in harness/AFK workflows. [[summaries/state-of-harness-engineering-2026]] reviewed the evidence and found the fresh-context loop variant "rests on one uncontrolled run of a toy app, with no baseline"; its reading is that "what actually helps isn't the wipe, it's that the work is written down in files." Both can be true: clearing is common practice, but its advantage over compaction is unmeasured. The design principle below ("make clearing safe, then prefer clearing") stands on practice, not on a controlled comparison.
 
 # Context Compression Strategies
 
@@ -162,7 +162,7 @@ system = "You are a code assistant. Current time is provided per-request."
 - **Quick prototype, one compression expected**: regenerative is fine
 - **Never**: aggressive deletion without a summary — you will lose file modification history
 
-## Clear Over Compact — Now Community Consensus
+## Clear Over Compact — Common Practice (advantage unmeasured)
 
 Matt Pocock argues against compacting and prefers hard context clears:
 

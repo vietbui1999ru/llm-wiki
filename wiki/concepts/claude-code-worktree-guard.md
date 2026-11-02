@@ -59,4 +59,7 @@ These are bandaids for specific bugs. Remove each one when its bug is fixed:
 - [[concepts/worktree-isolation]] — the isolation model the guard enforces.
 - [[concepts/agent-subagents]] — `isolation: "worktree"` subagents.
 - [[concepts/agentic-sandbox-controls]] — the broader sandboxing picture.
+
+<!-- personal -->
 - Local record: `mistakes/2026-10-20-claude-code-worktree-guard-compound-bash.md`; dotfiles workflow `docs/workflows/worktree-guard-bandaid.md`.
+<!-- /personal -->

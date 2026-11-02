@@ -121,6 +121,7 @@ The preference feedback loop is **RLHF-inspired but operates at the agent-harnes
 
 The key borrowed insight: multi-dimensional reward models (separate evaluation axes rather than a single score) and the preference signal → behavioral change pipeline. The mechanism is entirely different.
 
+<!-- personal -->
 ## Implementation status
 
 Implemented 2026-05-07.
@@ -138,6 +139,7 @@ Implemented 2026-05-07.
 
 **Invocation**: `/judge` after any code/plan/design response (behavioral rule in applied-ai.md).
 **Report**: `/judge-report` for session summary and strike status.
+<!-- /personal -->
 
 ## Related Pages
 

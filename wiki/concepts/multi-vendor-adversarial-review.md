@@ -63,9 +63,13 @@ Less valuable for: routine implementation, obvious bug fixes, tasks with determi
 
 The case for a reviewer is mostly practitioner reasoning, and the little 2026 measurement points the other way. In the NLAH ablation, adding a second reviewer agent lowered success by 8% from a 41% base; marmelab's survey lists "reviewer agent" under what doesn't work, while its authors report the opposite with their own reviewer role. Details and caveats (single studies, unreplicated) are on [[summaries/state-of-harness-engineering-2026]] and [[concepts/agent-harness]]. Treat the benefits claimed on this page as unmeasured, and prefer cheap gates (tests, scripts, a veto on one dimension) over an extra reviewer in every loop.
 
+<!-- personal -->
+
 ## This setup (dotfiles, as of 2026-11-02)
 
 Cross-vendor review runs through Pi, not a hosted model API: the `delegate-pi` council (`pi-council.sh`) sends a diff to `openai-codex/gpt-6.1-sol` (acceptance), `opencode-go/deepseek-v4-pro` (code quality, style) and `opencode-go/glm-5.3` (security veto), all at `high` effort. The same high-tier models do any second or third review of Pi's work; Claude-family models are not used as voices. Full table and voting rule: [[concepts/council-pattern]]. The earlier GitHub Models voice list (GPT-4.1, GPT-4.1 mini, Grok Code Fast) is retired.
+
+<!-- /personal -->
 
 ## Cross-Vendor vs Same-Family Tiering
 

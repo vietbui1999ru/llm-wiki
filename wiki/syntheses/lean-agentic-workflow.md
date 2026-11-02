@@ -11,6 +11,7 @@ updated: 2026-10-15
 
 A working synthesis of the workflow that emerged from ingesting and critiquing the agent engineering landscape. Not a framework — a set of composable, independently adoptable pieces. The AGENTS.md template encodes this workflow; this page explains why each piece exists.
 
+<!-- personal -->
 ## Status on this machine (checked 2026-10-15)
 
 This page records the workflow as designed from the May 2026 sources. Not every tool on it was ever installed here. Checked against the machine:
@@ -26,6 +27,7 @@ This page records the workflow as designed from the May 2026 sources. Not every 
 Read the rest of the page as the design rationale; the table above is the installed reality. The adopted loop is described in [[syntheses/spec-conformance-and-review-loop-options]].
 
 ---
+<!-- /personal -->
 
 ## The Full Stack
 
@@ -167,4 +169,7 @@ See: [[comparisons/spec-driven-frameworks-vs-native]], [[concepts/memory-bank-pa
 - [[concepts/context-compression]] — clear-over-compact; why lean-session matters
 - [[concepts/agent-self-correction]] — deviation detection and wiki oracle
 - [[syntheses/agent-primitive-selection]] — decision tree for skill vs subagent vs team
+
+<!-- personal -->
 - [[syntheses/control-plane-expansion-plan]] — scaling this workflow into an Agentic Engineering Control Plane
+<!-- /personal -->

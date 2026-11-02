@@ -43,6 +43,7 @@ stateDiagram-v2
 - **Artifacts.** `.dangeresque/runs/issue-<N>/<timestamp>-<MODE>.{md,json}` and `.dangeresque/sessions/<worktree>/`, gitignored.
 - **Engines.** Claude Code and Codex only. No Pi, no jj. Defaults pin `claude-opus-4-7` (effort max) and `gpt-5.5`.
 
+<!-- personal -->
 ## Compared with our setup (2026-10-22)
 
 Both sit on Claude Code's native worktrees, so the layout is the same: `.claude/worktrees/<name>` on `worktree-<name>`, branched fresh from origin. The difference is that dangeresque manages a *run*, and we manage a *session*.
@@ -64,6 +65,7 @@ Both sit on Claude Code's native worktrees, so the layout is the same: `.claude/
 3. **Resume and re-review of a crashed run** in its existing worktree.
 
 Running both tools in one repo would be confusing: dangeresque lists every entry under `.claude/worktrees/`, so it would see our session worktrees as runs.
+<!-- /personal -->
 
 ## Related pages
 
@@ -75,4 +77,7 @@ Running both tools in one repo would be confusing: dangeresque lists every entry
 - [[concepts/agent-harness]] — harness architecture
 - [[concepts/ralph-loop]] — minimal harness pattern
 - [[syntheses/lean-agentic-workflow]] — workflow that names dangeresque
+
+<!-- personal -->
 - [[syntheses/spec-conformance-and-review-loop-options]] — our review-loop gaps
+<!-- /personal -->

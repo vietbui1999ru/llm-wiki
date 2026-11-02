@@ -25,8 +25,13 @@ AI agent changes code in repo/worktree
   -> human reviews with LSP/DAP/diffview
   -> human makes small edits directly when faster
   -> human sends precise file/path/selection context back to agent
+```
+
+<!-- personal -->
+```
   -> Commandr/DiffViewer record approvals/evidence/task lifecycle
 ```
+<!-- /personal -->
 
 This preserves the reason to use Neovim: fast navigation, text objects, LSP intelligence, debugger integration, and direct editing muscle memory.
 
@@ -46,8 +51,13 @@ This preserves the reason to use Neovim: fast navigation, text objects, LSP inte
 | Avante.nvim | Cursor-like Neovim AI layer; agentic mode and ACP/CLI-agent direction; useful if you want IDE-like AI interactions inside Neovim. |
 | MCPHub.nvim | MCP client/manager inside Neovim; integrates MCP tools/resources/prompts with CodeCompanion/Avante/CopilotChat and includes LSP diagnostics support. |
 | claudecode.nvim | Claude Code IDE bridge: WebSocket server, split terminal, send visual selection/files, editor diffs, diagnostics/workspace info. |
+
+<!-- personal -->
+| Tool | Role |
+|---|---|
 | Commandr | L3 bus: task lifecycle, approvals, neutral progress, events. |
 | DiffViewer | L5 review/evidence UI; should interoperate with Neovim rather than replace it. |
+<!-- /personal -->
 
 ---
 
@@ -75,7 +85,10 @@ Use this policy:
 1. **Neovim opened for project**: Mason/lspconfig starts relevant LSPs naturally by buffer/root. DAP adapters are available on demand.
 2. **Agent starts code task**: runner detects project stack and either uses its own LSP capability (`omp`, OpenCode events, Claude LSP plugin) or relies on typecheck/tests if no LSP bridge exists.
 3. **Human review begins**: Neovim auto-reloads agent edits, diffview refreshes, LSP diagnostics update, DAP can reproduce/debug issues.
+
+<!-- personal -->
 4. **Evidence handoff**: summaries from LSP/DAP/diffview can be turned into Commandr neutral progress or DiffViewer review artifacts.
+<!-- /personal -->
 
 This avoids idle global daemons while preserving IDE-quality feedback when actual code is open.
 
@@ -91,6 +104,7 @@ The Xata workflow captures the practical minimum:
 - yank selected code with relative/absolute file path and line range for agent prompts
 - keep the approach agent-agnostic: Claude Code, Aider, OpenCode, Gemini, Codex, etc.
 
+<!-- personal -->
 Add our control-plane-specific needs:
 
 - show current Commandr task id/status in statusline
@@ -100,6 +114,7 @@ Add our control-plane-specific needs:
 - open DiffViewer review package from Neovim
 - expose LSP diagnostics summary to review package generator
 - expose DAP session result as evidence when debugging a failing test or runtime bug
+<!-- /personal -->
 
 ---
 
@@ -109,10 +124,20 @@ There are two valid modes:
 
 | Mode | Good for | Tools |
 |---|---|---|
-| Agent outside editor, Neovim as cockpit | Most Commandr/DiffViewer workflow; keeps agents swappable and bus-centered | Claude Code/OpenCode/Codex in tmux/terminal, claudecode.nvim bridge, DiffViewer, diffview.nvim |
+| Agent outside editor, Neovim as cockpit | Keeps agents swappable | Claude Code/OpenCode/Codex in tmux/terminal, claudecode.nvim bridge, diffview.nvim |
 | Agent inside editor | Short local refactors, prompt from selection, LSP-aware chat, MCP experiments | CodeCompanion.nvim, Avante.nvim, MCPHub.nvim |
 
-Do not make an editor plugin the authoritative task queue. Let editor AI plugins consume context and propose edits, but Commandr remains lifecycle source of truth when a task is in the bus.
+<!-- personal -->
+| Mode | Good for | Tools |
+|---|---|---|
+| Agent outside editor, Neovim as cockpit | Most Commandr/DiffViewer workflow; keeps agents swappable and bus-centered | Claude Code/OpenCode/Codex in tmux/terminal, claudecode.nvim bridge, DiffViewer, diffview.nvim |
+<!-- /personal -->
+
+Do not make an editor plugin the authoritative task queue. Let editor AI plugins consume context and propose edits.
+
+<!-- personal -->
+Commandr remains lifecycle source of truth when a task is in the bus.
+<!-- /personal -->
 
 ---
 
@@ -120,17 +145,20 @@ Do not make an editor plugin the authoritative task queue. Let editor AI plugins
 
 DAP matters because many agent failures are runtime failures that LSP/typecheck cannot catch. Neovim already has the right mental model: breakpoints, launch/attach, step, inspect variables, stack frames.
 
+<!-- personal -->
 For our system:
 
 - DAP session setup remains Neovim/operator-owned through `nvim-dap` and Mason-installed adapters.
 - Agents can request a debug reproduction, but human/operator decides whether to run debugger unless we later add a safe runner action.
 - Debug results should become evidence artifacts: failing breakpoint, stack trace, variable values, reproduction steps.
 - DiffViewer/Tauri can render the artifact; Commandr records only neutral progress or artifact reference.
+<!-- /personal -->
 
 ---
 
 ## Design Implications
 
+<!-- personal -->
 ### For `claude-setup/`
 
 Project onboarding should ask whether Neovim+Mason is the operator IDE. If yes:
@@ -153,6 +181,7 @@ DiffViewer should not try to replace Neovim. It should interoperate:
 - import LSP diagnostics summaries
 - import DAP/debug reproduction artifacts
 - show review packages and approvals in a richer UI
+<!-- /personal -->
 
 ### For runner choice
 
@@ -162,7 +191,10 @@ Use `omp` or another LSP-aware runner for autonomous code-changing tasks. Use Ne
 
 ## Open Questions
 
+<!-- personal -->
 - Should DiffViewer expose a `nvim://` or terminal command deep-link for file/line navigation?
 - Should Commandr define an artifact type for `lsp-diagnostics-summary` and `dap-debug-session`?
 - Should `claude-setup` install Neovim helper snippets, or only document expected capabilities?
+<!-- /personal -->
+
 - Should MCPHub.nvim become the preferred path for Neovim-local MCP tools, or remain an experiment?

@@ -98,10 +98,19 @@ DCP rewrites outgoing requests, invalidating prompt-cache prefixes from the prun
 | Layer | When it fires | What it does |
 |---|---|---|
 | OpenCode built-in compaction | Token threshold | End-of-context summarization |
-| lean-session plugin | Same as built-in | Shapes compaction prompt via `experimental.session.compacting` |
 | DCP | On LLM fetch (dedup/purge) + model decision (compress) | Keeps active payload lean |
 
-These compose: DCP keeps context lean → compaction fires later on cleaner input → lean-session shapes what survives compaction.
+<!-- personal -->
+| Layer | When it fires | What it does |
+|---|---|---|
+| lean-session plugin | Same as built-in | Shapes compaction prompt via `experimental.session.compacting` |
+<!-- /personal -->
+
+These compose: DCP keeps context lean → compaction fires later on cleaner input.
+
+<!-- personal -->
+With lean-session installed, it then shapes what survives compaction.
+<!-- /personal -->
 
 ## Related Pages
 

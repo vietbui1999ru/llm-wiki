@@ -9,7 +9,13 @@ updated: 2026-10-14
 
 # qmd
 
-A local search engine for markdown files ("Quick Markdown Search"), used here as the retrieval engine behind the wiki-context skill and the `qmd query` lookups the project instructions require. This setup runs qmd 2.8.3. It is a CLI and an MCP server (`qmd mcp`, stdio) over one sqlite index at `~/.cache/qmd/index.sqlite`.
+A local search engine for markdown files ("Quick Markdown Search"). It is a CLI and an MCP server (`qmd mcp`, stdio) over one sqlite index at `~/.cache/qmd/index.sqlite`.
+
+<!-- personal -->
+
+Used here as the retrieval engine behind the wiki-context skill and the `qmd query` lookups the project instructions require. This setup runs qmd 2.8.3.
+
+<!-- /personal -->
 
 ## Search modes
 
@@ -21,6 +27,8 @@ A local search engine for markdown files ("Quick Markdown Search"), used here as
 | `qmd query` | hybrid plus automatic query expansion and reranking (the recommended mode, called `full` in the eval suite) | expansion and reranker |
 
 `qmd query` also accepts a multi-line structured document whose lines are typed `lex:`, `vec:` or `hyde:` (with an optional `intent:` line) when you want to control the sub-queries yourself. `qmd get <file>[:from[:count]]` and `qmd multi-get` fetch documents by path, glob or `#docid`.
+
+<!-- personal -->
 
 ## Setup in this repo
 
@@ -38,15 +46,27 @@ From the retrieval evaluation suite ([[systems/retrieval-eval-suite]]; 114 synth
 - Latency per CLI call: about 5 s without rerank and about 21 s with it; repeats are faster because qmd caches expansions and rerank results by text.
 - An external reranker did not help: zero-shot Laya reranking of the `hybrid` candidates scored 0.651 (and 0.507 to 0.629 in three variants), below both `hybrid` and `full` ([[entities/laya]], `docs/experiments/laya-rerank/README.md`).
 
+<!-- /personal -->
+
 ## Gotchas
 
 - `qmd bench` returns at most 10 files per query; after the `wiki/**` filter only about 3 pages remain, so the suite calls the CLI with `-n 50` instead.
+
+<!-- personal -->
+
 - Adding a file outside `wiki/` can shift rankings, because the collection is the whole repo.
 - Rankings 2 to 12 of `full` come from near-flat reranker scores and reshuffle under small corpus changes, so treat `full`'s must-hit losses as informational and `hybrid` as the reference.
+
+<!-- /personal -->
 
 ## Related
 
 - [[concepts/bm25]] — the lexical half of the hybrid mode
 - [[concepts/reranking]] — what the `full` mode adds
+
+<!-- personal -->
+
 - [[systems/wiki-indexing-pipeline]] — how the index is built and refreshed
 - [[systems/retrieval-eval-suite]] — how it was measured
+
+<!-- /personal -->

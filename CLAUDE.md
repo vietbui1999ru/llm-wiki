@@ -145,6 +145,11 @@ publish: false     # keep off the public docs site: pages about this repo owner'
                    # (dotfiles layout, internal tools, harness plans). Default: published.
                    # Workflow diagrams and how-I-work guides stay published.
 
+For a general page that also describes this owner's setup, wrap the owner-specific blocks
+(whole sections, paragraphs, lists, tables or fences; each marker on its own line) in
+`<!-- personal -->` … `<!-- /personal -->`. The wiki keeps them; the docs-site build strips them,
+and fails on an unclosed marker. Use `publish: false` when the whole page is owner-specific.
+
 ## Stub conventions
 
 - Frontmatter: `status: stub`

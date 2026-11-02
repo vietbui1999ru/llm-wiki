@@ -52,6 +52,8 @@ The synthesis:
 - Replace manual review bottlenecks with safety nets only when the safety net is trustworthy.
 - Cap generated code to what can be reviewed or objectively verified.
 
+<!-- personal -->
+
 ## Fit with this wiki
 
 `llm-wiki` is already a compound engineering system:
@@ -61,6 +63,8 @@ The synthesis:
 - `qmd` retrieves prior learnings just in time.
 - `mistakes/` converts agent failures into future rules.
 - `AGENTS.md` / `CLAUDE.md` codify current taste and process.
+
+<!-- /personal -->
 
 ## Related
 

@@ -13,7 +13,13 @@ updated: 2026-06-17
 
 # Pi Agent (pi-mono)
 
-> **Note**: `can1357/oh-my-pi` (omp) is a major batteries-included fork of pi-mono. Same TypeScript shell, ~55k LoC Rust native core added, 4 tools → 32, hashline editing, LSP/DAP wired in, 40+ providers. See [[entities/omp]] and [[comparisons/our-stack-vs-omp]].
+> **Note**: `can1357/oh-my-pi` (omp) is a major batteries-included fork of pi-mono. Same TypeScript shell, ~55k LoC Rust native core added, 4 tools → 32, hashline editing, LSP/DAP wired in, 40+ providers. See [[entities/omp]].
+
+<!-- personal -->
+
+See also [[comparisons/our-stack-vs-omp]].
+
+<!-- /personal -->
 
 TypeScript monorepo (`badlogic/pi-mono`) providing a unified multi-provider LLM API and interactive coding agent CLI. MIT license. The key value for cross-provider workflows: `@mariozechner/pi-ai` wraps OpenAI, Anthropic, Google, and other providers behind a single interface.
 
@@ -32,6 +38,8 @@ GitHub: https://github.com/badlogic/pi-mono
 | `@mariozechner/pi-web-ui` | Web components for AI chat interfaces |
 
 ---
+
+<!-- personal -->
 
 ## Role in the Lean Workflow
 
@@ -64,6 +72,8 @@ const [gptReview, grokReview] = await Promise.all([
 ```
 
 ---
+
+<!-- /personal -->
 
 ## Council with GitHub Copilot Models
 
@@ -199,9 +209,14 @@ omp adds `omp install` / `omp marketplace` for distribution; Pi relies on manual
 
 - [[entities/omp]] — batteries-included fork of pi-mono; hashline/LSP/DAP/32 tools/40+ providers
 - [[summaries/omp-plugins]] — plugin system architecture (hooks, tools, marketplace)
-- [[comparisons/our-stack-vs-omp]] — feature gap vs our Claude Code + Pi setup
 - [[concepts/multi-vendor-adversarial-review]] — the council pattern Pi AI enables
 - [[comparisons/claude-code-vs-opencode-plugins]] — OpenCode as primary harness
 - [[entities/opencode]] — alternative primary harness; Pi AI as its council layer
 - [[entities/opencode-go]] — OpenCode Go subscription; primary open-model provider in source AGENTS.md
 - [[concepts/agent-self-correction]] — wiki-as-oracle; Pi AI for cross-vendor review
+
+<!-- personal -->
+
+- [[comparisons/our-stack-vs-omp]] — feature gap vs our Claude Code + Pi setup
+
+<!-- /personal -->

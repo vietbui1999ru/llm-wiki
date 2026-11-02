@@ -9,7 +9,11 @@ updated: 2026-07-23
 
 # Knowledge Crystallization Cycle (KCC)
 
+<!-- personal -->
+
 *(proposed, single-source — same position paper as [[concepts/nurture-first-development]]; not yet reviewed against this wiki's own patterns/rules split. Pending synthesis check before any of "Our Stack Implementation" below is treated as adopted.)*
+
+<!-- /personal -->
 
 The core developmental mechanism of [[concepts/nurture-first-development]]. Converts fragmented conversational knowledge into structured, reusable Skill Layer assets. Operationalizes Nonaka & Takeuchi's tacit-to-explicit knowledge conversion within an agent memory context.
 
@@ -96,6 +100,8 @@ Three factors determine how much structured knowledge emerges from a given exper
 2. **Annotation quality** — [REASONING] traces crystallize efficiently; bare [OPERATIONAL] records don't
 3. **Pattern density** — domains with strong regularities (financial patterns, legal precedent) yield higher efficiency than idiosyncratic domains
 
+<!-- personal -->
+
 ---
 
 ## Our Stack Implementation
@@ -110,6 +116,8 @@ We run partial KCC. Mapping:
 | Grounded Application | `wiki-context` skill (retrieves crystallized knowledge) | Incomplete — wiki-context retrieves wiki pages but not `global-prevention-rules.md` inline |
 
 **Proposed fix**: Add `[INSIGHT]` and `[PATTERN]` tagging to AGENTS.md (all harnesses). When tagged fragments accumulate, route to wiki ingest rather than `synthesize-mistakes`. The wiki ingest pipeline IS the crystallization algorithm — it already implements Algorithm 1 via: `pdf-ingest` / `pre-digest` (scope+extract) → comprehension questions (human review) → wiki page (de-contextualize+promote).
+
+<!-- /personal -->
 
 ---
 

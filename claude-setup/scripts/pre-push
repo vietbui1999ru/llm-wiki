@@ -3,6 +3,15 @@
 # Mirrors the "docs-site in sync with wiki" CI gate so drift is caught locally
 # (fast feedback) instead of as a red check after the push.
 
+# Git passes one line per ref on stdin: <local ref> <local sha> <remote ref> <remote sha>.
+# A deletion (`git push origin --delete <branch>`) has an all-zero local sha and
+# pushes no content, so there is nothing to check; skip unless some ref sends commits.
+only_deletes=1
+while read -r _ local_sha _ _; do
+  [[ $local_sha =~ ^0+$ ]] || only_deletes=0
+done
+(( only_deletes )) && exit 0
+
 WIKI_ROOT="$(git rev-parse --show-toplevel)"
 cd "$WIKI_ROOT" || exit 0
 

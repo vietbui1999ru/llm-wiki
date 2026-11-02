@@ -2,6 +2,14 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-11-02] update | Wiki prune: unused tools removed, Commandr archived
+
+- Removed 22 pages the setup does not use (commit 2de6d7b): entities/dangeresque, entities/sandcastle, entities/omp, entities/agentshield, entities/mnemory, entities/opencode-dcp, entities/pentagi, entities/agent-native, entities/obsidian-claude-code-mcp, entities/obsidian-cli-rest-mcp, summaries/omp-oh-my-pi, summaries/omp-plugins, summaries/opencode-headless-api, summaries/amazon-scraping-2026, summaries/awesome-software-architecture, summaries/cc-linting-debugging-reddit, comparisons/our-stack-vs-omp. Commandr archived in the same commit: entities/commandr, syntheses/desktop-control-plane, syntheses/control-plane-expansion-plan, syntheses/builderio-control-plane-integration, research/omp-snapcompact-rpc. Git history keeps all of them.
+- Golden set v1 → v2: 16 queries (q-004, q-007, q-017, q-018, q-023, q-032, q-036, q-038, q-047, q-049, q-054, q-056, q-076, q-090, q-096, q-110) lost their labels on removed pages; surviving labels kept, one note per removed page. q-076 ("local http api for my notes app so tools skip the shell") had the deleted obsidian-cli-rest-mcp as its only label and no surviving page answers it — obsidian-cli is the shell CLI it asks to skip — so the query is deleted and 113 remain. No must_hit query lost its last label. Committed baselines are untouched: qmd and LightRAG read the owner's main checkout, so both need a re-run after this merges.
+- `commandr-omp-runner/` deleted: its README already named `~/repos/Commandr/adapters/omp/` as canonical and nothing invokes it. Its index.md "Project Tools" bullet and a pi-headroom future-work item still name it (stale, left for the owner).
+- `claude-setup/docs-sync.json`: the kanban-status entry no longer maps to the deleted control-plane-expansion-plan page.
+- Orphans created by the prune relinked: entities/docling from concepts/contextual-retrieval, concepts/lsp-agent-baseline from concepts/agent-harness.
+
 ## [2026-11-02] update | Strip owner-setup sections from the public docs site
 
 - New convention (CLAUDE.md): wrap owner-specific blocks in general pages with `<!-- personal -->` … `<!-- /personal -->`; the docs build strips them and fails on an unclosed marker. The wiki keeps the content.

@@ -218,7 +218,5 @@ Catalog of all pages. Updated on every ingest operation.
 
 ## Project Tools
 - `pi-headroom/` — Headroom context compression plugin for omp (tool_result hook + headroom_retrieve custom tool); tested on omp v16.0.9; complementary to snapcompact
-- `commandr-omp-runner/` — L2 runner wrapper: bootstrap (`setup.sh`) + runner (`runner.sh`) with runner-agnostic interface; scaffold/smoke only; RPC host tools path for Level 2+
-  - `HOST-TOOLS.md` — Host tool schema for Commandr bus integration: progress, artifacts, approvals, complete/fail; policy table; runner-agnostic interface
 
 ## Research

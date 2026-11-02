@@ -11,7 +11,7 @@ publish: false
 
 # Agent Diff Viewer — Real-Time Code Review Tool
 
-> **Partially superseded.** This page describes the original design (May 2026). DiffViewer has since grown to include an OpenCode adapter, Pi extension (mid-turn blocking review), mobile companion MVP-0 (Tailscale PWA + Commandr bus approval tokens), and CodeBoarding architecture tab. The bus-watching re-homing (Phase 2) is in progress. See [[entities/diffviewer]] for current state and [[syntheses/desktop-control-plane]] for the Tauri roadmap.
+> **Partially superseded.** This page describes the original design (May 2026). DiffViewer has since grown to include an OpenCode adapter, Pi extension (mid-turn blocking review), mobile companion MVP-0 (Tailscale PWA + Commandr bus approval tokens), and CodeBoarding architecture tab. The bus-watching re-homing (Phase 2) is in progress. See [[entities/diffviewer]] for current state and Desktop AI Agent Control Plane — Architecture Synthesis for the Tauri roadmap.
 
 A localhost tool for reviewing and steering agent-generated code diffs between turns. Cursor-style diff panes driven by Claude Code hooks, with a clipboard-based steer injection loop.
 

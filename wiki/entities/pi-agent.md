@@ -13,11 +13,11 @@ updated: 2026-06-17
 
 # Pi Agent (pi-mono)
 
-> **Note**: `can1357/oh-my-pi` (omp) is a major batteries-included fork of pi-mono. Same TypeScript shell, ~55k LoC Rust native core added, 4 tools → 32, hashline editing, LSP/DAP wired in, 40+ providers. See [[entities/omp]].
+> **Note**: `can1357/oh-my-pi` (omp) is a major batteries-included fork of pi-mono. Same TypeScript shell, ~55k LoC Rust native core added, 4 tools → 32, hashline editing, LSP/DAP wired in, 40+ providers. See omp (oh-my-pi).
 
 <!-- personal -->
 
-See also [[comparisons/our-stack-vs-omp]].
+See also Our Stack vs omp.
 
 <!-- /personal -->
 
@@ -194,7 +194,7 @@ Pi's design is a direct reaction to context management failures in Claude Code a
 
 ## Plugin / Extension Surface
 
-Pi-mono and omp share the same extension architecture: hooks, custom tools, skills, and commands discovered from filesystem paths or bundled in plugins. See [[summaries/omp-plugins]] for the full plugin system reference.
+Pi-mono and omp share the same extension architecture: hooks, custom tools, skills, and commands discovered from filesystem paths or bundled in plugins. See omp Plugin System for the full plugin system reference.
 
 | Extension | Discovery | Pi | omp |
 |---|---|---|---|
@@ -207,8 +207,6 @@ omp adds `omp install` / `omp marketplace` for distribution; Pi relies on manual
 
 ## Related Pages
 
-- [[entities/omp]] — batteries-included fork of pi-mono; hashline/LSP/DAP/32 tools/40+ providers
-- [[summaries/omp-plugins]] — plugin system architecture (hooks, tools, marketplace)
 - [[concepts/multi-vendor-adversarial-review]] — the council pattern Pi AI enables
 - [[comparisons/claude-code-vs-opencode-plugins]] — OpenCode as primary harness
 - [[entities/opencode]] — alternative primary harness; Pi AI as its council layer
@@ -217,6 +215,5 @@ omp adds `omp install` / `omp marketplace` for distribution; Pi relies on manual
 
 <!-- personal -->
 
-- [[comparisons/our-stack-vs-omp]] — feature gap vs our Claude Code + Pi setup
 
 <!-- /personal -->

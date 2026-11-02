@@ -47,7 +47,7 @@ case "$ACTION" in
 esac
 ```
 
-Both independently arrived at: **guard on "is Obsidian running" first**, **resolve vault/PATH before dispatch**, **expose a small stable verb set rather than the full 100+-command surface**. That last point is the same instinct behind the MCP `search`+`execute` Code Mode pattern in [[entities/obsidian-cli-rest-mcp]] — a large underlying command surface gets collapsed to a small stable interface for the calling agent/script, whether the caller is a human's cron job or an LLM.
+Both independently arrived at: **guard on "is Obsidian running" first**, **resolve vault/PATH before dispatch**, **expose a small stable verb set rather than the full 100+-command surface**. That last point is the same instinct behind the MCP `search`+`execute` Code Mode pattern in Obsidian CLI REST MCP — a large underlying command surface gets collapsed to a small stable interface for the calling agent/script, whether the caller is a human's cron job or an LLM.
 
 ## Common automation shapes
 
@@ -68,6 +68,4 @@ Both independently arrived at: **guard on "is Obsidian running" first**, **resol
 ## Related
 
 - [[entities/obsidian-cli]] — the underlying command surface these scripts wrap
-- [[entities/obsidian-cli-rest-mcp]] — the same "small stable interface over a big command surface" instinct, applied via MCP's Code Mode instead of a shell wrapper
-- [[entities/obsidian-claude-code-mcp]] — the standing-connection alternative to scripting per-invocation
 - [[concepts/tool-design-for-agents]] — general principle: collapse large tool/command surfaces into a small, stable, discoverable interface

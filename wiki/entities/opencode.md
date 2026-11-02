@@ -309,7 +309,7 @@ opencode run --attach http://localhost:4096 "task 2"
 - `OPENCODE_EXPERIMENTAL_SCOUT` — Scout subagent (read-only fast search)
 - `OPENCODE_EXPERIMENTAL_PLAN_MODE` — plan mode
 
-See [[summaries/opencode-headless-api]] for full API reference and orchestration patterns.
+See OpenCode Headless & Programmatic Interface for full API reference and orchestration patterns.
 
 ---
 

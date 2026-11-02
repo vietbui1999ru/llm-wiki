@@ -168,7 +168,7 @@ Memory file stores: symptom, cause, solution, red flags. Not the full conversati
 
 ### Mnemory (self-hosted)
 
-[[entities/mnemory]] is a self-hosted MCP memory backend with semantic vector search (Qdrant) and artifact storage (S3/MinIO). The key architectural difference: Mnemory uses vector similarity for retrieval; the Anthropic tool uses flat file navigation. Mnemory also handles deduplication and contradiction detection automatically within a single LLM call.
+Mnemory is a self-hosted MCP memory backend with semantic vector search (Qdrant) and artifact storage (S3/MinIO). The key architectural difference: Mnemory uses vector similarity for retrieval; the Anthropic tool uses flat file navigation. Mnemory also handles deduplication and contradiction detection automatically within a single LLM call.
 
 ### Cloudflare Agent Memory (managed service)
 
@@ -198,5 +198,4 @@ For simple projects and single-vendor setups: `memory_20250818` is lower frictio
 - [[concepts/context-window]] — the fundamental constraint this tool works around
 - [[concepts/context-compression]] — compression strategies; server-side compaction is one lever
 - [[concepts/indirect-prompt-injection]] — security risk in memory files
-- [[entities/mnemory]] — OSS self-hosted parallel to this tool
 - [[summaries/cloudflare-agent-memory]] — managed memory service with 5-channel retrieval

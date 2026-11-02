@@ -46,7 +46,5 @@ Opening/reading, search (full-text + tag `[tag:x]` + property `[status:active]` 
 
 ## Related
 
-- [[entities/obsidian-cli-rest-mcp]] — community plugin exposing these same commands as a REST API + 2-tool MCP server (search/execute), for agents that shouldn't shell out per call
-- [[entities/obsidian-claude-code-mcp]] — separate community plugin bridging Claude Code to a running vault via WebSocket
 - [[concepts/cli-driven-vault-automation]] — the wrapper-script and cron patterns built on top of this CLI
 - [[concepts/wikilink-graph-extraction]] — this wiki (`llm-wiki`) is itself an Obsidian vault (`.obsidian/` at repo root), so this CLI (or the MCP bridges below) can query/open its own notes too

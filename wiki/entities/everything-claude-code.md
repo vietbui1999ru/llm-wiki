@@ -149,7 +149,6 @@ Rust control plane in `ecc2/` — builds locally, exposes `dashboard`, `start`, 
 
 ## Related Wiki Pages
 
-- [[entities/agentshield]] — ECC's security scanning component
 - [[concepts/instinct-clustering]] — continuous learning v2 pattern
 - [[comparisons/cc-to-cross-platform-migration]] — cross-harness migration matrix
 - [[concepts/agent-harness]] — the broader harness concept

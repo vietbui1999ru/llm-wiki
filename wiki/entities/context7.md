@@ -33,7 +33,7 @@ Both modes access the same upstream doc index; prefer MCP when the agent harness
 Cross-platform setup: [[comparisons/cc-to-cross-platform-migration]] (MCP layer section).
 
 <!-- personal -->
-MCP ecosystem overview: [[comparisons/our-stack-vs-omp]].
+MCP ecosystem overview: Our Stack vs omp.
 <!-- /personal -->
 
 ## MCP Tools Reference

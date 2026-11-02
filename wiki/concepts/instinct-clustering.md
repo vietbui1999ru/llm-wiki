@@ -90,7 +90,7 @@ Mitigation: `instinct-digest.ts` shows the diff; human triages periodically. Whe
 |---|---|---|---|
 | Instinct clustering | Implicit (behavioral) | Patterns from tool-call telemetry | Session start (filtered) |
 | [[concepts/agentic-memory-tool]] | Explicit (agent writes) | Facts, decisions, patterns | On-demand query |
-| [[entities/mnemory]] | Explicit (agent writes) | Cross-session facts, artifacts | On-demand query |
+| Mnemory | Explicit (agent writes) | Cross-session facts, artifacts | On-demand query |
 | [[concepts/agent-self-correction]] | Explicit (agent queries) | Wiki knowledge | On deviation |
 | `.agents/` corpus | Manual + hook | Per-repo task state | Compaction hook |
 
@@ -132,7 +132,6 @@ Instinct clustering is the only **implicit** pattern — it requires no agent ac
 
 - [[concepts/agent-self-correction]] — complementary explicit deviation detection
 - [[concepts/agentic-memory-tool]] — explicit cross-session memory (Anthropic)
-- [[entities/mnemory]] — explicit cross-session memory (OSS)
 - [[entities/opencode]] — plugin system that implements this pattern
 - [[entities/everything-claude-code]] — ECC: production implementation of this pattern
 - [[concepts/context-compression]] — what gets injected competes with task context

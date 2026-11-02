@@ -103,8 +103,8 @@ Dangeresque (host-native) uses worktrees + tool filtering. SandCastle runs Claud
 
 | Tool | How it uses worktrees |
 |---|---|
-| [[entities/dangeresque]] | One worktree per task; worker runs in isolation; adversarial reviewer reads result |
-| [[entities/sandcastle]] | Worktree + sandboxed container per task; branch strategy as a first-class parameter |
+| Dangeresque | One worktree per task; worker runs in isolation; adversarial reviewer reads result |
+| SandCastle | Worktree + sandboxed container per task; branch strategy as a first-class parameter |
 | [[concepts/agent-subagents]] | `isolation: "worktree"` in frontmatter; cleaned up automatically if no changes |
 
 ---
@@ -226,8 +226,6 @@ State carried between tasks lives in: commits, branch history, `.agents/decision
 - [[concepts/branch-strategy-for-agents]] — merge strategy after worktree work completes
 - [[concepts/agentic-sandbox-controls]] — ToS constraint driving host-native isolation
 - [[concepts/context-compression]] — clear-over-compact; worktrees make clearing safe
-- [[entities/dangeresque]] — lightweight host-native orchestrator using worktrees
-- [[entities/sandcastle]] — TypeScript lib; worktree + container combination
 - [[concepts/agent-subagents]] — `isolation: "worktree"` parameter
 - [[concepts/claude-code-worktree-guard]] — Claude Code's Bash guard for isolated sessions; refusal classes and bandaids
 - [[summaries/jj-for-coding-agents]] — jj workspaces vs Git worktrees for agents; Claude Code worktree hooks

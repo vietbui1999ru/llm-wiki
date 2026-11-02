@@ -189,8 +189,6 @@ Most examples restrict to coding style, build/test commands, micro-architecture.
 
 ## Related Pages
 
-- [[entities/dangeresque]] — host-native orchestrator
-- [[entities/sandcastle]] — parallel orchestrator with container isolation
 - [[concepts/multi-vendor-adversarial-review]] — cross-vendor judge pattern
 - [[concepts/branch-strategy-for-agents]] — merge strategy taxonomy
 - [[concepts/agentic-sandbox-controls]] — OS-level sandbox recommendation (needs update re: ToS)

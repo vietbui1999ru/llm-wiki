@@ -1,7 +1,7 @@
 ---
 title: "Lean Agentic Coding Workflow"
 type: synthesis
-tags: [agent-engineering, workflow, orchestration, council, dangeresque, lean-session]
+tags: [agent-engineering, workflow, orchestration, council, lean-session]
 sources: ["Are spec-driven frameworks like Agent OS, BMAD, Superpdoms or SpecKit still worth using, or have Claude Code and Codex made them redundant?.md", "Full Walkthrough Workflow for AI Coding — Matt Pocock.md", "karpathyllm-council LLM Council works together to answer your hardest questions.md", "Plugins for Opencode.md"]
 created: 2026-05-06
 updated: 2026-10-15
@@ -20,7 +20,6 @@ This page records the workflow as designed from the May 2026 sources. Not every 
 |---|---|
 | `/grill` (grill-me) | Installed, and now ends by writing a lint-clean `SPEC.md` and stopping for human approval: see [[syntheses/spec-conformance-and-review-loop-options]] |
 | `/prd`, `/issues` skills | Not installed (removed in the skills consolidation). The approved `SPEC.md`, with a verify command per acceptance criterion, plays the PRD role |
-| Dangeresque, SandCastle | Not installed (on neither `PATH`): *(documented-not-adopted)*. The unattended loop is Pi dispatched through pueue with the human `agent-review` gate: [[syntheses/pi-orchestration-architecture]] |
 | lean-session (OpenCode plugin) | Installed (`lean-session.js` in the OpenCode plugins folder) |
 | `/verify` and council | `verify-spec` now runs `ac-run check` and `floor-guard`. The council engine is Commandr's `bin/council` (linked at `~/.local/bin/council`); council mode was not tested end to end |
 
@@ -40,7 +39,7 @@ grill → PRD → vertical slices → AFK loop → verify → ship
 | grill           | `/grill` skill      | Align on requirements before any implementation                                            |
 | PRD             | `/prd` skill        | Synthesize grill into structured specification                                             |
 | vertical slices | `/issues` skill     | Break PRD into tracer-bullet tasks (HITL/AFK gate)                                         |
-| AFK loop        | Dangeresque         | Worker → verify → adversarial review → human-merge gate                                    |
+| AFK loop        | worktree run        | Worker → verify → adversarial review → human-merge gate                                    |
 | verify          | `/verify` + council | Evidence before claims; cross-vendor quality gate — see [[concepts/verification-pipeline]] |
 | ship            | `branch` or `head`  | Merge strategy based on risk                                                               |
 
@@ -52,7 +51,7 @@ grill → PRD → vertical slices → AFK loop → verify → ship
 
 The most common failure mode in AI coding is starting implementation on misaligned requirements. Grill-me forces alignment before token spend. The session summary lives in PRD, not in the conversation.
 
-See: [[concepts/agent-skills]] (grill/prd/issues), [[entities/dangeresque]] (AFK loop)
+See: [[concepts/agent-skills]] (grill/prd/issues), the AFK loop below
 
 ### Vertical slices (tracer bullets)
 
@@ -62,11 +61,11 @@ Fails when: slices are too large to complete in a single AFK session, or the cod
 
 See: [[comparisons/spec-driven-frameworks-vs-native]] — vertical slices context; "for whom / fails when" analysis
 
-### Dangeresque (AFK loop)
+### AFK loop
 
 Host-native (ToS-compliant), not containerized. Each task runs in a worktree (filesystem isolation); adversarial reviewer checks the result; human must merge. The reviewer is a different model or provider — single-model review catches nothing new.
 
-See: [[entities/dangeresque]], [[concepts/worktree-isolation]], [[concepts/multi-vendor-adversarial-review]]
+See: [[concepts/worktree-isolation]], [[concepts/multi-vendor-adversarial-review]]
 
 ### Council (not adversarial review)
 
@@ -162,7 +161,6 @@ See: [[comparisons/spec-driven-frameworks-vs-native]], [[concepts/memory-bank-pa
 
 ## Related Pages
 
-- [[entities/dangeresque]] — AFK loop implementation
 - [[entities/opencode]] — primary harness; plugin event surface
 - [[concepts/council-pattern]] — 3-stage deliberation
 - [[concepts/worktree-isolation]] — filesystem isolation for parallel AFK tasks
@@ -171,5 +169,4 @@ See: [[comparisons/spec-driven-frameworks-vs-native]], [[concepts/memory-bank-pa
 - [[syntheses/agent-primitive-selection]] — decision tree for skill vs subagent vs team
 
 <!-- personal -->
-- [[syntheses/control-plane-expansion-plan]] — scaling this workflow into an Agentic Engineering Control Plane
 <!-- /personal -->

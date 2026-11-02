@@ -13,7 +13,7 @@ grill → PRD → vertical slices (HITL/AFK) → AFK loop → verify → ship
 Phases:
 1. /grill      — align on requirements before any implementation
 2. Plan        — capture the aligned requirements (superpowers:writing-plans)
-3. AFK loop    — Dangeresque: worker → verify → adversarial review → human-merge gate
+3. AFK loop    — worker → verify → adversarial review → human-merge gate
 4. /verify     — run verification-before-completion before claiming done
 
 ## Model routing (env vars — do not hardcode)

@@ -73,7 +73,7 @@ HyDE is not unique to this service — it originates from the retrieval literatu
 
 Cloudflare's explicit design choice: **constrained API over raw filesystem access**. Their claim (unverified against independent benchmarks): the constrained API outperforms raw filesystem access on reasoning tasks involving temporal logic, supersession, and instruction following, because the service can enforce invariants (dedup, versioning, type classification) that a raw filesystem agent cannot.
 
-Compare: [[entities/mnemory]] gives raw Qdrant + S3 access; [[concepts/agentic-memory-tool]]'s `memory_20250818` gives raw flat file access. Cloudflare inserts a structured layer between the agent and storage.
+Compare: Mnemory gives raw Qdrant + S3 access; [[concepts/agentic-memory-tool]]'s `memory_20250818` gives raw flat file access. Cloudflare inserts a structured layer between the agent and storage.
 
 ## Documented Use Cases
 
@@ -90,7 +90,6 @@ Short version: Cloudflare is the managed option with the most sophisticated retr
 ## Related Pages
 
 - [[concepts/agentic-memory-tool]] — concept page covering the full memory tool landscape
-- [[entities/mnemory]] — self-hosted OSS parallel (Qdrant + S3)
 - [[concepts/context-compression]] — compaction lifecycle; `ingest` integrates here
 - [[concepts/agent-harness]] — harnesses that call `ingest` at compaction time
 - [[concepts/contextual-retrieval]] — HyDE and RRF are retrieval techniques also used in RAG

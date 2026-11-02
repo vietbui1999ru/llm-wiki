@@ -14,7 +14,7 @@ updated: 2026-05-06
 
 Mid-session reduction of the context payload sent to the LLM, performed without modifying the underlying session history. Where compaction summarizes everything at a hard threshold, DCP runs as a combination of model-driven compression and automatic cleanup strategies that fire on each LLM fetch — pruned spans are replaced with placeholders before the request is dispatched.
 
-Reference implementation: [[entities/opencode-dcp]] — the `@tarquinen/opencode-dcp` plugin for [[entities/opencode]]. Install:
+Reference implementation: opencode-dcp — the `@tarquinen/opencode-dcp` plugin for [[entities/opencode]]. Install:
 
 ```bash
 opencode plugin @tarquinen/opencode-dcp@latest --global
@@ -154,7 +154,6 @@ They are **complementary, not competing**: lean-session shapes the compaction su
 
 ## Related Pages
 
-- [[entities/opencode-dcp]] — the plugin itself (config reference, commands, prompt cache trade-off)
 - [[concepts/context-compression]] — compression strategy taxonomy
 - [[entities/opencode]] — host harness
 - [[concepts/context-degradation]] — failure modes DCP prevents (distraction, confusion)

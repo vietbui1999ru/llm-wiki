@@ -12,7 +12,7 @@ status: stub
 
 ACP (Agent Communication Protocol) is an editor-native protocol for AI agent ↔ editor communication, developed by the Zed editor team. Distinct from [[concepts/model-tier-routing|MCP]] (which connects models to tools), ACP gives agents direct buffer access and write-through the editor's save path.
 
-Mentioned in [[comparisons/cc-to-cross-platform-migration]], [[comparisons/our-stack-vs-omp]], [[syntheses/neovim-ai-operator-workflow]], and [[entities/omp]] (`omp acp` command). Neovim plugins CodeCompanion.nvim and Avante.nvim also list ACP support.
+Mentioned in [[comparisons/cc-to-cross-platform-migration]] and [[syntheses/neovim-ai-operator-workflow]]; the oh-my-pi fork of Pi exposes it as an `omp acp` command. Neovim plugins CodeCompanion.nvim and Avante.nvim also list ACP support.
 
 
 ## Related Pages

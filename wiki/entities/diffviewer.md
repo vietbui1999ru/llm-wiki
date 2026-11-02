@@ -12,7 +12,7 @@ publish: false
 
 # DiffViewer
 
-`~/repos/DiffViewer` — the **L5 UI** in the [[syntheses/desktop-control-plane|5-layer agent toolchain]]. Real-time diff review tool for agent-generated file changes, with steer injection and phone approval. Currently a Node.js/Hono browser server; Phase 5 target = Tauri desktop app.
+`~/repos/DiffViewer` — the **L5 UI** in the 5-layer agent toolchain. Real-time diff review tool for agent-generated file changes, with steer injection and phone approval. Currently a Node.js/Hono browser server; Phase 5 target = Tauri desktop app.
 
 GitHub: https://github.com/vietbui1999ru/DiffViewer
 
@@ -153,13 +153,13 @@ Examples:
 | Start runner | UI click or agent action invokes `runner.start` |
 | Open machine/session/log | UI navigation or agent context target |
 
-DiffViewer/Tauri owns the human-facing projection and local SQLite audit view. [[entities/commandr]] remains the lifecycle source of truth.
+DiffViewer/Tauri owns the human-facing projection and local SQLite audit view. Commandr remains the lifecycle source of truth.
 
 ### Skill-backed review packages
 
 Builder.io's visual-plan/visual-recap skills suggest a concrete DiffViewer extension path: review packages should be generated as inspectable artifacts, not chat prose. A future `review-package-generator` skill can produce diagrams, file maps, API/schema summaries, pinned evidence, and residual risk notes for the Tauri review screen.
 
-The concrete integration contract is [[syntheses/builderio-control-plane-integration]]: DiffViewer implements a local action dispatcher and writes regenerable artifacts under `.diffviewer/artifacts/<task>/`, while Commandr lifecycle mutations still go through SPEC-defined `bin/` tools and event types.
+The concrete integration contract is Builder.io Patterns for Commandr + DiffViewer: DiffViewer implements a local action dispatcher and writes regenerable artifacts under `.diffviewer/artifacts/<task>/`, while Commandr lifecycle mutations still go through SPEC-defined `bin/` tools and event types.
 
 ---
 
@@ -184,11 +184,6 @@ tailscale serve --bg 3334         # expose to tailnet
 
 ## Related Pages
 
-- [[syntheses/desktop-control-plane]] — big-picture synthesis; Tauri path
-- [[syntheses/builderio-control-plane-integration]] — concrete Builder.io action/artifact integration plan
-- [[entities/commandr]] — L3 bus; approval token format; events.jsonl
-- [[entities/omp]] — potential L2 worker with built-in browser + eval kernel; could replace Pi extension
-- [[entities/agent-native]] — action/state philosophy for the cockpit
 - [[summaries/builderio-skills]] — visual-plan/visual-recap artifact pattern
 - [[syntheses/agent-diff-viewer]] — earlier synthesis (pre-bus-watching, pre-mobile, pre-Pi-extension; partially superseded)
 - [[concepts/agent-harness]] — hook system, PostToolUse event shape

@@ -67,5 +67,4 @@ AWS Security Agent enforces a review gate before launch:
 ## Related Pages
 
 - [[concepts/pentest-agent-design]] — our custom agent design, borrowing these patterns
-- [[entities/pentagi]] — OSS autonomous pen testing system; compare architecture
 - [[concepts/owasp-security-checklist]] — vuln categories the agent tests against

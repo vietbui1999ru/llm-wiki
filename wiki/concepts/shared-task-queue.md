@@ -237,4 +237,3 @@ Failure return: orchestrator monitors `claimed/` for tasks older than timeout th
 - [[concepts/worker-coordination]] — blackboard pattern for results (complement to this)
 - [[concepts/agent-skills]] — skills as the startup invocation mechanism
 - [[concepts/ralph-loop]] — filesystem as durable state; same principle
-- [[entities/sandcastle]] — planner model (centralized assignment; contrast with pull model here)

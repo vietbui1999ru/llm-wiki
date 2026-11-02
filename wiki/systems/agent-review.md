@@ -76,5 +76,4 @@ Shared ground: verification output exists before the human looks, the human owns
 - [[entities/diffviewer]]: the per-edit gate this trials against (now disabled for Pi).
 - [[entities/pi-agent]]: the agent harness being reviewed.
 - [[syntheses/pi-orchestration-architecture]]: the earlier design that named `pi-diff-review` as the gate.
-- [[syntheses/desktop-control-plane]]: the 5-layer toolchain DiffViewer sits in.
 - [[systems/dotfiles-agent-harness-layout]]: where these pieces live and how they are provisioned.

@@ -32,7 +32,7 @@ Self-review catches surface errors (syntax, obvious logic) but misses systematic
 ## Implementations
 
 ### Dangeresque (per-task)
-[[entities/dangeresque]] runs a mandatory adversarial reviewer after every worker agent. The reviewer is a different model from the implementer. Worker → verify → **adversarial review** → human-merge gate.
+Dangeresque runs a mandatory adversarial reviewer after every worker agent. The reviewer is a different model from the implementer. Worker → verify → **adversarial review** → human-merge gate.
 
 ### Karpathy llm-council (reference implementation)
 [[entities/karpathy-llm-council]] is a local web app implementing the full 3-stage [[concepts/council-pattern]]: parallel dispatch → anonymized peer review → Chairman LLM synthesis. Key addition to existing implementations: **anonymization** (model identities hidden during review to prevent provider favoritism) and **Chairman synthesis** (designated model produces the final answer rather than a human). OpenRouter-based. Q&A focused, not production-grade.
@@ -101,6 +101,5 @@ See [[concepts/llm-as-judge]] for the full pattern including when to use rubric-
 
 - [[concepts/verification-pipeline]] — multi-vendor review as an implementation of the reviewer tier
 - [[syntheses/agent-primitive-selection]] — model tier routing; cross-vendor as an extension
-- [[entities/dangeresque]] — adversarial reviewer built into the pipeline
 - [[entities/agentops]] — `/council` as formalized multi-vendor consensus
 - [[concepts/llm-as-judge]] — the evaluation mechanism used in the cross-vendor reviewer role

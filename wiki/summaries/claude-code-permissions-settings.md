@@ -142,5 +142,4 @@ Older tutorials, community posts, and third-party orchestrators (Dangeresque etc
 - [[concepts/agentic-sandbox-controls]] — OS-level isolation; when settings.json is insufficient
 - [[concepts/self-healing-loop]] — autonomous loop that uses bypassPermissions
 - [[concepts/agentic-cicd]] — CI as external watchdog when agent runs in bypass mode
-- [[entities/dangeresque]] — host-native orchestrator; uses its own tool filter config
 - [[summaries/cc-auto-mode]] — auto mode, the classifier-gated alternative to bypassPermissions

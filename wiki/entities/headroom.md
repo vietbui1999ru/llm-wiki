@@ -135,4 +135,3 @@ Accuracy benchmarks (GSM8K, TruthfulQA, SQuAD v2, BFCL) claim ≥97% preservatio
 - [[concepts/context-compression]] — five compression strategies; CCR is the fifth
 - [[concepts/agent-harness]] — where Headroom fits in a harness stack
 - [[concepts/preference-feedback-loop]] — manual counterpart to `headroom learn`
-- [[entities/opencode-dcp]] — similar prefix-rewriting approach but OpenCode-specific

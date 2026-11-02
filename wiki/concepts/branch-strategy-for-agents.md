@@ -9,7 +9,7 @@ updated: 2026-05-04
 
 # Branch Strategy for Agents
 
-When running parallel agents in isolated git worktrees, the merge strategy is a first-class parameter that determines safety, speed, and human involvement. Formalized by [[entities/sandcastle]]; the underlying decision exists in any multi-agent worktree setup.
+When running parallel agents in isolated git worktrees, the merge strategy is a first-class parameter that determines safety, speed, and human involvement. Formalized by SandCastle; the underlying decision exists in any multi-agent worktree setup.
 
 ---
 
@@ -35,7 +35,7 @@ Agent creates a branch, stops. Human reviews diff and merges manually.
 
 - Maximum control — human sees everything before integration
 - Required when: changes affect shared interfaces, high-risk changes, uncertainty about scope
-- Matches [[entities/dangeresque]]'s mandatory human-merge gate philosophy
+- Matches Dangeresque's mandatory human-merge gate philosophy
 
 ---
 
@@ -63,8 +63,6 @@ All three strategies can use worktree isolation during implementation. The branc
 
 ## Relation to Existing Wiki
 
-- [[entities/sandcastle]] — formalizes this taxonomy as a first-class parameter
-- [[entities/dangeresque]] — implements the `branch` strategy (mandatory human-merge gate)
 - [[concepts/agent-harness]] — worktree isolation as a harness component
 - [[concepts/ralph-loop]] — the loop that branch strategy is embedded in
 - [[concepts/verification-pipeline]] — verification runs before merge; strategy determines what follows

@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "queries": [
     {
       "id": "q-001",
@@ -75,15 +75,11 @@
         {
           "page": "wiki/concepts/lsp-agent-baseline.md",
           "grade": 2
-        },
-        {
-          "page": "wiki/syntheses/desktop-control-plane.md",
-          "grade": 1
         }
       ],
       "must_hit": true,
       "authored_by": "llm_filtered",
-      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added desktop-control-plane.md as grade 1"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added desktop-control-plane.md as grade 1 | 2026-11-02: removed wiki/syntheses/desktop-control-plane.md, page deleted in wiki prune"
     },
     {
       "id": "q-005",
@@ -138,17 +134,13 @@
           "grade": 1
         },
         {
-          "page": "wiki/entities/mnemory.md",
-          "grade": 1
-        },
-        {
           "page": "wiki/summaries/cloudflare-agent-memory.md",
           "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Memory bank is the best primary answer, but three other cross-session memory pages are valid supporting answers."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Memory bank is the best primary answer, but three other cross-session memory pages are valid supporting answers. | 2026-11-02: removed wiki/entities/mnemory.md, page deleted in wiki prune"
     },
     {
       "id": "q-008",
@@ -324,17 +316,13 @@
           "grade": 2
         },
         {
-          "page": "wiki/entities/sandcastle.md",
-          "grade": 1
-        },
-        {
           "page": "wiki/concepts/branch-strategy-for-agents.md",
           "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Primary right; two worktree-specific pages support it."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Primary right; two worktree-specific pages support it. | 2026-11-02: removed wiki/entities/sandcastle.md, page deleted in wiki prune"
     },
     {
       "id": "q-018",
@@ -342,10 +330,6 @@
       "category": "alias",
       "split": "heldout",
       "relevant": [
-        {
-          "page": "wiki/entities/pentagi.md",
-          "grade": 2
-        },
         {
           "page": "wiki/summaries/aws-security-agent.md",
           "grade": 1
@@ -357,7 +341,7 @@
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): PentAGI (self-hosted) is the best primary; two other autonomous-pentest pages support it."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): PentAGI (self-hosted) is the best primary; two other autonomous-pentest pages support it. | 2026-11-02: removed wiki/entities/pentagi.md, page deleted in wiki prune"
     },
     {
       "id": "q-019",
@@ -488,15 +472,11 @@
         {
           "page": "wiki/concepts/worktree-isolation.md",
           "grade": 1
-        },
-        {
-          "page": "wiki/entities/sandcastle.md",
-          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): No developer would ask this. The real link is that self-correction routes an agent unsure about merge or branch strategy to the branch-strategy page. | pooled judgment 2026-10-06 (assistant at user request, not human): added worktree-isolation.md as grade 1 after reading page content | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added sandcastle.md as grade 1"
+      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): No developer would ask this. The real link is that self-correction routes an agent unsure about merge or branch strategy to the branch-strategy page. | pooled judgment 2026-10-06 (assistant at user request, not human): added worktree-isolation.md as grade 1 after reading page content | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added sandcastle.md as grade 1 | 2026-11-02: removed wiki/entities/sandcastle.md, page deleted in wiki prune"
     },
     {
       "id": "q-024",
@@ -693,15 +673,11 @@
         {
           "page": "wiki/concepts/dynamic-context-pruning.md",
           "grade": 2
-        },
-        {
-          "page": "wiki/entities/opencode-dcp.md",
-          "grade": 1
         }
       ],
       "must_hit": true,
       "authored_by": "llm_filtered",
-      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added opencode-dcp.md as grade 1"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added opencode-dcp.md as grade 1 | 2026-11-02: removed wiki/entities/opencode-dcp.md, page deleted in wiki prune"
     },
     {
       "id": "q-033",
@@ -763,21 +739,13 @@
       "split": "dev",
       "relevant": [
         {
-          "page": "wiki/entities/agent-native.md",
-          "grade": 2
-        },
-        {
           "page": "wiki/summaries/builderio-agent-native.md",
-          "grade": 1
-        },
-        {
-          "page": "wiki/syntheses/builderio-control-plane-integration.md",
           "grade": 1
         }
       ],
       "must_hit": true,
       "authored_by": "llm_filtered",
-      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added builderio-agent-native.md, builderio-control-plane-integration.md as grade 1"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added builderio-agent-native.md, builderio-control-plane-integration.md as grade 1 | 2026-11-02: removed wiki/entities/agent-native.md, page deleted in wiki prune | 2026-11-02: removed wiki/syntheses/builderio-control-plane-integration.md, page deleted in wiki prune"
     },
     {
       "id": "q-037",
@@ -805,21 +773,13 @@
           "grade": 2
         },
         {
-          "page": "wiki/syntheses/builderio-control-plane-integration.md",
-          "grade": 1
-        },
-        {
-          "page": "wiki/syntheses/desktop-control-plane.md",
-          "grade": 1
-        },
-        {
           "page": "wiki/syntheses/agent-diff-viewer.md",
           "grade": 1
         }
       ],
       "must_hit": true,
       "authored_by": "llm_filtered",
-      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added builderio-control-plane-integration.md, desktop-control-plane.md, agent-diff-viewer.md as grade 1"
+      "notes": "title | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added builderio-control-plane-integration.md, desktop-control-plane.md, agent-diff-viewer.md as grade 1 | 2026-11-02: removed wiki/syntheses/builderio-control-plane-integration.md, page deleted in wiki prune | 2026-11-02: removed wiki/syntheses/desktop-control-plane.md, page deleted in wiki prune"
     },
     {
       "id": "q-039",
@@ -962,15 +922,11 @@
         {
           "page": "wiki/entities/obsidian-cli.md",
           "grade": 1
-        },
-        {
-          "page": "wiki/entities/obsidian-cli-rest-mcp.md",
-          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): 'Notes app' = Obsidian; the CLI and its REST/MCP wrapper are real supporting answers."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): 'Notes app' = Obsidian; the CLI and its REST/MCP wrapper are real supporting answers. | 2026-11-02: removed wiki/entities/obsidian-cli-rest-mcp.md, page deleted in wiki prune"
     },
     {
       "id": "q-048",
@@ -998,17 +954,13 @@
           "grade": 2
         },
         {
-          "page": "wiki/entities/opencode-dcp.md",
-          "grade": 1
-        },
-        {
           "page": "wiki/concepts/agentic-memory-tool.md",
           "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Concept page primary, plugin page supporting. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added agentic-memory-tool.md as grade 1"
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Concept page primary, plugin page supporting. | pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added agentic-memory-tool.md as grade 1 | 2026-11-02: removed wiki/entities/opencode-dcp.md, page deleted in wiki prune"
     },
     {
       "id": "q-050",
@@ -1109,17 +1061,13 @@
           "grade": 2
         },
         {
-          "page": "wiki/summaries/amazon-scraping-2026.md",
-          "grade": 1
-        },
-        {
           "page": "wiki/concepts/webrtc-ip-leak.md",
           "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added amazon-scraping-2026.md, webrtc-ip-leak.md as grade 1"
+      "notes": "pooled judgment 2026-10-06 (Opus agent, ~10% of claims audited by assistant, not human): added amazon-scraping-2026.md, webrtc-ip-leak.md as grade 1 | 2026-11-02: removed wiki/summaries/amazon-scraping-2026.md, page deleted in wiki prune"
     },
     {
       "id": "q-055",
@@ -1147,17 +1095,13 @@
       "split": "dev",
       "relevant": [
         {
-          "page": "wiki/entities/agent-native.md",
-          "grade": 2
-        },
-        {
           "page": "wiki/summaries/builderio-agent-native.md",
           "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Entity primary; source summary supports (summaries are already used as labels elsewhere)."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Entity primary; source summary supports (summaries are already used as labels elsewhere). | 2026-11-02: removed wiki/entities/agent-native.md, page deleted in wiki prune"
     },
     {
       "id": "q-057",
@@ -1448,21 +1392,6 @@
       "notes": ""
     },
     {
-      "id": "q-076",
-      "query": "local http api for my notes app so tools skip the shell",
-      "category": "alias",
-      "split": "dev",
-      "relevant": [
-        {
-          "page": "wiki/entities/obsidian-cli-rest-mcp.md",
-          "grade": 2
-        }
-      ],
-      "must_hit": false,
-      "authored_by": "llm_filtered",
-      "notes": ""
-    },
-    {
       "id": "q-077",
       "query": "terminal coding agent where i can control compaction with my own code",
       "category": "alias",
@@ -1726,15 +1655,11 @@
         {
           "page": "wiki/concepts/tool-design-for-agents.md",
           "grade": 2
-        },
-        {
-          "page": "wiki/entities/obsidian-cli-rest-mcp.md",
-          "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Link exists (automation page cites tool-design), but the REST MCP page carries the actual argument."
+      "notes": "relabel after independent agent review 2026-10-06 (agent, not human): Link exists (automation page cites tool-design), but the REST MCP page carries the actual argument. | 2026-11-02: removed wiki/entities/obsidian-cli-rest-mcp.md, page deleted in wiki prune"
     },
     {
       "id": "q-091",
@@ -1837,15 +1762,11 @@
         {
           "page": "wiki/concepts/dynamic-context-pruning.md",
           "grade": 2
-        },
-        {
-          "page": "wiki/entities/opencode-dcp.md",
-          "grade": 2
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": ""
+      "notes": "2026-11-02: removed wiki/entities/opencode-dcp.md, page deleted in wiki prune"
     },
     {
       "id": "q-097",
@@ -2210,17 +2131,13 @@
           "grade": 1
         },
         {
-          "page": "wiki/entities/sandcastle.md",
-          "grade": 1
-        },
-        {
           "page": "wiki/syntheses/pi-orchestration-architecture.md",
           "grade": 1
         }
       ],
       "must_hit": false,
       "authored_by": "llm_filtered",
-      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): shared-task-queue is only defensible as hub for task distribution; narrow the query to that."
+      "notes": "rewrite after independent agent review 2026-10-06 (agent, not human): shared-task-queue is only defensible as hub for task distribution; narrow the query to that. | 2026-11-02: removed wiki/entities/sandcastle.md, page deleted in wiki prune"
     },
     {
       "id": "q-111",

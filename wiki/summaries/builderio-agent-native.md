@@ -44,7 +44,6 @@ That action can then be invoked from UI, agent runtime, HTTP, MCP, A2A, or CLI. 
 
 ## Wiki connections
 
-- [[entities/agent-native]] — entity page for the framework.
 - [[concepts/agent-harness]] — Agent-Native is a product harness: actions, state, identity, jobs, observability, skills, and UI surfaces.
 - [[concepts/agent-context-instructions]] — per-user skills/instructions become product state instead of local files only.
 - [[concepts/tool-design-for-agents]] — shared action schemas are tool contracts for both humans and agents.

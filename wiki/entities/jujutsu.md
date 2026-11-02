@@ -105,9 +105,10 @@ which leaves Git on a named branch after every commit. Research behind the switc
 5. jj workspaces are not Git worktrees, so the harness cannot see them. Claude Code's `EnterWorktree` refuses
    them too (issue #66503).
 6. **New files over 1 MiB are silently skipped (2026-11-01).** jj's default `snapshot.max-new-file-size` is
-   1 MiB. commit-funnel in jj mode, asked to commit a new 10 MB PDF, printed its normal success line, but the
-   file was not in the commit and stayed untracked in `jj st`. Raise the limit in the jj config or commit large
-   binaries with plain git, and check the commit's file list after committing.
+   1 MiB. A commit wrapper that tracks files through jj can report success while a new 10 MB file stays
+   untracked (it shows as untracked in `jj st` and is missing from the commit). Track it with
+   `jj file track --include-ignored <path>` (skips the size check), raise the limit in the jj config, or
+   commit large binaries with plain git; check the commit's file list after committing.
 7. **No snapshot daemon.** jj snapshots only when a jj command runs, so edits lost between two jj invocations
    are not recoverable from the op log. Hooks that run `jj status` on `SessionStart`/`PreCompact` (or a shell
    `preexec`) narrow that gap ([[summaries/jj-for-coding-agents]]).

@@ -90,8 +90,7 @@ Anthropic's Terms of Service restrict running Claude Code subscription keys insi
 
 **Resolution paths:**
 1. Use the Anthropic API (not subscription) — no container restriction
-2. Host-native worktree isolation ([[entities/dangeresque]] approach) + fine-grained `permissions.allow`/`permissions.deny` in `.claude/settings.json`
-3. [[entities/sandcastle]] workaround: Claude process runs on host, containers only for tool execution (sandboxing tool execution, not the Claude process)
+2. Host-native worktree isolation (Dangeresque approach) + fine-grained `permissions.allow`/`permissions.deny` in `.claude/settings.json`
 
 This does not invalidate the NVIDIA guidance — it applies fully to API usage and partially to subscription users who can sandbox tool execution even if the Claude process runs on host.
 
@@ -196,6 +195,4 @@ Docker's hosted sandbox product runs Claude Code, Codex CLI, Copilot CLI, Gemini
 - [[concepts/self-healing-loop]] — autonomous loop that requires sandbox isolation
 - [[concepts/agentic-cicd]] — CI as external watchdog when agent runs unattended
 - [[entities/ai-coding-agents]]
-- [[entities/dangeresque]] — host-native alternative to container sandboxing
-- [[entities/sandcastle]] — hybrid: Claude on host, tools in container
 - [[concepts/owasp-security-checklist]] — OWASP AI agent security controls; --dangerously-skip-permissions risks; rules files as persistent steering

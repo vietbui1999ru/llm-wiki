@@ -37,7 +37,7 @@ LSP belongs in the execution substrate, not in the bus.
 | L4 knowledge | Stores durable docs and code graph summaries; complements LSP. |
 | L5 UI | Displays diagnostics, symbol context, and blast-radius evidence. |
 
-[[entities/omp]] is the current reference: it treats LSP/DAP as core worker infrastructure. That makes it a better L2 candidate for code-changing tasks than pure text-only subprocess agents.
+omp (oh-my-pi) is the current reference: it treats LSP/DAP as core worker infrastructure. That makes it a better L2 candidate for code-changing tasks than pure text-only subprocess agents.
 
 ---
 

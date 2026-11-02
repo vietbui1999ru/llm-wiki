@@ -87,7 +87,6 @@ The control plane:
 ## Relation to Existing Wiki
 
 - [[concepts/multi-vendor-adversarial-review]] — `/council` is the primary implementation of this pattern
-- [[entities/dangeresque]] — also uses cross-vendor review (adversarial reviewer) but at the per-task level
 - [[concepts/domain-glossary]] — `.agents/decisions/` is a structured form of the shared glossary concept
 - [[concepts/agent-context-instructions]] — `.agents/` corpus serves as extended context instructions
 - [[syntheses/lean-agentic-workflow]] — alternative approach: commit-and-delete vs gitignored durable corpus

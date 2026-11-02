@@ -64,3 +64,4 @@ Source: `raw/Codebases are uniquely hard to search semantically.md`
 - [[concepts/reranking]] — post-retrieval filtering that stacks with contextual retrieval gains
 - [[concepts/compounding-knowledge-base]] — alternative pattern where context is pre-compiled into wiki pages rather than prepended at index time
 - [[entities/qmd]] — local search engine using the BM25 + vector hybrid this technique validates
+- [[entities/docling]] — layout-aware parser that turns PDFs and office files into the clean Markdown this pipeline indexes

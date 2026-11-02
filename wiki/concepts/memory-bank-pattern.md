@@ -136,7 +136,7 @@ The Memory Bank solves the core AGENTS.md limitation identified in Wand's critiq
 |---|---|---|---|
 | Memory Bank | versioned markdown files | Yes (git) | Via repomix compile |
 | [[concepts/agentic-memory-tool]] | Anthropic memory API | Yes | Embedding search |
-| [[entities/mnemory]] | Qdrant + S3 | Yes | Vector search |
+| Mnemory | Qdrant + S3 | Yes | Vector search |
 | CLAUDE.md @-imports | File references | No (static) | No |
 
 ---
@@ -146,6 +146,5 @@ The Memory Bank solves the core AGENTS.md limitation identified in Wand's critiq
 - [[concepts/rules-vs-hooks]] — where Memory Bank fits in the rules/hooks spectrum
 - [[entities/agents-md-format]] — the AGENTS.md format whose limitations motivate this pattern
 - [[concepts/agentic-memory-tool]] — Anthropic's native memory API approach
-- [[entities/mnemory]] — self-hosted vector memory alternative
 - [[concepts/context-compression]] — clear-over-compact; Memory Bank makes clearing safe
 - [[concepts/agent-context-instructions]] — the broader concept this implements

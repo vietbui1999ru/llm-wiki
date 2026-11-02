@@ -68,8 +68,12 @@ headroom perf                                                            # analy
 ```
 
 The wiki scripts tag every request so traffic is attributable per consumer: `x-headroom-stack` is
-`llm-wiki-index`, `llm-wiki-chat` or `llm-wiki-mcp`, and `x-headroom-session-id` carries
+`llm_wiki_index`, `llm_wiki_chat` or `llm_wiki_mcp`, and `x-headroom-session-id` carries
 `OPENCODE_LIGHTRAG_SESSION` (default `wiki-index` / `wiki-chat` / `wiki-mcp`).
+
+The stack slug must match `^[a-z][a-z0-9_]{0,63}$` — underscores, no hyphens. A hyphenated value is
+silently dropped and the request lands unattributed in `/stats`, which is why these use underscores
+(verified: `llm_wiki_index` appears in `requests.by_stack`; `llm-wiki-index` does not).
 
 Those two headers are not cosmetic for OpenCode Go. The endpoint refuses requests without
 `x-opencode-session` (`MissingSessionID`) and uses the value for routing and prefix-cache affinity, so

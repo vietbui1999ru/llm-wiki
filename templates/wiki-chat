@@ -86,7 +86,7 @@ _OPENCODE_HEADERS: dict[str, str] = {
     "x-opencode-session": _SESSION,
 }
 if _PROXY_URL:  # stack attribution + session grouping in the proxy's /stats
-    _OPENCODE_HEADERS["x-headroom-stack"] = "llm-wiki-chat"
+    _OPENCODE_HEADERS["x-headroom-stack"] = "llm_wiki_chat"
     _OPENCODE_HEADERS["x-headroom-session-id"] = _SESSION
 
 

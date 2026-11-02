@@ -92,7 +92,7 @@ _OPENCODE_HEADERS: dict[str, str] = {
     "x-opencode-session": _SESSION,
 }
 if _PROXY_URL:
-    _OPENCODE_HEADERS["x-headroom-stack"] = "llm-wiki-index"
+    _OPENCODE_HEADERS["x-headroom-stack"] = "llm_wiki_index"
     _OPENCODE_HEADERS["x-headroom-session-id"] = _SESSION
     # Extraction prompts ARE the content the graph is built from: lossy compression here
     # changes what gets stored. Keep the proxy in the path for monitoring and prefix-cache

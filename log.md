@@ -2,6 +2,14 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-11-02] update | Stale pages, schema, lean public docs site, index hook
+
+- Stale pages brought to the dotfiles setup as of 2026-11-02: council-pattern (pi-council.sh: three Pi voices, majority plus security veto, no Chairman), model-tier-routing (Opus orchestrator, Haiku scout/worker, Pi tiers, Sonnet no default role), multi-vendor-adversarial-review (reviewer-agent counter-evidence; GitHub Models list retired), context-compression heading ("Common Practice (advantage unmeasured)").
+- Schema: `type: pattern` and `type: research` added; `wiki/research/` added to the taxonomy; new optional `publish: false` field.
+- Docs site: 18 owner-setup pages marked `publish: false` (dotfiles layout, agent-review, otel-council, retrieval-eval-suite, wiki-indexing-pipeline, local-rag-wiki, Commandr, DiffViewer, control-plane syntheses, pi-orchestration, spec-conformance options, our-stack-vs-omp, linux-setup-guide, diagrammer-agent, lean-session). ONBOARDING.md and GUIDE.md leave the site; new `docs/starter.md` ("Start small") is the entry point. Workflow, architecture, send-it and harness-migration guides stay as "How I Work". 166 → 147 published pages, 0 dead links.
+- Still published but mixing general content with this setup (follow-up): GUIDE-style sections in lean-agentic-workflow, neovim-ai-operator-workflow, model-task-routing, preference-feedback-loop, council-pattern, and the pi-agent, omp, jujutsu, qmd, pele, dangeresque, firecrawl, context7, laya entity pages.
+- Index: wiki-index only ran from post-commit, so pages merged by `git pull` were never indexed (a2a-protocol, prompt-caching, lightrag were missing). Added a post-merge hook that reuses post-commit over ORIG_HEAD..HEAD; ran `wiki-index --reconcile`, then `--verify`: "Index matches the wiki."
+
 ## [2026-11-01] lint | lint + index reconcile after the 2026-11-01 ingest
 
 Reconcile: every wiki page has an index entry and every entry resolves; no broken wikilinks; frontmatter complete; stub markers consistent; pending-sync.md has 0 pending entries.

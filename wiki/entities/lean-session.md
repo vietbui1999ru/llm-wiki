@@ -5,6 +5,7 @@ tags: [opencode, plugin, compaction, context-management, agent-state]
 sources: []
 created: 2026-05-06
 updated: 2026-05-06
+publish: false
 ---
 
 # lean-session plugin

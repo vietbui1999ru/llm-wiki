@@ -5,6 +5,7 @@ tags: [indexing, rag, lightrag, qmd, embeddings, knowledge-graph, incremental, o
 sources: ["claude-setup/scripts/post-commit", "templates/wiki-index", "templates/wiki-mcp", "templates/wiki-chat", "LightRAG 1.5.7 source (lightrag/lightrag.py, lightrag/llm/openai.py)", "2026-10-04 rebuild and diagnosis sessions"]
 created: 2026-10-04
 updated: 2026-10-05
+publish: false
 ---
 
 # Wiki Indexing Pipeline: qmd and LightRAG

@@ -5,6 +5,7 @@ tags: [setup, tooling, workflow, claude-code, opencode, headroom, dotfiles]
 sources: []
 created: 2026-06-09
 updated: 2026-10-17
+publish: false
 ---
 
 # Linux Machine Setup Guide

@@ -5,6 +5,7 @@ tags: [dotfiles, stow, claude-code, codex, pi, opencode, agents, configuration, 
 sources: ["dotfiles README.md (Packages table)", "dotfiles scripts/restow.sh, bootstrap-dirs.sh, sync-agent-rules.sh", "dotfiles docs/workflows/sync-agents-disk-roster.md", "dotfiles shared/", "dotfiles scripts/firecrawl, scripts/firecrawl-mcp (verification run 2026-10-15)"]
 created: 2026-10-04
 updated: 2026-10-19
+publish: false
 ---
 
 # Dotfiles Layout for the Agent Harnesses

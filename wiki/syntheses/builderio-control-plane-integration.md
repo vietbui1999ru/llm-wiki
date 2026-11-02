@@ -10,6 +10,7 @@ sources:
   - "DiffViewer/docs/V0.7-CONTROL-PLANE-COCKPIT-PLAN.md"
 created: 2026-06-19
 updated: 2026-06-19
+publish: false
 ---
 
 # Builder.io Patterns for Commandr + DiffViewer

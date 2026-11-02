@@ -5,6 +5,7 @@ tags: [rag, local-llm, ollama, lightrag, graph, mcp, wiki-chat, wiki-index, wiki
 sources: ["summaries/agentic-search-vs-rag", "summaries/local-rag-elasticsearch"]
 created: 2026-05-11
 updated: 2026-10-04
+publish: false
 ---
 
 # Local Wiki RAG: LightRAG Graph Stack

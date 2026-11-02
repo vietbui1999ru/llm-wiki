@@ -23,6 +23,7 @@ Source summary: [[summaries/pele]].
 | Output | Standalone SVG with inline colour fallbacks; restyle via `--pele-*` CSS variables without re-rendering |
 | Speed | "Faster than Mermaid" `(claimed, unverified)`: no published benchmark |
 
+<!-- personal -->
 ## In this setup
 
 Installed as the `pele` skill in `~/dotfiles/shared/skills/pele/` (dotfiles PR #124, draft as of 2026-10-19):
@@ -36,6 +37,7 @@ Installed as the `pele` skill in `~/dotfiles/shared/skills/pele/` (dotfiles PR #
   `~/.claude/skills`. Ansible runs bootstrap, and the mise role supplies node, so a new machine needs no extra step.
 - Why not the alternatives: a global `npm i -g pele` or mise `npm:pele` installs no runnable command, and
   `npx -p pele` downloads again on each use and is not pinned.
+<!-- /personal -->
 
 ## When to use which diagram tool
 
@@ -43,14 +45,21 @@ Installed as the `pele` skill in `~/dotfiles/shared/skills/pele/` (dotfiles PR #
 |---|---|
 | Diagram inside a markdown page (wiki, docs site, README, spec) | A `mermaid` fence in the page; Mintlify, GitHub and Obsidian render it natively. Validate it with `pele-render` (stdin, exit 1 on a parse error). |
 | Standalone diagram file (slides, `<img>`, export) | pele (`pele-render x.mmd -o x.svg`) |
-| Designing the diagram itself | the [[entities/diagrammer-agent]] subagent, in any harness |
-| Neovim inline preview | none: `mmdc` was removed (not installed as of 2026-10-22) and nothing replaces it |
 | Freeform layout, whiteboard, hand-drawn slide deck | Excalidraw MCP |
 
+<!-- personal -->
+| Need | Tool |
+|---|---|
+| Designing the diagram itself | the [[entities/diagrammer-agent]] subagent, in any harness |
+| Neovim inline preview | none: `mmdc` was removed (not installed as of 2026-10-22) and nothing replaces it |
+<!-- /personal -->
+
+<!-- personal -->
 The docs site does not need pele. `build-docs-site.mjs` passes `mermaid` fences through to `.mdx`, and Mintlify
 renders them client-side with zoom and pan. Pre-rendering pages with pele would lose that and use pele's own
 layout instead of Mermaid's. pele targets Mermaid 12.1; Mintlify ships its own Mermaid build, so check newer
 types such as `architecture-beta` on the published page.
+<!-- /personal -->
 
 Diagram type per question, for system design: components and links → `flowchart LR` or `architecture-beta`;
 calls over time → `sequenceDiagram`; context for non-engineers → `C4Context`; entity lifecycle →
@@ -62,6 +71,9 @@ is narrow, because below 640 px pele switches supported diagrams to a vertical l
 
 ## Related pages
 
-- [[entities/diagrammer-agent]]: the subagent that designs diagrams and validates them with pele
 - [[systems/system-design-process]]
+
+<!-- personal -->
+- [[entities/diagrammer-agent]]: the subagent that designs diagrams and validates them with pele
 - [[systems/dotfiles-agent-harness-layout]]: where shared skills are linked
+<!-- /personal -->

@@ -44,9 +44,13 @@ Startup memory injection. One long-running multi-agent setup injects ~35k tokens
 4. A periodic prune: remove lessons that are now enforced, overruled, or redundant with native features.
 5. A human accepts every change to the harness.
 
+<!-- personal -->
+
 ## How this wiki's setup maps
 
 `mistakes/raw-log.md` → `capture-mistake` → `global-prevention-rules.md` (≤ 45-line cap, dated entries) is levels 1 and 3. The judge-driven [[concepts/preference-feedback-loop]] is level 3 with a cross-vendor evaluator. Promotion to hooks/guards is level 2. Levels 4 and 5 are not adopted.
+
+<!-- /personal -->
 
 ## Related
 

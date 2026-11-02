@@ -2,6 +2,12 @@
 
 Append-only. Format: `## [YYYY-MM-DD] <operation> | <title>`
 
+## [2026-11-02] update | Strip owner-setup sections from the public docs site
+
+- New convention (CLAUDE.md): wrap owner-specific blocks in general pages with `<!-- personal -->` … `<!-- /personal -->`; the docs build strips them and fails on an unclosed marker. The wiki keeps the content.
+- 34 mixed pages reviewed, 28 marked: Commandr/DiffViewer roles, "This setup" / "Local setup" / "Status on this machine" sections, this wiki's own measurements, owner keys and config, links to unpublished pages. Examples: neovim-ai-operator-workflow, omp, jujutsu, model-tier-routing, pi-agent, council-pattern, qmd, laya, model-task-routing.
+- Owner-setup term hits on the built site: 219 on 44 pages → 99 on 28. What remains is tools' documented paths (`~/.claude`, `~/.codex`, `~/.gemini`), generic attack-target paths (`~/.ssh`), and third-party source examples. 0 dead site links.
+
 ## [2026-11-02] update | Stale pages, schema, lean public docs site, index hook
 
 - Stale pages brought to the dotfiles setup as of 2026-11-02: council-pattern (pi-council.sh: three Pi voices, majority plus security veto, no Chairman), model-tier-routing (Opus orchestrator, Haiku scout/worker, Pi tiers, Sonnet no default role), multi-vendor-adversarial-review (reviewer-agent counter-evidence; GitHub Models list retired), context-compression heading ("Common Practice (advantage unmeasured)").

@@ -97,6 +97,8 @@ Order for code agents:
 
 LSP catches many syntactic and symbol errors. It does not prove acceptance criteria, runtime behavior, security posture, or product intent.
 
+<!-- personal -->
+
 ---
 
 ## Commandr/DiffViewer Implication
@@ -111,5 +113,7 @@ DiffViewer/Tauri should surface LSP-derived evidence in the UI:
 - safe-rename/blast-radius evidence when a change touches exported symbols
 
 This keeps the bus stable while improving agent code quality at L2 and review quality at L5.
+
+<!-- /personal -->
 
 See [[syntheses/neovim-ai-operator-workflow]] for the Neovim/Mason/DAP operator workflow.

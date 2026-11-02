@@ -50,12 +50,23 @@ const GUIDES = [
 const humanize = (slug) =>
   slug.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
+// A general page can hold a section about this owner's own setup. Wrapped in
+// <!-- personal --> … <!-- /personal --> (each marker on its own line), it stays
+// in the wiki and is stripped from the public site. An unclosed marker fails the
+// build rather than publishing the rest of the page.
+const PERSONAL = /^[ \t]*<!-- personal -->[ \t]*\n[\s\S]*?^[ \t]*<!-- \/personal -->[ \t]*(\n|$)/gm;
+function stripPersonal(body) {
+  const out = body.replace(PERSONAL, "");
+  if (/<!-- \/?personal -->/.test(out)) throw new Error("unbalanced <!-- personal --> marker");
+  return out;
+}
+
 function parseFrontmatter(raw) {
-  if (!raw.startsWith("---\n")) return { fm: {}, body: raw };
+  if (!raw.startsWith("---\n")) return { fm: {}, body: stripPersonal(raw) };
   const end = raw.indexOf("\n---", 4);
-  if (end === -1) return { fm: {}, body: raw };
+  if (end === -1) return { fm: {}, body: stripPersonal(raw) };
   const block = raw.slice(4, end);
-  const body = raw.slice(end + 4).replace(/^\r?\n/, "");
+  const body = stripPersonal(raw.slice(end + 4).replace(/^\r?\n/, ""));
   const fm = {};
   for (const line of block.split("\n")) {
     const m = line.match(/^([A-Za-z_]+):\s*(.*)$/);

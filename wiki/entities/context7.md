@@ -30,7 +30,11 @@ Both modes access the same upstream doc index; prefer MCP when the agent harness
 | Pi | `@upstash/context7-pi` extension + `ctx7` CLI fallback | Extension preferred; CLI when extension unavailable |
 | OMP | `ctx7` CLI | No native MCP plugin; CLI-only |
 
-Cross-platform setup: [[comparisons/cc-to-cross-platform-migration]] (MCP layer section). MCP ecosystem overview: [[comparisons/our-stack-vs-omp]].
+Cross-platform setup: [[comparisons/cc-to-cross-platform-migration]] (MCP layer section).
+
+<!-- personal -->
+MCP ecosystem overview: [[comparisons/our-stack-vs-omp]].
+<!-- /personal -->
 
 ## MCP Tools Reference
 
@@ -81,12 +85,15 @@ For scripting or non-MCP/CLI integrations.
 
 **Skip for**: pure reasoning tasks, git operations, file manipulation with no external library dependency, standard Unix tools (ls, grep, cat).
 
+<!-- personal -->
 The CLAUDE.md rule (always-loaded): "Before using any library, framework, CLI tool, or API — resolve current docs via context7 MCP." Applied in this repo on every ingest that touches a library.
+<!-- /personal -->
 
 Similar tool (wiki search, not doc fetch): [[entities/qmd]].
 
 Wrapped as one of three surfaces (alongside web/code search) in [[entities/ketch]]'s `ketch docs` command — same resolve → fetch flow, unified under a single agent-facing CLI.
 
+<!-- personal -->
 ## Key Storage and Rotation
 
 Single source of truth: `~/secrets/.env`
@@ -96,6 +103,7 @@ Synced to:
 - `~/.config/opencode/.env` (Opencode)
 
 Variable name: `CONTEXT7_API_KEY`. Rotate at [context7.com](https://context7.com), then update all three locations.
+<!-- /personal -->
 
 ## Related Packages
 

@@ -72,9 +72,13 @@ Other cost keys on a subagent: `omitClaudeMd`, `maxTurns`, `permissionMode: plan
 
 Statusline JSON supplies `rate_limits.five_hour.used_percentage`, `rate_limits.seven_day.used_percentage`, `cost.total_cost_usd` and `session_id` (the rate-limit fields only for Pro/Max subscribers, after the first response). Logging a line whenever a percentage changes and matching sessions to PRs gives a cost-per-PR figure for your own workload. `cost.total_cost_usd` is a client-side estimate and resets on `/clear`. The docs do not state that it includes subagent requests, though subagent usage counts toward limits and appears in `/usage`.
 
+<!-- personal -->
+
 ## Application in this setup (as of 2026-10-09)
 
 Implementation is dispatched to Pi under the plan-handoff rule, which moves it out of Claude usage entirely and is a stronger form of the context lever. In-Claude subagents are therefore mainly for read-only exploration and review. No custom agent roster is installed; `CLAUDE_CODE_SUBAGENT_MODEL` is set as a gap filler. No cost logging exists yet.
+
+<!-- /personal -->
 
 ## Related Pages
 

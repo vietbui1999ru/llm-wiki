@@ -7,11 +7,15 @@ created: 2026-10-19
 updated: 2026-11-01
 ---
 
+<!-- personal -->
+
 > **Contradiction (2026-11-01): the 2026-10-20 decision is superseded.** On 2026-10-20 this page and log.md
 > ("jj is human-only, agents stay on Git") recorded that agents use Git only and Claude's settings deny
 > `Bash(jj ...)`. That is no longer true. The current global rules (`~/.claude/rules/tool-routing.md`,
 > "Git history") make jj the default VCS for agent sessions, colocated with Git, with commits only through
 > `~/dotfiles/scripts/commit-funnel`. See "Agent use (current)" below; the old decision is kept for history.
+
+<!-- /personal -->
 
 # Jujutsu (jj)
 
@@ -24,10 +28,17 @@ conflicts are stored in commits, and descendants rebase automatically. Source su
 | | |
 |---|---|
 | Kind | Rust CLI VCS; Git backend via `gitoxide`. Only the Git backend is production-ready. |
-| Version used here | 0.46.0 (`jj --version`, Homebrew, 2026-10-20). Captured README news stops at 0.24 (Dec 2024). |
 | Repo / docs | github.com/jj-vcs/jj; docs at docs.jj-vcs.dev/latest (and `/prerelease` for `main`) |
 | Maturity | Experimental, pre-1.0; on-disk format may change. No Git submodule support. |
 | Help | `jj help <cmd>`, `jj help -k <keyword>` |
+
+<!-- personal -->
+
+| | |
+|---|---|
+| Version used here | 0.46.0 (`jj --version`, Homebrew, 2026-10-20). Captured README news stops at 0.24 (Dec 2024). |
+
+<!-- /personal -->
 
 ## Git-to-jj mental model
 
@@ -39,6 +50,8 @@ conflicts are stored in commits, and descendants rebase automatically. Source su
 | `git rebase --update-refs` + `git rerere` | automatic descendant rebase with propagated conflict resolutions |
 | interrupted rebase / merge state | conflicts recorded in commits, resolved later |
 | `git blame` | `jj file annotate` (since 0.24) |
+
+<!-- personal -->
 
 ## Local setup
 
@@ -77,6 +90,8 @@ which leaves Git on a named branch after every commit. Research behind the switc
 - **Not jj workspaces.** Claude Code's `EnterWorktree` validates against `git worktree list` and refuses jj
   workspaces made by a `WorktreeCreate` hook (issue #66503, open as of 2026-09-03). The harness therefore keeps
   Claude Code's Git worktrees and colocates jj inside each one.
+
+<!-- /personal -->
 
 ## Gotchas
 

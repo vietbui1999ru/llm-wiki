@@ -83,14 +83,23 @@ Layer-by-layer mapping of CC assets to equivalent mechanisms on Gemini CLI, Open
 |---|---|---|---|---|---|---|
 | System | `PreToolUse`, `PostToolUse`, `Stop` in `settings.json` | None | Plugin event system (20+ event types) | `hooks` in `config.toml` | Project-local hook events (15 types) | None |
 | Event count | 8 types | — | 20+ types | — | 15 types | — |
-| Current setup | PostToolUse on Bash → `publish-ai-kb.sh` | — | Already done: lean-compaction-plugin.ts | Can mirror project-local shell hooks | — | — |
 | **Parity** | — | None | Highest (more events than CC) | Medium | Medium (different events, DRY adapter) | None |
+
+<!-- personal -->
+| Asset | Claude Code | Gemini CLI | OpenCode | Codex | Cursor | GitHub Copilot |
+|---|---|---|---|---|---|---|
+| Current setup | PostToolUse on Bash → `publish-ai-kb.sh` | — | Already done: lean-compaction-plugin.ts | Can mirror project-local shell hooks | — | — |
+<!-- /personal -->
 
 **OpenCode leads on hooks**: OpenCode has more hook event types than Claude Code. Additional events include `file.edited`, `file.watcher.updated`, `message.updated`, `lsp.client.diagnostics`. The compaction hook (`session.compacting`) has no CC equivalent.
 
 **Cursor hook architecture**: Cursor has 15 hook types vs CC's 8. ECC uses a DRY adapter pattern — `adapter.js` transforms Cursor's stdin JSON to Claude Code's format, so the same `scripts/hooks/*.js` run on both harnesses. Notable Cursor-only hooks: `beforeSubmitPrompt` (secrets detection in prompts), `beforeTabFileRead` (blocks reading `.env`/`.pem` files).
 
-**Migration action**: OpenCode hook equivalent is the plugin system — already done (`lean-compaction-plugin.ts`). Codex supports repo-local hooks via `.codex/config.toml`, but plugin parity is still separate. Gemini and Copilot still have no equivalent here.
+**Migration action**: OpenCode hook equivalent is the plugin system. Codex supports repo-local hooks via `.codex/config.toml`, but plugin parity is still separate. Gemini and Copilot still have no equivalent here.
+
+<!-- personal -->
+OpenCode hook migration already done here (`lean-compaction-plugin.ts`).
+<!-- /personal -->
 
 ---
 
@@ -99,8 +108,13 @@ Layer-by-layer mapping of CC assets to equivalent mechanisms on Gemini CLI, Open
 | Asset | Claude Code | Gemini CLI | OpenCode | Codex | Cursor |
 |---|---|---|---|---|---|
 | System | CC plugin marketplace (`enabledPlugins`) | None | npm packages (`@tarquinen/opencode-dcp`, etc.) | None | Extension marketplace |
-| Specific plugins | superpowers, caveman, qmd, playwright, context7 | — | DCP plugin (already documented) | — | Cursor extensions |
 | **Parity** | — | None | Parallel (different ecosystem) | None | Parallel (different ecosystem) |
+
+<!-- personal -->
+| Asset | Claude Code | Gemini CLI | OpenCode | Codex | Cursor |
+|---|---|---|---|---|---|
+| Specific plugins | superpowers, caveman, qmd, playwright, context7 | — | DCP plugin (already documented) | — | Cursor extensions |
+<!-- /personal -->
 
 **Migration action**: No migration — plugin ecosystems are fully separate. Identify equivalent functionality per platform separately.
 
@@ -116,11 +130,13 @@ Layer-by-layer mapping of CC assets to equivalent mechanisms on Gemini CLI, Open
 
 ---
 
+<!-- personal -->
 ## Council / Multi-Vendor Review
 
 `templates/council.py` — **100% portable**. Runs anywhere Python + GITHUB_TOKEN available. Platform-agnostic by design.
 
 ---
+<!-- /personal -->
 
 ## GitHub Copilot (VS Code)
 
@@ -144,6 +160,7 @@ Project-local `.zed/` adapter. Writes ECC-managed files under `.zed/`, flattened
 ./install.sh --profile minimal --target zed
 ```
 
+<!-- personal -->
 ## What's Already Cross-Platform
 
 | Asset | Status |
@@ -157,6 +174,7 @@ Project-local `.zed/` adapter. Writes ECC-managed files under `.zed/`, flattened
 | Skill file *content* (`skills/*/SKILL.md`) | Portable to Codex native skills with small metadata shim |
 
 ---
+<!-- /personal -->
 
 ## What Still Needs Official Sources
 

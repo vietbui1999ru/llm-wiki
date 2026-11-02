@@ -23,7 +23,11 @@ Firecrawl handles the full stack of web data extraction:
 
 ## CLI-first across harnesses
 
-The MCP server is one way in, not the only one. The `firecrawl` CLI works from any harness that can run a shell command, and `firecrawl init` installs its skills into `~/.agents/skills`, which Claude Code, Codex, OpenCode and Pi all list. Here the 34 it installs are trimmed to a curated 15 (`dotfiles/shared/firecrawl-skills.txt`) and `init` is run only for Claude Code, Codex and OpenCode, because run bare it writes skills into the config folder of a dozen agents whether or not they are installed. The CLI reads `FIRECRAWL_API_KEY` from the environment and prefers it over a stored login, so a stale inherited key breaks every harness started before a key rotation. This setup puts a small shim ahead of the binary on `PATH` that loads the key from `~/secrets/.env` and overrides the inherited value; credentials, per-harness `firecrawl` agent files and the verification matrix are in [[systems/dotfiles-agent-harness-layout]]. Codex's sandbox network proxy blocks `api.firecrawl.dev` by default; a `dev` permission profile that extends Codex's `:workspace` sandbox and allowlists the API host fixes it (`dotfiles/docs/codex-permissions.md`).
+The MCP server is one way in, not the only one. The `firecrawl` CLI works from any harness that can run a shell command, and `firecrawl init` installs its skills into `~/.agents/skills`, which Claude Code, Codex, OpenCode and Pi all list. Run bare, `init` writes skills into the config folder of a dozen agents whether or not they are installed. The CLI reads `FIRECRAWL_API_KEY` from the environment and prefers it over a stored login, so a stale inherited key breaks every harness started before a key rotation. Codex's sandbox network proxy blocks `api.firecrawl.dev` by default; a `dev` permission profile that extends Codex's `:workspace` sandbox and allowlists the API host fixes it.
+
+<!-- personal -->
+Here the 34 skills `init` installs are trimmed to a curated 15 (`dotfiles/shared/firecrawl-skills.txt`) and `init` is run only for Claude Code, Codex and OpenCode. This setup puts a small shim ahead of the binary on `PATH` that loads the key from `~/secrets/.env` and overrides the inherited value; credentials, per-harness `firecrawl` agent files and the verification matrix are in [[systems/dotfiles-agent-harness-layout]]. The Codex `dev` profile is in `dotfiles/docs/codex-permissions.md`.
+<!-- /personal -->
 
 ## MCP Integration
 

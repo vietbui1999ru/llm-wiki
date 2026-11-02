@@ -9,7 +9,11 @@ updated: 2026-07-23
 
 # Tiered Knowledge Delivery (Push / Hook / Pull)
 
-The mechanism behind this wiki's "agent-first" claim (see [ONBOARDING.md](../../ONBOARDING.md)): agents get pre-synthesized structure without paying a search cost for it, while the bulk of the wiki stays out of every session's context.
+Agents get pre-synthesized structure without paying a search cost for it, while the bulk of the wiki stays out of every session's context.
+
+<!-- personal -->
+This is the mechanism behind this wiki's "agent-first" claim (see [ONBOARDING.md](../../ONBOARDING.md)).
+<!-- /personal -->
 
 ## Two failure modes this replaces
 
@@ -26,11 +30,13 @@ The mechanism behind this wiki's "agent-first" claim (see [ONBOARDING.md](../../
 
 Promotion between tiers is decided by **frequency × cost-of-violation**, not by how interesting a page is. Content earns Tier 0 only if it's both hit often and expensive to get wrong.
 
+<!-- personal -->
 ## Provenance
 
 Decided 2026-06-12 via a read-only 4-lens agent council (agent-consumer, human-learner, maintainer/cost, adversarial verifier) — see `docs/wiki-dual-use-audit-2026-06.md` for the full scorecard, prioritized fix list, and the hard constraint this model must satisfy: *pull stays the default; nothing large gets pushed into every session*.
 
 Correctness of Tier 0 is checked by the wiki's own lint procedure's Tier-0 distillation sync step (CLAUDE.md "Lint" operation) — for each wikilink cited in `applied-ai.md` / `global-prevention-rules.md`, verify the linked page still says the same thing.
+<!-- /personal -->
 
 ## Open question this doesn't answer
 

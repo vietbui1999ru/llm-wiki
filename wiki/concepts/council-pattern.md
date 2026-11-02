@@ -73,6 +73,10 @@ Karpathy's implementation anonymizes identities in Stage 2. Without anonymizatio
 | **Karpathy llm-council** | All models in parallel | Anonymized peer review + ranking | Chairman LLM | Local web app; OpenRouter; Q&A focused |
 | **AgentOps `/council`** | All models in parallel | None | Surfaces disagreements | CLI; design decisions; human synthesizes |
 | **BMAD workflow** | Opus plans, Codex reviews | Iterative back-and-forth | Human decides | Sequential, not parallel |
+
+<!-- personal -->
+| Implementation | Stage 1 | Stage 2 | Stage 3 | Notes |
+|---|---|---|---|---|
 | **This setup (dotfiles, as of 2026-11-02): `pi-council.sh`** | Three voices in parallel, one `pi` call each | None | No Chairman: majority rule (≥2 PASS) plus a security veto | Evaluates a diff, not a question; details below |
 
 ### This setup (dotfiles, as of 2026-11-02)
@@ -87,6 +91,7 @@ The council is the `delegate-pi` skill's council mode: `pi-council.sh --diff <ra
 | `security` (veto) | `PI_COUNCIL_SECURITY_MODEL` | `opencode-go/glm-5.3:high` |
 
 Verdict is PASS when at least two of the three voices pass; ties and all-ABSTAIN fail safe to FAIL. A security FAIL overrides a passing majority. Every voice runs at `medium` or `high` effort, never above. The orchestrator (Opus 5.5) reads the verdict and reasons; there is no synthesizing model. The earlier Sonnet + GPT + Opus Chairman council, with its `.council/` voice files and git auto-commit, is retired.
+<!-- /personal -->
 
 ---
 
@@ -141,5 +146,8 @@ For a 3-model council with 1K token query:
 - [[concepts/multi-vendor-adversarial-review]] — adversarial review; council as its strongest form
 - [[entities/karpathy-llm-council]] — reference implementation with anonymized peer review
 - [[entities/agentops]] — `/council` CLI; disagreement surfacing without Chairman
-- [[entities/pi-agent]] — the `pi` CLI that runs each council voice in this setup
 - [[syntheses/agent-primitive-selection]] — where council fits in the model-tier routing decision
+
+<!-- personal -->
+- [[entities/pi-agent]] — the `pi` CLI that runs each council voice in this setup
+<!-- /personal -->

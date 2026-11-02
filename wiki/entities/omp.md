@@ -192,7 +192,11 @@ Inherits from `.claude`, `.cursor`, `.windsurf`, `.gemini`, `.codex`, `.cline`, 
 - `subagent_lifecycle` / `subagent_progress` / `subagent_event` — native subagent monitoring
 - Real-time event streaming: `message_update`, `tool_execution_*`, `agent_start`/`agent_end`
 
+<!-- personal -->
+
 **Why it matters for Commandr:** RPC mode enables Level 2+ integration without writing TypeScript plugins. The host (commandr-omp-runner) can be any language — it just speaks JSON lines. See [[research/omp-snapcompact-rpc]] for full protocol research.
+
+<!-- /personal -->
 
 **RPC vs MCP:**
 
@@ -219,6 +223,8 @@ omp bundles skills, commands, hooks, custom tools, MCP servers, and themes in a 
 | MCP | `mcp.json` | Extra `mcpServers` entries |
 
 Install: `omp install ./path` (symlinks + watches), `omp install github:user/repo`, `omp install @scope/plugin`. Project-scoped with `-l`.
+
+<!-- personal -->
 
 ### Headroom Compression Plugin (Local)
 
@@ -259,6 +265,8 @@ Integration ladder:
 
 Level 1 is complete with `commandr-omp-runner` (see `commandr-omp-runner/` in this repo). Level 2 becomes useful once task/event/approval schemas stabilize. Level 3 (plugin-based bidirectional sync) is where the headroom plugin pattern also lives — a plugin can both intercept context and register tools that talk back to Commandr's bus.
 
+<!-- /personal -->
+
 ---
 
 ## Internal Schemes (`://`)
@@ -285,8 +293,13 @@ Level 1 is complete with `commandr-omp-runner` (see `commandr-omp-runner/` in th
 
 - [[entities/pi-agent]] — upstream fork; minimal harness design; Terminal Bench data
 - [[summaries/omp-oh-my-pi]] — full source summary
+- [[concepts/agent-harness]] — harness engineering framing
+- [[comparisons/claude-code-vs-opencode-plugins]] — adjacent harness comparison
+
+<!-- personal -->
+
 - [[comparisons/our-stack-vs-omp]] — feature gap vs our Claude Code + Pi setup
 - [[entities/commandr]] — L3 bus omp should speak through
 - [[entities/diffviewer]] — L5 UI consuming omp artifacts through Commandr/DiffViewer sidecars
-- [[concepts/agent-harness]] — harness engineering framing
-- [[comparisons/claude-code-vs-opencode-plugins]] — adjacent harness comparison
+
+<!-- /personal -->

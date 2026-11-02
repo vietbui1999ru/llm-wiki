@@ -112,11 +112,18 @@ Shell shorthand: `!command` runs `run_shell_command`. `@path` triggers `read_man
 | CC asset | Gemini equivalent |
 |---|---|
 | `~/.claude/CLAUDE.md` | `~/.gemini/GEMINI.md` |
+| `.claude/commands/*.toml` | `.gemini/commands/*.toml` (same format) |
+
+<!-- personal -->
+
+| CC asset | Gemini equivalent |
+|---|---|
 | `claude-setup/rules/*.md` | Same files, referenced via `@rules/*.md` imports |
 | `claude-setup/skills/*/SKILL.md` | `.gemini/skills/*/SKILL.md` + `activate_skill` |
-| `.claude/commands/*.toml` | `.gemini/commands/*.toml` (same format) |
 | `claude-setup/agents/*.md` | Experimental subagents (not production-ready) |
 | `templates/AGENTS.md` | Not natively read; use GEMINI.md or configure `context.fileName` |
+
+<!-- /personal -->
 
 ## Related Pages
 

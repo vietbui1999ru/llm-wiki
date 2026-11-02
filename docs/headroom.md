@@ -151,6 +151,101 @@ Prefix caching is worth more than compression on the extraction path, and the le
 - **Response cache** — LightRAG's own `kv_store_llm_response_cache.json` (56 MB, 3400 records here)
   already deduplicates repeated extraction calls; keep it when reusing a work dir.
 
+## Phase 2 plan: Option A with option C discipline
+
+Decided: **one proxy, one OpenAI-shaped target pinned to OpenCode Go** (option A), and **plain
+`claude` / `codex` / `pi` stay direct** — only `hclaude` / `hcodex` / `hpi` and an explicit
+`PI_HEADROOM=1` touch the proxy (option C). Owner of the dotfiles half is the `feat/headroom`
+worktree (SPEC.md approved; phase 1 already implemented).
+
+Verified before planning, on installed headroom 0.24.0 / pi 1.4.0:
+
+- Pi's `openai-codex` provider is **WebSocket** and joins base + `/codex/responses`, so today it calls
+  `wss://chatgpt.com/backend-api/codex/responses`. Headroom registers WS at `/backend-api/codex/responses`,
+  so `{proxy}/backend-api` is the only base that keeps that transport working through the proxy.
+- The ChatGPT branch is chosen by auth shape (fact above), so both Codex clients survive any
+  `OPENAI_TARGET_API_URL`. Only `opencode-go` depends on it.
+- `x-headroom-base-url` is dead on `/v1/chat/completions` (probed), so `opencode-go` must ride the pinned
+  target, not the header.
+- Stack slugs are underscore-only, so the tags are `pi_claude`, `pi_codex`, `pi_opencode`, `codex_cli`.
+
+### A. Two amendments to phase 1
+
+1. `scripts/headroom-workflow`, proxy policy: `OPENAI_TARGET_API_URL` currently sits in
+   `FORBIDDEN_ANY_ENV`, which forbids exactly what option A requires. Replace the blanket refusal with a
+   pinned value: a `PINNED_OPENAI_TARGET = "https://opencode.ai/zen/go/v1"` constant, set in the proxy
+   child env, still refusing an inherited value that differs and still refusing the other `*_TARGET_API_URL`
+   variables. AC-1/AC-3 keep their meaning — the pilot owns the upstream rather than inheriting it.
+2. `cmd_codex`: stop pinning `openai_base_url` to the proxy. Pin only
+   `chatgpt_base_url="{base}/backend-api/"`. Under option A the OpenAI target is OpenCode Go, so pinning
+   `openai_base_url` would hand an OpenAI-API-key Codex run to OpenCode. Subscription auth is the
+   supported route; an API-key `-c` override is refused by name, not silently rerouted.
+
+### B. Pi extension — `pi/.pi/agent/extensions/headroom.ts`, inert unless `PI_HEADROOM=1`
+
+| provider | baseUrl | stack |
+|---|---|---|
+| `anthropic` | `{base}` | `pi_claude` |
+| `openai-codex` | `{base}/backend-api` | `pi_codex` |
+| `opencode-go` | `{base}/v1` | `pi_opencode` |
+
+Registrations are `{ baseUrl, headers: { "x-headroom-stack": … } }` only — no `models`, `apiKey`,
+`oauth` or `api`, so catalog, auth and compatibility survive. Pi's `openai` provider is deliberately
+**left direct**: its API key belongs to a different vendor than the pinned target, so overriding it is
+the one misroute this design must not create. The extension throws (stopping startup) on a non-loopback
+base or a failed `/livez` check rather than registering a partial map.
+
+### C. `pi` subcommand and `hpi`
+
+Child-only env `PI_HEADROOM=1` plus `PI_HEADROOM_URL` (the already-validated base, so validation happens
+once in Python), loaded with an explicit `--extension <abs path>`, after `require_ready()`, via
+`execvpe` so argv and exit status pass through. `hpi` joins the existing guarded alias block next to
+`hclaude` / `hcodex`. For pueue, `PI_HEADROOM=1` goes in the queue command as a non-secret variable;
+pi-view, pueue-safe and provider-governance are not touched.
+
+### D. Tests
+
+- Python, `scripts/tests/test_headroom_workflow.py`: `test_proxy_pins_openai_target` (child env carries
+  the pinned value; a differing inherited value is refused; other target vars still refused) and
+  `test_codex_routes_subscription_only` (argv has `chatgpt_base_url` and no `openai_base_url`; an
+  API-key `-c model_provider`/`openai_base_url` override is refused) extend phase 1;
+  `test_pi_dispatch` covers child-only env, exactly one `-e`, preserved argv and exit status, and no
+  credential text; `test_pi_refuses_when_unready` expects exit 1 before exec.
+- Node, `headroom-pi.test.mjs`: inert without the env var; exactly the three registrations; each is
+  `{baseUrl, headers}` with no catalog or auth field; slugs match `^[a-z][a-z0-9_]{0,63}$`; readiness
+  failure throws before registering; `openai` is never registered.
+- Node, `headroom-routing.test.mjs`: pure mapping asserts codex path joining (`/backend-api` +
+  `/codex/responses`), the `opencode-go` and `anthropic` paths, and rejection of a non-loopback base.
+
+### E. Mapping and commit boundaries
+
+AC-1/AC-3 (pinned target) and AC-2 (subscription-only Codex) → commit 1, `scripts/headroom-workflow`
+plus its test file. AC-4/AC-6 → commit 2, the extension, both node test files and the `hpi` alias.
+AC-5 → commit 3, the `pi` subcommand, alias and Python test. One commit per unit, owned paths only,
+through `$HOME/dotfiles/scripts/commit-funnel`, in that worktree.
+
+### F. Risks and non-goals
+
+- OpenAI-API-key paths (Codex CLI and Pi's `openai`) are **unsupported** through the proxy. That is a
+  documented refusal with a test, not a silent reroute; if such a client is needed, run a second proxy on
+  another port with default targets.
+- WS proxying depends on `/backend-api/codex/responses`; if an upgrade drops it, Codex-through-proxy
+  fails at the first frame while readiness still passes. Phase 3 records that as a live check, not a
+  savings claim.
+- No claims about subscription dollars: the only new observability is `requests.by_stack`, plus Codex's
+  passive `x-codex-*` window numbers once its traffic is proxied.
+- Non-goals: memory, learning, semantic response cache, telemetry, cache warming, retention tiers, and
+  any edit to pi-view, pueue or provider-governance.
+
+### Model routing
+
+Planning artifacts (this plan, spec amendments, reviews) come from a thinking model, implementation from
+flash: `pi --model opencode-go/deepseek-v4-pro:high -p '<planning prompt>'` versus
+`--model opencode-go/deepseek-v4.1-flash`. A session cannot hot-swap its own model, so the split is per
+process, and the pro planner run currently cannot start: the `headroom` worktree has a pending
+agent-review (`d230ff58`, phase 1's three files) that refuses new agent input until a human resolves or
+skips it.
+
 ## What to change only with the eval gate
 
 These are the remaining token levers, all on the extraction or retrieval-parameter side. Each one

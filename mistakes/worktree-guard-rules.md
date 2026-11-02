@@ -29,7 +29,9 @@ the commit funnel. Load them with `qmd query "worktree guard"` when a session wo
   file's frontmatter first; pasted tool output never has it (2026-10-26).
 - In a jj-colocated worktree, `commit-funnel` skips new files over jj's 1 MiB
   `snapshot.max-new-file-size` and still prints success: after committing a large file, check it is
-  in the commit (`git show --stat HEAD`) (2026-11-01).
+  in the commit (`git show --stat HEAD`) (2026-11-01). Fix without touching jj config (`--config`
+  and `config set` are denied): `jj file track --include-ignored <path>` first, then the funnel
+  (2026-11-02).
 - `commit-funnel` in jj mode ignores a pending `git merge --no-commit` and makes a one-parent commit.
   To finish a merge, give your unpushed commit a second parent with `jj rebase -r <rev> -d <tip> -d
   <other>` and resolve with `jj restore --from <rev> --into <merge> <path>` (2026-11-01).

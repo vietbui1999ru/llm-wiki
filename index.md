@@ -160,7 +160,9 @@ Catalog of all pages. Updated on every ingest operation.
 - [[concepts/pentest-agent-design]] — Blueprint for Next.js + ECS Fargate + Neon pen test agent: supervisor + recon/web/db specialists, two-phase (black-box HTTP + gray-box AWS), safety constraints (scope lock, rate cap, read-only), findings.json + report.md output, wiki ingest pipeline
 - [[concepts/domain-glossary]] — CONTEXT.md pattern: shared language between dev and agent; token efficiency, consistent naming, reduced context distraction
 - [[concepts/deep-modules]] — Ousterhout's deep vs shallow modules; narrow interface, wide implementation; test boundary design; why AI produces shallow codebases by default
+- [[concepts/embeddings]] *(stub)* — Dense vector representations for semantic search and RAG; stub — expand when a dedicated source is ingested
 - [[concepts/evolution-strategies]] — Black-box optimization via parameter perturbation; ES vs RL trade-offs; shared random seed trick; progression from gaming (2017) to LLM fine-tuning (2025)
+- [[concepts/fine-tuning]] *(stub)* — Post-training LLM adaptation (SFT, LoRA, QLoRA, PEFT); stub — expand when a dedicated source is ingested
 - [[concepts/multi-vendor-adversarial-review]] — Using different model/vendor to review agent work; catches single-model blind spots; same-tier vs cross-vendor vs /council
 - [[concepts/branch-strategy-for-agents]] — head vs merge-to-head vs branch; when to use each; relation to worktrees and human-merge gates
 - [[concepts/agent-self-correction]] — wiki-as-runtime-oracle; deviation trigger table; qmd queries for re-alignment; zero startup overhead

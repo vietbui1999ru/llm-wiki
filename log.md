@@ -22,6 +22,55 @@ Missing concept pages: MCP (58 mentions), multi-agent handoffs, independent revi
 Suggested sources: a controlled clear-vs-compact study; NLAH ablation (arXiv 2603.25723) and four-role team study (arXiv 2602.01465); ETH Zurich AGENTS.md study (arXiv 2602.11988); MCP spec; current Claude Code hooks and subagents docs.
 Also: mistakes/worktree-guard-rules.md absorbed the reconcile-stash entries (10-27 retry-variations, 10-29 for-loop) and today's commit-funnel jj gaps.
 
+
+## [2026-11-01] lint
+
+### Orphan pages (no inbound wikilinks from wiki pages or tier-0 rules; only in index.md)
+18 orphan pages found. 11 persist from prior lints; 7 are new since 2026-10-22:
+
+**New orphans (created since last lint):**
+- `summaries/swe-bench-mobile` — created 2026-11-01; mobile coding-agent benchmark; suggest linking from `entities/ai-coding-agents` or `concepts/agentic-cicd`
+- `concepts/tiered-knowledge-delivery` — created 2026-07-23; no cross-links to wiki architecture pages
+
+**Persisting orphans:**
+- `concepts/a2a-protocol` *(stub)*, `concepts/acp-protocol` *(stub)*, `concepts/prompt-caching` *(stub)* — stubs awaiting source ingestion
+- `concepts/software-documentation`, `entities/docling`, `entities/eggroll`, `entities/lightrag` *(stub)*
+- `patterns/algorithmic`, `patterns/backend`
+- `summaries/amazon-scraping-2026`, `summaries/awesome-software-architecture`, `summaries/cc-auto-mode`, `summaries/cc-linting-debugging-reddit`, `summaries/hamel-evals-skills`, `summaries/what-is-an-agent-harness-parallel-ai`
+- `systems/otel-council`
+
+### Missing concept stubs (broken wikilink anchors — pages exist, sections don't)
+- `concepts/context-compression#kv-cache-optimization` — referenced by `entities/headroom`
+- `concepts/model-tier-routing#missing-model-fallback` — referenced by `concepts/model-task-routing`
+- `systems/architectural-patterns#event-sourcing` — referenced by `systems/architectural-patterns` (self-referential anchor)
+
+### Mentioned-but-no-page concepts (mentioned in ≥3 wiki files, no dedicated page)
+- **embeddings** (26 files) — core primitive for all RAG pages; no concept page existed → **stub created**
+- **fine-tuning** (8 files) — referenced in rlhf-cai, evolution-strategies, eggroll, laya; no concept page existed → **stub created**
+- reward hacking (3 files) — covered inline in `summaries/rlhf-cai`; low priority
+
+### Stale claims
+- **Persists:** `concepts/council-pattern` line 76 table shows "Sonnet 4.6 + GPT-5.4 / Chairman: Opus 4.6" — actual config since 2026-10-17 is `claude-sonnet-5-5` / `gpt-6.1-sol` / `claude-opus-5-5`; flagged in 2026-10-22 lint, still not resolved.
+- **Persists:** `concepts/agent-context-instructions` — contradiction with arXiv 2602.11988 already flagged at top of page; source not yet ingested.
+- `concepts/context-compression` — contradiction notice added 2026-11-01 re: fresh-context loop claim vs clear-over-compact consensus; properly handled inline.
+
+### Tier-0 sync
+All Tier-0 wikilinks in `applied-ai.md` and `global-prevention-rules.md` resolve to existing pages. No drift.
+
+### New stubs created
+- `concepts/embeddings` — mentioned in 26 wiki pages; core RAG/search primitive; no page existed
+- `concepts/fine-tuning` — mentioned in 8 wiki pages; bridges rlhf-cai and evolution-strategies
+
+### index.md
+- Added `[[concepts/embeddings]] *(stub)*` and `[[concepts/fine-tuning]] *(stub)*` to Concepts section.
+
+### Source suggestions (gaps)
+1. **Embeddings primer** (e.g. Pinecone "What are embeddings?" or OpenAI embedding docs) — fill `concepts/embeddings`; affects 26 downstream pages
+2. **Fine-tuning guide** (LoRA/QLoRA/PEFT paper or HuggingFace PEFT docs) — fill `concepts/fine-tuning`; connects rlhf-cai → evolution-strategies chain
+3. **SWE-Bench leaderboard report or coding-agent benchmark survey** — connect `summaries/swe-bench-mobile` to broader agent evals landscape
+4. **Anthropic prompt caching docs** — fill `concepts/prompt-caching` stub; critical for subagent cost modeling (persists from Oct 22)
+5. **arXiv 2602.11988 (ETH "Evaluating AGENTS.md")** — primary source for contradiction in `concepts/agent-context-instructions` (persists from Oct 22)
+
 ## [2026-11-01] ingest | Harness engineering cluster (OpenAI Codex, State of Harness Engineering 2026, Azure SRE Agent, Vercel harness course)
 
 - Four summaries: harness-engineering-codex-openai, state-of-harness-engineering-2026, azure-sre-agent-context-engineering, build-ai-agent-harness-vercel.

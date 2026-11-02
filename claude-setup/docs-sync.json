@@ -34,7 +34,7 @@
     },
     {
       "paths": ["shared/skills/kanban-status/**"],
-      "docs": ["docs/workflows.md", "wiki/syntheses/control-plane-expansion-plan.md"]
+      "docs": ["docs/workflows.md"]
     },
     {
       "paths": ["claude/.claude/rules/**"],

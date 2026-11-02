@@ -56,6 +56,63 @@ Client wiring:
 WIKI_LLM_PROXY_URL=http://127.0.0.1:8787/v1
 ```
 
+Start it in cache mode, not the installed default:
+
+```bash
+headroom proxy --host 127.0.0.1 --port 8787 --mode cache --workers 1 --no-cache --no-telemetry
+```
+
+`--mode cache` freezes prior turns to keep provider prefix caches intact; the installed default is
+`token`, which rewrites them for compression and loses exactly the cache hits this is meant to buy.
+`--no-cache` disables the *semantic response cache* (not upstream prefix caching): on a proxy shared by
+several clients, an identical prompt from two different agents must not be answered from one agent's
+cached response.
+
+Health: trust `/livez` (service name + version) and `/readyz` (503 when unhealthy) for identity and
+readiness. `/health` returns HTTP 200 even when unhealthy and cannot prove which process is listening.
+The wiki scripts preflight `/livez` before sending a single request, so a dead or foreign listener on
+the configured port fails loudly instead of receiving provider credentials.
+
+Do not use `headroom wrap` for this: it writes global agent configuration and can install context
+tools. The dotfiles pilot on `feat/headroom` (SPEC + `docs/headroom/0{1,2,3}-*.md`) owns that job with
+`scripts/headroom-workflow` and opt-in `hclaude` / `hcodex` / `hpi` launchers, keeping plain `claude`,
+`codex` and `pi` direct.
+
+## The Codex split: one account, two clients, one proxy
+
+ChatGPT-subscription traffic reaches the proxy from two places — the Codex CLI and Pi's
+`openai-codex` provider (which talks to `https://chatgpt.com/backend-api`) — while `opencode-go` is a
+different vendor on `/v1/chat/completions`. That split is tractable because the proxy picks the
+ChatGPT route from the **auth shape**, not the path or the client: `_resolve_codex_routing_headers`
+returns true when a `chatgpt-account-id` header is present or the bearer JWT carries
+`https://api.openai.com/auth` → `chatgpt_account_id`. Pi sends `chatgpt-account-id` (verified in its
+bundled provider), Codex CLI does too, so both land on `chatgpt.com` regardless of
+`OPENAI_TARGET_API_URL`. Only `opencode-go` depends on that setting.
+
+That makes one process viable: `OPENAI_TARGET_API_URL` = OpenCode Go, Claude on `/v1/messages`, both
+Codex clients on their ChatGPT branch. Two things to respect:
+
+- The tripwire is an OpenAI **API-key** client. `/v1/responses` without ChatGPT auth goes to the
+  configured OpenAI target, so an API-key Codex install would be sent to OpenCode Go. Either keep such
+  a client off this proxy or run a second proxy on another port with default targets.
+- `x-headroom-base-url` does **not** route `/v1/chat/completions` in 0.24.0. Probed with the header set
+  to `https://opencode.ai/zen/go/v1` against a default-target proxy, the request arrived at
+  `api.openai.com` with the OpenCode key attached (identical "Incorrect API key provided" body as a
+  direct OpenAI call). The header is only read by the catch-all `/{path:path}` route, which forwards
+  raw and skips the compression pipeline. Never rely on it to keep OpenCode credentials at OpenCode.
+
+Attribution across the split: tag each client, because the upstream model names overlap.
+`x-headroom-stack` accepts underscore slugs only — `codex_cli`, `pi_codex`, `pi_opencode`, `claude`,
+`llm_wiki_index`, `llm_wiki_chat`, `llm_wiki_mcp`. Pi can set it per provider through a
+`registerProvider(id, { headers })` partial override; Codex CLI through
+`model_providers.<id>.http_headers` in a launcher-scoped `-c` override.
+
+Quota visibility is asymmetric, and it decides how much to route. Anthropic usage is **polled** from
+the cached `claudeAiOauth` credential, so it is visible without traffic. Codex usage is **passive**:
+`x-codex-primary-used-percent` and friends are parsed from responses the proxy sees, so a direct Codex
+CLI run is invisible in `/stats`. If the Codex quota view matters, route the Codex CLI; if only Claude
+and per-request token counts matter, leave it direct.
+
 ## Monitoring
 
 One address, one set of numbers:

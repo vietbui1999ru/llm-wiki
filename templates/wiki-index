@@ -100,6 +100,38 @@ if _PROXY_URL:
     if os.environ.get("WIKI_PROXY_COMPRESS_INDEX", "0") != "1":
         _OPENCODE_HEADERS["x-headroom-bypass"] = "true"
 
+def _preflight_proxy() -> None:
+    """Fail closed: a dead or foreign listener must never receive provider credentials.
+
+    /health answers 200 even when unhealthy, so identity comes from /livez (service name) and
+    readiness from /readyz. See docs/headroom.md.
+    """
+    import json as _json
+    import urllib.error
+    import urllib.request
+
+    root = _PROXY_URL.rstrip("/")
+    if root.endswith("/v1"):
+        root = root[: -len("/v1")]
+    try:
+        with urllib.request.urlopen(f"{root}/livez", timeout=3) as resp:
+            identity = _json.loads(resp.read() or b"{}")
+    except urllib.error.HTTPError as exc:  # something answered, but not with an identity document
+        raise SystemExit(
+            f"{root}/livez answered HTTP {exc.code}; that is not a Headroom proxy. "
+            "Refusing to send provider credentials there."
+        )
+    except Exception as exc:
+        raise SystemExit(
+            f"Headroom proxy not reachable at {root} ({exc}).\n"
+            "Start it (docs/headroom.md) or unset WIKI_LLM_PROXY_URL to call the provider directly."
+        )
+    if identity.get("service") != "headroom-proxy":
+        raise SystemExit(
+            f"{root} answered but is not a Headroom proxy (service={identity.get('service')!r}). "
+            "Refusing to send provider credentials there."
+        )
+
 async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
     kwargs.setdefault("max_tokens", 4096)
     if _DISABLE_THINKING:
@@ -422,6 +454,9 @@ async def main() -> None:
     if args.status:
         show_status(pages, load_manifest())
         return
+
+    if _PROXY_URL:
+        _preflight_proxy()
 
     if args.test:
         await test_llm_backend()

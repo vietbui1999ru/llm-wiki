@@ -69,7 +69,7 @@ To mark a query as one whose failure is never acceptable, set `"must_hit": true`
 
 ### Re-baselining
 
-Re-baseline deliberately, in its own commit, when the change is intended (new golden set, rebuilt LightRAG index, new models) or the wiki changed enough to move the numbers. First bring both indexes up to date with the checkout, because a `git pull` does not run the post-commit hook:
+Re-baseline deliberately, in its own commit, when the change is intended (new golden set, rebuilt LightRAG index, new models) or the wiki changed enough to move the numbers. First bring both indexes up to date with the checkout: the hooks installed by `claude-setup/scripts/install.sh` refresh both indexes after a commit or a pull, but still run the commands below before a re-baseline to be sure (`wiki-index --verify` is the check):
 
 ```
 qmd update && qmd embed                       # qmd's collection (the whole repo)

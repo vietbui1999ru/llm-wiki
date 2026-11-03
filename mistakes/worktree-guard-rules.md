@@ -35,6 +35,11 @@ the commit funnel. Load them with `qmd query "worktree guard"` when a session wo
 - `commit-funnel` in jj mode ignores a pending `git merge --no-commit` and makes a one-parent commit.
   To finish a merge, give your unpushed commit a second parent with `jj rebase -r <rev> -d <tip> -d
   <other>` and resolve with `jj restore --from <rev> --into <merge> <path>` (2026-11-01).
+- A jj bookmark follows its own commit through a rebase, not the tip of the stack. `jj rebase -r
+  <tip> -B <earlier>` leaves the bookmark mid-stack and a plain push drops every commit above it
+  (dotfiles #237 lost its spec-archive commit). Before pushing after any reorder, check
+  `jj log -r '<bookmark>+'` is empty; if not, `jj bookmark set <bookmark> -r <new tip>` (the
+  owner's move) and push again (2026-11-03).
 
 ## Handing a checkout back
 - Before handing the owner a `switch`/`pull`/`merge` for a checkout, diff its tracked files against

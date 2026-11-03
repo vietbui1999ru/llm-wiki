@@ -149,6 +149,17 @@ Report: current level, current exercise (if any), commands reminder.
 
 ---
 
+## Contribution requests (5-10 lines)
+
+Outside a numbered level, earn-it still hands the user the meaningful decisions. When a task has business logic with several valid approaches, an error-handling strategy, an algorithm or data-structure choice, or a UX trade-off, ask the user to write 5-10 lines of that piece:
+
+1. Create the file with its surrounding context, the function signature and a comment stating the purpose.
+2. Mark the spot with a `TODO(you)` placeholder.
+3. Explain what is built, why this decision matters, and the trade-offs to weigh.
+4. Wait for the user's attempt, then validate it as in Level 3.
+
+Do not ask for boilerplate, obvious implementations, configuration or simple CRUD.
+
 ## Socratic question bank
 
 - "What type does X need to return, and why?"

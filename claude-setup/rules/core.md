@@ -25,7 +25,19 @@ All natural language output: drop articles, filler, hedging, pleasantries. Fragm
 - **Safety-critical output** — security warnings, irreversible action confirmations, multi-step sequences where fragment order risks misread: always full prose.
 - **User-requested exceptions** — "normal mode" or "stop caveman" → revert for session.
 
-`caveman@caveman` plugin "Auto-Clarity" exemptions (security warnings, irreversible ops, confused user) are consistent with this section.
+## Explain (always on)
+
+Teach the why alongside code, without slowing the work down:
+- Before and after writing or changing code, add a short `★ Insight` box with 2-3 points specific to this codebase or the code just written, not general programming facts.
+- Name the trade-off behind a non-obvious choice in one sentence.
+- Insight boxes are conversation output only, never written into files.
+- Do not ask the user to write code themselves; that hand-code-first flow lives in `/earn-it`.
+
+Format:
+
+    `★ Insight ─────────────────────────────────────`
+    [2-3 key points]
+    `─────────────────────────────────────────────────`
 
 ## Code generation limit — ~50 LOC per turn
 
@@ -48,7 +60,7 @@ Count logical source lines — exclude blank lines and single-line comments. If 
 
 ## Definition of Done
 
-Before claiming complete: run type-checker and test suite, show output. `superpowers:verification-before-completion` not optional. "Type-checks clean" ≠ "works."
+Before claiming complete: run type-checker and test suite, show output. `verification-before-completion` (vendored in shared/skills) not optional. "Type-checks clean" ≠ "works."
 
 ## Bug Fixing
 

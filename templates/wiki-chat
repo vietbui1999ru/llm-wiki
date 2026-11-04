@@ -35,7 +35,7 @@ already running, it is left up and only the chat model is unloaded on exit.
 
 Reranking (skip with --no-rerank): llama-server --rerank on 127.0.0.1:8012, started and
 stopped the same way; needs `brew install llama.cpp`. First start downloads the model.
-  WIKI_CHAT_RERANK_MODEL     -hf ref (default gpustack/bge-reranker-v2-m3-GGUF:Q8_0)
+  WIKI_CHAT_RERANK_MODEL     -hf ref (default ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF)
 Without llama-server, wiki-chat runs with reranking off.
 
 Prompt commands:
@@ -165,12 +165,12 @@ _LOCAL_NUM_CTX = 16384  # Ollama's default window is too small for LightRAG's re
 SHORT_ANSWER   = "Short answer, 2-4 sentences"
 
 # Reranker: llama-server --rerank (Ollama has no rerank API). Jina-format /v1/rerank.
-RERANK_MODEL = os.environ.get("WIKI_CHAT_RERANK_MODEL", "gpustack/bge-reranker-v2-m3-GGUF:Q8_0")
+RERANK_MODEL = os.environ.get("WIKI_CHAT_RERANK_MODEL", "ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF")
 RERANK_PORT  = 8012
 RERANK_URL   = f"http://127.0.0.1:{RERANK_PORT}"
 _rerank_on   = False  # set by _ensure_reranker once the server answers
 # api_key=None explicitly: jina_rerank would forward JINA_API_KEY from the env to this server.
-_rerank = functools.partial(generic_rerank_api, model="bge-reranker-v2-m3",
+_rerank = functools.partial(generic_rerank_api, model="qwen3-reranker-0.6b",
                             base_url=f"{RERANK_URL}/v1/rerank", api_key=None)
 SHORT_PROMPT   = "Answer in at most 4 sentences of plain prose. No headings or bullet lists."
 

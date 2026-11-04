@@ -568,7 +568,7 @@ Quick (advisory Codex check):
 → Codex output is advisory — synthesize, don't defer
 
 Full (two voices + Opus synthesis):
-  council.py --chairman "Should we [decision]?"
+  printf '%s' "Should we [decision]?" | council.py --chairman   # stdin keeps the question out of ps; --commit is opt-in
 → Voice A: Sonnet, Voice B: Codex, Chairman: Opus
 → Output written to .council/ and auto-committed
 ```
@@ -645,7 +645,7 @@ Output is advisory — synthesize disagreements yourself, don't defer blindly.
 ### Full council (two voices + Opus synthesis)
 
 ```bash
-council.py --chairman "Should we [decision]?"
+printf '%s' "Should we [decision]?" | council.py --chairman   # stdin keeps the question out of ps; --commit is opt-in
 ```
 
 - **Voice A:** Sonnet (`claude -p --model claude-sonnet-5-5`)

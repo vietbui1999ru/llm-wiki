@@ -22,10 +22,14 @@ Routing:
   openai/*    → codex -m <id> exec -o <tmp> -a never  (file output, no JSON parsing)
 
 Usage:
-  uv run council.py "should we use optimistic or pessimistic locking here?"
-  echo "question" | uv run council.py
-  uv run council.py --chairman "question"
-  uv run council.py --add openai/gpt-6.1-sol "question"
+  printf '%s' "should we use optimistic or pessimistic locking here?" | uv run council.py
+  printf '%s' "question" | uv run council.py --chairman
+  printf '%s' "question" | uv run council.py --add openai/gpt-6.1-sol
+  uv run council.py "question"            (positional form; visible in ps)
+  printf '%s' "question" | uv run council.py --commit   (opt-in git commit of .council/)
+
+Pass the question on stdin so it stays out of `ps`. --commit is opt-in; by
+default nothing is committed.
 """
 
 import asyncio
@@ -34,6 +38,7 @@ import sys
 import argparse
 import tempfile
 import textwrap
+from datetime import datetime, timezone
 from pathlib import Path
 
 MODEL_A  = os.getenv("OPENCODE_MODEL_COUNCIL",      "anthropic/claude-sonnet-5-5")
@@ -71,7 +76,9 @@ async def ask(model: str, prompt: str) -> str:
 
     else:
         # codex exec -o writes final assistant message as plain text — no JSON parsing needed
-        tmp = Path(tempfile.mktemp(suffix=".md"))
+        fd, tmp_name = tempfile.mkstemp(suffix=".md")
+        os.close(fd)
+        tmp = Path(tmp_name)
         try:
             cmd = ["codex", "-m", mid, "-a", "never", "exec", "-o", str(tmp)]
             proc = await asyncio.create_subprocess_exec(
@@ -91,7 +98,7 @@ async def ask(model: str, prompt: str) -> str:
             tmp.unlink(missing_ok=True)
 
 
-async def run(question: str, extra: list[str], chairman: bool) -> None:
+async def run(question: str, extra: list[str], chairman: bool, commit: bool = False) -> None:
     council_dir = Path(os.getenv("COUNCIL_DIR", ".council"))
     council_dir.mkdir(exist_ok=True)
 
@@ -113,7 +120,8 @@ async def run(question: str, extra: list[str], chairman: bool) -> None:
         print(f"  ▸ {model} → {path}")
 
     if not chairman:
-        await _git_commit(council_dir, question)
+        if commit:
+            await _git_commit(council_dir)
         print(f"\n{SEP2}\n")
         return
 
@@ -148,15 +156,18 @@ async def run(question: str, extra: list[str], chairman: bool) -> None:
         + f"\n\n## Synthesis\n\n{synthesis}\n"
     )
     print(f"  ▸ {CHAIRMAN} → {synthesis_path}")
-    await _git_commit(council_dir, question)
+    if commit:
+        await _git_commit(council_dir)
     print(f"\n{SEP2}\n")
 
 
-async def _git_commit(council_dir: Path, question: str) -> None:
-    label = textwrap.shorten(question, 60, placeholder="...")
+async def _git_commit(council_dir: Path) -> None:
+    # The folder is gitignored, so add -f. The message is a timestamp only:
+    # it must never carry question text.
+    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     for cmd in (
-        ["git", "add", str(council_dir)],
-        ["git", "commit", "-m", f"council: {label}"],
+        ["git", "add", "-f", str(council_dir)],
+        ["git", "commit", "-m", f"council: synthesis {stamp}"],
     ):
         proc = await asyncio.create_subprocess_exec(
             *cmd,
@@ -179,6 +190,10 @@ def main() -> None:
         "--add", metavar="MODEL", action="append", default=[],
         help="Add an extra council voice; prefix with anthropic/ or openai/"
     )
+    parser.add_argument(
+        "--commit", action="store_true",
+        help="Opt-in: git add -f and commit the council folder (default: no git)"
+    )
     args = parser.parse_args()
 
     question = args.question
@@ -188,7 +203,7 @@ def main() -> None:
         parser.print_help()
         sys.exit(1)
 
-    asyncio.run(run(question, args.add, args.chairman))
+    asyncio.run(run(question, args.add, args.chairman, args.commit))
 
 
 if __name__ == "__main__":

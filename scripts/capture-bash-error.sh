@@ -67,8 +67,18 @@ s = re.sub(r"[A-Za-z0-9+/_=-]{32,}", lambda m: R if re.search("[a-z]", m.group()
 sys.stdout.write(s)
 ' 2>/dev/null || echo "[REDACTION FAILED]"
 }
-CMD=$(printf '%s' "$CMD" | redact)
-ERR=$(printf '%s' "$ERR" | redact)
+# Shared dotfiles redactor (literal secret values + patterns) runs first when present;
+# the built-in redact() above still runs on the result. Absent on other machines: skip it.
+DOTFILES_REDACT="$HOME/dotfiles/scripts/redact"
+shared_redact() {
+    if [ -x "$DOTFILES_REDACT" ]; then
+        printf '%s' "$1" | "$DOTFILES_REDACT" 2>/dev/null || echo "[REDACTION FAILED]"
+    else
+        printf '%s' "$1"
+    fi
+}
+CMD=$(printf '%s' "$(shared_redact "$CMD")" | redact)
+ERR=$(printf '%s' "$(shared_redact "$ERR")" | redact)
 
 LOGFILE="$HOME/repos/llm-wiki/mistakes/raw-log.md"
 TS=$(date '+%Y-%m-%d %H:%M')

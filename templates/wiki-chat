@@ -51,6 +51,7 @@ import asyncio
 import json
 import os
 import functools
+import hashlib
 import shutil
 import subprocess
 import sys
@@ -258,8 +259,15 @@ def show_index_status() -> None:
     pages    = list((WIKI_DIR / "wiki").rglob("*.md"))
     indexed  = sum(1 for p in pages if str(p) in manifest)
     changed  = sum(1 for p in pages
-                   if str(p) in manifest and manifest[str(p)] != p.stat().st_mtime)
+                   if str(p) in manifest and not _is_current(p, manifest[str(p)]))
     console.print(f"[dim]Pages: {len(pages)} total · {indexed} indexed · {changed} changed[/dim]")
+
+
+def _is_current(path: Path, entry) -> bool:
+    """Same rule as wiki-index's is_current: hash entries by content, legacy floats by mtime."""
+    if isinstance(entry, dict):
+        return entry.get("hash") == hashlib.sha256(path.read_bytes()).hexdigest()
+    return entry == path.stat().st_mtime
 
 
 async def run(args: argparse.Namespace) -> None:

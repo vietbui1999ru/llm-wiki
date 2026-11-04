@@ -4,7 +4,7 @@ type: concept
 tags: [llm, knowledge-management, wiki, rag, epistemics]
 sources: [llm-wiki.md, "Compound Engineering.md"]
 created: 2026-04-21
-updated: 2026-06-17
+updated: 2026-11-04
 ---
 
 # Compounding Knowledge Base
@@ -49,3 +49,4 @@ Curation, direction, and synthesis judgment. Specifically: which sources to inge
 - [[entities/qmd]] — search tool that enables efficient query operations as the wiki scales
 - [[concepts/contextual-retrieval]] — technique that significantly narrows the RAG/wiki performance gap for retrieval tasks
 - [[concepts/compound-engineering]] — workflow-level version of the same compounding principle
+- [[entities/open-knowledge-format]] — Google Cloud's open spec formalizing this pattern into an interoperable bundle format

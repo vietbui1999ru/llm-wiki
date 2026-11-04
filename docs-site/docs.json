@@ -161,6 +161,7 @@
         "pages": [
           "comparisons/cc-to-cross-platform-migration",
           "comparisons/claude-code-vs-opencode-plugins",
+          "comparisons/okf-vs-llm-wiki-frontmatter",
           "comparisons/spec-driven-frameworks-vs-native"
         ]
       },
@@ -186,6 +187,7 @@
           "entities/laya",
           "entities/lightrag",
           "entities/obsidian-cli",
+          "entities/open-knowledge-format",
           "entities/opencode",
           "entities/opencode-go",
           "entities/opentelemetry",

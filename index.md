@@ -59,6 +59,8 @@ Catalog of all pages. Updated on every ingest operation.
 - [[summaries/reddit-self-improving-claude-code-setup]] — r/ClaudeCode thread (2026-10): lessons files work if curated, dated and pruned; 146/153 nightly-review lessons were existing-but-ignored rules; hooks over prose; startup-injection disagreement *(anecdotal)*
 - [[summaries/steer-not-script-agent-instructions]] — Pattern Interruption essay: script the protocol (format, phases, contracts, safety gates), principle-ize the judgment (principles, end-state criteria, anti-patterns)
 - [[summaries/less-is-more-claude-md]] — blog on ETH "Evaluating AGENTS.md" (arXiv 2602.11988): generated context files −2–3% success, +20% cost; dev-written +4%; ~30-line pointer file + system-design doc *(secondary report)*
+- [[summaries/okf-v01-announcement]] — Google Cloud blog launching Open Knowledge Format v0.1: formalizes the Karpathy LLM-wiki pattern as markdown + YAML bundles; only `type` required; format-not-platform *(superseded by v0.2)*
+- [[summaries/okf-v02-readme]] — knowledge-catalog/okf README: OKF v0.2 trust/provenance/freshness fields (`sources`, `generated`, `verified`, `status`, `stale_after`); BigQuery enrichment agent with tool-enforced crawl caps; self-contained graph visualizer; repo moved to open-knowledge-format
 
 ## Entities
 - [[entities/rtk]] — Rust CLI proxy that filters/compresses command output before it hits LLM context; PreToolUse hook across 15 agents; 4 strategies (filter/group/truncate/dedup); 60-90% token savings *(claimed, unverified — self-reported estimates)*; hook rewrite collides with the Claude Code worktree guard (rtk#3864)
@@ -93,6 +95,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[entities/opentelemetry]] — CNCF-graduated vendor-neutral observability framework; three signals, GenAI semantic conventions (incubating), instrumentation approaches, Collector config, compatible backends for AI workloads
 - [[entities/obsidian-cli]] — Official Obsidian CLI (v1.12.4+, free); requires app running; key=value + bare-word flags (flag-syntax contradiction flagged); 100+ commands across search/daily/tasks/properties/dev
 - [[entities/lightrag]] *(stub)* — Graph-based RAG framework (HKUDS); entity/relation extraction, persistent knowledge graph, multiple retrieval modes; graph indexing layer for this wiki alongside qmd
+- [[entities/open-knowledge-format]] — Open Knowledge Format (Google Cloud, v0.1→v0.2): vendor-neutral spec for knowledge as markdown + YAML frontmatter; path = identity, links = graph, `index.md`/`log.md` reserved; v0.1/v0.2 field drift flagged
 
 ## Concepts
 - [[concepts/lsp-agent-baseline]] — Language servers as lazy project-scoped baseline for coding agents; L2 capability, not L3 bus state; pairs with typecheck/tests/diff review
@@ -205,6 +208,7 @@ Catalog of all pages. Updated on every ingest operation.
 - [[comparisons/spec-driven-frameworks-vs-native]] — Heavy frameworks vs lean skills vs vanilla vs custom harness; community consensus; discrepancies with prior wiki
 - [[comparisons/claude-code-vs-opencode-plugins]] — Hook surface, compaction control, custom tools; OpenCode's compaction hook as key differentiator
 - [[comparisons/cc-to-cross-platform-migration]] — Full migration matrix: CC rules/skills/subagents/hooks/plugins → Gemini/OpenCode/Codex/Cursor/Copilot/Zed; parity rating per layer; hook event counts; DRY adapter pattern
+- [[comparisons/okf-vs-llm-wiki-frontmatter]] — OKF v0.2 fields vs this wiki's frontmatter (203-page usage snapshot); gaps: `description`, `generated`/`verified`, `stale_after`, `resource`; input for the reconcile pass
 
 ## Syntheses
 - [[syntheses/spec-conformance-and-review-loop-options]] — Current dotfiles workflow vs lifecycle gaps (spec, test strength, review loops, operate); three refactor options (Harvest / Spec spine / Gated pipeline) with recommendation; Option 1 built and live since 2026-10-15 (ac-run, floor-guard, grill-me/verify-spec moved to dotfiles; 3 review cycles, honour-system approval); scope: frontier providers only, mutation testing deferred

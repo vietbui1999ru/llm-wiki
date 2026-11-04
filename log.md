@@ -1362,3 +1362,22 @@ All 10 Tier-0 wikilinks in `applied-ai.md` and `global-prevention-rules.md` reso
 3. **ACP protocol docs (Zed)** — fill the `concepts/acp-protocol` stub; editor-native agent ↔ editor protocol vs MCP
 4. **A2A protocol spec (Google)** — fill the `concepts/a2a-protocol` stub; multi-agent communication standard
 5. **arXiv 2602.11988 (ETH "Evaluating AGENTS.md")** — primary source for the contradiction at `concepts/agent-context-instructions`; only the blog summary was ingested
+
+## [2026-11-04] ingest | Open Knowledge Format (2 sources)
+
+Sources: `knowledge-catalogokf at main.md` (OKF v0.2 README), `How the Open Knowledge Format can improve data sharing.md` (v0.1 launch blog). Pre-ingest review skipped by Viet for this session.
+
+### Created
+- `summaries/okf-v02-readme`, `summaries/okf-v01-announcement`
+- `entities/open-knowledge-format` — v0.1/v0.2 field drift flagged at top; v0.2 SPEC.md itself not ingested
+- `comparisons/okf-vs-llm-wiki-frontmatter` — 203-page frontmatter usage snapshot; gaps `description`, `generated`/`verified`, `stale_after`, `resource`; input for the planned reconcile
+
+### Updated
+- `concepts/compounding-knowledge-base` — Related link to the OKF entity
+
+### Contradictions
+- Blog (v0.1) and README (v0.2) disagree on the field set; README is newer and the canonical spec moved to GoogleCloudPlatform/open-knowledge-format.
+
+### Source suggestions
+1. OKF v0.2 SPEC.md from the canonical repository — confirm field semantics before any reconcile adopts them.
+2. `Introducing the Google Cloud Knowledge Catalog.md` and `knowledge-catalogtoolboxmdcodedemo at main.md` (already in raw/, not yet ingested).

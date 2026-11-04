@@ -1,0 +1,670 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#   "pyyaml>=6",
+# ]
+# ///
+"""wiki — deterministic wiki-maintenance commands. No LLM calls, no network.
+
+Usage:
+  wiki status [--brief] [--json]      counts of pending work
+  wiki lint [--json]                  orphans, broken links, frontmatter, index drift
+  wiki drift [--resolve <page>] [--json]
+                                      list pending Tier-0 drift entries, or resolve a page's
+  wiki reindex [--json]               qmd update + qmd embed, output passed through
+  wiki queue <op> <target> [--json]   write a task into .agents/inbox/ (op: ingest|reconcile|tier0)
+  wiki queue --from-drift [--json]    one tier0 task per pending drift entry
+
+Paths:
+  content (wiki/, index.md, raw/)  ← `git rev-parse --show-toplevel`
+  runtime state (pending-sync.md, .agents/)
+                                   ← dirname of `git rev-parse --git-common-dir` (the main
+                                     checkout, so worktrees share one queue and one drift log)
+
+Exit codes:
+  status    always 0 (safe in hooks; report-only)
+  lint      1 when problems were found, 0 when clean
+  drift     0
+  queue     0 (also when a task was skipped as already queued), 2 on bad op/target
+  reindex   the exit code of the failing qmd command
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import date
+from pathlib import Path
+
+import yaml
+
+REQUIRED_KEYS = ("title", "type", "tags", "sources", "created", "updated")
+INBOX_OPS = ("ingest", "reconcile", "tier0")
+
+# Where each queued op is documented in CLAUDE.md ("## Operations").
+OP_SECTIONS = {
+    "ingest": "### Ingest (markdown source)",
+    "reconcile": "### Lint",
+    "tier0": "### Lint",
+}
+OP_SECTION_PDF = "### Ingest (PDF source)"
+OP_NOTES = {
+    "reconcile": (
+        "Reconcile the wiki catalogue: resolve broken wikilinks, add pages missing from "
+        "index.md, repair frontmatter, and drop entries that point at pages which no longer exist."
+    ),
+    "tier0": (
+        "Tier-0 distillation sync: for every wikilink cited in `claude-setup/rules/applied-ai.md` "
+        "and `mistakes/global-prevention-rules.md` (the always-loaded files), open the linked page "
+        "and verify its current recommendation still matches the Tier-0 claim. Fix the page or the "
+        "rule so they agree, then resolve matching `pending-sync.md` entries with "
+        "`claude-setup/scripts/wiki drift --resolve <page>`."
+    ),
+}
+
+FENCE_RE = re.compile(r"```|~~~")
+INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
+WIKILINK_RE = re.compile(r"\[\[([^\[\]]+)\]\]")
+FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---\s*(?:\n|$)", re.S)
+FIELD_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$")
+
+
+# ── repo / state resolution ──────────────────────────────────────────────────
+
+
+def _git(*args: str, cwd: Path | None = None) -> str:
+    proc = subprocess.run(
+        ["git", *args], cwd=str(cwd) if cwd else None, capture_output=True, text=True
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(f"git {' '.join(args)}: {proc.stderr.strip() or 'failed'}")
+    return proc.stdout.strip()
+
+
+class Paths:
+    """content_root = this checkout; state_root = the main checkout (shared runtime state)."""
+
+    def __init__(self, cwd: Path | None = None) -> None:
+        self.content_root = Path(_git("rev-parse", "--show-toplevel", cwd=cwd))
+        common = _git("rev-parse", "--git-common-dir", cwd=self.content_root)
+        common_path = Path(common)
+        if not common_path.is_absolute():
+            common_path = (self.content_root / common_path).resolve()
+        self.state_root = common_path.parent
+        # raw/ is gitignored: in a worktree it only exists in the main checkout.
+        for base in (self.content_root, self.state_root):
+            if (base / "raw").is_dir():
+                self.raw_dir = base / "raw"
+                break
+        else:
+            self.raw_dir = self.content_root / "raw"
+
+    @property
+    def wiki_dir(self) -> Path:
+        return self.content_root / "wiki"
+
+    @property
+    def index_file(self) -> Path:
+        return self.content_root / "index.md"
+
+    @property
+    def pending_file(self) -> Path:
+        return self.state_root / "pending-sync.md"
+
+    @property
+    def agents_dir(self) -> Path:
+        return self.state_root / ".agents"
+
+    def rel(self, path: Path) -> str:
+        try:
+            return str(path.relative_to(self.content_root))
+        except ValueError:
+            return str(path)
+
+
+def warn(message: str) -> None:
+    print(f"wiki: {message}", file=sys.stderr)
+
+
+# ── wiki page reading ────────────────────────────────────────────────────────
+
+
+def wiki_pages(paths: Paths) -> list[Path]:
+    if not paths.wiki_dir.is_dir():
+        return []
+    return sorted(
+        p
+        for p in paths.wiki_dir.rglob("*.md")
+        if not any(part.startswith(".") for part in p.relative_to(paths.wiki_dir).parts)
+    )
+
+
+def page_id(path: Path, paths: Paths) -> str:
+    """Wikilink form of a page: wiki/concepts/foo.md → concepts/foo."""
+    return str(path.relative_to(paths.wiki_dir).with_suffix("")).replace(os.sep, "/")
+
+
+def split_frontmatter(text: str) -> tuple[str | None, str]:
+    match = FRONTMATTER_RE.match(text)
+    if not match:
+        return None, text
+    return match.group(1), text[match.end():]
+
+
+def frontmatter(path: Path) -> tuple[dict | None, str]:
+    """Return (frontmatter dict or None, kind) with kind in ok|no-frontmatter|bad-yaml."""
+    try:
+        raw, _ = split_frontmatter(path.read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return None, "no-frontmatter"
+    if raw is None:
+        return None, "no-frontmatter"
+    try:
+        loaded = yaml.safe_load(raw)
+    except yaml.YAMLError:
+        return None, "bad-yaml"
+    if not isinstance(loaded, dict):
+        return {}, "ok"
+    return loaded, "ok"
+
+
+def strip_code(text: str) -> str:
+    """Drop fenced blocks (mermaid, shell) and inline code spans before scanning links."""
+    out: list[str] = []
+    fence: str | None = None
+    for line in text.splitlines():
+        stripped = line.lstrip()
+        marker = stripped[:3]
+        if fence is None and marker in ("```", "~~~"):
+            fence = marker
+            out.append("")
+            continue
+        if fence is not None:
+            if stripped.startswith(fence):
+                fence = None
+            out.append("")
+            continue
+        out.append(INLINE_CODE_RE.sub("", line))
+    return "\n".join(out)
+
+
+def wikilinks(text: str) -> list[str]:
+    links = []
+    for match in WIKILINK_RE.finditer(strip_code(text)):
+        target = match.group(1).split("|")[0].split("#")[0].strip().lstrip("/")
+        if target.endswith(".md"):
+            target = target[: -len(".md")]
+        if target:
+            links.append(target)
+    return links
+
+
+# ── lint ─────────────────────────────────────────────────────────────────────
+
+
+def run_lint(paths: Paths) -> dict:
+    pages = wiki_pages(paths)
+    known = {page_id(p, paths): p for p in pages}
+
+    orphans: list[str] = []
+    broken: list[dict] = []
+    missing_fm: list[dict] = []
+    index_broken: list[dict] = []
+    unindexed: list[str] = []
+
+    inbound: dict[str, set[str]] = {pid: set() for pid in known}
+
+    for path in pages:
+        pid = page_id(path, paths)
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for link in wikilinks(text):
+            if link not in known:
+                broken.append({"page": paths.rel(path), "link": f"[[{link}]]"})
+            elif link != pid:
+                inbound[link].add(pid)
+
+    index_text = paths.index_file.read_text(encoding="utf-8", errors="replace") if paths.index_file.is_file() else ""
+    index_links = set(wikilinks(index_text))
+    for link in wikilinks(index_text):
+        if link not in known:
+            index_broken.append({"page": "index.md", "link": f"[[{link}]]"})
+        elif link in inbound:
+            inbound[link].add("index.md")
+
+    for path in pages:
+        pid = page_id(path, paths)
+        data, kind = frontmatter(path)
+        if kind != "ok":
+            missing_fm.append({"page": paths.rel(path), "missing": list(REQUIRED_KEYS), "problem": kind})
+        else:
+            gone = [key for key in REQUIRED_KEYS if key not in data]
+            if gone:
+                missing_fm.append({"page": paths.rel(path), "missing": gone, "problem": "missing-keys"})
+        if pid not in index_links:
+            unindexed.append(paths.rel(path))
+
+    orphans = [paths.rel(known[pid]) for pid, sources in inbound.items() if not sources]
+
+    problems = len(orphans) + len(broken) + len(missing_fm) + len(index_broken) + len(unindexed)
+    return {
+        "root": str(paths.content_root),
+        "pages": len(pages),
+        "problems": problems,
+        "ok": problems == 0,
+        "orphan_pages": orphans,
+        "broken_wikilinks": broken,
+        "missing_frontmatter": missing_fm,
+        "index_broken_links": index_broken,
+        "unindexed_pages": unindexed,
+    }
+
+
+def print_lint(report: dict) -> None:
+    sections = (
+        ("orphan_pages", "Orphan pages (no inbound wikilink)"),
+        ("unindexed_pages", "Pages missing from index.md"),
+        ("missing_frontmatter", "Missing / invalid frontmatter"),
+    )
+    for key, title in sections:
+        items = report[key]
+        if not items:
+            continue
+        print(f"{title}: {len(items)}")
+        for item in items:
+            if isinstance(item, dict):
+                detail = ", ".join(item["missing"])
+                print(f"  {item['page']}  ({item['problem']}: {detail})")
+            else:
+                print(f"  {item}")
+
+    for key, title in (("broken_wikilinks", "Broken wikilinks"), ("index_broken_links", "index.md links to missing pages")):
+        items = report[key]
+        if not items:
+            continue
+        print(f"{title}: {len(items)}")
+        for item in items:
+            print(f"  {item['page']} → {item['link']}")
+
+    if report["ok"]:
+        print(f"lint: clean ({report['pages']} pages)")
+    else:
+        print(f"lint: {report['problems']} problem(s) across {report['pages']} pages")
+
+
+# ── pending-sync drift ───────────────────────────────────────────────────────
+
+
+def pending_blocks(paths: Paths) -> list[dict]:
+    """Each block: {fields, start, end} where start/end are line indices (end exclusive)."""
+    try:
+        lines = paths.pending_file.read_text(encoding="utf-8").splitlines(keepends=True)
+    except FileNotFoundError:
+        return []
+
+    separators = [i for i, line in enumerate(lines) if line.strip() == "---"]
+    bounds = []
+    for pos, start in enumerate(separators):
+        end = separators[pos + 1] if pos + 1 < len(separators) else len(lines)
+        bounds.append((start + 1, end))
+
+    blocks = []
+    for start, end in bounds:
+        fields: dict[str, str] = {}
+        for line in lines[start:end]:
+            match = FIELD_RE.match(line.strip())
+            if match:
+                fields[match.group(1)] = match.group(2).strip()
+        if "wiki_page" in fields:
+            blocks.append({"fields": fields, "start": start, "end": end})
+    return blocks
+
+
+def pending_entries(paths: Paths) -> list[dict]:
+    return [b["fields"] for b in pending_blocks(paths) if b["fields"].get("status") == "pending"]
+
+
+def normalize_page(value: str) -> str:
+    value = value.strip().strip("\"'")
+    if value.endswith(".md"):
+        value = value[: -len(".md")]
+    if value.startswith("wiki/"):
+        value = value[len("wiki/"):]
+    return value.lstrip("/")
+
+
+def resolve_drift(paths: Paths, target: str) -> list[str]:
+    blocks = pending_blocks(paths)
+    wanted = normalize_page(target)
+    resolved = []
+    if not blocks:
+        return resolved
+
+    lines = paths.pending_file.read_text(encoding="utf-8").splitlines(keepends=True)
+    for block in blocks:
+        page = block["fields"].get("wiki_page", "")
+        if normalize_page(page) != wanted or block["fields"].get("status") != "pending":
+            continue
+        for i in range(block["start"], block["end"]):
+            if lines[i].lstrip().startswith("status:"):
+                lines[i] = "status: resolved\n"
+        resolved.append(page)
+
+    if resolved:
+        paths.pending_file.write_text("".join(lines), encoding="utf-8")
+    return resolved
+
+
+# ── raw inbox ────────────────────────────────────────────────────────────────
+
+
+def raw_files(paths: Paths) -> list[Path]:
+    if not paths.raw_dir.is_dir():
+        return []
+    return sorted(
+        p
+        for p in paths.raw_dir.rglob("*")
+        if p.is_file() and not any(part.startswith(".") for part in p.relative_to(paths.raw_dir).parts)
+    )
+
+
+def processed_sources(paths: Paths) -> set[str]:
+    names: set[str] = set()
+    for path in wiki_pages(paths):
+        data, _kind = frontmatter(path)
+        if not data:
+            continue
+        sources = data.get("sources") or []
+        if isinstance(sources, str):
+            sources = [sources]
+        if not isinstance(sources, list):
+            continue
+        for source in sources:
+            text = str(source).strip().strip("\"'")
+            if text:
+                names.add(text.replace(os.sep, "/").rsplit("/", 1)[-1])
+    return names
+
+
+def unprocessed_raw(paths: Paths) -> list[Path]:
+    seen = processed_sources(paths)
+    return [p for p in raw_files(paths) if p.name not in seen]
+
+
+# ── inbox queue ──────────────────────────────────────────────────────────────
+
+
+def slugify(value: str) -> str:
+    value = value.strip().strip("\"'")
+    if value.endswith(".md"):
+        value = value[: -len(".md")]
+    for prefix in ("wiki/", "raw/", "pdfs/"):
+        if value.startswith(prefix):
+            value = value[len(prefix):]
+            break
+    value = re.sub(r"[^A-Za-z0-9]+", "-", value).strip("-").lower()
+    return value or "task"
+
+
+def task_body(op: str, target: str, section: str, extra: str = "") -> str:
+    note = OP_NOTES.get(op, "")
+    extra_block = f"{extra}\n" if extra else ""
+    return f"""---
+op: {op}
+target: {target}
+created: {date.today().isoformat()}
+source: wiki queue
+---
+
+# Task: {op} {target}
+
+- **op:** `{op}`
+- **target:** `{target}`
+{extra_block}
+## Instructions
+
+Follow the `{section}` section of `CLAUDE.md` (repo root). That section is the spec for this
+task; do not invent a wider scope.
+
+{note}
+
+## Rules
+
+- Work on a branch in a worktree. Never commit on `main`/`master`.
+- Commit your changes with a clear message.
+- Push the branch and open a **draft** PR.
+- Never push to `main`. Never merge.
+- Leave this task file in `.agents/` alone — the operator closes it out.
+"""
+
+
+def queue_task(paths: Paths, op: str, target: str, extra: str = "") -> tuple[str, Path]:
+    """Return (status, path) where status is 'queued' or 'skipped'."""
+    filename = f"{op}-{slugify(target)}.md"
+    inbox = paths.agents_dir / "inbox"
+    claimed = paths.agents_dir / "claimed"
+    for directory in (inbox, claimed, paths.agents_dir / "done"):
+        directory.mkdir(parents=True, exist_ok=True)
+
+    path = inbox / filename
+    if path.exists() or (claimed / filename).exists():
+        return "skipped", path
+
+    section = OP_SECTION_PDF if op == "ingest" and target.lower().endswith(".pdf") else OP_SECTIONS[op]
+    path.write_text(task_body(op, target, section, extra), encoding="utf-8")
+    return "queued", path
+
+
+# ── subcommands ──────────────────────────────────────────────────────────────
+
+
+def cmd_status(args: argparse.Namespace, paths: Paths) -> int:
+    drift = pending_entries(paths)
+    raw = unprocessed_raw(paths)
+    lint = run_lint(paths)
+    inbox = paths.agents_dir / "inbox"
+    tasks = sorted(inbox.glob("*.md")) if inbox.is_dir() else []
+
+    counts = {
+        "pending_drift": len(drift),
+        "unprocessed_raw": len(raw),
+        "lint_problems": lint["problems"],
+        "inbox_tasks": len(tasks),
+    }
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "root": str(paths.content_root),
+                    "state_root": str(paths.state_root),
+                    **counts,
+                    "pending": any(counts.values()),
+                },
+                indent=2,
+            )
+        )
+        return 0
+
+    if args.brief:
+        if not any(counts.values()):
+            return 0
+        print(
+            "wiki: {pending_drift} pending drift · {unprocessed_raw} unprocessed raw · "
+            "{lint_problems} lint · {inbox_tasks} inbox".format(**counts)
+        )
+        return 0
+
+    print(f"wiki status — {paths.content_root} (state: {paths.state_root})")
+    print(f"  pending drift:    {counts['pending_drift']}")
+    print(f"  unprocessed raw:  {counts['unprocessed_raw']}")
+    print(f"  lint problems:    {counts['lint_problems']}")
+    print(f"  inbox tasks:      {counts['inbox_tasks']}")
+    return 0
+
+
+def cmd_lint(args: argparse.Namespace, paths: Paths) -> int:
+    report = run_lint(paths)
+    if args.json:
+        print(json.dumps(report, indent=2))
+    else:
+        print_lint(report)
+    return 0 if report["ok"] else 1
+
+
+def cmd_drift(args: argparse.Namespace, paths: Paths) -> int:
+    resolved: list[str] = []
+    if args.resolve:
+        resolved = resolve_drift(paths, args.resolve)
+
+    entries = pending_entries(paths)
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "state_root": str(paths.state_root),
+                    "pending": len(entries),
+                    "entries": entries,
+                    "resolved": resolved,
+                },
+                indent=2,
+            )
+        )
+        return 0
+
+    if args.resolve:
+        if resolved:
+            for page in resolved:
+                print(f"resolved: {page}")
+        else:
+            print(f"drift: no pending entry for {args.resolve}")
+
+    if not entries:
+        print("drift: 0 pending entries")
+        return 0
+    print(f"drift: {len(entries)} pending entr{'y' if len(entries) == 1 else 'ies'}")
+    for entry in entries:
+        print(f"  {entry.get('wiki_page', '?')} → {entry.get('tier0_file', '?')}  {entry.get('wikilink', '')}")
+    return 0
+
+
+def cmd_reindex(args: argparse.Namespace, paths: Paths) -> int:
+    if args.json:
+        results = []
+        code = 0
+        for command in (("qmd", "update"), ("qmd", "embed")):
+            proc = subprocess.run(list(command), cwd=str(paths.content_root), capture_output=True, text=True)
+            results.append({"command": " ".join(command), "returncode": proc.returncode, "output": proc.stdout + proc.stderr})
+            if proc.returncode != 0 and code == 0:
+                code = proc.returncode
+        print(json.dumps({"ok": code == 0, "root": str(paths.content_root), "steps": results}, indent=2))
+        return code
+
+    code = 0
+    for command in (("qmd", "update"), ("qmd", "embed")):
+        try:
+            proc = subprocess.run(list(command), cwd=str(paths.content_root))
+        except FileNotFoundError:
+            print(f"wiki reindex: {command[0]} not found on PATH", file=sys.stderr)
+            return 127
+        if proc.returncode != 0 and code == 0:
+            code = proc.returncode
+    return code
+
+
+def cmd_queue(args: argparse.Namespace, paths: Paths) -> int:
+    jobs: list[tuple[str, str, str]] = []
+    if args.from_drift:
+        for entry in pending_entries(paths):
+            page = entry.get("wiki_page", "")
+            if not page:
+                continue
+            extra = f"- **tier0_file:** `{entry['tier0_file']}`" if entry.get("tier0_file") else ""
+            jobs.append(("tier0", page, extra))
+        if not jobs:
+            print("queue: no pending drift entries")
+            return 0
+    else:
+        if not args.op or not args.target:
+            print("wiki queue: need <op> <target>, or --from-drift", file=sys.stderr)
+            return 2
+        if args.op not in INBOX_OPS:
+            print(f"wiki queue: unknown op {args.op!r} (one of: {', '.join(INBOX_OPS)})", file=sys.stderr)
+            return 2
+        jobs.append((args.op, args.target, ""))
+
+    queued, skipped = [], []
+    for op, target, extra in jobs:
+        status, path = queue_task(paths, op, target, extra)
+        (queued if status == "queued" else skipped).append(str(path))
+
+    if args.json:
+        print(json.dumps({"queued": queued, "skipped": skipped}, indent=2))
+        return 0
+
+    for path in queued:
+        print(f"queued: {path}")
+    for path in skipped:
+        print(f"skipped (already queued): {path}")
+    return 0
+
+
+# ── entry point ──────────────────────────────────────────────────────────────
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="wiki",
+        description="Deterministic wiki maintenance: status, lint, drift, reindex, queue. No LLM calls.",
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    status = sub.add_parser("status", help="counts of pending work")
+    status.add_argument("--brief", action="store_true", help="one line; nothing when all counts are 0")
+    status.add_argument("--json", action="store_true")
+    status.set_defaults(func=cmd_status)
+
+    lint = sub.add_parser("lint", help="orphans, broken wikilinks, frontmatter, index drift")
+    lint.add_argument("--json", action="store_true")
+    lint.set_defaults(func=cmd_lint)
+
+    drift = sub.add_parser("drift", help="list pending Tier-0 drift entries")
+    drift.add_argument("--resolve", metavar="WIKI_PAGE", help="mark this page's pending entries resolved")
+    drift.add_argument("--json", action="store_true")
+    drift.set_defaults(func=cmd_drift)
+
+    reindex = sub.add_parser("reindex", help="qmd update + qmd embed")
+    reindex.add_argument("--json", action="store_true")
+    reindex.set_defaults(func=cmd_reindex)
+
+    queue = sub.add_parser("queue", help="write a task into .agents/inbox/")
+    queue.add_argument("op", nargs="?", choices=INBOX_OPS, help="ingest | reconcile | tier0")
+    queue.add_argument("target", nargs="?", help="file or page the task is about")
+    queue.add_argument("--from-drift", action="store_true", help="one tier0 task per pending drift entry")
+    queue.add_argument("--json", action="store_true")
+    queue.set_defaults(func=cmd_queue)
+
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    try:
+        paths = Paths()
+    except RuntimeError as error:
+        print(f"wiki: not inside a git repository ({error})", file=sys.stderr)
+        return 2 if args.command != "status" else 0
+    try:
+        return args.func(args, paths)
+    except Exception as error:  # report-only commands must never break a hook
+        if args.command == "status":
+            warn(f"status failed: {error}")
+            return 0
+        raise
+
+
+if __name__ == "__main__":
+    sys.exit(main())

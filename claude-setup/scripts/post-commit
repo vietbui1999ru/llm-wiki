@@ -51,3 +51,8 @@ DRIFT_SCRIPT="$WIKI_ROOT/claude-setup/scripts/detect-tier0-drift.sh"
 if [[ -x "$DRIFT_SCRIPT" ]]; then
     "$DRIFT_SCRIPT" 2>/dev/null || true
 fi
+
+# ── Queue pending drift as claimable tasks ───────────────────────────────────
+# One tier0 task per pending entry, written to the main checkout's .agents/inbox/.
+# Idempotent (entries already queued or claimed are skipped), never blocks the commit.
+"$WIKI_ROOT/claude-setup/scripts/wiki" queue --from-drift >/dev/null 2>&1 || true

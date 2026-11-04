@@ -18,7 +18,10 @@ Usage:
   wiki-chat --mode local       entity-focused (specific concept questions)
   wiki-chat --mode global      community summaries (cross-concept questions)
 
-Synthesis backend (first one configured wins):
+Synthesis backend (--backend, default ollama):
+  ollama    local model via the Ollama server; short answers
+      WIKI_CHAT_MODEL               model tag (default gemma4:e4b; see `ollama list`)
+  opencode  remote; first one configured wins:
   LLAMACPP_BASE_URL=...             → self-hosted llama.cpp (RESERVED — not wired yet, errors if set)
   OPENCODE_GO_API_KEY_LIGHTRAG=...  → OpenCode Go (OpenAI-compatible); counts against plan limits
       OPENCODE_LIGHTRAG_MODEL       model id (default deepseek-v4.1-flash)
@@ -26,7 +29,14 @@ Synthesis backend (first one configured wins):
       OPENCODE_LIGHTRAG_SESSION     routing/prefix-cache affinity id (default: wiki-chat)
   WIKI_LLM_PROXY_URL=...            send synthesis through a local proxy (see docs/headroom.md)
   none configured                   → queries return an error
-Embeddings still use ollama (nomic-embed-text); no local LLM is used.
+Embeddings always use ollama (nomic-embed-text). If no Ollama server answers on
+127.0.0.1:11434, wiki-chat starts `ollama serve` and stops it on exit; if one was
+already running, it is left up and only the chat model is unloaded on exit.
+
+Reranking (skip with --no-rerank): llama-server --rerank on 127.0.0.1:8012, started and
+stopped the same way; needs `brew install llama.cpp`. First start downloads the model.
+  WIKI_CHAT_RERANK_MODEL     -hf ref (default ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF)
+Without llama-server, wiki-chat runs with reranking off.
 
 Prompt commands:
   /mode local|global|hybrid|naive   switch query mode mid-session
@@ -40,15 +50,21 @@ import argparse
 import asyncio
 import json
 import os
+import functools
+import hashlib
+import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 try:
     import ollama as _ollama
     from dotenv import load_dotenv
     from lightrag import LightRAG, QueryParam
+    from lightrag.llm.ollama import ollama_model_complete
     from lightrag.llm.openai import openai_complete_if_cache
+    from lightrag.rerank import generic_rerank_api
     from lightrag.utils import EmbeddingFunc
     from prompt_toolkit import prompt as pt_prompt
     from prompt_toolkit.history import FileHistory
@@ -144,19 +160,37 @@ async def _no_backend(*args, **kwargs):
     raise RuntimeError("No LLM backend configured. Set OPENCODE_GO_API_KEY_LIGHTRAG (in ~/secrets/.env).")
 
 
-# Selection: local llama.cpp slot (reserved) -> OpenCode Go -> none.
-if _LOCAL_LLM_URL:
-    # TODO: self-hosted llama.cpp (llama-server exposes an OpenAI-compatible /v1 API).
-    # Slot is intentionally left empty until an instance exists.
-    raise NotImplementedError("llama.cpp backend not wired yet. Unset LLAMACPP_BASE_URL.")
-elif _API_KEY:
-    LLM_MODEL  = _OPENCODE_MODEL
-    _llm_func  = _opencode_llm
-    _llm_async = 4
-else:
-    LLM_MODEL  = "none"
-    _llm_func  = _no_backend
-    _llm_async = 1
+OLLAMA_URL     = "http://127.0.0.1:11434"
+_LOCAL_MODEL   = os.environ.get("WIKI_CHAT_MODEL", "gemma4:e4b")
+_LOCAL_NUM_CTX = 16384  # Ollama's default window is too small for LightRAG's retrieved context
+SHORT_ANSWER   = "Short answer, 2-4 sentences"
+
+# Reranker: llama-server --rerank (Ollama has no rerank API). Jina-format /v1/rerank.
+RERANK_MODEL = os.environ.get("WIKI_CHAT_RERANK_MODEL", "ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF")
+RERANK_PORT  = 8012
+RERANK_URL   = f"http://127.0.0.1:{RERANK_PORT}"
+_rerank_on   = False  # set by _ensure_reranker once the server answers
+# api_key=None explicitly: jina_rerank would forward JINA_API_KEY from the env to this server.
+_rerank = functools.partial(generic_rerank_api, model="qwen3-reranker-0.6b",
+                            base_url=f"{RERANK_URL}/v1/rerank", api_key=None)
+SHORT_PROMPT   = "Answer in at most 4 sentences of plain prose. No headings or bullet lists."
+
+LLM_MODEL, _llm_func, _llm_async, _llm_kwargs = "none", _no_backend, 1, {}
+
+
+def _select_backend(backend: str) -> None:
+    global LLM_MODEL, _llm_func, _llm_async, _llm_kwargs
+    if backend == "ollama":
+        # think=False: gemma4 thinks by default, which costs latency for no gain on short answers.
+        LLM_MODEL, _llm_func, _llm_async = _LOCAL_MODEL, ollama_model_complete, 1
+        _llm_kwargs = {"host": OLLAMA_URL, "options": {"num_ctx": _LOCAL_NUM_CTX, "think": False}}
+    # Remote selection: local llama.cpp slot (reserved) -> OpenCode Go -> none.
+    elif _LOCAL_LLM_URL:
+        # TODO: self-hosted llama.cpp (llama-server exposes an OpenAI-compatible /v1 API).
+        # Slot is intentionally left empty until an instance exists.
+        raise NotImplementedError("llama.cpp backend not wired yet. Unset LLAMACPP_BASE_URL.")
+    elif _API_KEY:
+        LLM_MODEL, _llm_func, _llm_async = _OPENCODE_MODEL, _opencode_llm, 4
 
 console = Console()
 
@@ -179,6 +213,8 @@ def _build_rag() -> LightRAG:
         llm_model_func=_llm_func,
         llm_model_name=LLM_MODEL,
         llm_model_max_async=_llm_async,
+        llm_model_kwargs=_llm_kwargs,
+        rerank_model_func=_rerank if _rerank_on else None,
         chunk_token_size=800,
         chunk_overlap_token_size=64,
         top_k=20,
@@ -199,9 +235,17 @@ async def make_rag() -> LightRAG:
 
 async def ask(rag: LightRAG, question: str, mode: str) -> None:
     console.print(f"[dim]▸ querying [{mode}]...[/dim]")
+    # Context budget stays under _LOCAL_NUM_CTX so the local model sees all of it.
+    param = QueryParam(mode=mode, response_type=SHORT_ANSWER,
+                       user_prompt=SHORT_PROMPT, max_total_tokens=12000,
+                       enable_rerank=_rerank_on)  # False silences LightRAG's "no rerank model" warning
     try:
-        result = await rag.aquery(question, param=QueryParam(mode=mode))
-        console.print(Markdown(result))
+        result = await rag.aquery(question, param=param)
+        # LightRAG logs backend failures and returns None; rich.Markdown(None) would then raise.
+        if isinstance(result, str) and result.strip():
+            console.print(Markdown(result))
+        else:
+            console.print("[yellow]No answer (see the error above).[/yellow]")
     except Exception as e:
         console.print(f"[red]Query error: {e}[/red]")
 
@@ -215,8 +259,15 @@ def show_index_status() -> None:
     pages    = list((WIKI_DIR / "wiki").rglob("*.md"))
     indexed  = sum(1 for p in pages if str(p) in manifest)
     changed  = sum(1 for p in pages
-                   if str(p) in manifest and manifest[str(p)] != p.stat().st_mtime)
+                   if str(p) in manifest and not _is_current(p, manifest[str(p)]))
     console.print(f"[dim]Pages: {len(pages)} total · {indexed} indexed · {changed} changed[/dim]")
+
+
+def _is_current(path: Path, entry) -> bool:
+    """Same rule as wiki-index's is_current: hash entries by content, legacy floats by mtime."""
+    if isinstance(entry, dict):
+        return entry.get("hash") == hashlib.sha256(path.read_bytes()).hexdigest()
+    return entry == path.stat().st_mtime
 
 
 async def run(args: argparse.Namespace) -> None:
@@ -274,13 +325,84 @@ async def run(args: argparse.Namespace) -> None:
         await rag.finalize_storages()
 
 
+def _up(url: str) -> bool:
+    import urllib.request
+    try:
+        with urllib.request.urlopen(url, timeout=1):  # non-2xx (e.g. 503 while loading) raises
+            return True
+    except Exception:
+        return False
+
+
+def _ensure_server(name: str, cmd: list[str], probe: str, wait_s: int) -> subprocess.Popen | None:
+    """Start `cmd` if `probe` does not answer; return the process only if we started it."""
+    if _up(probe):
+        return None
+    console.print(f"[dim]Starting {name}...[/dim]")
+    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                            start_new_session=True)
+    for _ in range(wait_s * 5):
+        if _up(probe):
+            return proc
+        if proc.poll() is not None:
+            break
+        time.sleep(0.2)
+    _stop(proc)
+    raise RuntimeError(f"{name} did not come up at {probe} within {wait_s}s.")
+
+
+def _stop(proc: subprocess.Popen | None) -> None:
+    if proc is None or proc.poll() is not None:
+        return
+    proc.terminate()
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+
+
+def _ensure_reranker() -> subprocess.Popen | None:
+    """Bring up llama-server with the reranker; on any failure, run without reranking."""
+    global _rerank_on
+    if shutil.which("llama-server") is None:
+        console.print("[dim]rerank off: llama-server not found (brew install llama.cpp)[/dim]")
+        return None
+    cmd = ["llama-server", "-hf", RERANK_MODEL, "--rerank", "--port", str(RERANK_PORT),
+           "--host", "127.0.0.1", "-ub", "2048", "-b", "2048"]  # a query+chunk pair must fit one ubatch
+    try:
+        proc = _ensure_server("llama-server reranker", cmd, f"{RERANK_URL}/health", 180)
+    except RuntimeError as e:
+        console.print(f"[yellow]rerank off: {e}[/yellow]")
+        return None
+    _rerank_on = True
+    return proc
+
+
 def main() -> None:
-    if _PROXY_URL:
-        _preflight_proxy()
     parser = argparse.ArgumentParser(description="wiki-chat: graph-aware wiki assistant")
     parser.add_argument("--mode", choices=VALID_MODES, default="hybrid")
+    parser.add_argument("--backend", choices=("ollama", "opencode"), default="ollama")
+    parser.add_argument("--no-rerank", action="store_true", help="skip the local reranker")
     args = parser.parse_args()
-    asyncio.run(run(args))
+    _select_backend(args.backend)
+    if args.backend == "opencode" and _PROXY_URL:
+        _preflight_proxy()
+    try:  # embeddings need Ollama on every backend
+        ollama = _ensure_server("ollama serve", ["ollama", "serve"], f"{OLLAMA_URL}/api/version", 10)
+    except RuntimeError as e:
+        raise SystemExit(str(e))
+    reranker = None if args.no_rerank else _ensure_reranker()
+    try:
+        asyncio.run(run(args))
+    except KeyboardInterrupt:
+        pass
+    finally:
+        _stop(reranker)
+        if ollama is not None:  # we own it: shut it down
+            _stop(ollama)
+            console.print("[dim]ollama stopped.[/dim]")
+        elif args.backend == "ollama":  # someone else's server: just free the model's memory
+            subprocess.run(["ollama", "stop", _LOCAL_MODEL], capture_output=True)
 
 
 if __name__ == "__main__":

@@ -33,6 +33,11 @@ Embeddings always use ollama (nomic-embed-text). If no Ollama server answers on
 127.0.0.1:11434, wiki-chat starts `ollama serve` and stops it on exit; if one was
 already running, it is left up and only the chat model is unloaded on exit.
 
+Reranking (skip with --no-rerank): llama-server --rerank on 127.0.0.1:8012, started and
+stopped the same way; needs `brew install llama.cpp`. First start downloads the model.
+  WIKI_CHAT_RERANK_MODEL     -hf ref (default gpustack/bge-reranker-v2-m3-GGUF:Q8_0)
+Without llama-server, wiki-chat runs with reranking off.
+
 Prompt commands:
   /mode local|global|hybrid|naive   switch query mode mid-session
   /reindex                          re-index changed wiki pages
@@ -45,6 +50,8 @@ import argparse
 import asyncio
 import json
 import os
+import functools
+import shutil
 import subprocess
 import sys
 import time
@@ -56,6 +63,7 @@ try:
     from lightrag import LightRAG, QueryParam
     from lightrag.llm.ollama import ollama_model_complete
     from lightrag.llm.openai import openai_complete_if_cache
+    from lightrag.rerank import generic_rerank_api
     from lightrag.utils import EmbeddingFunc
     from prompt_toolkit import prompt as pt_prompt
     from prompt_toolkit.history import FileHistory
@@ -155,6 +163,15 @@ OLLAMA_URL     = "http://127.0.0.1:11434"
 _LOCAL_MODEL   = os.environ.get("WIKI_CHAT_MODEL", "gemma4:e4b")
 _LOCAL_NUM_CTX = 16384  # Ollama's default window is too small for LightRAG's retrieved context
 SHORT_ANSWER   = "Short answer, 2-4 sentences"
+
+# Reranker: llama-server --rerank (Ollama has no rerank API). Jina-format /v1/rerank.
+RERANK_MODEL = os.environ.get("WIKI_CHAT_RERANK_MODEL", "gpustack/bge-reranker-v2-m3-GGUF:Q8_0")
+RERANK_PORT  = 8012
+RERANK_URL   = f"http://127.0.0.1:{RERANK_PORT}"
+_rerank_on   = False  # set by _ensure_reranker once the server answers
+# api_key=None explicitly: jina_rerank would forward JINA_API_KEY from the env to this server.
+_rerank = functools.partial(generic_rerank_api, model="bge-reranker-v2-m3",
+                            base_url=f"{RERANK_URL}/v1/rerank", api_key=None)
 SHORT_PROMPT   = "Answer in at most 4 sentences of plain prose. No headings or bullet lists."
 
 LLM_MODEL, _llm_func, _llm_async, _llm_kwargs = "none", _no_backend, 1, {}
@@ -196,6 +213,7 @@ def _build_rag() -> LightRAG:
         llm_model_name=LLM_MODEL,
         llm_model_max_async=_llm_async,
         llm_model_kwargs=_llm_kwargs,
+        rerank_model_func=_rerank if _rerank_on else None,
         chunk_token_size=800,
         chunk_overlap_token_size=64,
         top_k=20,
@@ -218,7 +236,8 @@ async def ask(rag: LightRAG, question: str, mode: str) -> None:
     console.print(f"[dim]▸ querying [{mode}]...[/dim]")
     # Context budget stays under _LOCAL_NUM_CTX so the local model sees all of it.
     param = QueryParam(mode=mode, response_type=SHORT_ANSWER,
-                       user_prompt=SHORT_PROMPT, max_total_tokens=12000)
+                       user_prompt=SHORT_PROMPT, max_total_tokens=12000,
+                       enable_rerank=_rerank_on)  # False silences LightRAG's "no rerank model" warning
     try:
         result = await rag.aquery(question, param=param)
         # LightRAG logs backend failures and returns None; rich.Markdown(None) would then raise.
@@ -298,57 +317,84 @@ async def run(args: argparse.Namespace) -> None:
         await rag.finalize_storages()
 
 
-def _ollama_up() -> bool:
+def _up(url: str) -> bool:
     import urllib.request
     try:
-        with urllib.request.urlopen(f"{OLLAMA_URL}/api/version", timeout=1):
+        with urllib.request.urlopen(url, timeout=1):  # non-2xx (e.g. 503 while loading) raises
             return True
     except Exception:
         return False
 
 
-def _ensure_ollama() -> subprocess.Popen | None:
-    """Start `ollama serve` if nothing is listening; return the process only if we started it."""
-    if _ollama_up():
+def _ensure_server(name: str, cmd: list[str], probe: str, wait_s: int) -> subprocess.Popen | None:
+    """Start `cmd` if `probe` does not answer; return the process only if we started it."""
+    if _up(probe):
         return None
-    console.print("[dim]Starting ollama serve...[/dim]")
-    proc = subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL,
-                            stderr=subprocess.DEVNULL, start_new_session=True)
-    for _ in range(50):
-        if _ollama_up():
+    console.print(f"[dim]Starting {name}...[/dim]")
+    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                            start_new_session=True)
+    for _ in range(wait_s * 5):
+        if _up(probe):
             return proc
+        if proc.poll() is not None:
+            break
         time.sleep(0.2)
+    _stop(proc)
+    raise RuntimeError(f"{name} did not come up at {probe} within {wait_s}s.")
+
+
+def _stop(proc: subprocess.Popen | None) -> None:
+    if proc is None or proc.poll() is not None:
+        return
     proc.terminate()
-    raise SystemExit("ollama serve did not come up on 127.0.0.1:11434 within 10s.")
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
 
 
-def _release_ollama(proc: subprocess.Popen | None, backend: str) -> None:
-    if proc is not None:  # we own it: shut it down
-        proc.terminate()
-        try:
-            proc.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-        console.print("[dim]ollama stopped.[/dim]")
-    elif backend == "ollama":  # someone else's server: just free the model's memory
-        subprocess.run(["ollama", "stop", _LOCAL_MODEL], capture_output=True)
+def _ensure_reranker() -> subprocess.Popen | None:
+    """Bring up llama-server with the reranker; on any failure, run without reranking."""
+    global _rerank_on
+    if shutil.which("llama-server") is None:
+        console.print("[dim]rerank off: llama-server not found (brew install llama.cpp)[/dim]")
+        return None
+    cmd = ["llama-server", "-hf", RERANK_MODEL, "--rerank", "--port", str(RERANK_PORT),
+           "--host", "127.0.0.1", "-ub", "2048", "-b", "2048"]  # a query+chunk pair must fit one ubatch
+    try:
+        proc = _ensure_server("llama-server reranker", cmd, f"{RERANK_URL}/health", 180)
+    except RuntimeError as e:
+        console.print(f"[yellow]rerank off: {e}[/yellow]")
+        return None
+    _rerank_on = True
+    return proc
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="wiki-chat: graph-aware wiki assistant")
     parser.add_argument("--mode", choices=VALID_MODES, default="hybrid")
     parser.add_argument("--backend", choices=("ollama", "opencode"), default="ollama")
+    parser.add_argument("--no-rerank", action="store_true", help="skip the local reranker")
     args = parser.parse_args()
     _select_backend(args.backend)
     if args.backend == "opencode" and _PROXY_URL:
         _preflight_proxy()
-    proc = _ensure_ollama()  # embeddings need it on every backend
+    try:  # embeddings need Ollama on every backend
+        ollama = _ensure_server("ollama serve", ["ollama", "serve"], f"{OLLAMA_URL}/api/version", 10)
+    except RuntimeError as e:
+        raise SystemExit(str(e))
+    reranker = None if args.no_rerank else _ensure_reranker()
     try:
         asyncio.run(run(args))
     except KeyboardInterrupt:
         pass
     finally:
-        _release_ollama(proc, args.backend)
+        _stop(reranker)
+        if ollama is not None:  # we own it: shut it down
+            _stop(ollama)
+            console.print("[dim]ollama stopped.[/dim]")
+        elif args.backend == "ollama":  # someone else's server: just free the model's memory
+            subprocess.run(["ollama", "stop", _LOCAL_MODEL], capture_output=True)
 
 
 if __name__ == "__main__":

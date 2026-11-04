@@ -51,3 +51,7 @@ __pycache__/
 
 # Retrieval eval run output (only committed baselines live under tests/retrieval/baselines/)
 tests/retrieval/results/
+
+# Local council and mistake logs (this repo is public; keep them out of git)
+.council/
+mistakes/raw-log.md

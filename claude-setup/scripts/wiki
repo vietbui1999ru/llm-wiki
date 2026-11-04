@@ -412,7 +412,7 @@ def slugify(value: str) -> str:
 
 def task_body(op: str, target: str, section: str, extra: str = "") -> str:
     note = OP_NOTES.get(op, "")
-    extra_block = f"\n{extra}\n" if extra else ""
+    extra_block = f"{extra}\n" if extra else ""
     return f"""---
 op: {op}
 target: {target}

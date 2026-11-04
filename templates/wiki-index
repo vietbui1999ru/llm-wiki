@@ -39,7 +39,8 @@ USAGE NOTE — --full with OpenCode Go:
 
 Requires:
   uv run --script wiki-index   (deps declared inline above)
-  ollama running with nomic-embed-text (embeddings only; no local LLM is used)
+  ollama with nomic-embed-text (embeddings only). If no server answers on 127.0.0.1:11434,
+  wiki-index starts `ollama serve` and stops it on exit.
 """
 from __future__ import annotations
 
@@ -48,7 +49,11 @@ import asyncio
 import hashlib
 import json
 import os
+import shutil
+import subprocess
 import sys
+import time
+import urllib.request
 from pathlib import Path
 
 try:
@@ -70,7 +75,20 @@ MANIFEST    = WORK_DIR / "manifest.json"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 
-_API_KEY          = os.environ.get("OPENCODE_GO_API_KEY_LIGHTRAG", "")
+def _secret(name: str) -> str:
+    """The env value, else one key via dotfiles' secret-get. Nothing sources ~/secrets/.env
+    (dotfiles docs/workflows/secrets.md), so a key is fetched only by the tool that needs it."""
+    if os.environ.get(name):
+        return os.environ[name]
+    tool = shutil.which("secret-get") or str(Path.home() / "dotfiles/scripts/secret-get")
+    try:
+        out = subprocess.run([tool, name], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return out.stdout.strip() if out.returncode == 0 else ""
+
+
+_API_KEY          = _secret("OPENCODE_GO_API_KEY_LIGHTRAG")
 _OPENCODE_URL     = os.environ.get("OPENCODE_LIGHTRAG_BASE_URL", "https://opencode.ai/zen/go/v1")
 _OPENCODE_MODEL   = os.environ.get("OPENCODE_LIGHTRAG_MODEL", "deepseek-v4.1-flash")
 _OPENROUTER_KEY   = os.environ.get("OPENROUTER_API_KEY", "")
@@ -503,5 +521,51 @@ async def main() -> None:
         await rag.finalize_storages()
 
 
+OLLAMA_PROBE = "http://127.0.0.1:11434/api/version"
+
+
+def _ollama_up() -> bool:
+    try:
+        with urllib.request.urlopen(OLLAMA_PROBE, timeout=1):
+            return True
+    except Exception:
+        return False
+
+
+def _ensure_ollama() -> subprocess.Popen | None:
+    """Start `ollama serve` if nothing answers; return the process only if we started it."""
+    if _ollama_up():
+        return None
+    print("Starting ollama serve...", flush=True)
+    proc = subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL, start_new_session=True)
+    for _ in range(50):  # 10 s
+        if _ollama_up():
+            return proc
+        if proc.poll() is not None:
+            break
+        time.sleep(0.2)
+    _stop(proc)
+    raise SystemExit(f"ollama serve did not come up at {OLLAMA_PROBE}.")
+
+
+def _stop(proc: subprocess.Popen | None) -> None:
+    if proc is None or proc.poll() is not None:
+        return
+    proc.terminate()
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    # --status and --test never embed, so they need no Ollama server.
+    needs_ollama = not ({"--status", "--test"} & set(sys.argv[1:]))
+    ollama = _ensure_ollama() if needs_ollama else None
+    try:
+        asyncio.run(main())
+    finally:
+        if ollama is not None:
+            _stop(ollama)
+            print("ollama stopped.", flush=True)

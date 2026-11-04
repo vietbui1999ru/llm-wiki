@@ -156,6 +156,19 @@ async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwa
     return result
 
 
+def _secret(name: str) -> str:
+    """The env value, else one key via dotfiles' secret-get. Nothing sources ~/secrets/.env
+    (dotfiles docs/workflows/secrets.md), so a key is fetched only by the tool that needs it."""
+    if os.environ.get(name):
+        return os.environ[name]
+    tool = shutil.which("secret-get") or str(Path.home() / "dotfiles/scripts/secret-get")
+    try:
+        out = subprocess.run([tool, name], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return out.stdout.strip() if out.returncode == 0 else ""
+
+
 async def _no_backend(*args, **kwargs):
     raise RuntimeError("No LLM backend configured. Set OPENCODE_GO_API_KEY_LIGHTRAG (in ~/secrets/.env).")
 
@@ -179,8 +192,8 @@ LLM_MODEL, _llm_func, _llm_async, _llm_kwargs = "none", _no_backend, 1, {}
 
 
 def _select_backend(backend: str) -> None:
-    global LLM_MODEL, _llm_func, _llm_async, _llm_kwargs
-    if backend == "ollama":
+    global LLM_MODEL, _llm_func, _llm_async, _llm_kwargs, _API_KEY
+    if backend == "ollama":  # local: no key is fetched
         # think=False: gemma4 thinks by default, which costs latency for no gain on short answers.
         LLM_MODEL, _llm_func, _llm_async = _LOCAL_MODEL, ollama_model_complete, 1
         _llm_kwargs = {"host": OLLAMA_URL, "options": {"num_ctx": _LOCAL_NUM_CTX, "think": False}}
@@ -189,7 +202,7 @@ def _select_backend(backend: str) -> None:
         # TODO: self-hosted llama.cpp (llama-server exposes an OpenAI-compatible /v1 API).
         # Slot is intentionally left empty until an instance exists.
         raise NotImplementedError("llama.cpp backend not wired yet. Unset LLAMACPP_BASE_URL.")
-    elif _API_KEY:
+    elif (_API_KEY := _API_KEY or _secret("OPENCODE_GO_API_KEY_LIGHTRAG")):
         LLM_MODEL, _llm_func, _llm_async = _OPENCODE_MODEL, _opencode_llm, 4
 
 console = Console()
@@ -235,9 +248,12 @@ async def make_rag() -> LightRAG:
 
 async def ask(rag: LightRAG, question: str, mode: str) -> None:
     console.print(f"[dim]▸ querying [{mode}]...[/dim]")
-    # Context budget stays under _LOCAL_NUM_CTX so the local model sees all of it.
+    # Context budget stays under _LOCAL_NUM_CTX so the local model sees all of it. Chunks get
+    # what entities + relations + prompt leave of the total; LightRAG's defaults (6000 + 8000)
+    # exceed 12000 alone, which left 0 chunks, so cap the graph parts at 3000 each.
     param = QueryParam(mode=mode, response_type=SHORT_ANSWER,
                        user_prompt=SHORT_PROMPT, max_total_tokens=12000,
+                       max_entity_tokens=3000, max_relation_tokens=3000,
                        enable_rerank=_rerank_on)  # False silences LightRAG's "no rerank model" warning
     try:
         result = await rag.aquery(question, param=param)

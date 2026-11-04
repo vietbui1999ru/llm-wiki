@@ -128,7 +128,7 @@ OpenCode Go synthesis        OpenCode Go synthesis
 |---|---|---|
 | [Claude Code](https://claude.ai/code) | LLM interface — runs wiki operations | Download from claude.ai |
 | [qmd](https://github.com/antiloger/qmd) | Hybrid search (BM25 + vector) — `post-commit` hook calls it | `cargo install qmd` or [binary release](https://github.com/antiloger/qmd/releases) |
-| [ollama](https://ollama.com) | Local embeddings (`nomic-embed-text`) for the graph index, TUI and MCP server; no local LLM is used; to be replaced by llama.cpp later (OpenCode has no embeddings endpoint) | Download from ollama.com |
+| [ollama](https://ollama.com) | Local embeddings (`nomic-embed-text`) for the graph index, TUI and MCP server, plus wiki-chat's local answers (`gemma4:e4b` by default, `WIKI_CHAT_MODEL` to change). wiki-chat and wiki-index start `ollama serve` when none is running and stop it on exit; wiki-mcp expects a running server. Do not run it as an always-on `brew services` job, or nothing gets stopped | Download from ollama.com |
 | [uv](https://docs.astral.sh/uv/) | Python script runner (install.sh handles this) | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | [Node.js](https://nodejs.org) | Runs `docs-site/` generator + `pre-push` hook | `nvm install --lts` or distro package |
 | [zsh](https://www.zsh.org) | `post-commit` and `pre-push` hooks use `#!/bin/zsh` | `sudo apt install zsh` (or change hook shebang to `bash`) |

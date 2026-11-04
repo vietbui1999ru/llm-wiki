@@ -49,6 +49,7 @@ import asyncio
 import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -74,7 +75,20 @@ MANIFEST    = WORK_DIR / "manifest.json"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 
-_API_KEY          = os.environ.get("OPENCODE_GO_API_KEY_LIGHTRAG", "")
+def _secret(name: str) -> str:
+    """The env value, else one key via dotfiles' secret-get. Nothing sources ~/secrets/.env
+    (dotfiles docs/workflows/secrets.md), so a key is fetched only by the tool that needs it."""
+    if os.environ.get(name):
+        return os.environ[name]
+    tool = shutil.which("secret-get") or str(Path.home() / "dotfiles/scripts/secret-get")
+    try:
+        out = subprocess.run([tool, name], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return out.stdout.strip() if out.returncode == 0 else ""
+
+
+_API_KEY          = _secret("OPENCODE_GO_API_KEY_LIGHTRAG")
 _OPENCODE_URL     = os.environ.get("OPENCODE_LIGHTRAG_BASE_URL", "https://opencode.ai/zen/go/v1")
 _OPENCODE_MODEL   = os.environ.get("OPENCODE_LIGHTRAG_MODEL", "deepseek-v4.1-flash")
 _OPENROUTER_KEY   = os.environ.get("OPENROUTER_API_KEY", "")

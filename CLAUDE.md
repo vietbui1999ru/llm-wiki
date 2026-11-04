@@ -79,6 +79,25 @@ When Viet says "lint the wiki":
 ### Docs sync
 `node claude-setup/scripts/docs-sync.mjs [--since <ref>] [--dry-run]` — rewrites the docs that describe the dotfiles agent harness after a burst of changes; path→doc mapping in `claude-setup/docs-sync.json`.
 
+### Autonomous operation
+`claude-setup/scripts/wiki` runs the deterministic side of maintenance with no LLM calls, so any agent (Claude Code, Codex, Pi, OpenCode) can run it unattended. Same surface as MCP tools via `claude-setup/scripts/wiki-mcp-ops` (`wiki_status`, `wiki_lint`, `wiki_drift`, `wiki_reindex`, `wiki_queue`). Every subcommand takes `--json`.
+
+| Command | Does |
+|---|---|
+| `wiki status [--brief]` | counts of pending drift, unprocessed `raw/`, lint problems, inbox tasks |
+| `wiki lint` | orphan pages, broken wikilinks, missing frontmatter keys, `index.md` drift; exit 1 on problems |
+| `wiki drift [--resolve <page>]` | list pending Tier-0 drift entries, or mark one page's entries resolved |
+| `wiki reindex` | `qmd update`, then `qmd embed` |
+| `wiki queue <ingest\|reconcile\|tier0> <target>` | write one task into `.agents/inbox/`, pointing at the matching section here |
+| `wiki queue --from-drift` | one tier0 task per pending drift entry |
+
+`post-commit` runs `queue --from-drift` after drift detection and the `SessionStart` hook prints `status --brief`, so pending work is visible without anyone asking. When it reports work:
+1. Claim a task with the `claim-task` skill — it `mv`s the file out of `.agents/inbox/`, which is atomic across worktrees.
+2. Do it on a branch in a worktree, following the Operations section the task file names.
+3. Commit, push, open a **draft** PR. Never push `main`, never merge.
+
+Runtime state (`pending-sync.md`, `.agents/`) lives in the main checkout and is shared by every worktree; content (`wiki/`, `index.md`, `raw/`) resolves from the checkout you are in.
+
 ## context7 lookup rule
 Before using any library, framework, CLI tool, or API — resolve current docs via context7 MCP:
 1. `mcp__context7__resolve-library-id` → get the library ID

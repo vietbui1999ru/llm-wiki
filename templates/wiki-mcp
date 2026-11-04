@@ -7,7 +7,6 @@
 #   "mcp>=1.0,<2",   # 2.x removed the @app.list_tools()/@app.call_tool() decorators used below
 #   "ollama",
 #   "numpy",
-#   "python-dotenv",
 # ]
 # ///
 """wiki-mcp — local MCP server: graph-aware wiki queries via LightRAG
@@ -31,13 +30,13 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
 try:
     import numpy as np
     import ollama as _ollama
-    from dotenv import load_dotenv
     from lightrag import LightRAG, QueryParam
     from lightrag.llm.openai import openai_complete_if_cache
     from lightrag.utils import EmbeddingFunc
@@ -48,14 +47,27 @@ except ImportError as e:
     print(f"Missing: {e}", file=sys.stderr)
     sys.exit(1)
 
+def lightrag_key() -> str:
+    """OPENCODE_GO_API_KEY_LIGHTRAG: env first, then dotfiles secret-get; never a .env file."""
+    key = os.environ.get("OPENCODE_GO_API_KEY_LIGHTRAG", "")
+    if key:
+        return key
+    helper = Path.home() / "dotfiles/scripts/secret-get"
+    if os.access(helper, os.X_OK):
+        res = subprocess.run([str(helper), "OPENCODE_GO_API_KEY_LIGHTRAG"], capture_output=True, text=True)
+        if res.returncode == 0:
+            return res.stdout.strip()
+    return ""
+
 WIKI_DIR    = Path.home() / "repos/llm-wiki"
-load_dotenv(WIKI_DIR / ".env")
 WORK_DIR    = WIKI_DIR / ".lightrag"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 
 # Synthesis backend: local llama.cpp slot (reserved) -> OpenCode Go -> none
-_API_KEY        = os.environ.get("OPENCODE_GO_API_KEY_LIGHTRAG", "")
+_API_KEY        = lightrag_key()
+if _API_KEY:
+    os.environ["OPENCODE_GO_API_KEY_LIGHTRAG"] = _API_KEY
 _OPENCODE_URL    = os.environ.get("OPENCODE_LIGHTRAG_BASE_URL", "https://opencode.ai/zen/go/v1")
 _OPENCODE_MODEL  = os.environ.get("OPENCODE_LIGHTRAG_MODEL", "deepseek-v4.1-flash")
 _OPENROUTER_KEY  = os.environ.get("OPENROUTER_API_KEY", "")

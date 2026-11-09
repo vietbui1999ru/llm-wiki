@@ -25,6 +25,8 @@ the commit funnel. Load them with `qmd query "worktree guard"` when a session wo
   check the match first; a side-branch worktree lints a copy with the field rewritten (2026-10-26).
 
 ## New files through the commit funnel
+- Run `commit-funnel` from the worktree root: it resolves path arguments against the shell's cwd,
+  not `--worktree`, and a `cd` into a subdirectory for tests persists (2026-11-05).
 - New markdown note in a repo with frontmatter properties (e.g. `status.py` hooks): copy a sibling
   file's frontmatter first; pasted tool output never has it (2026-10-26).
 - In a jj-colocated worktree, `commit-funnel` skips new files over jj's 1 MiB

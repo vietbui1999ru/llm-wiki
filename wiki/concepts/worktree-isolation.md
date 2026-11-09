@@ -195,6 +195,12 @@ What works in this harness: keep Claude Code's Git worktree and colocate a jj re
 see an ordinary worktree; agents get jj's undo and history editing. See [[entities/jujutsu]] for the commit
 funnel and gotchas.
 
+**Update 2026-11-09 (jj 0.46, Claude Code 2.1.319, tested).** `jj workspace add --colocate` creates a real Git
+worktree, listed by `git worktree list`, and `EnterWorktree` accepts it, so the #66503 refusal does not apply to
+that form. The dotfiles harness now starts new sessions through `scripts/jw`, which makes such a workspace on a
+real branch: one shared jj store, and Git-based gates keep working because the commit funnel keeps `HEAD` attached.
+See [[concepts/claude-code-worktree-guard]] for why this launch path avoids the guard.
+
 ---
 
 ## Fresh Context Window Per Task

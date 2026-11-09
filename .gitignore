@@ -43,6 +43,7 @@ pending-sync.md
 .pi/
 .claude/pre-digest/
 .playwright-mcp/
+.serena/
 docs-site/.mintlify/
 /tmp/mint-dev.log
 pi-headroom/node_modules/

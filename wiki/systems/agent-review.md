@@ -4,7 +4,7 @@ type: concept
 tags: [agent-review, neovim, pi, human-in-the-loop, code-review, diffview, gitsigns, dotfiles]
 sources: ["dotfiles docs/workflows/agent-review.md", "dotfiles docs/workflows/ai-workflow-consolidation.md", "dotfiles docs/workflows/agent-review-handoff.md", "dotfiles scripts/agent-review, scripts/trial-usage.sh", "dotfiles pi/.pi/agent/extensions/agent-review/index.ts", "dotfiles nvim/.config/nvim/lua/custom/agent_review.lua", "How the Claude Code team does code review.md"]
 created: 2026-10-04
-updated: 2026-11-01
+updated: 2026-11-10
 publish: false
 ---
 
@@ -49,6 +49,7 @@ The spec defines a trial of agent-review against `pi-diff-review`: expiry 30 day
 - **Manual verification still open per the spec:** diffview render and `reset_hunk` correctness, a live round trip, subdirectory repo root, `pi-diff-review` non-activation, tamper flag live.
 - **agent-flow integration** (a `review` state in the status pill, escalation, per-phase `Review: on|off`) is specified but no implementation was found in the sketchybar bridge *(not examined in detail)*.
 - The `which-key` label for `<leader>aR` is missing from `init.lua` (the keymap carries its own description).
+- **Edits during review refuse approval:** if an agent changes the run's worktree while it awaits approval, `agent-review approve` refuses with `tree-changed`. The person's recovery steps are in dotfiles `docs/workflows/agent-review.md#tree-changed`; an agent must stop and report rather than restore files itself (see [[concepts/human-gates-no-bypass]]).
 
 ## Compared with the Claude Code team's practice
 
@@ -77,3 +78,4 @@ Shared ground: verification output exists before the human looks, the human owns
 - [[entities/pi-agent]]: the agent harness being reviewed.
 - [[syntheses/pi-orchestration-architecture]]: the earlier design that named `pi-diff-review` as the gate.
 - [[systems/dotfiles-agent-harness-layout]]: where these pieces live and how they are provisioned.
+- [[concepts/human-gates-no-bypass]]: the rule that one gate refusal means stop and hand the unblock to the person.

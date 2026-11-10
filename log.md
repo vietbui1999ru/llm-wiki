@@ -1406,3 +1406,11 @@ Sources: `knowledge-catalogokf at main.md` (OKF v0.2 README), `How the Open Know
 ### Source suggestions
 1. OKF v0.2 SPEC.md from the canonical repository — confirm field semantics before any reconcile adopts them.
 2. `Introducing the Google Cloud Knowledge Catalog.md` and `knowledge-catalogtoolboxmdcodedemo at main.md` (already in raw/, not yet ingested).
+
+## [2026-11-10] update | gate etiquette rule
+
+### Created
+- `concepts/human-gates-no-bypass` — what counts as a gate, one-refusal-means-stop rule, the 2026-11-10 `tree-changed` incident, why refusal messages address the person, focus completion; mirrors dotfiles PR 283 (draft, worktree-guard line pending)
+
+### Updated
+- `systems/agent-review` — Known limits bullet on `tree-changed` after edits during review; Related link to the new page

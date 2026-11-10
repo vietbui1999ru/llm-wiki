@@ -140,8 +140,8 @@ OpenCode Go synthesis        OpenCode Go synthesis
 
 | Tool | Purpose |
 |---|---|
-| `OPENCODE_GO_API_KEY_LIGHTRAG` in `.env` | OpenCode Go (OpenAI-compatible, default model `deepseek-v4.1-flash`) for entity extraction (`wiki-index`) and synthesis (`wiki-mcp`). Override with `OPENCODE_LIGHTRAG_MODEL` / `OPENCODE_LIGHTRAG_BASE_URL` / `OPENCODE_LIGHTRAG_SESSION` (routing and prefix-cache affinity). Without the key everything runs locally for free. |
-| `WIKI_LLM_PROXY_URL` in `.env` | Optional local [Headroom](docs/headroom.md) proxy in front of extraction and synthesis, e.g. `http://127.0.0.1:8787/v1`. Extraction opts out of compression by default (the prompt is the graph content) but still gets monitoring and a stable session; synthesis gets compressed. |
+| `OPENCODE_GO_API_KEY_LIGHTRAG` in `~/secrets/.env` | OpenCode Go (OpenAI-compatible, default model `deepseek-v4.1-flash`) for entity extraction (`wiki-index`) and synthesis (`wiki-mcp`). Override with `OPENCODE_LIGHTRAG_MODEL` / `OPENCODE_LIGHTRAG_BASE_URL` / `OPENCODE_LIGHTRAG_SESSION` (routing and prefix-cache affinity). Without the key everything runs locally for free. |
+| `WIKI_LLM_PROXY_URL` (exported env var) | Optional local [Headroom](docs/headroom.md) proxy in front of extraction and synthesis, e.g. `http://127.0.0.1:8787/v1`. Extraction opts out of compression by default (the prompt is the graph content) but still gets monitoring and a stable session; synthesis gets compressed. |
 | `OPENROUTER_API_KEY` in `.env` | OpenRouter as alternative extraction backend for `wiki-index` / `wiki-mcp` (stub — not yet implemented; set `OPENCODE_GO_API_KEY_LIGHTRAG` or leave unset for local). |
 | [OpenCode](https://opencode.ai) | AFK agent orchestration; connects to `wiki-mcp` for in-session wiki queries |
 | GitHub PAT | Cross-vendor council via GitHub Models API |
@@ -168,9 +168,8 @@ echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
 ### 2. Configure the OpenCode Go key (required for indexing and queries)
 
 ```bash
-cp .env.example .env
-# edit .env — set OPENCODE_GO_API_KEY_LIGHTRAG=...
-# or export it from your shell / secrets file (exported vars win over .env)
+# Put OPENCODE_GO_API_KEY_LIGHTRAG=... in ~/secrets/.env. The scripts read it through
+# dotfiles secret-get; no repo .env file is used. Exporting the variable also works and wins.
 ```
 
 Without a key there is no LLM backend: `wiki-index`, `wiki-chat` queries and `wiki_query` exit with a clear error (`wiki-index --status` still works). A self-hosted llama.cpp backend is planned; the `LLAMACPP_BASE_URL` slot is reserved but not wired yet.

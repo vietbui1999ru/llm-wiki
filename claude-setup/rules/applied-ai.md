@@ -26,7 +26,7 @@ Applies to: ML/AI, AI Engineering, Agent Orchestration, Data Analyst, Data Engin
 ```bash
 ~/dotfiles/shared/skills/delegate-pi/pi-council.sh --diff <range>   # JSON: verdict + votes[].reason
 ```
-Only when the user asks for a synthesis, use the Chairman template: `uv run ~/repos/llm-wiki/templates/council.py --chairman "question"`. Output is advisory. Don't invoke for: routine impl, single-file edits, config, ingest, <30 min tasks. [[concepts/council-pattern]]
+Only when the user asks for a synthesis, use the Chairman template: `printf '%s' "question" | uv run ~/repos/llm-wiki/templates/council.py --chairman`. Passing the question on stdin keeps it out of `ps`. `--commit` is opt-in; by default nothing is committed. Output is advisory. Don't invoke for: routine impl, single-file edits, config, ingest, <30 min tasks. [[concepts/council-pattern]]
 
 **Self-correction**: before deviating from core workflow — claiming complete without tests, 3+ failed fixes, wrong model tier, large unrequested edits, saturated context — run `qmd query "<situation>"` to load the relevant pattern before proceeding. [[concepts/agent-self-correction]]
 

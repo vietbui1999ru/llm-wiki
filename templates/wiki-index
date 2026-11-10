@@ -6,7 +6,6 @@
 #   "openai",
 #   "ollama",
 #   "numpy",
-#   "python-dotenv",
 # ]
 # ///
 """wiki-index — build/update LightRAG graph index over the wiki
@@ -16,7 +15,8 @@ Usage:
   wiki-index --full     wipe and rebuild from scratch  *** see usage note below ***
   wiki-index --status   show manifest stats without indexing
 
-Extraction backend (first one configured wins; set env vars in secrets/.env):
+Extraction backend (first one configured wins). The key is read from the environment or
+through dotfiles secret-get from ~/secrets/.env; no repo .env file is used:
   LLAMACPP_BASE_URL=...             → self-hosted llama.cpp (RESERVED — not wired yet, errors if set)
   OPENCODE_GO_API_KEY_LIGHTRAG=...  → OpenCode Go (OpenAI-compatible, flat monthly plan)
       OPENCODE_LIGHTRAG_MODEL       model id (default deepseek-v4.1-flash)
@@ -58,17 +58,15 @@ from pathlib import Path
 
 try:
     import ollama as _ollama
-    from dotenv import load_dotenv
     from lightrag import LightRAG, QueryParam
     from lightrag.base import DocStatus
     from lightrag.llm.openai import openai_complete_if_cache
     from lightrag.utils import EmbeddingFunc, sanitize_text_for_encoding
 except ImportError:
-    print("Missing: pip install lightrag-hku python-dotenv")
+    print("Missing: pip install lightrag-hku")
     sys.exit(1)
 
 WIKI_DIR    = Path.home() / "repos/llm-wiki"
-load_dotenv(WIKI_DIR / ".env")
 WIKI_PAGES  = WIKI_DIR / "wiki"
 WORK_DIR    = WIKI_DIR / ".lightrag"
 MANIFEST    = WORK_DIR / "manifest.json"

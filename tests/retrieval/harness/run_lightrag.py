@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["lightrag-hku>=1.5.7,<1.6", "openai", "ollama", "numpy", "python-dotenv"]
+# dependencies = ["lightrag-hku>=1.5.7,<1.6", "openai", "ollama", "numpy"]
 # ///
 """Score LightRAG retrieval (aquery_data, no answer generation) against the golden set.
 
@@ -16,6 +16,7 @@ import hashlib
 import json
 import os
 import shutil
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -27,6 +28,18 @@ import provenance  # noqa: E402
 import run_qmd  # noqa: E402
 
 WIKI_DIR = Path.home() / "repos/llm-wiki"
+
+def lightrag_key() -> str:
+    """OPENCODE_GO_API_KEY_LIGHTRAG: env first, then dotfiles secret-get; never a .env file."""
+    key = os.environ.get("OPENCODE_GO_API_KEY_LIGHTRAG", "")
+    if key:
+        return key
+    helper = Path.home() / "dotfiles/scripts/secret-get"
+    if os.access(helper, os.X_OK):
+        res = subprocess.run([str(helper), "OPENCODE_GO_API_KEY_LIGHTRAG"], capture_output=True, text=True)
+        if res.returncode == 0:
+            return res.stdout.strip()
+    return ""
 REAL_INDEX = WIKI_DIR / ".lightrag"
 EVAL_COPY = Path.home() / ".cache/llm-wiki/lightrag-eval"
 MODES = ("naive", "local", "global", "hybrid", "mix")
@@ -80,14 +93,13 @@ async def build_rag(work_dir, graph_modes):
     """Construct LightRAG exactly as templates/wiki-mcp does. Returns (rag, call counter)."""
     import numpy as np
     import ollama
-    from dotenv import load_dotenv
     from lightrag import LightRAG
     from lightrag.llm.openai import openai_complete_if_cache
     from lightrag.utils import EmbeddingFunc
 
-    load_dotenv(WIKI_DIR / ".env")
-    load_dotenv(Path.home() / "secrets/.env")
-    key = os.environ.get("OPENCODE_GO_API_KEY_LIGHTRAG", "")
+    key = lightrag_key()
+    if key:
+        os.environ["OPENCODE_GO_API_KEY_LIGHTRAG"] = key
     if graph_modes and not key:
         sys.exit("graph modes need OPENCODE_GO_API_KEY_LIGHTRAG (in ~/secrets/.env); use --modes naive for a zero-LLM run")
     model = os.environ.get("OPENCODE_LIGHTRAG_MODEL", "deepseek-v4.1-flash")

@@ -3,7 +3,8 @@
 # Run from repo root: bash claude-setup/scripts/install.sh
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# LLM_WIKI_REPO_DIR is a test seam: tests point the installer at a temporary repo.
+REPO_DIR="${LLM_WIKI_REPO_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 BIN_DIR="$HOME/.local/bin"
 mkdir -p "$BIN_DIR"
 
@@ -36,6 +37,21 @@ chmod +x "$REPO_DIR/claude-setup/scripts/detect-tier0-drift.sh"
 # pre-push: rebuild docs-site/ and block the push if it drifts from wiki sources
 cp "$REPO_DIR/claude-setup/scripts/pre-push" "$REPO_DIR/.git/hooks/pre-push"
 chmod +x "$REPO_DIR/.git/hooks/pre-push"
+
+# pre-commit: secret-scan gate from dotfiles. Linked, not copied, so dotfiles updates
+# apply. Absent on other machines: say so, do not fail.
+DOTFILES_PRECOMMIT="$HOME/dotfiles/scripts/hooks/pre-commit"
+HOOKS_DIR="$(git -C "$REPO_DIR" rev-parse --git-path hooks)"
+[[ "$HOOKS_DIR" = /* ]] || HOOKS_DIR="$REPO_DIR/$HOOKS_DIR"
+if [ -x "$DOTFILES_PRECOMMIT" ]; then
+  mkdir -p "$HOOKS_DIR"
+  if [ -e "$HOOKS_DIR/pre-commit" ] && [ ! -L "$HOOKS_DIR/pre-commit" ]; then
+    mv "$HOOKS_DIR/pre-commit" "$HOOKS_DIR/pre-commit.bak"
+  fi
+  ln -sfn "$DOTFILES_PRECOMMIT" "$HOOKS_DIR/pre-commit"
+else
+  echo "install.sh: dotfiles pre-commit not found; commits are not secret-scanned"
+fi
 
 # ── ollama ──────────────────────────────────────────────────────────────────
 if ! command -v ollama &>/dev/null; then

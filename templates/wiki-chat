@@ -5,7 +5,6 @@
 #   "lightrag-hku>=1.5.7,<1.6",   # tested on 1.5.7; constructor kwargs moved between releases
 #   "ollama",
 #   "openai",
-#   "python-dotenv",
 #   "rich",
 #   "prompt_toolkit",
 #   "numpy",
@@ -60,7 +59,6 @@ from pathlib import Path
 
 try:
     import ollama as _ollama
-    from dotenv import load_dotenv
     from lightrag import LightRAG, QueryParam
     from lightrag.llm.ollama import ollama_model_complete
     from lightrag.llm.openai import openai_complete_if_cache
@@ -76,7 +74,6 @@ except ImportError as e:
     sys.exit(1)
 
 WIKI_DIR    = Path.home() / "repos/llm-wiki"
-load_dotenv(WIKI_DIR / ".env")
 WORK_DIR    = WIKI_DIR / ".lightrag"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768

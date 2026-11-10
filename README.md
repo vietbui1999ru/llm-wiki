@@ -128,7 +128,7 @@ OpenCode Go synthesis        OpenCode Go synthesis
 |---|---|---|
 | [Claude Code](https://claude.ai/code) | LLM interface — runs wiki operations | Download from claude.ai |
 | [qmd](https://github.com/antiloger/qmd) | Hybrid search (BM25 + vector) — `post-commit` hook calls it | `cargo install qmd` or [binary release](https://github.com/antiloger/qmd/releases) |
-| [ollama](https://ollama.com) | Local embeddings (`nomic-embed-text`) for the graph index, TUI and MCP server; no local LLM is used; to be replaced by llama.cpp later (OpenCode has no embeddings endpoint) | Download from ollama.com |
+| [ollama](https://ollama.com) | Local embeddings (`nomic-embed-text`) for the graph index, TUI and MCP server, plus wiki-chat's local answers (`gemma4:e4b` by default, `WIKI_CHAT_MODEL` to change). wiki-chat and wiki-index start `ollama serve` when none is running and stop it on exit; wiki-mcp expects a running server. Do not run it as an always-on `brew services` job, or nothing gets stopped | Download from ollama.com |
 | [uv](https://docs.astral.sh/uv/) | Python script runner (install.sh handles this) | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
 | [Node.js](https://nodejs.org) | Runs `docs-site/` generator + `pre-push` hook | `nvm install --lts` or distro package |
 | [zsh](https://www.zsh.org) | `post-commit` and `pre-push` hooks use `#!/bin/zsh` | `sudo apt install zsh` (or change hook shebang to `bash`) |
@@ -140,7 +140,8 @@ OpenCode Go synthesis        OpenCode Go synthesis
 
 | Tool | Purpose |
 |---|---|
-| `OPENCODE_GO_API_KEY_LIGHTRAG` in `~/secrets/.env` | OpenCode Go (OpenAI-compatible, default model `deepseek-v4.1-flash`) for entity extraction (`wiki-index`) and synthesis (`wiki-mcp`). Override with `OPENCODE_LIGHTRAG_MODEL` / `OPENCODE_LIGHTRAG_BASE_URL`. Without the key everything runs locally for free. |
+| `OPENCODE_GO_API_KEY_LIGHTRAG` in `~/secrets/.env` | OpenCode Go (OpenAI-compatible, default model `deepseek-v4.1-flash`) for entity extraction (`wiki-index`) and synthesis (`wiki-mcp`). Override with `OPENCODE_LIGHTRAG_MODEL` / `OPENCODE_LIGHTRAG_BASE_URL` / `OPENCODE_LIGHTRAG_SESSION` (routing and prefix-cache affinity). Without the key everything runs locally for free. |
+| `WIKI_LLM_PROXY_URL` (exported env var) | Optional local [Headroom](docs/headroom.md) proxy in front of extraction and synthesis, e.g. `http://127.0.0.1:8787/v1`. Extraction opts out of compression by default (the prompt is the graph content) but still gets monitoring and a stable session; synthesis gets compressed. |
 | `OPENROUTER_API_KEY` in `.env` | OpenRouter as alternative extraction backend for `wiki-index` / `wiki-mcp` (stub — not yet implemented; set `OPENCODE_GO_API_KEY_LIGHTRAG` or leave unset for local). |
 | [OpenCode](https://opencode.ai) | AFK agent orchestration; connects to `wiki-mcp` for in-session wiki queries |
 | GitHub PAT | Cross-vendor council via GitHub Models API |

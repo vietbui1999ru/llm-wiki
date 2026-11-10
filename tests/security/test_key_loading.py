@@ -1,9 +1,11 @@
 """The LightRAG key must come from the environment or the dotfiles secret-get
 helper, never from a repo .env file. The three wiki templates each carry the
-same lightrag_key() function; these tests run it under a temporary HOME."""
+same _secret(name) function; these tests run it under a temporary HOME and a
+PATH without secret-get, so only the fake helper can answer."""
 
 import ast
 import os
+import shutil
 import stat
 import subprocess
 import tempfile
@@ -18,15 +20,15 @@ OTHER_KEY = "sk-" + "b" * 32
 
 
 def _function_node(path: Path) -> ast.FunctionDef:
-    """Return the lightrag_key() AST node from path."""
+    """Return the _secret() AST node from path."""
     for node in ast.parse(path.read_text()).body:
-        if isinstance(node, ast.FunctionDef) and node.name == "lightrag_key":
+        if isinstance(node, ast.FunctionDef) and node.name == "_secret":
             return node
-    raise AssertionError(f"lightrag_key missing from {path}")
+    raise AssertionError(f"_secret missing from {path}")
 
 
 def _function_source(path: Path) -> str:
-    """Return the source text of lightrag_key() as it appears in path."""
+    """Return the source text of _secret() as it appears in path."""
     source = ast.get_source_segment(path.read_text(), _function_node(path))
     assert source is not None, path
     return source
@@ -35,10 +37,11 @@ def _function_source(path: Path) -> str:
 def _load(source: str):
     # Only the function text from a template is compiled, never the template
     # module (it imports heavy dependencies at top level).
-    ns = {"os": os, "subprocess": subprocess, "Path": Path}
+    ns = {"os": os, "shutil": shutil, "subprocess": subprocess, "Path": Path}
     module = ast.parse(source)
-    exec(compile(module, "<lightrag_key>", "exec"), ns)  # noqa: S102
-    return ns["lightrag_key"]
+    exec(compile(module, "<_secret>", "exec"), ns)  # noqa: S102
+    secret = ns["_secret"]
+    return lambda: secret("OPENCODE_GO_API_KEY_LIGHTRAG")
 
 
 def _fake_home(tmp: Path, secret_get_body: str | None) -> Path:
@@ -55,6 +58,9 @@ class KeyLoadingTest(unittest.TestCase):
     def setUp(self):
         self._saved_env = os.environ.pop("OPENCODE_GO_API_KEY_LIGHTRAG", None)
         self._saved_home = os.environ.get("HOME")
+        self._saved_path = os.environ.get("PATH")
+        # keep the real secret-get off PATH: only the fake helper under HOME may answer
+        os.environ["PATH"] = "/usr/bin:/bin"
         self.tmp = tempfile.TemporaryDirectory()
 
     def tearDown(self):
@@ -64,6 +70,8 @@ class KeyLoadingTest(unittest.TestCase):
         os.environ.pop("OPENCODE_GO_API_KEY_LIGHTRAG", None) if self._saved_env is None else None
         if self._saved_home is not None:
             os.environ["HOME"] = self._saved_home
+        if self._saved_path is not None:
+            os.environ["PATH"] = self._saved_path
 
     def _key_fn(self, home: Path):
         os.environ["HOME"] = str(home)
@@ -97,7 +105,7 @@ class KeyLoadingTest(unittest.TestCase):
 
     def test_templates_carry_identical_function(self):
         sources = {_function_source(p) for p in TEMPLATES}
-        self.assertEqual(len(sources), 1, "lightrag_key differs between templates")
+        self.assertEqual(len(sources), 1, "_secret differs between templates")
 
     def test_no_dotenv_import_or_dependency_left(self):
         for p in TEMPLATES + [HARNESS]:

@@ -22,8 +22,14 @@ through dotfiles secret-get from ~/secrets/.env; no repo .env file is used:
       OPENCODE_LIGHTRAG_MODEL       model id (default deepseek-v4.1-flash)
       OPENCODE_LIGHTRAG_BASE_URL    default https://opencode.ai/zen/go/v1
       OPENCODE_LIGHTRAG_DISABLE_THINKING  default 1: send thinking={"type":"disabled"}; set 0 to omit
+      OPENCODE_LIGHTRAG_SESSION     routing/prefix-cache affinity id (default: wiki-index)
   OPENROUTER_API_KEY=sk-or-...      → OpenRouter (not yet implemented — stub only)
   none configured                   → indexing/--test exit with an error; --status still works
+
+Optional Headroom proxy (see docs/headroom.md):
+  WIKI_LLM_PROXY_URL=http://127.0.0.1:8787/v1   send extraction through the local proxy
+  WIKI_PROXY_COMPRESS_INDEX=1                   let the proxy compress extraction prompts too
+                                                (off by default: those prompts are the graph content)
 
 USAGE NOTE — --full with OpenCode Go:
   LightRAG runs 3 extraction phases per page (entity → relation → community),
@@ -33,16 +39,21 @@ USAGE NOTE — --full with OpenCode Go:
 
 Requires:
   uv run --script wiki-index   (deps declared inline above)
-  ollama running with nomic-embed-text (embeddings only; no local LLM is used)
+  ollama with nomic-embed-text (embeddings only). If no server answers on 127.0.0.1:11434,
+  wiki-index starts `ollama serve` and stops it on exit.
 """
 from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import os
+import shutil
 import subprocess
 import sys
+import time
+import urllib.request
 from pathlib import Path
 
 try:
@@ -55,18 +66,6 @@ except ImportError:
     print("Missing: pip install lightrag-hku")
     sys.exit(1)
 
-def lightrag_key() -> str:
-    """OPENCODE_GO_API_KEY_LIGHTRAG: env first, then dotfiles secret-get; never a .env file."""
-    key = os.environ.get("OPENCODE_GO_API_KEY_LIGHTRAG", "")
-    if key:
-        return key
-    helper = Path.home() / "dotfiles/scripts/secret-get"
-    if os.access(helper, os.X_OK):
-        res = subprocess.run([str(helper), "OPENCODE_GO_API_KEY_LIGHTRAG"], capture_output=True, text=True)
-        if res.returncode == 0:
-            return res.stdout.strip()
-    return ""
-
 WIKI_DIR    = Path.home() / "repos/llm-wiki"
 WIKI_PAGES  = WIKI_DIR / "wiki"
 WORK_DIR    = WIKI_DIR / ".lightrag"
@@ -74,9 +73,20 @@ MANIFEST    = WORK_DIR / "manifest.json"
 EMBED_MODEL = "nomic-embed-text"
 EMBED_DIM   = 768
 
-_API_KEY          = lightrag_key()
-if _API_KEY:
-    os.environ["OPENCODE_GO_API_KEY_LIGHTRAG"] = _API_KEY
+def _secret(name: str) -> str:
+    """The env value, else one key via dotfiles' secret-get. Nothing sources ~/secrets/.env
+    (dotfiles docs/workflows/secrets.md), so a key is fetched only by the tool that needs it."""
+    if os.environ.get(name):
+        return os.environ[name]
+    tool = shutil.which("secret-get") or str(Path.home() / "dotfiles/scripts/secret-get")
+    try:
+        out = subprocess.run([tool, name], capture_output=True, text=True, timeout=5)
+    except (OSError, subprocess.TimeoutExpired):
+        return ""
+    return out.stdout.strip() if out.returncode == 0 else ""
+
+
+_API_KEY          = _secret("OPENCODE_GO_API_KEY_LIGHTRAG")
 _OPENCODE_URL     = os.environ.get("OPENCODE_LIGHTRAG_BASE_URL", "https://opencode.ai/zen/go/v1")
 _OPENCODE_MODEL   = os.environ.get("OPENCODE_LIGHTRAG_MODEL", "deepseek-v4.1-flash")
 _OPENROUTER_KEY   = os.environ.get("OPENROUTER_API_KEY", "")
@@ -85,9 +95,58 @@ _OPENROUTER_KEY   = os.environ.get("OPENROUTER_API_KEY", "")
 # (probed: 2774 -> 185 completion tokens on a sample prompt). Set to 0 for models that reject it.
 _DISABLE_THINKING = os.environ.get("OPENCODE_LIGHTRAG_DISABLE_THINKING", "1") == "1"
 
-# OpenCode Go asks clients to identify themselves and send a stable session id
-# (https://opencode.ai/docs/go/#where-can-i-use-it) so routing/prompt caching work.
-_OPENCODE_HEADERS = {"User-Agent": "llm-wiki-lightrag/1.0", "x-opencode-session": f"wiki-index-{os.getpid()}"}
+# OpenCode Go requires a session id and uses it for routing/prefix-cache affinity
+# (https://opencode.ai/docs/go/#where-can-i-use-it). A per-process value makes every run a
+# new namespace, so the default is stable and can be overridden per experiment.
+_SESSION = os.environ.get("OPENCODE_LIGHTRAG_SESSION", "wiki-index")
+
+# Optional local proxy (Headroom) in front of the extraction backend. See docs/headroom.md.
+_PROXY_URL = os.environ.get("WIKI_LLM_PROXY_URL", "")
+_BASE_URL = _PROXY_URL or _OPENCODE_URL
+_OPENCODE_HEADERS: dict[str, str] = {
+    "User-Agent": "llm-wiki-lightrag/1.0",
+    "x-opencode-session": _SESSION,
+}
+if _PROXY_URL:
+    _OPENCODE_HEADERS["x-headroom-stack"] = "llm_wiki_index"
+    _OPENCODE_HEADERS["x-headroom-session-id"] = _SESSION
+    # Extraction prompts ARE the content the graph is built from: lossy compression here
+    # changes what gets stored. Keep the proxy in the path for monitoring and prefix-cache
+    # alignment only, unless the operator opts in explicitly.
+    if os.environ.get("WIKI_PROXY_COMPRESS_INDEX", "0") != "1":
+        _OPENCODE_HEADERS["x-headroom-bypass"] = "true"
+
+def _preflight_proxy() -> None:
+    """Fail closed: a dead or foreign listener must never receive provider credentials.
+
+    /health answers 200 even when unhealthy, so identity comes from /livez (service name) and
+    readiness from /readyz. See docs/headroom.md.
+    """
+    import json as _json
+    import urllib.error
+    import urllib.request
+
+    root = _PROXY_URL.rstrip("/")
+    if root.endswith("/v1"):
+        root = root[: -len("/v1")]
+    try:
+        with urllib.request.urlopen(f"{root}/livez", timeout=3) as resp:
+            identity = _json.loads(resp.read() or b"{}")
+    except urllib.error.HTTPError as exc:  # something answered, but not with an identity document
+        raise SystemExit(
+            f"{root}/livez answered HTTP {exc.code}; that is not a Headroom proxy. "
+            "Refusing to send provider credentials there."
+        )
+    except Exception as exc:
+        raise SystemExit(
+            f"Headroom proxy not reachable at {root} ({exc}).\n"
+            "Start it (docs/headroom.md) or unset WIKI_LLM_PROXY_URL to call the provider directly."
+        )
+    if identity.get("service") != "headroom-proxy":
+        raise SystemExit(
+            f"{root} answered but is not a Headroom proxy (service={identity.get('service')!r}). "
+            "Refusing to send provider credentials there."
+        )
 
 async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwargs):
     kwargs.setdefault("max_tokens", 4096)
@@ -97,7 +156,7 @@ async def _opencode_llm(prompt, system_prompt=None, history_messages=None, **kwa
         _OPENCODE_MODEL, prompt,
         system_prompt=system_prompt,
         history_messages=history_messages or [],
-        base_url=_OPENCODE_URL,
+        base_url=_BASE_URL,
         api_key=_API_KEY,
         extra_headers=_OPENCODE_HEADERS,  # per-request; LightRAG overwrites client-level default_headers
         **kwargs,
@@ -236,6 +295,26 @@ def save_manifest(m: dict) -> None:
     MANIFEST.write_text(json.dumps(m, indent=2))
 
 
+def page_hash(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def is_current(path: Path, entry) -> bool:
+    """True when what is in the index still matches the file on disk.
+
+    Entries are content hashes: a checkout, clone or worktree switch rewrites mtimes for
+    unchanged pages, and an mtime key re-extracts all of them for nothing. Legacy float
+    entries are adopted without a reindex when their mtime still matches.
+    """
+    if isinstance(entry, dict):
+        return entry.get("hash") == page_hash(path)
+    return entry == path.stat().st_mtime
+
+
+def mark_indexed(manifest: dict, path: Path) -> None:
+    manifest[str(path)] = {"hash": page_hash(path), "mtime": path.stat().st_mtime}
+
+
 def page_content(path: Path) -> str:
     rel = path.relative_to(WIKI_DIR)
     return f"# Source: {rel}\n\n{path.read_text()}"
@@ -268,11 +347,7 @@ async def _index_one(rag: LightRAG, p: Path) -> str | None:
 
 
 async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
-    changed = [
-        p for p in pages
-        if str(p) not in manifest
-        or manifest[str(p)] != p.stat().st_mtime
-    ]
+    changed = [p for p in pages if str(p) not in manifest or not is_current(p, manifest[str(p)])]
 
     if not changed:
         print("Index up to date — no changes detected.")
@@ -288,7 +363,7 @@ async def index_pages(rag: LightRAG, pages: list[Path], manifest: dict) -> dict:
             print(f"    FAILED: {reason}", flush=True)
             failed.append(rel)
             continue
-        manifest[str(p)] = p.stat().st_mtime
+        mark_indexed(manifest, p)
         save_manifest(manifest)   # save after each page so partial runs resume
 
     print(f"Done. {len(changed) - len(failed)} pages indexed, {len(failed)} failed.")
@@ -343,7 +418,7 @@ async def reconcile(rag: LightRAG, problems: list[tuple[str, str]], manifest: di
             if reason := await _index_one(rag, p):
                 print(f"    FAILED: {reason}", flush=True)
             else:
-                manifest[str(p)] = p.stat().st_mtime
+                mark_indexed(manifest, p)
                 save_manifest(manifest)
     await rag.doc_status.index_done_callback()
 
@@ -351,13 +426,16 @@ async def reconcile(rag: LightRAG, problems: list[tuple[str, str]], manifest: di
 def show_status(pages: list[Path], manifest: dict) -> None:
     indexed   = sum(1 for p in pages if str(p) in manifest)
     changed   = sum(1 for p in pages
-                    if str(p) in manifest and manifest[str(p)] != p.stat().st_mtime)
+                    if str(p) in manifest and not is_current(p, manifest[str(p)]))
     unindexed = len(pages) - indexed
     print(f"Pages total:    {len(pages)}")
     print(f"Indexed:        {indexed}")
     print(f"Changed:        {changed}")
     print(f"Not yet:        {unindexed}")
     print(f"Work dir:       {WORK_DIR}")
+    print(f"Extraction:     {LLM_MODEL} via {_BASE_URL}")
+    print(f"Proxy:          {_PROXY_URL or 'none (direct)'}")
+    print(f"Session id:     {_SESSION}")
 
 
 async def test_llm_backend() -> None:
@@ -392,6 +470,9 @@ async def main() -> None:
     if args.status:
         show_status(pages, load_manifest())
         return
+
+    if _PROXY_URL:
+        _preflight_proxy()
 
     if args.test:
         await test_llm_backend()
@@ -438,5 +519,51 @@ async def main() -> None:
         await rag.finalize_storages()
 
 
+OLLAMA_PROBE = "http://127.0.0.1:11434/api/version"
+
+
+def _ollama_up() -> bool:
+    try:
+        with urllib.request.urlopen(OLLAMA_PROBE, timeout=1):
+            return True
+    except Exception:
+        return False
+
+
+def _ensure_ollama() -> subprocess.Popen | None:
+    """Start `ollama serve` if nothing answers; return the process only if we started it."""
+    if _ollama_up():
+        return None
+    print("Starting ollama serve...", flush=True)
+    proc = subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL, start_new_session=True)
+    for _ in range(50):  # 10 s
+        if _ollama_up():
+            return proc
+        if proc.poll() is not None:
+            break
+        time.sleep(0.2)
+    _stop(proc)
+    raise SystemExit(f"ollama serve did not come up at {OLLAMA_PROBE}.")
+
+
+def _stop(proc: subprocess.Popen | None) -> None:
+    if proc is None or proc.poll() is not None:
+        return
+    proc.terminate()
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    # --status and --test never embed, so they need no Ollama server.
+    needs_ollama = not ({"--status", "--test"} & set(sys.argv[1:]))
+    ollama = _ensure_ollama() if needs_ollama else None
+    try:
+        asyncio.run(main())
+    finally:
+        if ollama is not None:
+            _stop(ollama)
+            print("ollama stopped.", flush=True)

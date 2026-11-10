@@ -1,0 +1,279 @@
+# Headroom: one proxy, and where it actually saves tokens
+
+Headroom is a context-optimization proxy already installed on this machine (`headroom 0.24.0`, uv tool).
+It sits between a client and the provider, compressing context and stabilizing prompt prefixes before
+the request goes upstream. This page records what it can and cannot save here, and how the wiki's own
+scripts use it.
+
+Decision summary:
+
+| Path | Headroom helps? | Why |
+|---|---|---|
+| Agent harness traffic (Claude Code, Codex, Pi) | **yes, the most** | long tool outputs and multi-turn history are exactly what it compresses |
+| `wiki-chat` / `wiki_mcp` synthesis | **yes, some** | retrieved graph context is prose, and the query is the expensive half of RAG |
+| `wiki-index` extraction | **no** | the prompt *is* the content being stored in the graph; compressing it corrupts entities |
+| Embeddings, graph traversal, qmd | **no** | all local, zero token cost already |
+
+The indexer therefore routes through the proxy with `x-headroom-bypass: true` by default: it gains
+observability and session affinity, not compression. Set `WIKI_PROXY_COMPRESS_INDEX=1` to override,
+but expect extraction quality to drop.
+
+## One address for every agent
+
+A single proxy process serves Anthropic, OpenAI-shaped and OpenCode Go traffic because it routes by
+path and auth shape, not by client.
+
+Verified on 0.24.0 (smoke-tested against the real endpoints; a dummy-key request through the proxy
+returns the upstream's own error byte for byte):
+
+| Client | Base URL | Upstream the proxy picks |
+|---|---|---|
+| Claude Code | `http://127.0.0.1:8787` (`ANTHROPIC_BASE_URL`) | `api.anthropic.com` |
+| Codex CLI (ChatGPT subscription auth) | `http://127.0.0.1:8787` | `chatgpt.com/backend-api/codex` |
+| Pi `opencode-go`, `wiki-index/chat/mcp` | `http://127.0.0.1:8787/v1` (`OPENAI_BASE_URL`) | `OPENAI_TARGET_API_URL` |
+
+Start the proxy with the OpenAI target pointed at OpenCode Go, since Codex's subscription traffic is
+routed to `chatgpt.com` by auth shape and never consults that setting:
+
+```bash
+OPENAI_TARGET_API_URL=https://opencode.ai/zen/go/v1 headroom proxy --port 8787
+```
+
+Caveat found by probing: `/v1/responses` only branches to `chatgpt.com` when the Authorization header
+is a ChatGPT session token. A Codex install using a plain `OPENAI_API_KEY` would also be sent to the
+OpenCode endpoint, so do not run both Codex auth modes against one proxy.
+
+Client wiring:
+
+```bash
+# Claude Code — durable: ~/.claude/settings.json
+"env": { "ANTHROPIC_BASE_URL": "http://127.0.0.1:8787" }
+
+# Pi — ~/.pi/agent/models.json, provider-level only, keeps the built-in model catalog
+{ "providers": { "opencode-go": { "baseUrl": "http://127.0.0.1:8787/v1" } } }
+
+# wiki scripts — .env or shell
+WIKI_LLM_PROXY_URL=http://127.0.0.1:8787/v1
+```
+
+Start it in cache mode, not the installed default:
+
+```bash
+headroom proxy --host 127.0.0.1 --port 8787 --mode cache --workers 1 --no-cache --no-telemetry
+```
+
+`--mode cache` freezes prior turns to keep provider prefix caches intact; the installed default is
+`token`, which rewrites them for compression and loses exactly the cache hits this is meant to buy.
+`--no-cache` disables the *semantic response cache* (not upstream prefix caching): on a proxy shared by
+several clients, an identical prompt from two different agents must not be answered from one agent's
+cached response.
+
+Health: trust `/livez` (service name + version) and `/readyz` (503 when unhealthy) for identity and
+readiness. `/health` returns HTTP 200 even when unhealthy and cannot prove which process is listening.
+The wiki scripts preflight `/livez` before sending a single request, so a dead or foreign listener on
+the configured port fails loudly instead of receiving provider credentials.
+
+Do not use `headroom wrap` for this: it writes global agent configuration and can install context
+tools. The dotfiles pilot on `feat/headroom` (SPEC + `docs/headroom/0{1,2,3}-*.md`) owns that job with
+`scripts/headroom-workflow` and opt-in `hclaude` / `hcodex` / `hpi` launchers, keeping plain `claude`,
+`codex` and `pi` direct.
+
+## The Codex split: one account, two clients, one proxy
+
+ChatGPT-subscription traffic reaches the proxy from two places — the Codex CLI and Pi's
+`openai-codex` provider (which talks to `https://chatgpt.com/backend-api`) — while `opencode-go` is a
+different vendor on `/v1/chat/completions`. That split is tractable because the proxy picks the
+ChatGPT route from the **auth shape**, not the path or the client: `_resolve_codex_routing_headers`
+returns true when a `chatgpt-account-id` header is present or the bearer JWT carries
+`https://api.openai.com/auth` → `chatgpt_account_id`. Pi sends `chatgpt-account-id` (verified in its
+bundled provider), Codex CLI does too, so both land on `chatgpt.com` regardless of
+`OPENAI_TARGET_API_URL`. Only `opencode-go` depends on that setting.
+
+That makes one process viable: `OPENAI_TARGET_API_URL` = OpenCode Go, Claude on `/v1/messages`, both
+Codex clients on their ChatGPT branch. Two things to respect:
+
+- The tripwire is an OpenAI **API-key** client. `/v1/responses` without ChatGPT auth goes to the
+  configured OpenAI target, so an API-key Codex install would be sent to OpenCode Go. Either keep such
+  a client off this proxy or run a second proxy on another port with default targets.
+- `x-headroom-base-url` does **not** route `/v1/chat/completions` in 0.24.0. Probed with the header set
+  to `https://opencode.ai/zen/go/v1` against a default-target proxy, the request arrived at
+  `api.openai.com` with the OpenCode key attached (identical "Incorrect API key provided" body as a
+  direct OpenAI call). The header is only read by the catch-all `/{path:path}` route, which forwards
+  raw and skips the compression pipeline. Never rely on it to keep OpenCode credentials at OpenCode.
+
+Attribution across the split: tag each client, because the upstream model names overlap.
+`x-headroom-stack` accepts underscore slugs only — `codex_cli`, `pi_codex`, `pi_opencode`, `claude`,
+`llm_wiki_index`, `llm_wiki_chat`, `llm_wiki_mcp`. Pi can set it per provider through a
+`registerProvider(id, { headers })` partial override; Codex CLI through
+`model_providers.<id>.http_headers` in a launcher-scoped `-c` override.
+
+Quota visibility is asymmetric, and it decides how much to route. Anthropic usage is **polled** from
+the cached `claudeAiOauth` credential, so it is visible without traffic. Codex usage is **passive**:
+`x-codex-primary-used-percent` and friends are parsed from responses the proxy sees, so a direct Codex
+CLI run is invisible in `/stats`. If the Codex quota view matters, route the Codex CLI; if only Claude
+and per-request token counts matter, leave it direct.
+
+## Monitoring
+
+One address, one set of numbers:
+
+```bash
+curl -s http://127.0.0.1:8787/stats | jq '.requests, .savings, .cost'   # counters, by_provider/by_stack
+curl -s http://127.0.0.1:8787/metrics                                    # Prometheus
+curl -s http://127.0.0.1:8787/stats-history                              # durable history
+headroom perf                                                            # analyze the proxy logs
+```
+
+The wiki scripts tag every request so traffic is attributable per consumer: `x-headroom-stack` is
+`llm_wiki_index`, `llm_wiki_chat` or `llm_wiki_mcp`, and `x-headroom-session-id` carries
+`OPENCODE_LIGHTRAG_SESSION` (default `wiki-index` / `wiki-chat` / `wiki-mcp`).
+
+The stack slug must match `^[a-z][a-z0-9_]{0,63}$` — underscores, no hyphens. A hyphenated value is
+silently dropped and the request lands unattributed in `/stats`, which is why these use underscores
+(verified: `llm_wiki_index` appears in `requests.by_stack`; `llm-wiki-index` does not).
+
+Those two headers are not cosmetic for OpenCode Go. The endpoint refuses requests without
+`x-opencode-session` (`MissingSessionID`) and uses the value for routing and prefix-cache affinity, so
+the scripts send a **stable** id. It used to be `f"...-{os.getpid()}"`, which put every run in a fresh
+namespace and gave the prefix cache nothing to hit.
+
+## Prompt caching: what the wiki controls
+
+Prefix caching is worth more than compression on the extraction path, and the levers are local:
+
+- **Stable session id** — done above.
+- **Stable content** — entities only cost tokens when they are re-extracted. The index manifest now
+  keys on a SHA-256 of the page instead of its mtime, so a checkout, clone or worktree switch (which
+  rewrites mtimes for unchanged files) no longer re-extracts the whole wiki. `wiki-index --status`
+  reports what is actually changed.
+- **Stable prompt prefix** — `wiki_chunking_func` prepends the same graph-structure block before the
+  page body on every chunk of a page, so the extractor's prompt starts with a repeated prefix.
+- **Response cache** — LightRAG's own `kv_store_llm_response_cache.json` (56 MB, 3400 records here)
+  already deduplicates repeated extraction calls; keep it when reusing a work dir.
+
+## Phase 2 plan: Option A with option C discipline
+
+Decided: **one proxy, one OpenAI-shaped target pinned to OpenCode Go** (option A), and **plain
+`claude` / `codex` / `pi` stay direct** — only `hclaude` / `hcodex` / `hpi` and an explicit
+`PI_HEADROOM=1` touch the proxy (option C). Owner of the dotfiles half is the `feat/headroom`
+worktree (SPEC.md approved; phase 1 already implemented).
+
+Verified before planning, on installed headroom 0.24.0 / pi 1.4.0:
+
+- Pi's `openai-codex` provider is **WebSocket** and joins base + `/codex/responses`, so today it calls
+  `wss://chatgpt.com/backend-api/codex/responses`. Headroom registers WS at `/backend-api/codex/responses`,
+  so `{proxy}/backend-api` is the only base that keeps that transport working through the proxy.
+- The ChatGPT branch is chosen by auth shape (fact above), so both Codex clients survive any
+  `OPENAI_TARGET_API_URL`. Only `opencode-go` depends on it.
+- `x-headroom-base-url` is dead on `/v1/chat/completions` (probed), so `opencode-go` must ride the pinned
+  target, not the header.
+- Stack slugs are underscore-only, so the tags are `pi_claude`, `pi_codex`, `pi_opencode`, `codex_cli`.
+
+### A. Two amendments to phase 1
+
+1. `scripts/headroom-workflow`, proxy policy: `OPENAI_TARGET_API_URL` currently sits in
+   `FORBIDDEN_ANY_ENV`, which forbids exactly what option A requires. Replace the blanket refusal with a
+   pinned value: a `PINNED_OPENAI_TARGET = "https://opencode.ai/zen/go/v1"` constant, set in the proxy
+   child env, still refusing an inherited value that differs and still refusing the other `*_TARGET_API_URL`
+   variables. AC-1/AC-3 keep their meaning — the pilot owns the upstream rather than inheriting it.
+2. `cmd_codex`: stop pinning `openai_base_url` to the proxy. Pin only
+   `chatgpt_base_url="{base}/backend-api/"`. Under option A the OpenAI target is OpenCode Go, so pinning
+   `openai_base_url` would hand an OpenAI-API-key Codex run to OpenCode. Subscription auth is the
+   supported route; an API-key `-c` override is refused by name, not silently rerouted.
+
+### B. Pi extension — `pi/.pi/agent/extensions/headroom.ts`, inert unless `PI_HEADROOM=1`
+
+| provider | baseUrl | stack |
+|---|---|---|
+| `anthropic` | `{base}` | `pi_claude` |
+| `openai-codex` | `{base}/backend-api` | `pi_codex` |
+| `opencode-go` | `{base}/v1` | `pi_opencode` |
+
+Registrations are `{ baseUrl, headers: { "x-headroom-stack": … } }` only — no `models`, `apiKey`,
+`oauth` or `api`, so catalog, auth and compatibility survive. Pi's `openai` provider is deliberately
+**left direct**: its API key belongs to a different vendor than the pinned target, so overriding it is
+the one misroute this design must not create. The extension throws (stopping startup) on a non-loopback
+base or a failed `/livez` check rather than registering a partial map.
+
+### C. `pi` subcommand and `hpi`
+
+Child-only env `PI_HEADROOM=1` plus `PI_HEADROOM_URL` (the already-validated base, so validation happens
+once in Python), loaded with an explicit `--extension <abs path>`, after `require_ready()`, via
+`execvpe` so argv and exit status pass through. `hpi` joins the existing guarded alias block next to
+`hclaude` / `hcodex`. For pueue, `PI_HEADROOM=1` goes in the queue command as a non-secret variable;
+pi-view, pueue-safe and provider-governance are not touched.
+
+### D. Tests
+
+- Python, `scripts/tests/test_headroom_workflow.py`: `test_proxy_pins_openai_target` (child env carries
+  the pinned value; a differing inherited value is refused; other target vars still refused) and
+  `test_codex_routes_subscription_only` (argv has `chatgpt_base_url` and no `openai_base_url`; an
+  API-key `-c model_provider`/`openai_base_url` override is refused) extend phase 1;
+  `test_pi_dispatch` covers child-only env, exactly one `-e`, preserved argv and exit status, and no
+  credential text; `test_pi_refuses_when_unready` expects exit 1 before exec.
+- Node, `headroom-pi.test.mjs`: inert without the env var; exactly the three registrations; each is
+  `{baseUrl, headers}` with no catalog or auth field; slugs match `^[a-z][a-z0-9_]{0,63}$`; readiness
+  failure throws before registering; `openai` is never registered.
+- Node, `headroom-routing.test.mjs`: pure mapping asserts codex path joining (`/backend-api` +
+  `/codex/responses`), the `opencode-go` and `anthropic` paths, and rejection of a non-loopback base.
+
+### E. Mapping and commit boundaries
+
+AC-1/AC-3 (pinned target) and AC-2 (subscription-only Codex) → commit 1, `scripts/headroom-workflow`
+plus its test file. AC-4/AC-6 → commit 2, the extension, both node test files and the `hpi` alias.
+AC-5 → commit 3, the `pi` subcommand, alias and Python test. One commit per unit, owned paths only,
+through `$HOME/dotfiles/scripts/commit-funnel`, in that worktree.
+
+### F. Risks and non-goals
+
+- OpenAI-API-key paths (Codex CLI and Pi's `openai`) are **unsupported** through the proxy. That is a
+  documented refusal with a test, not a silent reroute; if such a client is needed, run a second proxy on
+  another port with default targets.
+- WS proxying depends on `/backend-api/codex/responses`; if an upgrade drops it, Codex-through-proxy
+  fails at the first frame while readiness still passes. Phase 3 records that as a live check, not a
+  savings claim.
+- No claims about subscription dollars: the only new observability is `requests.by_stack`, plus Codex's
+  passive `x-codex-*` window numbers once its traffic is proxied.
+- Non-goals: memory, learning, semantic response cache, telemetry, cache warming, retention tiers, and
+  any edit to pi-view, pueue or provider-governance.
+
+### Model routing
+
+Planning artifacts (this plan, spec amendments, reviews) come from a thinking model, implementation from
+flash: `pi --model opencode-go/deepseek-v4-pro:high -p '<planning prompt>'` versus
+`--model opencode-go/deepseek-v4.1-flash`. A session cannot hot-swap its own model, so the split is per
+process, and the pro planner run currently cannot start: the `headroom` worktree has a pending
+agent-review (`d230ff58`, phase 1's three files) that refuses new agent input until a human resolves or
+skips it.
+
+## What to change only with the eval gate
+
+These are the remaining token levers, all on the extraction or retrieval-parameter side. Each one
+changes what the graph contains or what the synthesiser sees, so run the gate first
+(`docs/retrieval-eval.md`) rather than tuning by feel:
+
+| Lever | Default | Effect |
+|---|---|---|
+| `entity_extract_max_gleaning` | `1` (LightRAG default) | a second extraction round per chunk; `0` removes roughly half the extraction calls |
+| `chunk_token_size` / `chunk_overlap_token_size` | `800` / `64` | bigger chunks mean fewer calls and more tokens per call |
+| `summary_max_tokens` | `1200` | caps merged entity/relation descriptions; lower means a leaner graph and smaller query context |
+| `related_chunk_number` | `5` | chunks pulled per entity/relation at query time |
+| `chunk_top_k` / `max_total_tokens` | `20` / `30000` | size of the synthesis context, the main per-query cost |
+
+`wiki-index` and `wiki-mcp`/`wiki-chat` set `top_k=20` and `cosine_better_than_threshold=0.3`
+deliberately; anything below that needs a baseline run to prove it did not cost recall.
+
+## Why not LLMLingua-style compression here
+
+A dedicated prompt compressor (LLMLingua, Kompress) is what Headroom already runs for prose, and it is
+the right shape for agent traffic. For this wiki it is the wrong tool on the write path and a marginal
+one on the read path, because:
+
+- Extraction prompts must stay verbatim; anything dropped is missing from the graph permanently.
+- Retrieved wiki chunks are already dense, cross-linked prose written for this exact purpose. Dropping
+  tokens there trades answer quality for a saving that the response cache and the context caps above
+  capture more safely.
+- The cheapest large win is not compression at all: it is not re-extracting pages that did not change.
+
+Measure before believing either claim: `qmd cleanup` frees index space but nothing in tokens, and the
+retrieval eval is the only thing here that can tell a real saving from a quality regression.

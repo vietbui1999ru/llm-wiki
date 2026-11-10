@@ -9,7 +9,7 @@ sources:
   - "BUG 2.1.222 escalates 82966 to ordinary sessions worktree isolation refuses every `source``.` via an interpreter denylist, with no opt-out · Issue 84530.md"
   - "Complex git situations tripping up claude  rClaudeCode.md"
 created: 2026-10-20
-updated: 2026-10-20
+updated: 2026-11-09
 ---
 
 # Claude Code Worktree-Isolation Guard
@@ -17,6 +17,8 @@ updated: 2026-10-20
 When a Claude Code session is isolated in a worktree (`EnterWorktree`, `isolation: "worktree"` subagents, background jobs), the harness statically checks every Bash command before it runs. If it cannot prove that git operations stay inside the session's own worktree, it refuses the command with "Refusing to run it — a worktree-isolated session's git operations must target its own worktree." Since 2.1.222 this applies to every session type, and it cannot be switched off. Evidence: [[summaries/claude-code-worktree-guard-issues]].
 
 The guard is conservative by design: it does not run or simulate the command, so anything whose target directory or executable is only known at runtime counts as unverifiable.
+
+**The guard follows session state, not checkout location (tested 2026-11-09, 2.1.319).** Isolation is recorded on the session and kept on resume. A plain `claude` or `claude --bg` started inside an existing `.claude/worktrees/<x>` checkout, with no `EnterWorktree`, ran every refused shape tried: nested git expansion, computed `rg` values, `git -C` at the primary, `~` paths and `jj git fetch`. Background jobs are guarded when they enter a worktree, not by being background jobs. A session started this way loses the stop on touching the primary checkout, so the dotfiles harness restores that in a Bash hook, and it can still stall on a "Blast-radius check" prompt for commands it cannot analyze.
 
 ## Refusal classes (as of 2.1.304)
 

@@ -1,0 +1,116 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#   "mcp>=1.0,<2",   # 2.x removed the decorator surface used below
+# ]
+# ///
+"""wiki-mcp-ops — stdio MCP server for the deterministic wiki maintenance CLI.
+
+Every tool shells out to `claude-setup/scripts/wiki <cmd> --json` and returns its
+output verbatim. No LLM calls, no network, no index rebuilds except wiki_reindex.
+
+WIKI_ROOT   repo to operate on (default: ~/repos/llm-wiki)
+
+Register (Claude Code / Codex / OpenCode style):
+
+  {"mcpServers": {"wiki-ops": {"command": "<repo>/claude-setup/scripts/wiki-mcp-ops",
+                               "env": {"WIKI_ROOT": "<repo>"}}}}
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+from pathlib import Path
+from typing import Literal
+
+from mcp.server.fastmcp import FastMCP
+
+DEFAULT_ROOT = Path.home() / "repos" / "llm-wiki"
+ROOT = Path(os.environ.get("WIKI_ROOT", str(DEFAULT_ROOT))).expanduser().resolve()
+CLI = ROOT / "claude-setup" / "scripts" / "wiki"
+
+app = FastMCP("wiki-ops")
+
+
+def run_cli(*args: str, timeout: int = 300) -> str:
+    """Run the wiki CLI with --json. Returns its JSON, or a readable failure line."""
+    if not CLI.is_file():
+        return f"wiki CLI not found at {CLI} (set WIKI_ROOT to the repo root)"
+    try:
+        proc = subprocess.run(
+            [str(CLI), *args, "--json"],
+            cwd=str(ROOT),
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return f"wiki {' '.join(args)} timed out after {timeout}s"
+    except OSError as error:
+        return f"wiki {' '.join(args)} could not start: {error}"
+
+    payload = proc.stdout.strip()
+    if not payload:
+        return f"wiki {' '.join(args)} failed (exit {proc.returncode}): {proc.stderr.strip()}"
+    if proc.returncode != 0:
+        # lint exits 1 when it found problems — that is a result, not a failure.
+        note = f"/* exit {proc.returncode}{': ' + proc.stderr.strip() if proc.stderr.strip() else ''} */"
+        return f"{payload}\n{note}"
+    return payload
+
+
+@app.tool()
+def wiki_status() -> str:
+    """Counts of pending wiki work: drift entries, unprocessed raw files, lint problems, inbox tasks."""
+    return run_cli("status")
+
+
+@app.tool()
+def wiki_lint() -> str:
+    """Lint the wiki: orphan pages, broken wikilinks, missing frontmatter keys, index.md drift."""
+    return run_cli("lint")
+
+
+@app.tool()
+def wiki_drift(resolve: str | None = None) -> str:
+    """List pending Tier-0 drift entries, or resolve one page's entries.
+
+    Args:
+        resolve: wiki page to mark resolved, e.g. "wiki/concepts/agent-harness.md"
+    """
+    if resolve:
+        return run_cli("drift", "--resolve", resolve)
+    return run_cli("drift")
+
+
+@app.tool()
+def wiki_reindex() -> str:
+    """Re-run the qmd index (qmd update, then qmd embed). Slow: minutes on a full rebuild."""
+    return run_cli("reindex", timeout=1800)
+
+
+@app.tool()
+def wiki_queue(
+    op: Literal["ingest", "reconcile", "tier0"] | None = None,
+    target: str | None = None,
+    from_drift: bool = False,
+) -> str:
+    """Queue a maintenance task in .agents/inbox/ (idempotent; skips tasks already queued or claimed).
+
+    Args:
+        op: ingest | reconcile | tier0
+        target: file or wiki page the task is about, e.g. "raw/some-article.md"
+        from_drift: queue one tier0 task per pending drift entry (ignores op/target)
+    """
+    if from_drift:
+        return run_cli("queue", "--from-drift")
+    if not op or not target:
+        return json.dumps({"error": "provide op and target, or from_drift=true"})
+    return run_cli("queue", op, target)
+
+
+if __name__ == "__main__":
+    app.run()

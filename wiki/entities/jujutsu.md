@@ -89,7 +89,9 @@ which leaves Git on a named branch after every commit. Research behind the switc
   `config set`/`edit`, `--ignore-immutable` and `op abandon` are denied.
 - **Not jj workspaces.** Claude Code's `EnterWorktree` validates against `git worktree list` and refuses jj
   workspaces made by a `WorktreeCreate` hook (issue #66503, open as of 2026-09-03). The harness therefore keeps
-  Claude Code's Git worktrees and colocates jj inside each one.
+  Claude Code's Git worktrees and colocates jj inside each one. **Superseded for new sessions 2026-11-09:** `jj
+  workspace add --colocate` (0.46) makes a real Git worktree that `EnterWorktree` accepts, and `scripts/jw` creates
+  these for `jwc` and `jwb` launches. Subagent and `EnterWorktree` checkouts still colocate their own repo.
 
 <!-- /personal -->
 
@@ -102,8 +104,8 @@ which leaves Git on a named branch after every commit. Research behind the switc
 3. Every jj command writes, even `jj st`, which snapshots and imports Git refs. jj is unsafe in read-only or
    plan-mode agents.
 4. Rewriting a branch that another Git worktree has checked out leaves that worktree stale.
-5. jj workspaces are not Git worktrees, so the harness cannot see them. Claude Code's `EnterWorktree` refuses
-   them too (issue #66503).
+5. A plain jj workspace is not a Git worktree, so the harness cannot see it, and Claude Code's `EnterWorktree`
+   refuses it (issue #66503). With `--colocate` (0.46) it is a real Git worktree and both work (tested 2026-11-09).
 6. **New files over 1 MiB are silently skipped (2026-11-01).** jj's default `snapshot.max-new-file-size` is
    1 MiB. A commit wrapper that tracks files through jj can report success while a new 10 MB file stays
    untracked (it shows as untracked in `jj st` and is missing from the commit). Track it with

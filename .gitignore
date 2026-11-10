@@ -36,11 +36,14 @@ raw/
 pending-sync.md
 .mcp.json
 .obsidian
-.claude
+# .claude/ is machine-local except the tracked project settings (SessionStart hook).
+.claude/*
+!.claude/settings.json
 .agents/
 .pi/
 .claude/pre-digest/
 .playwright-mcp/
+.serena/
 docs-site/.mintlify/
 /tmp/mint-dev.log
 pi-headroom/node_modules/

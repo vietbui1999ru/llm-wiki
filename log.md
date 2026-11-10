@@ -1362,3 +1362,47 @@ All 10 Tier-0 wikilinks in `applied-ai.md` and `global-prevention-rules.md` reso
 3. **ACP protocol docs (Zed)** — fill the `concepts/acp-protocol` stub; editor-native agent ↔ editor protocol vs MCP
 4. **A2A protocol spec (Google)** — fill the `concepts/a2a-protocol` stub; multi-agent communication standard
 5. **arXiv 2602.11988 (ETH "Evaluating AGENTS.md")** — primary source for the contradiction at `concepts/agent-context-instructions`; only the blog summary was ingested
+
+## [2026-11-08] lint
+
+### Orphan pages
+None — all 204 pages have at least one inbound wikilink. Previously-flagged orphans (`patterns/algorithmic`, `patterns/backend`, `systems/otel-council`, `concepts/acp-protocol`) have all gained inbound links since the 2026-10-25 lint.
+
+### Stale claims
+- **Resolved:** `concepts/council-pattern` model table — the old "Sonnet 4.6 + GPT-5.4 / Chairman Opus 4.6" row is now explicitly marked "retired" (line 93); current setup (2026-11-02) uses `pi-council.sh` with majority (≥2 PASS) + security veto, no Chairman. Stale flag from 2026-10-25 lint is now closed.
+- **Persists:** `concepts/agent-context-instructions` — ETH arXiv:2602.11988 contradiction (primary source not yet ingested) is still flagged at the top of the page. No new drift; status unchanged from prior lint.
+
+### Tier-0 sync
+All 11 Tier-0 wikilinks in `applied-ai.md` and `global-prevention-rules.md` checked. No drift.
+
+### Missing concept stubs
+None — every wikilink in the wiki resolves to an existing page (79 concept pages, all reachable). No new stubs created this run.
+
+### Existing stubs (8, pre-existing)
+`concepts/a2a-protocol`, `concepts/acp-protocol`, `concepts/embeddings`, `concepts/fine-tuning`, `concepts/github-issue-handoff`, `concepts/prompt-caching`, `entities/lightrag`, `comparisons/okf-vs-llm-wiki-frontmatter`
+
+### Source suggestions (gaps)
+1. **arXiv 2602.11988 (ETH "Evaluating AGENTS.md")** — primary source for the open contradiction in `concepts/agent-context-instructions`; blog summary only was ingested; direct paper needed to resolve flag
+2. **LightRAG paper/HKUDS docs** — expand `entities/lightrag` stub; used as the wiki's graph-RAG layer with no dedicated source page
+3. **Anthropic prompt caching docs** — expand `concepts/prompt-caching` stub; central to subagent cost modeling and the harness itself
+4. **A2A Protocol spec (Google)** — expand `concepts/a2a-protocol` stub; Google's open agent-to-agent protocol, relevant to multi-agent harness design
+5. **OKF v0.2 SPEC.md (GoogleCloudPlatform/open-knowledge-format)** — confirm field semantics before the frontmatter reconcile proposed in `comparisons/okf-vs-llm-wiki-frontmatter`; also the two raw/ files from the previous ingest note (`Introducing the Google Cloud Knowledge Catalog.md`, `knowledge-catalogtoolboxmdcodedemo at main.md`) are no longer in raw/ so appear already processed or removed
+
+## [2026-11-04] ingest | Open Knowledge Format (2 sources)
+
+Sources: `knowledge-catalogokf at main.md` (OKF v0.2 README), `How the Open Knowledge Format can improve data sharing.md` (v0.1 launch blog). Pre-ingest review skipped by Viet for this session.
+
+### Created
+- `summaries/okf-v02-readme`, `summaries/okf-v01-announcement`
+- `entities/open-knowledge-format` — v0.1/v0.2 field drift flagged at top; v0.2 SPEC.md itself not ingested
+- `comparisons/okf-vs-llm-wiki-frontmatter` — 203-page frontmatter usage snapshot; gaps `description`, `generated`/`verified`, `stale_after`, `resource`; input for the planned reconcile
+
+### Updated
+- `concepts/compounding-knowledge-base` — Related link to the OKF entity
+
+### Contradictions
+- Blog (v0.1) and README (v0.2) disagree on the field set; README is newer and the canonical spec moved to GoogleCloudPlatform/open-knowledge-format.
+
+### Source suggestions
+1. OKF v0.2 SPEC.md from the canonical repository — confirm field semantics before any reconcile adopts them.
+2. `Introducing the Google Cloud Knowledge Catalog.md` and `knowledge-catalogtoolboxmdcodedemo at main.md` (already in raw/, not yet ingested).

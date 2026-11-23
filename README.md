@@ -21,6 +21,29 @@ This is not a static documentation site. It is a **compounding knowledge system*
 
 ---
 
+
+## Agent tooling moves to agent-harness
+
+The agent workflow moves to `vietbui1999ru/agent-harness`. This repository keeps the knowledge content and stops growing its agent tooling.
+
+Kept here:
+
+- `wiki/`, `index.md`, `log.md`, `mistakes/`, `docs-site/`, `pdfs/` and `assets/`.
+- The query tools in `templates/` (`wiki-index`, `wiki-chat`, `wiki-mcp`) and `council.py`.
+
+Frozen (no new features; removal follows in a later change):
+
+- `claude-setup/` (rules, skills, scripts and `settings.json`).
+- The top-level `skills/`, `pi-headroom/` and the agent hook scripts in `scripts/`.
+
+Dotfiles still reads these parts, so they keep working:
+
+- the PostToolUse hook that runs `scripts/publish-ai-kb.sh` when `log.md` changes;
+- the OpenCode plugins and `opencode.json`, which load skills and `mistakes/raw-log.md`;
+- the `council` shell function, which runs templates from this repository.
+
+On each machine, run `git pull`. No other step is necessary.
+
 ## Purpose
 
 Most people who read about AI engineering forget 90% of it. This wiki makes forgetting structurally harder:
@@ -189,6 +212,8 @@ wiki-index --full --yes
 After the initial build, the post-commit hook keeps the index current automatically — no manual re-runs needed after ingests. The indexer prepends Obsidian wikilink structure as extraction hints, reducing LLM token cost ~40–55% per page.
 
 ### 4. Link Claude Code configuration
+
+> **Deprecated.** Do not run `install-claude-symlink.sh` on a machine that stows dotfiles. Both claim `~/.claude`. Dotfiles owns `~/.claude` now. See "Agent tooling moves to agent-harness" below.
 
 ```bash
 bash ~/repos/llm-wiki/claude-setup/scripts/install-claude-symlink.sh

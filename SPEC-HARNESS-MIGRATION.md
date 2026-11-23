@@ -1,6 +1,6 @@
 ---
 title: Agent harness migration
-status: draft
+status: superseded
 created: 2026-10-22
 owner: Viet
 repo: ~/repos/agent-harness
@@ -8,7 +8,7 @@ repo: ~/repos/agent-harness
 
 # Agent harness migration
 
-> **Draft.** This file reports the first step (a link-view repo) and holds empty sections for the migration plan. The plan is filled in after the ideas have been grilled in the agent-harness repo. A later pass turns it into an MVP presentation for the docs site.
+> **Superseded.** The migration plan now lives in `vietbui1999ru/agent-harness`, in `docs/migration.md` and `docs/READING-DIGEST.md`. This file keeps the record of step 1 (the link-view repo). The link view is retired, and the agent-harness `main` branch replaces it.
 
 ## Why
 

@@ -14,17 +14,29 @@ Answered by the user on 2026-11-26.
 | Truth layer (section 3, item 4) | Accepted. |
 | Graph build (section 3, item 5) | The first build uses an LLM. Later builds use wikilinks and frontmatter. An LLM reorganizer runs now and then. Keep it cheap. |
 | Page types (section 3, item 6) | Types live in the kit config. |
-| Repo (question 1) | Strip this repo. Keep the current content on a `personal` line. A new `main` holds the kit. See section 6. |
+| Repo (question 1) | Strip this repo. A new `main` holds the kit. The current content moves to a private repo (P1). See section 6. |
 | Language (question 2) | Python, installed with `uvx`. |
 | Web adapter design (question 3) | Accepted. |
 | Index (question 4) | SQLite FTS5 plus a vector table replaces qmd and LightRAG. |
 | Weak hits (question 5) | A confidence layer scores each query and picks the source without asking. See R14. |
+| Personal line (P1) | A new private repo `llm-wiki-personal` holds the full history. |
+| Firecrawl install (P2) | Accept both: the local binary (preferred) and a Firecrawl Cloud API key with no binary. |
+| Web off, mid score (P3) | Answer from the KB with a "low coverage" note. |
+| Principle | Local-first RAG and KB. See section 1. |
 
 Assumption: "Laya layer" in the answer to question 5 means a routing layer that scores confidence. This plan calls it the confidence router. Correct the name if "Laya" means something specific.
 
 ## 1. Goal
 
 Publish an empty, domain-neutral knowledge base kit. The kit keeps the core behavior of this wiki and none of its content. A user can start a glossary, a study notebook, a legal reference, a product documentation base, or a business archive from the same kit.
+
+Principle: local-first. With the default config, no data leaves the machine.
+
+- Embeddings and the answer LLM default to a local Ollama endpoint.
+- Index, router, lint, jobs and eval run locally with no network.
+- Web access is off by default. When the user enables it, `FIRECRAWL_CLOUD=search` sends only search queries out. Until then the kit sets `FIRECRAWL_CLOUD=off`.
+- Hosted LLM APIs and Firecrawl Cloud are opt-in per provider in `kb.toml`. `kb doctor` lists every enabled outbound path.
+- A test runs `ask`, `index` and `eval` with the network blocked and the default config.
 
 ## 2. Current state (verified on `main` at `3de2de5`)
 
@@ -57,7 +69,8 @@ Each line gives the testable form. Items marked "assume" are open until the user
 - R3 Web access. A `web` adapter interface with two adapters.
   - `firecrawl-local` (default): the kit calls the binary (`scrape`, `crawl`, `map`, `search`) or its `serve` API on `127.0.0.1:3002`. The kit sets `FIRECRAWL_CLOUD=search`, so only search leaves the machine. The kit runs the MCP form with `--public-only`. `FIRECRAWL_API_KEY` is optional.
   - `searxng` (optional): a SearXNG endpoint for search, plus `firecrawl-local scrape` for page content. Nothing leaves the machine except the SearXNG queries.
-  - `kb doctor` reports which adapter works. Install needs Rust and a C compiler; Chrome and Node 22 are optional. Web access is off until the user enables it.
+  - `firecrawl-cloud` (no binary): the Firecrawl API with `FIRECRAWL_API_KEY`. For users without Rust.
+  - `kb doctor` reports which adapter works. The binary needs Rust and a C compiler; Chrome and Node 22 are optional. Web access is off until the user enables it.
 - R4 Formats. Markdown with YAML frontmatter is the source. The indexer writes `.kb/notes.jsonl` (one record per note and per block), `.kb/links.json` (graph edges) and `.kb/index.sqlite` (full-text and vector tables). `.kb/` is gitignored except an optional committed `notes.jsonl` for tools that cannot run the indexer.
 - R5 Obsidian. The vault root is the repo root. Links use `[[note]]`, `[[note#heading]]` and `[[note^block]]` with Obsidian resolution rules (shortest unique path). The kit ships a minimal `.obsidian/` config with templates enabled. Lint fails on unresolved links.
 - R6 Provenance. Every answer has a label: `KB`, `WEB` or `KB+WEB`, and the confidence score from R14. Every KB claim cites a note and block. Every web claim cites a URL. Web results never enter the KB directly. They land in `inbox/` as `status: draft`, `confidence: low`, with the URL and retrieval date.
@@ -149,12 +162,12 @@ Facts that limit the options:
 Steps (run only after the spec is approved):
 
 1. Back up the full history: `git clone --mirror` to a local path.
-2. Keep the personal line. Option A: push the mirror to a new private repo `llm-wiki-personal`. Option B: rename the public `main` to `personal` in the same repo. See question P1.
+2. Create the private repo `llm-wiki-personal` and push the mirror to it.
 3. Build the kit on a branch `kit` from an orphan commit. It holds only the kept files from section 7. No history from the personal line.
-4. Rename the current `main` to `personal` (GitHub branch rename; open PRs retarget). Rename `kit` to `main`. Set `main` as the default branch.
+4. Rename the current `main` to `archive/pre-kit` (GitHub branch rename). Rename `kit` to `main`. Set `main` as the default branch. Ask the user before deleting `archive/pre-kit` and the other old branches from the public repo.
 5. Reapply the branch protection to the new `main`.
 6. Run a secret scan on the new `main` before the repo is announced.
-7. Repoint the local checkouts: `~/repos/agent-harness/llm-wiki` tracks `personal`, so agent-harness tools keep the content.
+7. Repoint the local checkout `~/repos/agent-harness/llm-wiki` to `llm-wiki-personal`, so agent-harness tools keep the content.
 
 ## 7. What moves from this repo
 
@@ -179,18 +192,15 @@ Each phase ends with its tests passing and the golden eval run.
 
 ## 9. Open questions
 
-Recommended default in brackets.
+Recommended default in brackets. P1 to P3 are answered (section 0).
 
-- P1. Personal line: a private repo `llm-wiki-personal` (option A), or a public `personal` branch in this repo (option B)? [A. A branch cannot be private.]
-- P2. Firecrawl Local needs Rust to install. Is that acceptable for a `uvx` user, or should the kit also accept a Firecrawl Cloud API key with no local binary? [Accept both; the binary is preferred.]
-- P3. Router default when web access is off and `t_low <= c < t_high`: answer from the KB with a "low coverage" note? [Yes.]
 - 6. Web drafts: may a web result ever become a KB note without a human edit? [No.]
 - 7. Who may set `confidence: high` and `status: verified`? [Only a human, through `kb verify`.]
 - 8. Atomicity limit: word cap per note, and are block IDs required on every paragraph or only on cited claims? [600 words; block IDs added by the indexer on first citation.]
 - 9. Multi-user: is a business shared KB (several editors, access control) in v1? [No. Single user, git for sharing.]
 - 10. Chat surface: terminal only, or also a small local web page? [Terminal only in v1.]
 - 11. Non-markdown sources in v1: PDF, web pages, others? [PDF and web pages.]
-- 12. Providers: is an OpenAI-compatible endpoint enough, or is a native Anthropic adapter needed in v1? [Compatible endpoint plus a native Anthropic adapter.]
+- 12. Providers: is an OpenAI-compatible endpoint enough, or is a native Anthropic adapter needed in v1? [Local Ollama by default; an OpenAI-compatible endpoint and a native Anthropic adapter as opt-in.]
 - 13. Scheduler: cron and systemd only, or also launchd and Windows Task Scheduler? [cron and systemd in v1, launchd documented.]
 - 14. License and name? [MIT or Apache-2.0; name to decide.]
 - 15. Does the kit ship one `AGENTS.md` generated from one rules file? [Yes.]
